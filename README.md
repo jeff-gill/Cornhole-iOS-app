@@ -1,6 +1,6 @@
 # Cornhole (iOS)
 
-A physics-based cornhole game for iPhone and iPad, built with SwiftUI. It has no third-party dependencies.
+A physics-based cornhole game for iPhone and iPad, built with SwiftUI and SpriteKit. It has no third-party dependencies, and all the art is drawn in code.
 
 ## How it plays
 
