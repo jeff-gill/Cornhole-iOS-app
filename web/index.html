@@ -194,8 +194,9 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 28px; text-align: c
     <h2>How to play</h2>
     <div class="help">
       <p><b>1. Pick the finish.</b> Tap where you want the bag to <b>end up</b> (green). A dotted line shows your throw from your hand to that spot. Tap anywhere else to move it.</p>
-      <p><b>2. Pick the landing.</b> Drag the yellow ring along the gold strip to choose where the bag <b>hits first</b>. Land it close to the finish for a high arc that sticks, or farther back for a flat throw that slides in. <b>Stick it</b> drops the bag right on the finish.</p>
-      <p><b>3. Stop three needles.</b> <b>Direction</b> pushes it left or right, <b>Strength</b> sends it long or short, and <b>Height</b> changes the arc, so it lands somewhere else and slides a different amount. Only three perfect stops go exactly where you planned.</p>
+      <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone to choose where the bag <b>hits first</b>. Land it close to the finish for a high arc that sticks, or farther back for a flat throw that slides in. <b>Stick it</b> drops the bag right on the finish.</p>
+      <p><b>3. Add spin.</b> Move the ring off the centre line and the bag gets spin, so it kicks and hooks toward the finish after landing. A longer slide has more room to hook, so the zone gets wider farther back.</p>
+      <p><b>4. Stop three needles.</b> <b>Direction</b> pushes it left or right, <b>Strength</b> sends it long or short, and <b>Height</b> changes the arc, so it lands somewhere else and slides a different amount. Only three perfect stops go exactly where you planned.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts each inning. First to 21 wins. Knock your opponent's bags off, or knock your own in.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app.</p>
     </div>
@@ -262,13 +263,20 @@ function landingVel(v) {
   const r = Math.max(0, T.rBase - T.rSteep * steep);
   return { x: (v.x - n.x * vn) * r, y: (v.y - n.y * vn) * r };
 }
+// Spin: a spinning bag kicks sideways when it lands, then keeps hooking a little as it slides.
+const SPIN_KICK = rad(9), SPIN_CURVE = 0.05; // radians at landing, radians per foot of slide (at full spin)
+function rot(v, a) { const c = Math.cos(a), s = Math.sin(a); return { x: v.x * c + v.y * s, y: -v.x * s + v.y * c }; }
+const heading = v => Math.atan2(v.x, v.y);
+const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 function slideStep(b, dt) {
   const sp = Math.hypot(b.vx, b.vy);
   if (sp < T.stop) { b.vx = b.vy = 0; return false; }
   const f = T.mu * G * SC / sp;
   const nvx = b.vx - b.vx * f * dt, nvy = b.vy - b.vy * f * dt - G * SS * SC * dt;
   if (nvx * b.vx + nvy * b.vy <= 0) { b.vx = b.vy = 0; return false; }
-  b.vx = nvx; b.vy = nvy; b.x += nvx * dt; b.y += nvy * dt;
+  b.vx = nvx; b.vy = nvy;
+  if (b.curve) { const v = rot({ x: nvx, y: nvy }, b.curve * Math.hypot(nvx, nvy) * dt); b.vx = v.x; b.vy = v.y; }
+  b.x += b.vx * dt; b.y += b.vy * dt;
   return true;
 }
 
@@ -279,7 +287,7 @@ class World {
   get settled() { return this.bags.every(b => b.state !== "flying" && b.state !== "sliding"); }
   launch(t, owner) {
     const b = { id: this.nextId++, owner, state: "flying", x: t.o.x, y: t.o.y, z: t.o.z, vx: 0, vy: 0,
-      angle: t.az, spin: this.random ? (Math.random() * 8 - 4) : 2, t, ft: 0, c: contact(t), trail: [{ ...t.o }] };
+      angle: t.az, spin: (t.spin || 0) * 7 + (this.random ? (Math.random() * 2 - 1) : 0), curve: 0, t, ft: 0, c: contact(t), trail: [{ ...t.o }] };
     this.bags.push(b); return b.id;
   }
   step(dt) {
@@ -308,7 +316,8 @@ class World {
     if (c.kind === "hole") { b.state = "inHole"; b.vx = b.vy = 0; this.events.push({ type: "swish", bag: b }); }
     else if (c.kind === "ground") { b.state = "ground"; b.z = 0; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "ground", bag: b }); }
     else {
-      b.state = "sliding"; const lv = landingVel(c.v); b.vx = lv.x; b.vy = lv.y; b.spin *= 0.6;
+      b.state = "sliding"; const lv = rot(landingVel(c.v), (b.t.spin || 0) * SPIN_KICK); b.vx = lv.x; b.vy = lv.y;
+      b.curve = (b.t.spin || 0) * SPIN_CURVE; b.spin *= 0.6;
       this.events.push({ type: "land", bag: b }); this.bounds(b);
     }
   }
@@ -338,7 +347,7 @@ class World {
       const closing = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny;
       if (closing < 0) {
         const imp = -(1 + T.rest) * closing / 2;
-        p.vx -= nx * imp; p.vy -= ny * imp; q.vx += nx * imp; q.vy += ny * imp;
+        p.vx -= nx * imp; p.vy -= ny * imp; q.vx += nx * imp; q.vy += ny * imp; p.curve = q.curve = 0;
         if (closing < -0.5) {
           const tw = this.random ? Math.random() * 6 - 3 : 1.5; p.spin += tw; q.spin -= tw;
           this.events.push({ type: "hit" });
@@ -363,27 +372,41 @@ function throwFor(o, L, el) {
   if (D < 1) return null;
   const c = Math.cos(el), den = 2 * c * c * (D * Math.tan(el) + o.z - surf(L));
   if (den <= 0) return null;
-  return { o, speed: Math.sqrt(G * D * D / den), el, az: Math.atan2(dx, dy) };
+  return { o, speed: Math.sqrt(G * D * D / den), el, az: Math.atan2(dx, dy), spin: 0 };
 }
 function freeSlideEnd(t) {
   const c = contact(t, true);
   if (c.kind !== "board") return c.p;
-  const lv = landingVel(c.v), b = { x: c.p.x, y: c.p.y, vx: lv.x, vy: lv.y };
+  const s = t.spin || 0, lv = rot(landingVel(c.v), s * SPIN_KICK), b = { x: c.p.x, y: c.p.y, vx: lv.x, vy: lv.y, curve: s * SPIN_CURVE };
   for (let i = 0; i < 4800 && slideStep(b, T.dt); i++);
   return b;
 }
-function solve(o, L, E) {
-  if (!E) return throwFor(o, L, T.defEl);
-  const D = Math.hypot(L.x - o.x, L.y - o.y), dir = { x: (L.x - o.x) / D, y: (L.y - o.y) / D };
-  const want = Math.max(0, (E.x - L.x) * dir.x + (E.y - L.y) * dir.y);
-  const slide = el => { const t = throwFor(o, L, el); if (!t) return null; const e = freeSlideEnd(t); return (e.x - L.x) * dir.x + (e.y - L.y) * dir.y; };
+// Arc (elevation) so the bag travels `D` feet toward unit direction `u` after landing at L, with spin s.
+function solveEl(o, L, u, D, s) {
+  const mk = el => { const t = throwFor(o, L, el); if (t) t.spin = s; return t; };
+  const slide = el => { const t = mk(el); if (!t) return null; const e = freeSlideEnd(t); return (e.x - L.x) * u.x + (e.y - L.y) * u.y; };
   let lo = T.minEl, hi = T.maxEl;
   const sLo = slide(lo), sHi = slide(hi);
-  if (sLo === null || sHi === null) return throwFor(o, L, T.defEl);
-  if (want >= sLo) return throwFor(o, L, lo);
-  if (want <= sHi) return throwFor(o, L, hi);
-  for (let i = 0; i < 32; i++) { const m = (lo + hi) / 2, s = slide(m); if (s === null) break; if (s > want) lo = m; else hi = m; }
-  return throwFor(o, L, (lo + hi) / 2);
+  if (sLo === null || sHi === null) return mk(T.defEl);
+  if (D >= sLo) return mk(lo);
+  if (D <= sHi) return mk(hi);
+  for (let i = 0; i < 32; i++) { const m = (lo + hi) / 2, v = slide(m); if (v === null) break; if (v > D) lo = m; else hi = m; }
+  return mk((lo + hi) / 2);
+}
+// Perfect release that lands on L and finishes on E: arc sets the distance, spin bends the slide toward E.
+function solveSpin(o, L, E) {
+  const D = dist(L, E), base = throwFor(o, L, T.maxEl);
+  if (!base) return null;
+  if (D < 0.08) return base;
+  const u = { x: (E.x - L.x) / D, y: (E.y - L.y) / D }, gain = SPIN_KICK + SPIN_CURVE * D * 0.5;
+  let s = clamp(wrap(heading(u) - base.az) / gain, -1, 1);
+  for (let k = 0; k < 6; k++) {
+    const t = solveEl(o, L, u, D, s); if (!t) return null;
+    const e = freeSlideEnd(t), err = wrap(heading(u) - heading({ x: e.x - L.x, y: e.y - L.y }));
+    if (Math.abs(err) < 2e-4) return t;
+    s = clamp(s + err / gain, -1, 1);
+  }
+  return solveEl(o, L, u, D, s);
 }
 function preview(t) {
   const w = new World(false); w.launch(t, 0);
@@ -424,15 +447,24 @@ function landingRange(g) {
   for (let i = 0; i < 28; i++) { const m = (lo + hi) / 2; if (slideAt(g, m, T.minEl) >= g.R - m) hi = m; else lo = m; }
   return { min: hi, max };
 }
-// Perfect release for this finish spot, with a small sideways correction for the board's downhill pull.
-function planThrow(pl, E, slideLen) {
-  const g = aimLine(pl, E), range = landingRange(g);
-  const d = clamp(g.R - slideLen, range.min, range.max), L = along(g, d);
-  const t = solve(g.o, L, E);
-  if (!t) return null;
-  const target = Math.atan2(E.x - g.o.x, E.y - g.o.y);
-  for (let i = 0; i < 2; i++) { const e = freeSlideEnd(t); t.az += target - Math.atan2(e.x - g.o.x, e.y - g.o.y); }
-  return { g, range, d, landing: L, ideal: t };
+// Landing zone: a fan behind the finish spot. Straight back needs no spin; off to the side needs spin,
+// and a longer slide has more room to hook, so the fan widens with distance.
+const maxPhi = D => 0.85 * (SPIN_KICK + SPIN_CURVE * D * 0.5);
+function aimZone(pl, E) {
+  const g = aimLine(pl, E), r = landingRange(g);
+  return { g, back: { x: -g.dir.x, y: -g.dir.y }, Dmin: Math.max(0, g.R - r.max), Dmax: Math.max(0, g.R - r.min) };
+}
+function landingFrom(z, E, D, phi) { const v = rot(z.back, phi); return { x: E.x + v.x * D, y: E.y + v.y * D }; }
+function planThrow(pl, E, D, phi) {
+  const z = aimZone(pl, E);
+  D = clamp(D, z.Dmin, z.Dmax); phi = clamp(phi, -maxPhi(D), maxPhi(D));
+  let L = landingFrom(z, E, D, phi);
+  for (let i = 0; i < 80 && !onBoard(L) && D > z.Dmin; i++) { // keep the landing on the wood
+    if (Math.abs(phi) > 0.005) phi *= 0.85; else D = Math.max(z.Dmin, D - 0.05);
+    L = landingFrom(z, E, D, phi);
+  }
+  const t = solveSpin(z.g.o, L, E);
+  return t ? { z, D, phi, landing: L, ideal: t } : null;
 }
 
 // ───────────────────────── Difficulty & meters
@@ -452,6 +484,7 @@ const needleAt = (time, lv) => -Math.cos(2 * Math.PI * lv.freq * time);
 const eff = (e, lv) => Math.abs(e) <= lv.zone ? 0 : clamp(e, -1, 1);
 function applyErrors(e, ideal, lv) {
   return { ...ideal, az: ideal.az + eff(e.dir, lv) * MAX_DIR, speed: ideal.speed * (1 + eff(e.pow, lv) * MAX_POW),
+    spin: clamp((ideal.spin || 0) + eff(e.dir, lv) * 0.35, -1, 1),
     el: clamp(ideal.el + eff(e.ht, lv) * MAX_HT, rad(4), rad(78)) };
 }
 function grade(e, m, lv) {
@@ -497,7 +530,7 @@ const sfx = {
 // ───────────────────────── Game state
 const S = {
   mode: "cpu", level: "medium", names: ["You", "CPU"], world: new World(), scores: [0, 0], inning: 1, thrown: [0, 0],
-  player: 0, leader: 0, phase: "menu", landing: null, end: null, slideLen: null, plan: null, ideal: null, prev: null, meter: 0, meterT: 0,
+  player: 0, leader: 0, phase: "menu", landing: null, end: null, landD: null, landPhi: 0, plan: null, ideal: null, prev: null, meter: 0, meterT: 0,
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, lastId: null, cpuT: 0, cpuPlan: null,
   saved: {}, settleT: 0, acc: 0, banner: null, bannerT: 0, lastInning: null, winner: null,
 };
@@ -514,9 +547,9 @@ function newGame() {
 }
 const DEFAULT_SLIDE = 1.5;
 function refreshPlan() {
-  S.plan = S.end ? planThrow(S.player, S.end, S.slideLen) : null;
+  S.plan = S.end ? planThrow(S.player, S.end, S.landD ?? DEFAULT_SLIDE, S.landPhi || 0) : null;
   if (!S.plan) { S.landing = S.ideal = S.prev = null; return; }
-  S.slideLen = S.plan.g.R - S.plan.d; // keep what was actually achievable
+  S.landD = S.plan.D; S.landPhi = S.plan.phi; // keep what was actually achievable
   S.landing = S.plan.landing; S.ideal = S.plan.ideal;
   S.prev = preview(S.ideal);
 }
@@ -524,10 +557,9 @@ function setMarker(kind, p) {
   if (!canEdit()) return;
   if (kind === "end") {
     S.end = { x: clamp(p.x, -1.8, 1.8), y: clamp(p.y, FY + 0.2, BY + 0.6) };
-    if (S.slideLen == null) S.slideLen = DEFAULT_SLIDE;
   } else if (S.plan) {
-    const g = S.plan.g, d = (p.x - g.o.x) * g.dir.x + (p.y - g.o.y) * g.dir.y;
-    S.slideLen = g.R - d;
+    const v = { x: p.x - S.end.x, y: p.y - S.end.y };
+    S.landD = Math.hypot(v.x, v.y); S.landPhi = wrap(heading(v) - heading(S.plan.z.back));
   }
   refreshPlan(); ui();
 }
@@ -535,14 +567,14 @@ function beginTurn() {
   S.cpuPlan = null;
   if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.cpuT = 0; S.phase = "cpu"; }
   else {
-    const s = S.saved[S.player]; S.end = s ? s[0] : null; S.slideLen = s ? s[1] : null;
+    const s = S.saved[S.player]; S.end = s ? s[0] : null; S.landD = s ? s[1] : null; S.landPhi = s ? s[2] : 0;
     S.phase = "aiming"; refreshPlan();
   }
   ui();
 }
 function beginThrow() {
   if (!canEdit() || !S.ideal) return;
-  S.saved[S.player] = [S.end, S.slideLen];
+  S.saved[S.player] = [S.end, S.landD, S.landPhi];
   S.errors = { dir: 0, pow: 0, ht: 0 }; S.meter = 0; S.meterT = 0; S.phase = "meter"; sfx.tick(); ui();
 }
 function stopMeter() {
@@ -603,7 +635,7 @@ function frame(now) {
     S.cpuT += dt;
     if (!S.cpuPlan && S.cpuT > 0.7) {
       S.cpuPlan = cpuPlan(S.player, S.world.bags); S.end = S.cpuPlan.end;
-      S.slideLen = dist(S.cpuPlan.landing, S.cpuPlan.end); refreshPlan(); ui();
+      S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0; refreshPlan(); ui();
     }
     if (S.cpuT > 2.0 && S.ideal) releaseBag({ dir: gauss(lv().cpu), pow: gauss(lv().cpu), ht: gauss(lv().cpu) });
   } else if (S.phase === "flight") {
@@ -664,20 +696,28 @@ function drawBoard() {
 
   // aim line
   if (S.plan && S.phase !== "flight") {
-    const g = S.plan.g, r = S.plan.range;
-    // throwing line from the hand to the finish spot
+    const z = S.plan.z, E = S.end;
+    // the throw's path from the hand to the landing spot
+    const d = { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) };
     c.strokeStyle = COL.p[S.player] + "cc"; c.lineWidth = 2 * dpr; c.setLineDash([2 * dpr, 5 * dpr]);
-    c.beginPath(); c.moveTo(...m.pt(along(g, g.R - 8))); c.lineTo(...m.pt(S.end)); c.stroke(); c.setLineDash([]);
-    // rail: where the landing ring can go and still finish on the green spot
-    if (canEdit() && r.max - r.min > 0.02) {
-      c.lineCap = "round";
-      c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = 12 * dpr;
-      c.beginPath(); c.moveTo(...m.pt(along(g, r.min))); c.lineTo(...m.pt(along(g, r.max))); c.stroke();
-      c.strokeStyle = "rgba(244,197,66,.45)"; c.lineWidth = 8 * dpr; c.stroke();
-      c.fillStyle = "rgba(255,255,255,.9)"; c.font = `600 ${11 * dpr}px "Barlow Semi Condensed", sans-serif`; c.textAlign = "left";
-      const [fx, fy] = m.pt(along(g, r.min)), [nx, ny] = m.pt(along(g, r.max));
-      c.fillText("flat · slides", fx + 12 * dpr, fy + 4 * dpr);
-      if (ny < fy - 40 * dpr) c.fillText("high · sticks", nx + 12 * dpr, ny + 16 * dpr);
+    c.beginPath(); c.moveTo(...m.pt({ x: S.landing.x - d.x * 8, y: S.landing.y - d.y * 8 })); c.lineTo(...m.pt(S.landing)); c.stroke(); c.setLineDash([]);
+    // landing zone: where the ring can go and still finish on the green spot
+    if (canEdit() && z.Dmax - z.Dmin > 0.02) {
+      const N = 16, left = [], right = [];
+      for (let i = 0; i <= N; i++) {
+        const D = z.Dmin + (z.Dmax - z.Dmin) * i / N, a = maxPhi(D);
+        left.push(m.pt(landingFrom(z, E, D, -a))); right.push(m.pt(landingFrom(z, E, D, a)));
+      }
+      c.beginPath(); c.moveTo(...left[0]); for (const q of left) c.lineTo(...q); for (const q of right.reverse()) c.lineTo(...q); c.closePath();
+      c.fillStyle = "rgba(244,197,66,.26)"; c.fill();
+      c.strokeStyle = "rgba(244,197,66,.8)"; c.lineWidth = 1.5 * dpr; c.stroke();
+      c.strokeStyle = "rgba(255,255,255,.35)"; c.setLineDash([3 * dpr, 4 * dpr]);
+      c.beginPath(); c.moveTo(...m.pt(landingFrom(z, E, z.Dmin, 0))); c.lineTo(...m.pt(landingFrom(z, E, z.Dmax, 0))); c.stroke(); c.setLineDash([]);
+      c.fillStyle = "rgba(255,255,255,.92)"; c.font = `600 ${11 * dpr}px "Barlow Semi Condensed", sans-serif`; c.textAlign = "left";
+      const ea = m.pt(landingFrom(z, E, z.Dmax, maxPhi(z.Dmax))), eb = m.pt(landingFrom(z, E, z.Dmax, -maxPhi(z.Dmax)));
+      const [fx, fy] = ea[0] > eb[0] ? ea : eb;
+      c.fillText("flat · slides", fx + 22 * dpr, fy - 10 * dpr);
+      c.fillText("off-centre = spin", fx + 22 * dpr, fy + 4 * dpr);
     }
   }
   // perfect-throw slide preview
@@ -781,13 +821,13 @@ boardC.addEventListener("pointerdown", e => {
   if (!canEdit()) return;
   boardC.setPointerCapture(e.pointerId);
   const r = boardC.getBoundingClientRect(), p = bmap().world((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
-  // Grab the landing ring if the touch is near it or near the throwing line; otherwise move the finish spot.
-  let nearLine = false;
+  // Grab the landing ring if the touch is near it or inside the landing zone; otherwise move the finish spot.
+  let inZone = false;
   if (S.plan) {
-    const g = S.plan.g, d = (p.x - g.o.x) * g.dir.x + (p.y - g.o.y) * g.dir.y, q = along(g, d);
-    nearLine = dist(p, q) < 0.3 && d >= S.plan.range.min - 0.4 && d <= g.R - 0.35;
+    const z = S.plan.z, v = { x: p.x - S.end.x, y: p.y - S.end.y }, D = Math.hypot(v.x, v.y);
+    inZone = D >= z.Dmin - 0.25 && D <= z.Dmax + 0.3 && Math.abs(wrap(heading(v) - heading(z.back))) <= maxPhi(D) + 0.12;
   }
-  dragging = S.landing && (dist(p, S.landing) < 0.55 || nearLine) && dist(p, S.end) > 0.3 ? "landing" : "end";
+  dragging = S.landing && (dist(p, S.landing) < 0.55 || inZone) && dist(p, S.end) > 0.3 ? "landing" : "end";
   setMarker(dragging, p);
 });
 boardC.addEventListener("pointermove", e => {
@@ -828,7 +868,7 @@ function ui() {
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
-  else if (canEdit() && S.landing) { hint.textContent = "Drag the yellow ring to choose where it lands"; hint.hidden = false; }
+  else if (canEdit() && S.landing) { hint.textContent = "Drag the yellow ring around the gold zone"; hint.hidden = false; }
   else hint.hidden = true;
 
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${S.names[S.player] === "You" ? "Your" : esc(S.names[S.player]) + "'s"} throw</div>`;
@@ -837,10 +877,10 @@ function ui() {
     if (S.ideal) {
       plan = `<div class="stats">
         <div class="stat"><small>Arc</small><b>${deg(S.ideal.el).toFixed(0)}°</b></div>
-        <div class="stat"><small>Speed</small><b>${(S.ideal.speed * 0.6818).toFixed(0)} mph</b></div>
-        <div class="stat"><small>Slide</small><b>${S.slideLen < 0.15 ? "Sticks" : S.slideLen.toFixed(1) + " ft"}</b></div>
+        <div class="stat"><small>Slide</small><b>${S.landD < 0.15 ? "Sticks" : S.landD.toFixed(1) + " ft"}</b></div>
+        <div class="stat"><small>Spin</small><b>${Math.abs(S.ideal.spin) < 0.05 ? "None" : (S.ideal.spin > 0 ? "Right " : "Left ") + Math.round(Math.abs(S.ideal.spin) * 100) + "%"}</b></div>
         ${showPreview() && S.prev ? `<div class="stat"><small>Perfect throw</small><b>${outcomeText(S.prev)}</b></div>` : ""}
-      </div><div class="muted">Land closer to the green spot for a high arc that sticks, or farther back for a flat throw that slides.</div>`;
+      </div><div class="muted">Land near the green spot to stick it, farther back to slide it in. Off to the side adds spin to hook it.</div>`;
     }
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">Bag ${S.thrown[S.player] + 1} of 4</span></div>
       <div style="min-height:52px;display:flex;flex-direction:column;gap:4px">${plan}</div>
@@ -849,8 +889,8 @@ function ui() {
         <button class="btn" id="stickBtn" ${S.landing ? "" : "disabled"}>Stick it</button>
         <button class="btn go" id="throwBtn" style="background:${COL.p[S.player]}" ${S.ideal ? "" : "disabled"}>THROW</button>
       </div>`;
-    $("clearBtn").onclick = () => { S.end = null; S.slideLen = null; refreshPlan(); ui(); };
-    $("stickBtn").onclick = () => { if (S.end) { S.slideLen = 0; refreshPlan(); ui(); } };
+    $("clearBtn").onclick = () => { S.end = null; S.landD = null; S.landPhi = 0; refreshPlan(); ui(); };
+    $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };
   } else if (S.phase === "meter") {
     const z = lv().zone * 100;
