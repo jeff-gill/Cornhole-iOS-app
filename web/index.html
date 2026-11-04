@@ -74,7 +74,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 }
 #banner.show { transform: translateX(-50%) scale(1); opacity: 1; }
 #hint {
-  position: absolute; left: 10px; bottom: 10px; pointer-events: none; font-family: var(--font-label); font-weight: 600;
+  position: absolute; left: 10px; top: 10px; pointer-events: none; font-family: var(--font-label); font-weight: 600;
   font-size: 13px; background: rgba(0,0,0,.5); padding: 6px 11px; border-radius: 999px;
 }
 
@@ -193,8 +193,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 28px; text-align: c
   <div class="sheet">
     <h2>How to play</h2>
     <div class="help">
-      <p><b>1. Mark your spots.</b> Tap the board where the bag should <b>land</b> (yellow). Tap again where it should <b>finish</b> (green). Drag either marker to adjust. <b>Stick it</b> puts both on the same spot for a high, dead-drop throw.</p>
-      <p><b>2. The game plans the perfect throw.</b> Flatter throws come in fast and slide. Higher throws drop steep and stick.</p>
+      <p><b>1. Pick the finish.</b> Tap where you want the bag to <b>end up</b> (green). A dotted line shows your throw from your hand to that spot. Tap anywhere else to move it.</p>
+      <p><b>2. Pick the landing.</b> Drag the yellow ring along the gold strip to choose where the bag <b>hits first</b>. Land it close to the finish for a high arc that sticks, or farther back for a flat throw that slides in. <b>Stick it</b> drops the bag right on the finish.</p>
       <p><b>3. Stop three needles.</b> <b>Direction</b> pushes it left or right, <b>Strength</b> sends it long or short, and <b>Height</b> changes the arc, so it lands somewhere else and slides a different amount. Only three perfect stops go exactly where you planned.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts each inning. First to 21 wins. Knock your opponent's bags off, or knock your own in.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app.</p>
@@ -402,6 +402,39 @@ function preview(t) {
   return { flight, slide, outcome: b.state, end: { x: b.x, y: b.y } };
 }
 
+// ───────────────────────── Aiming: finish spot + landing distance along the throwing line
+// A bag slides the way it was thrown, so the landing spot must sit on the line from the hand to the finish.
+function aimLine(pl, E) {
+  const o = release(pl), R = Math.hypot(E.x - o.x, E.y - o.y);
+  return { o, R, dir: { x: (E.x - o.x) / R, y: (E.y - o.y) / R } };
+}
+const along = (g, d) => ({ x: g.o.x + g.dir.x * d, y: g.o.y + g.dir.y * d });
+function slideAt(g, d, el) {
+  const L = along(g, d), t = throwFor(g.o, L, el);
+  if (!t) return 0;
+  const e = freeSlideEnd(t);
+  return (e.x - L.x) * g.dir.x + (e.y - L.y) * g.dir.y;
+}
+// Landing distances (from the hand) whose perfect throw can finish exactly on E.
+function landingRange(g) {
+  const max = g.R - Math.max(0, slideAt(g, g.R, T.maxEl));          // highest arc still slides a hair
+  const onBoardFrom = g.dir.y > 0 ? (FY + 0.05 - g.o.y) / g.dir.y : g.R; // never plan to land on the grass
+  let lo = Math.min(onBoardFrom, max), hi = max;
+  if (slideAt(g, lo, T.minEl) >= g.R - lo) return { min: lo, max };
+  for (let i = 0; i < 28; i++) { const m = (lo + hi) / 2; if (slideAt(g, m, T.minEl) >= g.R - m) hi = m; else lo = m; }
+  return { min: hi, max };
+}
+// Perfect release for this finish spot, with a small sideways correction for the board's downhill pull.
+function planThrow(pl, E, slideLen) {
+  const g = aimLine(pl, E), range = landingRange(g);
+  const d = clamp(g.R - slideLen, range.min, range.max), L = along(g, d);
+  const t = solve(g.o, L, E);
+  if (!t) return null;
+  const target = Math.atan2(E.x - g.o.x, E.y - g.o.y);
+  for (let i = 0; i < 2; i++) { const e = freeSlideEnd(t); t.az += target - Math.atan2(e.x - g.o.x, e.y - g.o.y); }
+  return { g, range, d, landing: L, ideal: t };
+}
+
 // ───────────────────────── Difficulty & meters
 const LEVELS = {
   easy:   { title: "Backyard", sub: "Slow meters, full trajectory preview", freq: 0.42, zone: 0.08, cpu: 0.42, preview: true },
@@ -464,7 +497,7 @@ const sfx = {
 // ───────────────────────── Game state
 const S = {
   mode: "cpu", level: "medium", names: ["You", "CPU"], world: new World(), scores: [0, 0], inning: 1, thrown: [0, 0],
-  player: 0, leader: 0, phase: "menu", landing: null, end: null, ideal: null, prev: null, meter: 0, meterT: 0,
+  player: 0, leader: 0, phase: "menu", landing: null, end: null, slideLen: null, plan: null, ideal: null, prev: null, meter: 0, meterT: 0,
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, lastId: null, cpuT: 0, cpuPlan: null,
   saved: {}, settleT: 0, acc: 0, banner: null, bannerT: 0, lastInning: null, winner: null,
 };
@@ -479,26 +512,37 @@ function newGame() {
   S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null;
   beginTurn();
 }
+const DEFAULT_SLIDE = 1.5;
 function refreshPlan() {
-  if (!S.landing) { S.ideal = null; S.prev = null; return; }
-  S.ideal = solve(release(S.player), S.landing, S.end);
-  S.prev = S.ideal ? preview(S.ideal) : null;
+  S.plan = S.end ? planThrow(S.player, S.end, S.slideLen) : null;
+  if (!S.plan) { S.landing = S.ideal = S.prev = null; return; }
+  S.slideLen = S.plan.g.R - S.plan.d; // keep what was actually achievable
+  S.landing = S.plan.landing; S.ideal = S.plan.ideal;
+  S.prev = preview(S.ideal);
 }
 function setMarker(kind, p) {
   if (!canEdit()) return;
-  const q = { x: clamp(p.x, -2, 2), y: clamp(p.y, FY - 1, BY + 0.8) };
-  if (kind === "landing") S.landing = q; else S.end = q;
+  if (kind === "end") {
+    S.end = { x: clamp(p.x, -1.8, 1.8), y: clamp(p.y, FY + 0.2, BY + 0.6) };
+    if (S.slideLen == null) S.slideLen = DEFAULT_SLIDE;
+  } else if (S.plan) {
+    const g = S.plan.g, d = (p.x - g.o.x) * g.dir.x + (p.y - g.o.y) * g.dir.y;
+    S.slideLen = g.R - d;
+  }
   refreshPlan(); ui();
 }
 function beginTurn() {
   S.cpuPlan = null;
-  if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = null; S.cpuT = 0; S.phase = "cpu"; }
-  else { const s = S.saved[S.player]; S.landing = s ? s[0] : null; S.end = s ? s[1] : null; S.phase = "aiming"; refreshPlan(); }
+  if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.cpuT = 0; S.phase = "cpu"; }
+  else {
+    const s = S.saved[S.player]; S.end = s ? s[0] : null; S.slideLen = s ? s[1] : null;
+    S.phase = "aiming"; refreshPlan();
+  }
   ui();
 }
 function beginThrow() {
   if (!canEdit() || !S.ideal) return;
-  S.saved[S.player] = [S.landing, S.end];
+  S.saved[S.player] = [S.end, S.slideLen];
   S.errors = { dir: 0, pow: 0, ht: 0 }; S.meter = 0; S.meterT = 0; S.phase = "meter"; sfx.tick(); ui();
 }
 function stopMeter() {
@@ -558,7 +602,8 @@ function frame(now) {
   else if (S.phase === "cpu") {
     S.cpuT += dt;
     if (!S.cpuPlan && S.cpuT > 0.7) {
-      S.cpuPlan = cpuPlan(S.player, S.world.bags); S.landing = S.cpuPlan.landing; S.end = S.cpuPlan.end; refreshPlan(); ui();
+      S.cpuPlan = cpuPlan(S.player, S.world.bags); S.end = S.cpuPlan.end;
+      S.slideLen = dist(S.cpuPlan.landing, S.cpuPlan.end); refreshPlan(); ui();
     }
     if (S.cpuT > 2.0 && S.ideal) releaseBag({ dir: gauss(lv().cpu), pow: gauss(lv().cpu), ht: gauss(lv().cpu) });
   } else if (S.phase === "flight") {
@@ -618,11 +663,22 @@ function drawBoard() {
   c.strokeStyle = COL.woodD; c.lineWidth = 1.5 * dpr; c.stroke();
 
   // aim line
-  if (S.ideal && S.landing) {
-    const d = { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) };
-    const a = m.pt({ x: S.landing.x - d.x * 6, y: S.landing.y - d.y * 6 }), b = m.pt(S.landing);
-    c.strokeStyle = COL.p[S.player] + "aa"; c.lineWidth = 2 * dpr; c.setLineDash([2 * dpr, 5 * dpr]);
-    c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.stroke(); c.setLineDash([]);
+  if (S.plan && S.phase !== "flight") {
+    const g = S.plan.g, r = S.plan.range;
+    // throwing line from the hand to the finish spot
+    c.strokeStyle = COL.p[S.player] + "cc"; c.lineWidth = 2 * dpr; c.setLineDash([2 * dpr, 5 * dpr]);
+    c.beginPath(); c.moveTo(...m.pt(along(g, g.R - 8))); c.lineTo(...m.pt(S.end)); c.stroke(); c.setLineDash([]);
+    // rail: where the landing ring can go and still finish on the green spot
+    if (canEdit() && r.max - r.min > 0.02) {
+      c.lineCap = "round";
+      c.strokeStyle = "rgba(0,0,0,.35)"; c.lineWidth = 12 * dpr;
+      c.beginPath(); c.moveTo(...m.pt(along(g, r.min))); c.lineTo(...m.pt(along(g, r.max))); c.stroke();
+      c.strokeStyle = "rgba(244,197,66,.45)"; c.lineWidth = 8 * dpr; c.stroke();
+      c.fillStyle = "rgba(255,255,255,.9)"; c.font = `600 ${11 * dpr}px "Barlow Semi Condensed", sans-serif`; c.textAlign = "left";
+      const [fx, fy] = m.pt(along(g, r.min)), [nx, ny] = m.pt(along(g, r.max));
+      c.fillText("flat · slides", fx + 12 * dpr, fy + 4 * dpr);
+      if (ny < fy - 40 * dpr) c.fillText("high · sticks", nx + 12 * dpr, ny + 16 * dpr);
+    }
   }
   // perfect-throw slide preview
   if (showPreview() && S.prev && S.prev.slide.length > 1 && S.phase !== "flight") {
@@ -638,7 +694,7 @@ function drawBoard() {
   for (const b of bags) if (b.state === "ground") drawBag(c, m, b, 0);
   for (const b of bags) if (onSurface(b)) drawBag(c, m, b, 0);
   if (S.landing) {
-    const [x, y] = m.pt(S.landing), r = 0.2 * s;
+    const [x, y] = m.pt(S.landing), r = 0.24 * s;
     c.lineWidth = 4 * dpr; c.strokeStyle = "rgba(0,0,0,.5)"; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
     c.lineWidth = 2.5 * dpr; c.strokeStyle = COL.gold; c.stroke();
     c.lineWidth = 1.5 * dpr; c.beginPath(); c.moveTo(x - r * 1.5, y); c.lineTo(x + r * 1.5, y); c.moveTo(x, y - r * 1.5); c.lineTo(x, y + r * 1.5); c.stroke();
@@ -725,9 +781,13 @@ boardC.addEventListener("pointerdown", e => {
   if (!canEdit()) return;
   boardC.setPointerCapture(e.pointerId);
   const r = boardC.getBoundingClientRect(), p = bmap().world((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
-  if (!S.landing) dragging = "landing";
-  else if (S.end) dragging = dist(p, S.landing) <= dist(p, S.end) ? "landing" : "end";
-  else dragging = dist(p, S.landing) < 0.4 ? "landing" : "end";
+  // Grab the landing ring if the touch is near it or near the throwing line; otherwise move the finish spot.
+  let nearLine = false;
+  if (S.plan) {
+    const g = S.plan.g, d = (p.x - g.o.x) * g.dir.x + (p.y - g.o.y) * g.dir.y, q = along(g, d);
+    nearLine = dist(p, q) < 0.3 && d >= S.plan.range.min - 0.4 && d <= g.R - 0.35;
+  }
+  dragging = S.landing && (dist(p, S.landing) < 0.55 || nearLine) && dist(p, S.end) > 0.3 ? "landing" : "end";
   setMarker(dragging, p);
 });
 boardC.addEventListener("pointermove", e => {
@@ -767,19 +827,20 @@ function outcomeText(p) {
 function ui() {
   renderScore();
   const hint = $("hint");
-  if (canEdit() && !S.landing) { hint.textContent = "Tap where the bag should land"; hint.hidden = false; }
-  else if (canEdit() && !S.end) { hint.textContent = "Tap where it should finish"; hint.hidden = false; }
+  if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
+  else if (canEdit() && S.landing) { hint.textContent = "Drag the yellow ring to choose where it lands"; hint.hidden = false; }
   else hint.hidden = true;
 
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${S.names[S.player] === "You" ? "Your" : esc(S.names[S.player]) + "'s"} throw</div>`;
   if (S.phase === "aiming") {
-    let plan = `<div class="muted">Tap the board where your bag should hit first, then tap again where it should stop.</div>`;
+    let plan = `<div class="muted">Tap the board where you want your bag to end up. Then drag the yellow ring to pick where it lands first.</div>`;
     if (S.ideal) {
       plan = `<div class="stats">
         <div class="stat"><small>Arc</small><b>${deg(S.ideal.el).toFixed(0)}°</b></div>
         <div class="stat"><small>Speed</small><b>${(S.ideal.speed * 0.6818).toFixed(0)} mph</b></div>
+        <div class="stat"><small>Slide</small><b>${S.slideLen < 0.15 ? "Sticks" : S.slideLen.toFixed(1) + " ft"}</b></div>
         ${showPreview() && S.prev ? `<div class="stat"><small>Perfect throw</small><b>${outcomeText(S.prev)}</b></div>` : ""}
-      </div><div class="muted">${S.end ? "Flatter throws slide further, higher throws stick. Drag the markers to adjust." : "No finish spot yet, so it's a medium arc. Tap where it should stop."}</div>`;
+      </div><div class="muted">Land closer to the green spot for a high arc that sticks, or farther back for a flat throw that slides.</div>`;
     }
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">Bag ${S.thrown[S.player] + 1} of 4</span></div>
       <div style="min-height:52px;display:flex;flex-direction:column;gap:4px">${plan}</div>
@@ -788,8 +849,8 @@ function ui() {
         <button class="btn" id="stickBtn" ${S.landing ? "" : "disabled"}>Stick it</button>
         <button class="btn go" id="throwBtn" style="background:${COL.p[S.player]}" ${S.ideal ? "" : "disabled"}>THROW</button>
       </div>`;
-    $("clearBtn").onclick = () => { S.landing = S.end = null; refreshPlan(); ui(); };
-    $("stickBtn").onclick = () => { if (S.landing) { S.end = { ...S.landing }; refreshPlan(); ui(); } };
+    $("clearBtn").onclick = () => { S.end = null; S.slideLen = null; refreshPlan(); ui(); };
+    $("stickBtn").onclick = () => { if (S.end) { S.slideLen = 0; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };
   } else if (S.phase === "meter") {
     const z = lv().zone * 100;
