@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<style>[hidden]{display:none!important}</style>
 </head>
 <body>
 <title>Backyard Cornhole</title>
@@ -57,18 +58,18 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .card .dots { display: flex; gap: 3px; margin-top: 3px; }
 .card .dots i { width: 8px; height: 8px; border-radius: 2px; background: rgba(255,255,255,.25); }
 .card .dots i.on { background: var(--ink); }
-.card .live { font-family: var(--font-label); font-size: 11px; opacity: .9; min-height: 13px; }
+.card .live { font-family: var(--font-label); font-size: 11px; opacity: .9; min-height: 13px; white-space: nowrap; }
 .card .pts { font-family: var(--font-display); font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
 .inning { text-align: center; font-family: var(--font-label); display: flex; flex-direction: column; justify-content: center; }
 .inning small { font-size: 10px; letter-spacing: .1em; color: var(--ink-dim); text-transform: uppercase; }
 .inning b { font-family: var(--font-display); font-size: 20px; line-height: 1.1; }
 
 /* Views */
-#side { width: 100%; flex: 0 0 22%; display: block; }
+#side { width: 100%; flex: 0 0 27%; display: block; }
 .boardwrap { position: relative; flex: 1 1 auto; min-height: 0; background: var(--grass); }
 #board { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
 #banner {
-  position: absolute; top: 12px; left: 50%; transform: translateX(-50%) scale(.6); opacity: 0; pointer-events: none;
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%) scale(.6); opacity: 0; pointer-events: none;
   font-family: var(--font-display); font-size: 24px; padding: 8px 20px; border-radius: 999px; white-space: nowrap;
   color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.35); transition: transform .25s cubic-bezier(.3,1.6,.5,1), opacity .2s;
 }
@@ -197,7 +198,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 28px; text-align: c
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone to choose where the bag <b>hits first</b>. Land it close to the finish for a high arc that sticks, or farther back for a flat throw that slides in. <b>Stick it</b> drops the bag right on the finish.</p>
       <p><b>3. Add spin.</b> Move the ring off the centre line and the bag gets spin, so it kicks and hooks toward the finish after landing. A longer slide has more room to hook, so the zone gets wider farther back.</p>
       <p><b>4. Stop three needles.</b> <b>Direction</b> pushes it left or right, <b>Strength</b> sends it long or short, and <b>Height</b> changes the arc, so it lands somewhere else and slides a different amount. Only three perfect stops go exactly where you planned.</p>
-      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts each inning. First to 21 wins. Knock your opponent's bags off, or knock your own in.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: if you throw 4 and they throw 1, you score 3 and they score nothing. First to 21 wins. Knock your opponent's bags off, or knock your own in.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app.</p>
     </div>
     <button class="play" id="helpClose">GOT IT</button>
@@ -532,7 +533,7 @@ const S = {
   mode: "cpu", level: "medium", names: ["You", "CPU"], world: new World(), scores: [0, 0], inning: 1, thrown: [0, 0],
   player: 0, leader: 0, phase: "menu", landing: null, end: null, landD: null, landPhi: 0, plan: null, ideal: null, prev: null, meter: 0, meterT: 0,
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, lastId: null, cpuT: 0, cpuPlan: null,
-  saved: {}, settleT: 0, acc: 0, banner: null, bannerT: 0, lastInning: null, winner: null,
+  saved: {}, settleT: 0, acc: 0, fx: [], shake: 0, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
 };
 const lv = () => LEVELS[S.level];
 const isCPU = p => S.mode === "cpu" && p === 1;
@@ -542,7 +543,7 @@ const showPreview = () => lv().preview || isCPU(S.player);
 function newGame() {
   S.names = S.mode === "cpu" ? ["You", "CPU"] : ["Player 1", "Player 2"];
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.player = 0; S.leader = 0;
-  S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null;
+  S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null; S.fx = []; S.relT = 99;
   beginTurn();
 }
 const DEFAULT_SLIDE = 1.5;
@@ -588,7 +589,7 @@ function releaseBag(e) {
   S.feedback = METERS.map(m => ({ title: m.title, text: grade(e[m.key], m, lv()) }));
   S.perfect = S.feedback.every(f => f.text === "Perfect");
   S.lastId = S.world.launch(actual, S.player);
-  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.phase = "flight"; sfx.whoosh();
+  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh();
   if (S.perfect) showBanner("Perfect release!", S.player);
   ui();
 }
@@ -612,15 +613,16 @@ function finishInning() {
   ui();
 }
 function nextInning() {
-  S.world.clear(); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; beginTurn();
+  S.world.clear(); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fx = []; beginTurn();
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.6; renderBanner(); }
 function handleEvents(evts) {
   for (const e of evts) {
-    if (e.type === "swish") { showBanner("SWISH! Cornhole!", e.bag.owner); sfx.hole(); }
-    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "Knocked in!", e.bag.owner); sfx.hole(); }
-    else if (e.type === "land" || e.type === "hit") sfx.thud();
-    else if (e.type === "ground") { if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
+    if (e.type === "swish") { showBanner("SWISH! Cornhole!", e.bag.owner); sfx.hole(); spawnConfetti(e.bag.owner); }
+    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "Knocked in!", e.bag.owner); sfx.hole(); spawnConfetti(e.bag.owner); }
+    else if (e.type === "land") { sfx.thud(); spawnDust(e.bag); }
+    else if (e.type === "hit") sfx.thud();
+    else if (e.type === "ground") { spawnDust(e.bag, 8, "110,85,50"); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
     else if (e.type === "off") showBanner(e.bag.id === S.lastId ? "Slid off" : "Knocked off!", e.bag.owner);
   }
 }
@@ -629,6 +631,7 @@ function handleEvents(evts) {
 let lastT = 0;
 function frame(now) {
   const dt = lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60; lastT = now;
+  S.time += dt; S.relT += dt; updateFx(dt);
   if (S.banner) { S.bannerT -= dt; if (S.bannerT <= 0) { S.banner = null; renderBanner(); } }
   if (S.phase === "meter") { S.meterT += dt; updateNeedle(); }
   else if (S.phase === "cpu") {
@@ -653,15 +656,18 @@ function frame(now) {
 const sideC = document.getElementById("side"), boardC = document.getElementById("board");
 const sx = sideC.getContext("2d"), bx = boardC.getContext("2d");
 let dpr = 1;
+const tex = {}; // pre-rendered scenery, rebuilt on resize
 function fit() {
   dpr = Math.min(window.devicePixelRatio || 1, 3);
   for (const c of [sideC, boardC]) { c.width = Math.round(c.clientWidth * dpr); c.height = Math.round(c.clientHeight * dpr); }
+  buildTextures();
 }
 new ResizeObserver(fit).observe(document.querySelector(".boardwrap"));
 window.addEventListener("resize", fit);
 
-const COL = { p: ["#d9412f", "#2f6fd9"], pd: ["#8c2318", "#173f85"], grass: "#4c8a3f", grassD: "#3f7735",
-  wood: "#dcb37a", woodD: "#9c6f3d", grain: "#c79a62", hole: "#1d1510", skyT: "#1e3a5c", skyB: "#e9a96a", gold: "#f4c542", go: "#4be38a" };
+const COL = { p: ["#d9412f", "#2f6fd9"], pd: ["#8c2318", "#173f85"], pl: ["#f47a62", "#6aa2f5"],
+  skin: ["#e3b088", "#9a6646"], skinD: ["#c58f68", "#7c4f34"], hair: ["#5a3a22", "#1d1512"],
+  shorts: "#2a2f38", wood: "#dcb37a", woodD: "#9c6f3d", navy: "#1f3552", gold: "#f4c542", go: "#4be38a", hole: "#140d08" };
 
 // Board mapping: down-range is up the screen.
 const BM = { minX: -2.2, maxX: 2.2, minY: FY - 1.1, maxY: BY + 0.9 };
@@ -672,36 +678,264 @@ function bmap() {
   return { s, pt: p => [ox + (p.x - BM.minX) * s, oy + (BM.maxY - p.y) * s],
     world: (X, Y) => ({ x: (X - ox) / s + BM.minX, y: BM.maxY - (Y - oy) / s }) };
 }
+// Side view mapping.
+const SV = { minY: -3, maxY: 33, maxZ: 13 };
+function smap() {
+  const W = sideC.width, H = sideC.height, gs = 16 * dpr, gy = H - gs;
+  const kx = W / (SV.maxY - SV.minY), kz = (gy - 4 * dpr) / SV.maxZ;
+  return { W, H, gy, gs, kx, kz, pt: (y, z) => [(y - SV.minY) * kx, gy - z * kz] };
+}
 function rrect(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
+function mkCanvas(w, h) { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
+function rng(seed) { return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// ───────────────────────── Pre-rendered art
+function buildTextures() {
+  if (boardC.width > 2 && boardC.height > 2) { tex.grass = paintGrass(); tex.board = paintBoardTop(); }
+  if (sideC.width > 2 && sideC.height > 2) tex.side = paintSideScene();
+}
+function paintGrass() {
+  const W = boardC.width, H = boardC.height, g = mkCanvas(W, H), c = g.getContext("2d"), r = rng(11), m = bmap(), s = m.s;
+  const base = c.createLinearGradient(0, 0, 0, H); base.addColorStop(0, "#4a8a3d"); base.addColorStop(1, "#57983f");
+  c.fillStyle = base; c.fillRect(0, 0, W, H);
+  // mowing stripes, 1 ft wide
+  for (let y = 0, k = 0; y < H; y += s, k++) { c.fillStyle = k % 2 ? "rgba(255,255,255,.055)" : "rgba(0,30,0,.06)"; c.fillRect(0, y, W, s); }
+  // blades
+  const n = Math.min(26000, (W * H) / (55 * dpr * dpr));
+  c.lineCap = "round";
+  for (let i = 0; i < n; i++) {
+    const x = r() * W, y = r() * H, len = (2.5 + r() * 4.5) * dpr, a = -Math.PI / 2 + (r() - 0.5) * 0.9;
+    c.strokeStyle = `hsla(${92 + r() * 22},${38 + r() * 22}%,${24 + r() * 26}%,${0.35 + r() * 0.4})`;
+    c.lineWidth = (0.6 + r() * 0.8) * dpr;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); c.stroke();
+  }
+  // a few clover clumps
+  for (let i = 0; i < W * H / (9000 * dpr * dpr); i++) {
+    const x = r() * W, y = r() * H; c.fillStyle = "rgba(120,170,80,.35)";
+    for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(x + Math.cos(k * 2.1) * 2 * dpr, y + Math.sin(k * 2.1) * 2 * dpr, 1.8 * dpr, 0, 7); c.fill(); }
+  }
+  const v = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,20,0,.32)");
+  c.fillStyle = v; c.fillRect(0, 0, W, H);
+  return g;
+}
+function woodGrain(c, x, y, w, h, r, dark, n, alpha) {
+  c.lineCap = "round";
+  for (let i = 0; i < n; i++) {
+    const x0 = x + r() * w, amp = (0.5 + r() * 2.5) * dpr, freq = 2 + r() * 4, ph = r() * 6;
+    c.strokeStyle = `rgba(${dark},${alpha * (0.4 + r() * 0.8)})`; c.lineWidth = (0.4 + r() * 1.3) * dpr;
+    c.beginPath();
+    for (let k = 0; k <= 24; k++) { const yy = y + h * k / 24, xx = x0 + Math.sin(k / 24 * freq + ph) * amp; k ? c.lineTo(xx, yy) : c.moveTo(xx, yy); }
+    c.stroke();
+  }
+}
+function paintBoardTop() {
+  const m = bmap(), s = m.s, bw = 2 * HW * s, bh = (BY - FY) * s, pad = Math.ceil(0.5 * s);
+  const g = mkCanvas(bw + 2 * pad, bh + 2 * pad), c = g.getContext("2d"), r = rng(5);
+  const X = pad, Y = pad;
+  // shadow: the raised back throws a longer shadow
+  c.save(); c.fillStyle = "rgba(0,0,0,.42)"; c.shadowColor = "rgba(0,0,0,.5)"; c.shadowBlur = 0.18 * s;
+  c.beginPath(); c.moveTo(X + 0.05 * s, Y + bh + 0.02 * s); c.lineTo(X + bw + 0.07 * s, Y + bh + 0.02 * s);
+  c.lineTo(X + bw + 0.3 * s, Y + 0.12 * s); c.lineTo(X + 0.25 * s, Y + 0.12 * s); c.closePath(); c.fill(); c.restore();
+  // frame (2x4 rim)
+  const rim = 0.07 * s;
+  const fg = c.createLinearGradient(X, Y, X + bw, Y); fg.addColorStop(0, "#a8773f"); fg.addColorStop(0.5, "#c08c50"); fg.addColorStop(1, "#946634");
+  c.fillStyle = fg; rrect(c, X, Y, bw, bh, 0.06 * s); c.fill();
+  // plywood top
+  const tx = X + rim, ty = Y + rim, tw = bw - 2 * rim, th = bh - 2 * rim;
+  c.save(); rrect(c, tx, ty, tw, th, 0.03 * s); c.clip();
+  const wg = c.createLinearGradient(tx, 0, tx + tw, 0);
+  wg.addColorStop(0, "#e9cb98"); wg.addColorStop(0.35, "#dfb880"); wg.addColorStop(0.7, "#e6c48f"); wg.addColorStop(1, "#d8ad74");
+  c.fillStyle = wg; c.fillRect(tx, ty, tw, th);
+  woodGrain(c, tx, ty, tw, th, r, "140,90,40", 70, 0.16);
+  for (let k = 0; k < 2; k++) { // knots
+    const kx = tx + (0.2 + r() * 0.6) * tw, ky = ty + (0.15 + r() * 0.7) * th;
+    c.fillStyle = "rgba(130,80,35,.25)"; c.beginPath(); c.ellipse(kx, ky, 1.2 * dpr, 2.6 * dpr, 0, 0, 7); c.fill();
+    for (let j = 2; j > 0; j--) { c.strokeStyle = `rgba(120,70,30,${0.06 + j * 0.03})`; c.lineWidth = 0.7 * dpr; c.beginPath(); c.ellipse(kx, ky, j * 1.3 * dpr + 1.2 * dpr, j * 2.6 * dpr + 2.6 * dpr, 0, 0, 7); c.stroke(); }
+  }
+  // painted design: navy band with gold pinstripes running diagonally across the lower half
+  const hx = X + bw / 2, hy = Y + 0.75 * s;
+  c.save(); c.globalAlpha = 0.9;
+  const band = (y0, y1, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(tx - 5, ty + th * y0 + 0.5 * s); c.lineTo(tx + tw + 5, ty + th * y0 - 0.5 * s); c.lineTo(tx + tw + 5, ty + th * y1 - 0.5 * s); c.lineTo(tx - 5, ty + th * y1 + 0.5 * s); c.closePath(); c.fill(); };
+  band(0.585, 0.6, COL.gold); band(0.61, 0.76, COL.navy); band(0.77, 0.785, COL.gold);
+  // inset border pinstripe
+  c.strokeStyle = COL.navy; c.lineWidth = 0.035 * s; rrect(c, tx + 0.09 * s, ty + 0.09 * s, tw - 0.18 * s, th - 0.18 * s, 0.05 * s); c.stroke();
+  // ring around the hole
+  c.strokeStyle = COL.gold; c.lineWidth = 0.05 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.1) * s, 0, 7); c.stroke();
+  c.strokeStyle = COL.navy; c.lineWidth = 0.025 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.16) * s, 0, 7); c.stroke();
+  c.restore();
+  woodGrain(c, tx, ty, tw, th, r, "90,55,20", 40, 0.07); // grain showing through the paint
+  // varnish sheen
+  const sh = c.createLinearGradient(tx, ty, tx + tw * 0.8, ty + th * 0.6);
+  sh.addColorStop(0, "rgba(255,255,255,.22)"); sh.addColorStop(0.45, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,.06)");
+  c.fillStyle = sh; c.fillRect(tx, ty, tw, th);
+  c.restore();
+  // rim highlight and edge
+  c.strokeStyle = "rgba(255,240,210,.35)"; c.lineWidth = dpr; rrect(c, tx, ty, tw, th, 0.03 * s); c.stroke();
+  c.strokeStyle = "rgba(70,40,15,.8)"; c.lineWidth = 1.5 * dpr; rrect(c, X, Y, bw, bh, 0.06 * s); c.stroke();
+  // the hole: dark, with the far inner wall catching light
+  const hr = HR * s;
+  c.save(); c.beginPath(); c.arc(hx, hy, hr, 0, 7); c.clip();
+  c.fillStyle = "#8a6034"; c.fillRect(hx - hr, hy - hr, 2 * hr, 2 * hr);
+  const hg = c.createRadialGradient(hx, hy + hr * 0.3, 0, hx, hy + hr * 0.25, hr * 1.1); hg.addColorStop(0, "#000"); hg.addColorStop(1, COL.hole);
+  c.fillStyle = hg; c.beginPath(); c.arc(hx, hy + 0.09 * s, hr, 0, 7); c.fill();
+  c.restore();
+  c.strokeStyle = "rgba(60,35,15,.9)"; c.lineWidth = 1.5 * dpr; c.beginPath(); c.arc(hx, hy, hr, 0, 7); c.stroke();
+  c.strokeStyle = "rgba(255,240,210,.4)"; c.lineWidth = dpr; c.beginPath(); c.arc(hx, hy, hr + dpr, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke();
+  const [ox, oy] = m.pt({ x: -HW, y: BY });
+  return { canvas: g, x: ox - pad, y: oy - pad };
+}
+function paintSideScene() {
+  const sm = smap(), { W, H, gy, kx, kz } = sm, g = mkCanvas(W, H), c = g.getContext("2d"), r = rng(3);
+  // golden-hour sky
+  const sky = c.createLinearGradient(0, 0, 0, gy);
+  sky.addColorStop(0, "#2c5d94"); sky.addColorStop(0.55, "#86b5d8"); sky.addColorStop(0.85, "#f3cf96"); sky.addColorStop(1, "#f6b978");
+  c.fillStyle = sky; c.fillRect(0, 0, W, gy);
+  const sunX = W * 0.8, sunY = gy * 0.5;
+  const glow = c.createRadialGradient(sunX, sunY, 0, sunX, sunY, H * 0.9);
+  glow.addColorStop(0, "rgba(255,240,190,.9)"); glow.addColorStop(0.12, "rgba(255,220,150,.45)"); glow.addColorStop(1, "rgba(255,200,120,0)");
+  c.fillStyle = glow; c.fillRect(0, 0, W, gy);
+  c.fillStyle = "#fff6d8"; c.beginPath(); c.arc(sunX, sunY, H * 0.07, 0, 7); c.fill();
+  // clouds
+  for (let i = 0; i < 4; i++) {
+    const cx = (0.08 + i * 0.25 + r() * 0.08) * W, cy = (0.12 + r() * 0.22) * gy, w = (0.07 + r() * 0.06) * W;
+    c.fillStyle = "rgba(255,255,255,.55)";
+    for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse(cx + (r() - 0.5) * w, cy + (r() - 0.5) * w * 0.15, w * (0.25 + r() * 0.2), w * (0.1 + r() * 0.08), 0, 0, 7); c.fill(); }
+  }
+  // hazy hills, then tree line
+  c.fillStyle = "rgba(96,128,140,.55)"; c.beginPath(); c.moveTo(0, gy);
+  for (let x = 0; x <= W; x += 6 * dpr) c.lineTo(x, gy - kz * (7.5 + 1.5 * Math.sin(x / W * 5 + 1) + Math.sin(x / W * 13) * 0.6));
+  c.lineTo(W, gy); c.fill();
+  for (const [col, h0, h1, step] of [["#3a6a45", 5.5, 9, 0.9], ["#2c5535", 4.5, 7.5, 0.7]]) {
+    c.fillStyle = col;
+    for (let y = SV.minY - 1; y < SV.maxY + 1; y += step + r() * step) {
+      const [x] = sm.pt(y, 0), h = (h0 + r() * (h1 - h0)) * kz, w = (0.9 + r() * 1.1) * kx;
+      c.beginPath(); c.ellipse(x, gy - h, w, h * 0.55, 0, 0, 7); c.fill(); c.fillRect(x - w, gy - h, 2 * w, h);
+    }
+  }
+  // wooden privacy fence
+  const fh = 4.2 * kz, plank = Math.max(3 * dpr, 0.45 * kx);
+  for (let x = 0, k = 0; x < W; x += plank, k++) {
+    const pg = c.createLinearGradient(0, gy - fh, 0, gy);
+    const tone = k % 3 === 0 ? ["#c99a63", "#9c6f40"] : k % 3 === 1 ? ["#bf8f58", "#93663a"] : ["#c4955e", "#986b3d"];
+    pg.addColorStop(0, tone[0]); pg.addColorStop(1, tone[1]);
+    c.fillStyle = pg; c.fillRect(x, gy - fh - (k % 2) * dpr, plank - 0.6 * dpr, fh + (k % 2) * dpr);
+  }
+  c.fillStyle = "rgba(60,35,15,.35)"; c.fillRect(0, gy - fh * 0.78, W, 1.2 * dpr); c.fillRect(0, gy - fh * 0.25, W, 1.2 * dpr);
+  c.fillStyle = "rgba(255,230,190,.25)"; c.fillRect(0, gy - fh - dpr, W, dpr);
+  // string lights between two poles
+  const poles = [sm.pt(1.5, 0)[0], sm.pt(15, 0)[0], sm.pt(31.5, 0)[0]], top = gy - 9.5 * kz;
+  c.strokeStyle = "#3b2a1c"; c.lineWidth = 2 * dpr; for (const p of poles) { c.beginPath(); c.moveTo(p, gy); c.lineTo(p, top - 3 * dpr); c.stroke(); }
+  for (let i = 0; i < poles.length - 1; i++) {
+    const a = poles[i], b = poles[i + 1], sag = 1.6 * kz, pts = [];
+    for (let k = 0; k <= 30; k++) { const t = k / 30; pts.push([lerp(a, b, t), top + sag * 4 * t * (1 - t)]); }
+    c.strokeStyle = "rgba(40,30,20,.85)"; c.lineWidth = 1 * dpr; c.beginPath(); pts.forEach((p, k) => k ? c.lineTo(...p) : c.moveTo(...p)); c.stroke();
+    for (let k = 2; k < 30; k += 3) {
+      const [x, y] = pts[k], bg = c.createRadialGradient(x, y + 3 * dpr, 0, x, y + 3 * dpr, 7 * dpr);
+      bg.addColorStop(0, "rgba(255,236,170,.85)"); bg.addColorStop(1, "rgba(255,220,140,0)");
+      c.fillStyle = bg; c.beginPath(); c.arc(x, y + 3 * dpr, 7 * dpr, 0, 7); c.fill();
+      c.fillStyle = "#fff4cf"; c.beginPath(); c.ellipse(x, y + 3 * dpr, 1.6 * dpr, 2.2 * dpr, 0, 0, 7); c.fill();
+    }
+  }
+  // lawn
+  const lg = c.createLinearGradient(0, gy, 0, H); lg.addColorStop(0, "#5f9f49"); lg.addColorStop(1, "#3e7632");
+  c.fillStyle = lg; c.fillRect(0, gy, W, H - gy);
+  c.lineCap = "round";
+  for (let i = 0; i < W / dpr * 1.4; i++) {
+    const x = r() * W, y = gy + r() * (H - gy), len = (2 + r() * 4) * dpr;
+    c.strokeStyle = `hsla(${95 + r() * 20},45%,${28 + r() * 20}%,.7)`; c.lineWidth = dpr;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() - 0.5) * 2 * dpr, y - len); c.stroke();
+  }
+  // soft shading where lawn meets fence
+  const sh = c.createLinearGradient(0, gy - 3 * dpr, 0, gy + 6 * dpr); sh.addColorStop(0, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,0,0,.12)");
+  c.fillStyle = sh; c.fillRect(0, gy - 3 * dpr, W, 9 * dpr);
+  return g;
+}
+
+// ───────────────────────── Effects
+function spawnDust(p, n = 10, col = "235,214,170") {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * 7, v = 0.5 + Math.random() * 1.4;
+    S.fx.push({ k: "dust", x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.5 + Math.random() * 0.35, max: 0.85, size: 0.04 + Math.random() * 0.06, col });
+  }
+  S.fx.push({ k: "ring", x: p.x, y: p.y, life: 0.4, max: 0.4 });
+}
+function spawnConfetti(pl) {
+  const cols = [COL.p[pl], COL.gold, "#ffffff", COL.pl[pl]];
+  for (let i = 0; i < 56; i++) {
+    const a = Math.random() * 7, v = 1.5 + Math.random() * 5;
+    S.fx.push({ k: "conf", x: HOLE.x, y: HOLE.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1 + Math.random() * 0.7, max: 1.7,
+      size: 0.07 + Math.random() * 0.07, rot: Math.random() * 7, vr: (Math.random() - 0.5) * 14, col: cols[i % cols.length] });
+  }
+  S.fx.push({ k: "glow", x: HOLE.x, y: HOLE.y, life: 0.9, max: 0.9, col: COL.gold });
+  S.shake = 0.35;
+}
+function updateFx(dt) {
+  for (const f of S.fx) {
+    f.life -= dt;
+    if (f.vx !== undefined) { const drag = Math.pow(f.k === "conf" ? 0.2 : 0.05, dt); f.vx *= drag; f.vy *= drag; f.x += f.vx * dt; f.y += f.vy * dt; }
+    if (f.rot !== undefined) f.rot += f.vr * dt;
+  }
+  S.fx = S.fx.filter(f => f.life > 0);
+  S.shake = Math.max(0, S.shake - dt);
+}
+function drawFx(c, m) {
+  for (const f of S.fx) {
+    const [x, y] = m.pt(f), a = Math.max(0, f.life / f.max);
+    if (f.k === "dust") { c.fillStyle = `rgba(${f.col},${0.65 * a})`; c.beginPath(); c.arc(x, y, f.size * m.s * (1.6 - a * 0.6), 0, 7); c.fill(); }
+    else if (f.k === "ring") { c.strokeStyle = `rgba(255,255,255,${0.55 * a})`; c.lineWidth = 2 * dpr; c.beginPath(); c.arc(x, y, (0.2 + (1 - a) * 0.45) * m.s, 0, 7); c.stroke(); }
+    else if (f.k === "glow") {
+      const rr = (0.3 + (1 - a) * 0.9) * m.s, gl = c.createRadialGradient(x, y, 0, x, y, rr);
+      gl.addColorStop(0, `rgba(255,220,90,${0.6 * a})`); gl.addColorStop(1, "rgba(255,220,90,0)"); c.fillStyle = gl; c.beginPath(); c.arc(x, y, rr, 0, 7); c.fill();
+    } else if (f.k === "conf") {
+      const z = f.size * m.s; c.save(); c.globalAlpha = Math.min(1, a * 1.5); c.translate(x, y); c.rotate(f.rot);
+      c.fillStyle = f.col; c.fillRect(-z / 2, -z / 4, z, z / 2 * (0.4 + Math.abs(Math.sin(f.rot)))); c.restore();
+    }
+  }
+}
+
+// ───────────────────────── Top-down view
+function pillow(c, h, bulge) {
+  c.beginPath(); c.moveTo(-h, -h);
+  c.quadraticCurveTo(0, -h - bulge, h, -h); c.quadraticCurveTo(h + bulge, 0, h, h);
+  c.quadraticCurveTo(0, h + bulge, -h, h); c.quadraticCurveTo(-h - bulge, 0, -h, -h); c.closePath();
+}
+function drawBagTop(c, x, y, z, angle, owner, dim, shadow = true) {
+  const h = z / 2;
+  c.save(); c.translate(x, y); c.rotate(angle);
+  if (shadow) { c.shadowColor = "rgba(0,0,0,.42)"; c.shadowBlur = z * 0.22; c.shadowOffsetX = z * 0.07; c.shadowOffsetY = z * 0.12; }
+  const gr = c.createRadialGradient(-h * 0.3, -h * 0.35, z * 0.04, 0, 0, z * 0.8);
+  gr.addColorStop(0, dim ? COL.p[owner] : COL.pl[owner]); gr.addColorStop(0.55, dim ? COL.pd[owner] : COL.p[owner]); gr.addColorStop(1, COL.pd[owner]);
+  c.fillStyle = gr; pillow(c, h * 0.92, z * 0.07); c.fill();
+  c.shadowColor = "transparent";
+  // duck-cloth weave
+  c.save(); pillow(c, h * 0.92, z * 0.07); c.clip();
+  c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 0.6 * dpr;
+  for (let k = -z; k < z; k += 2.2 * dpr) { c.beginPath(); c.moveTo(k, -h); c.lineTo(k + z, h); c.stroke(); }
+  c.restore();
+  // seam and corner pinches
+  c.setLineDash([1.6 * dpr, 1.6 * dpr]); c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = 0.8 * dpr;
+  pillow(c, h * 0.72, z * 0.05); c.stroke(); c.setLineDash([]);
+  c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = 0.8 * dpr;
+  for (const [sx_, sy_] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { c.beginPath(); c.moveTo(sx_ * h * 0.9, sy_ * h * 0.9); c.lineTo(sx_ * h * 0.62, sy_ * h * 0.62); c.stroke(); }
+  c.strokeStyle = "rgba(0,0,0,.45)"; c.lineWidth = 0.9 * dpr; pillow(c, h * 0.92, z * 0.07); c.stroke();
+  c.restore();
+}
 
 function drawBoard() {
   const c = bx, W = boardC.width, H = boardC.height, m = bmap(), s = m.s;
-  c.fillStyle = COL.grass; c.fillRect(0, 0, W, H);
-  c.fillStyle = COL.grassD;
-  for (let y = 0, k = 0; y < H; y += 0.8 * s, k++) if (k % 2) c.fillRect(0, y, W, 0.8 * s);
-  // board
-  const [bx0, by0] = m.pt({ x: -HW, y: BY }), bw = 2 * HW * s, bh = (BY - FY) * s;
-  c.fillStyle = "rgba(0,0,0,.28)"; rrect(c, bx0 + 0.12 * s, by0 - 0.05 * s, bw, bh, 4 * dpr); c.fill();
-  const gr = c.createLinearGradient(0, by0, 0, by0 + bh); gr.addColorStop(0, COL.wood); gr.addColorStop(1, COL.grain);
-  c.fillStyle = gr; rrect(c, bx0, by0, bw, bh, 4 * dpr); c.fill();
-  c.strokeStyle = "rgba(156,111,61,.35)"; c.lineWidth = 1 * dpr;
-  for (let i = 1; i < 8; i++) {
-    const x = bx0 + bw * i / 8; c.beginPath(); c.moveTo(x, by0 + 3); c.bezierCurveTo(x + 4 * dpr, by0 + bh * .33, x - 3 * dpr, by0 + bh * .66, x + 2 * dpr, by0 + bh - 3); c.stroke();
-  }
-  c.strokeStyle = COL.woodD; c.lineWidth = 3 * dpr; rrect(c, bx0, by0, bw, bh, 4 * dpr); c.stroke();
-  const [hx, hy] = m.pt(HOLE), hr = HR * s;
-  const hg = c.createRadialGradient(hx, hy - hr * .3, 0, hx, hy, hr); hg.addColorStop(0, "#000"); hg.addColorStop(1, COL.hole);
-  c.fillStyle = hg; c.beginPath(); c.arc(hx, hy, hr, 0, Math.PI * 2); c.fill();
-  c.strokeStyle = COL.woodD; c.lineWidth = 1.5 * dpr; c.stroke();
+  if (!tex.grass || tex.grass.width !== W || tex.grass.height !== H) buildTextures();
+  c.save();
+  if (S.shake > 0) c.translate((Math.random() - 0.5) * S.shake * 22 * dpr, (Math.random() - 0.5) * S.shake * 22 * dpr);
+  c.drawImage(tex.grass, 0, 0);
+  c.drawImage(tex.board.canvas, tex.board.x, tex.board.y);
 
-  // aim line
   if (S.plan && S.phase !== "flight") {
     const z = S.plan.z, E = S.end;
-    // the throw's path from the hand to the landing spot
     const d = { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) };
-    c.strokeStyle = COL.p[S.player] + "cc"; c.lineWidth = 2 * dpr; c.setLineDash([2 * dpr, 5 * dpr]);
+    c.strokeStyle = COL.p[S.player] + "dd"; c.lineWidth = 2.5 * dpr; c.lineCap = "round"; c.setLineDash([0.1, 6 * dpr]);
     c.beginPath(); c.moveTo(...m.pt({ x: S.landing.x - d.x * 8, y: S.landing.y - d.y * 8 })); c.lineTo(...m.pt(S.landing)); c.stroke(); c.setLineDash([]);
-    // landing zone: where the ring can go and still finish on the green spot
     if (canEdit() && z.Dmax - z.Dmin > 0.02) {
       const N = 16, left = [], right = [];
       for (let i = 0; i <= N; i++) {
@@ -709,110 +943,197 @@ function drawBoard() {
         left.push(m.pt(landingFrom(z, E, D, -a))); right.push(m.pt(landingFrom(z, E, D, a)));
       }
       c.beginPath(); c.moveTo(...left[0]); for (const q of left) c.lineTo(...q); for (const q of right.reverse()) c.lineTo(...q); c.closePath();
-      c.fillStyle = "rgba(244,197,66,.26)"; c.fill();
-      c.strokeStyle = "rgba(244,197,66,.8)"; c.lineWidth = 1.5 * dpr; c.stroke();
-      c.strokeStyle = "rgba(255,255,255,.35)"; c.setLineDash([3 * dpr, 4 * dpr]);
+      c.fillStyle = "rgba(244,197,66,.24)"; c.fill();
+      c.strokeStyle = "rgba(244,197,66,.85)"; c.lineWidth = 1.5 * dpr; c.stroke();
+      c.strokeStyle = "rgba(255,255,255,.4)"; c.setLineDash([3 * dpr, 4 * dpr]);
       c.beginPath(); c.moveTo(...m.pt(landingFrom(z, E, z.Dmin, 0))); c.lineTo(...m.pt(landingFrom(z, E, z.Dmax, 0))); c.stroke(); c.setLineDash([]);
-      c.fillStyle = "rgba(255,255,255,.92)"; c.font = `600 ${11 * dpr}px "Barlow Semi Condensed", sans-serif`; c.textAlign = "left";
+      c.font = `600 ${11 * dpr}px "Barlow Semi Condensed", sans-serif`; c.textAlign = "left";
       const ea = m.pt(landingFrom(z, E, z.Dmax, maxPhi(z.Dmax))), eb = m.pt(landingFrom(z, E, z.Dmax, -maxPhi(z.Dmax)));
       const [fx, fy] = ea[0] > eb[0] ? ea : eb;
-      c.fillText("flat · slides", fx + 22 * dpr, fy - 10 * dpr);
-      c.fillText("off-centre = spin", fx + 22 * dpr, fy + 4 * dpr);
+      c.fillStyle = "rgba(0,0,0,.45)"; c.fillText("flat · slides", fx + 23 * dpr, fy - 9 * dpr); c.fillText("off-centre = spin", fx + 23 * dpr, fy + 5 * dpr);
+      c.fillStyle = "rgba(255,255,255,.95)"; c.fillText("flat · slides", fx + 22 * dpr, fy - 10 * dpr); c.fillText("off-centre = spin", fx + 22 * dpr, fy + 4 * dpr);
     }
   }
-  // perfect-throw slide preview
   if (showPreview() && S.prev && S.prev.slide.length > 1 && S.phase !== "flight") {
-    c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = 2 * dpr; c.setLineDash([5 * dpr, 5 * dpr]); c.lineCap = "round";
+    c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 2 * dpr; c.setLineDash([5 * dpr, 5 * dpr]); c.lineCap = "round";
     c.beginPath(); c.moveTo(...m.pt(S.prev.slide[0])); for (const p of S.prev.slide) c.lineTo(...m.pt(p)); c.stroke();
     if (S.prev.outcome !== "inHole") {
       const [ex, ey] = m.pt(S.prev.end), z = BAG * s; c.setLineDash([3 * dpr, 3 * dpr]); c.lineWidth = 1.5 * dpr;
-      rrect(c, ex - z / 2, ey - z / 2, z, z, z * .2); c.stroke();
+      rrect(c, ex - z / 2, ey - z / 2, z, z, z * .25); c.stroke();
     }
     c.setLineDash([]);
   }
   const bags = S.world.bags;
-  for (const b of bags) if (b.state === "ground") drawBag(c, m, b, 0);
-  for (const b of bags) if (onSurface(b)) drawBag(c, m, b, 0);
-  if (S.landing) {
+  for (const b of bags) if (b.state === "ground") { const [x, y] = m.pt(b); drawBagTop(c, x, y, BAG * s, b.angle, b.owner, true); }
+  for (const b of bags) if (onSurface(b)) { const [x, y] = m.pt(b); drawBagTop(c, x, y, BAG * s, b.angle, b.owner, false); }
+  drawFx(c, m);
+  if (S.landing && S.phase !== "flight") {
     const [x, y] = m.pt(S.landing), r = 0.24 * s;
-    c.lineWidth = 4 * dpr; c.strokeStyle = "rgba(0,0,0,.5)"; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
+    c.lineWidth = 4.5 * dpr; c.strokeStyle = "rgba(0,0,0,.45)"; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
     c.lineWidth = 2.5 * dpr; c.strokeStyle = COL.gold; c.stroke();
-    c.lineWidth = 1.5 * dpr; c.beginPath(); c.moveTo(x - r * 1.5, y); c.lineTo(x + r * 1.5, y); c.moveTo(x, y - r * 1.5); c.lineTo(x, y + r * 1.5); c.stroke();
+    c.lineWidth = 1.5 * dpr; c.beginPath(); c.moveTo(x - r * 1.5, y); c.lineTo(x - r * 0.5, y); c.moveTo(x + r * 0.5, y); c.lineTo(x + r * 1.5, y);
+    c.moveTo(x, y - r * 1.5); c.lineTo(x, y - r * 0.5); c.moveTo(x, y + r * 0.5); c.lineTo(x, y + r * 1.5); c.stroke();
   }
-  if (S.end) {
-    const [x, y] = m.pt(S.end), r = 0.16 * s + 3 * dpr;
-    c.lineWidth = 4 * dpr; c.strokeStyle = "rgba(0,0,0,.5)"; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
+  if (S.end && S.phase !== "flight") {
+    const [x, y] = m.pt(S.end), r = 0.16 * s + 3 * dpr, pulse = 1 + 0.08 * Math.sin(S.time * 4);
+    c.lineWidth = 4.5 * dpr; c.strokeStyle = "rgba(0,0,0,.45)"; c.beginPath(); c.arc(x, y, r * pulse, 0, 7); c.stroke();
     c.lineWidth = 2.5 * dpr; c.strokeStyle = COL.go; c.stroke();
     c.fillStyle = COL.go; c.beginPath(); c.arc(x, y, r * 0.35, 0, 7); c.fill();
   }
   for (const b of bags) if (b.state === "flying") {
-    const above = Math.max(0, b.z - surf(b));
-    const [x, y] = m.pt(b), z = BAG * s * (1 - Math.min(0.5, above * 0.04));
-    c.fillStyle = `rgba(0,0,0,${Math.max(0.1, 0.35 - above * 0.02)})`; c.beginPath(); c.ellipse(x, y, z / 2, z / 2, 0, 0, 7); c.fill();
-    drawBag(c, m, { ...b, y: b.y + above * 0.08 }, Math.min(1.2, above * 0.09));
+    const above = Math.max(0, b.z - surf(b)), [x, y] = m.pt(b), z = BAG * s;
+    const sz = z * (1 - Math.min(0.45, above * 0.035));
+    c.fillStyle = `rgba(0,0,0,${Math.max(0.08, 0.32 - above * 0.02)})`; c.beginPath(); c.ellipse(x + above * 0.6 * dpr, y + above * 0.9 * dpr, sz * 0.55, sz * 0.5, 0, 0, 7); c.fill();
+    const lift = Math.min(1.2, above * 0.09), [lx, ly] = m.pt({ x: b.x, y: b.y + above * 0.08 });
+    drawBagTop(c, lx, ly, z * (1 + lift), b.angle, b.owner, false, false);
   }
-}
-function drawBag(c, m, b, lift) {
-  const [x, y] = m.pt(b), z = BAG * m.s * (1 + lift), r = z * 0.22;
-  c.save(); c.translate(x, y); c.rotate(b.angle);
-  c.fillStyle = "rgba(0,0,0,.3)"; rrect(c, -z / 2 + 1.5 * dpr, -z / 2 + 2 * dpr, z, z, r); c.fill();
-  c.fillStyle = b.state === "ground" ? COL.pd[b.owner] : COL.p[b.owner]; rrect(c, -z / 2, -z / 2, z, z, r); c.fill();
-  c.strokeStyle = "rgba(255,255,255,.45)"; c.lineWidth = 1 * dpr; c.setLineDash([2 * dpr, 2 * dpr]);
-  rrect(c, -z / 2 + z * .12, -z / 2 + z * .12, z * .76, z * .76, z * .12); c.stroke(); c.setLineDash([]);
-  c.strokeStyle = COL.pd[b.owner]; c.lineWidth = 1.5 * dpr; rrect(c, -z / 2, -z / 2, z, z, r); c.stroke();
   c.restore();
 }
 
+// ───────────────────────── Side view
+function sideBoard(c, sm, front, back, frontH, backH) {
+  const P = sm.pt, depth = 0.3, dir = Math.sign(back - front);
+  // back leg
+  const legY = back - dir * 0.35, [lx, ly] = P(legY, backH - depth), [lx2, ly2] = P(legY + dir * 0.22, 0);
+  c.fillStyle = "#7a5430"; c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + (lx2 - lx), ly); c.lineTo(lx2 + dir * 1.5 * dpr, ly2); c.lineTo(lx - dir * 0.5 * dpr, ly2); c.closePath(); c.fill();
+  // painted frame side
+  const fg = c.createLinearGradient(0, P(0, backH)[1], 0, P(0, 0)[1]); fg.addColorStop(0, "#284569"); fg.addColorStop(1, "#16273d");
+  c.fillStyle = fg; c.beginPath();
+  c.moveTo(...P(front, Math.max(0, frontH - depth))); c.lineTo(...P(front, frontH)); c.lineTo(...P(back, backH)); c.lineTo(...P(back, backH - depth)); c.closePath(); c.fill();
+  // gold pinstripe and wood top edge
+  c.strokeStyle = COL.gold; c.lineWidth = Math.max(1, 0.8 * dpr); c.beginPath(); c.moveTo(...P(front + dir * 0.15, frontH - 0.12 + 0.01)); c.lineTo(...P(back - dir * 0.15, backH - 0.12)); c.stroke();
+  c.strokeStyle = "#e6c48f"; c.lineWidth = Math.max(1.5, 2 * dpr); c.beginPath(); c.moveTo(...P(front, frontH)); c.lineTo(...P(back, backH)); c.stroke();
+}
+function bagSide(c, sm, b, sf) {
+  const P = sm.pt, y0 = b.y - BAG / 2, y1 = b.y + BAG / 2, t = 0.2;
+  const gr = c.createLinearGradient(0, P(0, sf(b.y) + t)[1], 0, P(0, sf(b.y))[1]);
+  gr.addColorStop(0, b.state === "ground" ? COL.p[b.owner] : COL.pl[b.owner]); gr.addColorStop(1, COL.pd[b.owner]);
+  c.fillStyle = gr; c.beginPath();
+  c.moveTo(...P(y0, sf(y0))); c.lineTo(...P(y1, sf(y1)));
+  const [ax, ay] = P(y1, sf(y1) + t), [bx_, by_] = P(y0, sf(y0) + t), [mx, my] = P(b.y, sf(b.y) + t * 1.35);
+  c.lineTo(ax, ay); c.quadraticCurveTo(mx, my, bx_, by_); c.closePath(); c.fill();
+}
+function throwerPose() {
+  const t = S.time;
+  const p = { arm: -0.12 + 0.05 * Math.sin(t * 2.2), step: 0, lean: 0.04, bob: 0.03 * Math.sin(t * 2.2), holding: true };
+  if (S.phase === "meter") { p.arm = -0.3 - 0.36 * S.meter - 0.06 * Math.sin(t * 7); p.lean = 0.08 + 0.05 * S.meter; p.bob = -0.08 * S.meter; }
+  else if (S.phase === "cpu" && S.cpuT > 1.2) { const k = clamp((S.cpuT - 1.2) / 0.8, 0, 1); p.arm = lerp(-0.12, -1.05, k); p.lean = 0.04 + 0.12 * k; p.bob = -0.15 * k; }
+  else if (S.phase === "flight" || (S.relT < 1.2 && S.phase !== "aiming" && S.phase !== "cpu")) {
+    const r = clamp(S.relT / 0.3, 0, 1), e = 1 - Math.pow(1 - r, 3), back = clamp((S.relT - 0.9) / 0.6, 0, 1);
+    p.arm = lerp(-1.05, 1.95, e) - back * 1.4; p.step = e * (1 - back * 0.3); p.lean = 0.3 * e - 0.15 * back; p.bob = -0.2 * e; p.holding = false;
+  }
+  return p;
+}
+function limb(c, a, b, w, col) { c.strokeStyle = col; c.lineWidth = w; c.lineCap = "round"; c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.stroke(); }
+function drawPlayer(c, ox, oy, u, pl, pose) {
+  // Character in feet; screen y grows downward. Facing +x (down-range).
+  const S2 = (x, y) => [ox + x * u, oy - y * u];
+  const rotp = (p, o, a) => { const dx = p[0] - o[0], dy = p[1] - o[1]; return [o[0] + dx * Math.cos(a) + dy * Math.sin(a), o[1] - dx * Math.sin(a) + dy * Math.cos(a)]; };
+  const hip = [0.05 + pose.step * 0.35, 3.0 + pose.bob];
+  const lean = pose.lean;
+  const up = (len, extra = 0) => [hip[0] + Math.sin(lean + extra) * len, hip[1] + Math.cos(lean + extra) * len];
+  const shoulder = up(1.9), neck = up(2.15), head = up(2.62);
+  const backFoot = [-0.65 - pose.step * 0.15, 0], frontFoot = [0.45 + pose.step * 1.0, 0];
+  const knee = (foot, fwd) => [(hip[0] + foot[0]) / 2 + fwd, (hip[1] + foot[1]) / 2 + 0.05];
+  const skin = COL.skin[pl], skinD = COL.skinD[pl], jersey = COL.p[pl], jerseyD = COL.pd[pl];
+  const W = v => v * u;
+  const shoe = (f, dark) => {
+    const [x, y] = S2(f[0], f[1]);
+    c.fillStyle = dark ? "#d8d2c4" : "#f6f2e8"; rrect(c, x - W(0.2), y - W(0.3), W(0.78), W(0.3), W(0.12)); c.fill();
+    c.fillStyle = jersey; c.fillRect(x + W(0.05), y - W(0.22), W(0.3), W(0.07));
+    c.fillStyle = "#3a3a3a"; c.fillRect(x - W(0.2), y - W(0.06), W(0.78), W(0.06));
+  };
+  const leg = (foot, fwd, dark) => {
+    const k = knee(foot, fwd), H = S2(...hip), K = S2(...k), F = S2(foot[0] + 0.12, foot[1] + 0.25);
+    limb(c, K, F, W(0.36), dark ? skinD : skin);
+    limb(c, [F[0], F[1] - W(0.15)], F, W(0.38), "#f3efe4"); // sock
+    limb(c, H, K, W(0.48), dark ? "#1f232a" : COL.shorts); // shorts
+    shoe(foot, dark);
+  };
+  const arm = (angle, dark, holding) => {
+    const sh = S2(...shoulder), dir = [Math.sin(angle), -Math.cos(angle)];
+    const el = [shoulder[0] + dir[0] * 1.0, shoulder[1] + dir[1] * 1.0];
+    const fa = angle + 0.25, hand = [el[0] + Math.sin(fa) * 0.95, el[1] - Math.cos(fa) * 0.95];
+    const E = S2(...el), Hd = S2(...hand);
+    limb(c, sh, E, W(0.3), dark ? skinD : skin); limb(c, E, Hd, W(0.27), dark ? skinD : skin);
+    limb(c, sh, [lerp(sh[0], E[0], 0.45), lerp(sh[1], E[1], 0.45)], W(0.42), dark ? jerseyD : jersey); // sleeve
+    c.fillStyle = dark ? skinD : skin; c.beginPath(); c.arc(Hd[0], Hd[1], W(0.16), 0, 7); c.fill();
+    if (holding) {
+      c.save(); c.translate(Hd[0], Hd[1] + W(0.05)); c.rotate(-fa * 0.6);
+      const g = c.createLinearGradient(0, -W(0.3), 0, W(0.3)); g.addColorStop(0, COL.pl[pl]); g.addColorStop(1, COL.pd[pl]);
+      c.fillStyle = g; rrect(c, -W(0.3), -W(0.1), W(0.6), W(0.24), W(0.08)); c.fill(); c.restore();
+    }
+  };
+  // ground shadow
+  c.fillStyle = "rgba(0,0,0,.22)"; c.beginPath(); c.ellipse(...S2(pose.step * 0.4, 0), W(1.2 + pose.step * 0.4), W(0.18), 0, 0, 7); c.fill();
+  leg(backFoot, 0.25, true);
+  arm(-pose.arm * 0.5 - 0.15, true, false); // far arm swings opposite
+  // torso
+  const tpts = [[-0.42, 0.05], [0.38, 0.05], [0.44, 1.95], [-0.46, 1.95]].map(([x, y]) => rotp(S2(hip[0] + x, hip[1] + y), S2(...hip), -lean));
+  const tg = c.createLinearGradient(tpts[0][0], 0, tpts[1][0], 0); tg.addColorStop(0, jerseyD); tg.addColorStop(0.6, jersey); tg.addColorStop(1, jersey);
+  c.fillStyle = tg; c.beginPath(); c.moveTo(...tpts[0]); c.lineTo(...tpts[1]); c.lineTo(...tpts[2]);
+  c.quadraticCurveTo(...S2(...up(2.05, 0.05)), ...tpts[3]); c.closePath(); c.fill();
+  c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = W(0.07); c.beginPath(); c.moveTo(...rotp(S2(hip[0] - 0.05, hip[1] + 0.2), S2(...hip), -lean)); c.lineTo(...rotp(S2(hip[0] - 0.05, hip[1] + 1.75), S2(...hip), -lean)); c.stroke();
+  leg(frontFoot, 0.32, false);
+  // neck + head
+  limb(c, S2(...shoulder), S2(...neck), W(0.28), skinD);
+  const [hx, hy] = S2(...head), hr = W(0.42);
+  c.fillStyle = COL.hair[pl]; c.beginPath(); c.arc(hx - W(0.08), hy + W(0.02), hr, 0, 7); c.fill();
+  const hg = c.createRadialGradient(hx + W(0.12), hy - W(0.08), 0, hx, hy, hr * 1.1); hg.addColorStop(0, skin); hg.addColorStop(1, skinD);
+  c.fillStyle = hg; c.beginPath(); c.arc(hx + W(0.04), hy + W(0.04), hr * 0.95, 0, 7); c.fill();
+  c.fillStyle = skinD; c.beginPath(); c.arc(hx - W(0.08), hy + W(0.08), W(0.1), 0, 7); c.fill(); // ear
+  c.fillStyle = "#222"; c.beginPath(); c.arc(hx + W(0.28), hy - W(0.02), Math.max(1, W(0.05)), 0, 7); c.fill(); // eye
+  // cap
+  c.fillStyle = jersey; c.beginPath(); c.arc(hx, hy - W(0.05), hr * 1.02, Math.PI * 1.02, Math.PI * 1.98); c.closePath(); c.fill();
+  c.fillStyle = jerseyD; rrect(c, hx + W(0.1), hy - W(0.12), W(0.55), W(0.1), W(0.05)); c.fill();
+  c.fillStyle = "#fff"; c.beginPath(); c.arc(hx, hy - hr * 0.98, W(0.05), 0, 7); c.fill();
+  // throwing arm in front
+  arm(pose.arm, false, pose.holding);
+}
 function drawSide() {
-  const c = sx, W = sideC.width, H = sideC.height, minY = -2.5, maxY = 33, maxZ = 14, gs = 14 * dpr;
-  const kx = W / (maxY - minY), gy = H - gs, kz = (gy - 6 * dpr) / maxZ;
-  const pt = (y, z) => [(y - minY) * kx, gy - z * kz];
-  const sky = c.createLinearGradient(0, 0, 0, gy); sky.addColorStop(0, COL.skyT); sky.addColorStop(1, COL.skyB);
-  c.fillStyle = sky; c.fillRect(0, 0, W, gy);
-  c.fillStyle = COL.grass; c.fillRect(0, gy, W, gs); c.fillStyle = COL.grassD; c.fillRect(0, gy, W, 2 * dpr);
-  c.fillStyle = "rgba(255,255,255,.5)";
-  for (let f = 0; f <= 27; f += 3) { const [x] = pt(f, 0); c.fillRect(x - 0.5 * dpr, gy + 3 * dpr, 1 * dpr, 4 * dpr); }
-  // own board
-  c.fillStyle = "rgba(220,179,122,.85)"; c.strokeStyle = COL.woodD; c.lineWidth = 1 * dpr;
-  c.beginPath(); c.moveTo(...pt(0, 0)); c.lineTo(...pt(0, FH)); c.lineTo(...pt(-4, BH)); c.lineTo(...pt(-4, 0)); c.closePath(); c.fill(); c.stroke();
-  // target board
-  const [lx, ly] = pt(BY - 0.4, BH - 0.05), [lx2, ly2] = pt(BY - 0.15, 0);
-  c.fillStyle = COL.woodD; c.fillRect(lx, ly, Math.max(2, lx2 - lx), ly2 - ly);
-  c.fillStyle = COL.wood; c.beginPath(); c.moveTo(...pt(FY, 0)); c.lineTo(...pt(FY, FH)); c.lineTo(...pt(BY, BH)); c.lineTo(...pt(BY, BH - 0.25)); c.lineTo(...pt(FY + 0.3, 0.02)); c.closePath(); c.fill(); c.stroke();
+  const c = sx, sm = smap(), P = sm.pt;
+  if (!tex.side || tex.side.width !== sm.W || tex.side.height !== sm.H) buildTextures();
+  c.drawImage(tex.side, 0, 0);
+  // own board (front at the foul line) and target board
+  sideBoard(c, sm, 0, -4, FH, BH);
+  sideBoard(c, sm, FY, BY, FH, BH);
   const h0 = HOLE.y - HR, h1 = HOLE.y + HR;
-  c.strokeStyle = COL.hole; c.lineWidth = 3 * dpr; c.beginPath(); c.moveTo(...pt(h0, plane(h0))); c.lineTo(...pt(h1, plane(h1))); c.stroke();
+  c.strokeStyle = COL.hole; c.lineWidth = 3 * dpr; c.beginPath(); c.moveTo(...P(h0, plane(h0))); c.lineTo(...P(h1, plane(h1))); c.stroke();
   // thrower
-  const throwing = S.phase === "flight", f = -0.6;
-  c.strokeStyle = COL.p[S.player]; c.lineWidth = 3 * dpr; c.lineCap = "round"; c.lineJoin = "round";
-  c.beginPath(); c.moveTo(...pt(f - 0.8, 0)); c.lineTo(...pt(f, 2.9)); c.lineTo(...pt(f + (throwing ? 1.2 : 0.6), 0));
-  c.moveTo(...pt(f, 2.9)); c.lineTo(...pt(f + 0.2, 4.9)); c.moveTo(...pt(f + 0.15, 4.6));
-  c.lineTo(...(throwing ? pt(f + 1.6, 5.4) : pt(f - 0.5, 3.4))); c.stroke();
-  c.fillStyle = COL.p[S.player]; c.beginPath(); c.arc(...pt(f + 0.25, 5.5), 5 * dpr, 0, 7); c.fill();
+  drawPlayer(c, P(-1.2, 0)[0], sm.gy, sm.kz, S.player, throwerPose());
   // preview arc
   if (showPreview() && S.prev && S.phase !== "flight") {
-    c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 1.5 * dpr; c.setLineDash([4 * dpr, 4 * dpr]);
-    c.beginPath(); c.moveTo(...pt(S.prev.flight[0].y, S.prev.flight[0].z)); for (const p of S.prev.flight) c.lineTo(...pt(p.y, p.z)); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = "rgba(255,255,255,.95)"; c.lineWidth = 1.6 * dpr; c.setLineDash([4 * dpr, 4 * dpr]);
+    c.beginPath(); c.moveTo(...P(S.prev.flight[0].y, S.prev.flight[0].z)); for (const p of S.prev.flight) c.lineTo(...P(p.y, p.z)); c.stroke(); c.setLineDash([]);
   }
-  // bags at rest
   for (const b of S.world.bags) {
-    if (!onSurface(b) && b.state !== "ground") continue;
-    const sf = b.state === "ground" ? () => 0 : plane, y0 = b.y - BAG / 2, y1 = b.y + BAG / 2;
-    c.fillStyle = b.state === "ground" ? COL.pd[b.owner] : COL.p[b.owner];
-    c.beginPath(); c.moveTo(...pt(y0, sf(y0))); c.lineTo(...pt(y1, sf(y1))); c.lineTo(...pt(y1, sf(y1) + 0.3)); c.lineTo(...pt(y0, sf(y0) + 0.3)); c.closePath(); c.fill();
+    if (onSurface(b)) bagSide(c, sm, b, plane);
+    else if (b.state === "ground") bagSide(c, sm, b, () => 0);
   }
-  // trail + flying bag
+  // trail: fading dots
   const last = S.world.bags.find(b => b.id === S.lastId);
   if (last && last.trail.length > 1) {
-    c.strokeStyle = COL.p[last.owner] + "cc"; c.lineWidth = 2 * dpr; c.setLineDash([1 * dpr, 4 * dpr]);
-    c.beginPath(); c.moveTo(...pt(last.trail[0].y, last.trail[0].z)); for (const p of last.trail) c.lineTo(...pt(p.y, p.z)); c.stroke(); c.setLineDash([]);
+    const n = last.trail.length;
+    for (let i = 0; i < n; i += 2) {
+      const p = last.trail[i], [x, y] = P(p.y, p.z);
+      c.fillStyle = `rgba(255,255,255,${0.15 + 0.55 * i / n})`; c.beginPath(); c.arc(x, y, 1.3 * dpr, 0, 7); c.fill();
+    }
   }
   for (const b of S.world.bags) if (b.state === "flying") {
-    const [x, y] = pt(b.y, b.z), z = Math.max(9 * dpr, BAG * kx * 1.3);
-    c.save(); c.translate(x, y); c.rotate(b.angle * 1.7); c.fillStyle = COL.p[b.owner]; c.strokeStyle = COL.pd[b.owner];
-    rrect(c, -z / 2, -z / 4, z, z / 2, 2 * dpr); c.fill(); c.stroke(); c.restore();
+    const v = velAt(b.t, b.ft), [x, y] = P(b.y, b.z), [gx, gy] = P(b.y, surf(b));
+    const above = b.z - surf(b);
+    c.fillStyle = `rgba(0,0,0,${Math.max(0.05, 0.25 - above * 0.015)})`; c.beginPath(); c.ellipse(gx, gy, 6 * dpr, 1.6 * dpr, 0, 0, 7); c.fill();
+    const L = Math.max(13 * dpr, BAG * sm.kx * 1.5) * (0.78 + 0.22 * Math.abs(Math.cos(b.angle))), T2 = L * 0.34;
+    const pitch = Math.atan2(-v.z * sm.kz, v.y * sm.kx) * 0.6 + 0.12 * Math.sin(b.angle * 2);
+    c.save(); c.translate(x, y); c.rotate(pitch);
+    const g = c.createLinearGradient(0, -T2 / 2, 0, T2 / 2); g.addColorStop(0, COL.pl[b.owner]); g.addColorStop(1, COL.pd[b.owner]);
+    c.fillStyle = g; rrect(c, -L / 2, -T2 / 2, L, T2, T2 * 0.45); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.5)"; c.setLineDash([1.5 * dpr, 1.5 * dpr]); c.lineWidth = 0.7 * dpr;
+    c.beginPath(); c.moveTo(-L / 2 + 2 * dpr, 0); c.lineTo(L / 2 - 2 * dpr, 0); c.stroke(); c.setLineDash([]);
+    c.restore();
   }
 }
-function draw() { if (boardC.width) drawBoard(); if (sideC.width) drawSide(); }
+function draw() { if (boardC.width > 2) drawBoard(); if (sideC.width > 2) drawSide(); }
 
 // ───────────────────────── Input on the board
 let dragging = null;
@@ -844,11 +1165,11 @@ const panel = $("panel");
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 
 function renderScore() {
-  const live = inningResult().raw;
+  const ir = inningResult();
   for (const p of [0, 1]) {
     $("name" + p).textContent = S.names[p];
     $("pts" + p).textContent = S.scores[p];
-    $("live" + p).textContent = live[p] > 0 ? `+${live[p]} this inning` : "";
+    $("live" + p).textContent = ir.winner === p ? `Inning +${ir.awarded}` : "";
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "menu"].includes(S.phase));
   }
@@ -909,8 +1230,10 @@ function ui() {
   const sheet = $("inningSheet");
   if ((S.phase === "inning" || S.phase === "over") && S.lastInning) {
     const r = S.lastInning;
-    const col = p => `<div class="col" style="background:${COL.p[p]}"><div class="title-sm">${esc(S.names[p])}</div><div class="big">${r.raw[p]}</div><small>${r.hole[p]} in · ${r.on[p]} on</small></div>`;
-    const line = r.winner === null ? "Wash: no points this inning." : `${esc(S.names[r.winner])} +${r.awarded} · ${S.scores[0]} to ${S.scores[1]}`;
+    const col = p => `<div class="col" style="background:${COL.p[p]}"><div class="title-sm">${esc(S.names[p])}</div><div class="big">${r.raw[p]}</div><small>${r.hole[p]} in · ${r.on[p]} on<br>points thrown</small></div>`;
+    const line = r.winner === null
+      ? `${r.raw[0]} − ${r.raw[1]} cancels out. No points this inning.`
+      : `${r.raw[r.winner]} − ${r.raw[1 - r.winner]} → ${esc(S.names[r.winner])} ${S.names[r.winner] === "You" ? "score" : "scores"} ${r.awarded}<br><span class="muted">Game: ${esc(S.names[0])} ${S.scores[0]}, ${esc(S.names[1])} ${S.scores[1]}</span>`;
     const head = S.phase === "over" ? `<h2 style="color:${COL.gold}">🏆 ${esc(S.names[S.winner])} ${S.names[S.winner] === "You" ? "win" : "wins"}!</h2>` : `<h2>Inning ${S.inning}</h2>`;
     $("inningBody").innerHTML = `${head}<div class="cols">${col(0)}${col(1)}</div><div class="center who">${line}</div>
       <button class="play" id="nextBtn" style="background:${COL.p[r.winner ?? 0]}">${S.phase === "over" ? "PLAY AGAIN" : "NEXT INNING"}</button>
