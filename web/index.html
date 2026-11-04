@@ -196,7 +196,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 28px; text-align: c
     <div class="help">
       <p><b>1. Pick the finish.</b> Tap where you want the bag to <b>end up</b> (green). A dotted line shows your throw from your hand to that spot. Tap anywhere else to move it.</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone to choose where the bag <b>hits first</b>. Land it close to the finish for a high arc that sticks, or farther back for a flat throw that slides in. <b>Stick it</b> drops the bag right on the finish.</p>
-      <p><b>Push shots.</b> If one of your own bags sits between the landing and the finish, the game throws a little harder so your bag shoves it onto the green spot. Great for knocking your blocker into the hole.</p>
+      <p><b>Push shots.</b> If one of your own bags sits between the landing and the finish, the game throws a little harder so your bag shoves it as far as the green spot. Your bag pushes it the way your throw is travelling, so line your throw up through the blocker. A sloppy Direction stop pushes it off-line too.</p>
       <p><b>3. Add spin.</b> Move the ring off the centre line and the bag gets spin, so it kicks and hooks toward the finish after landing. A longer slide has more room to hook, so the zone gets wider farther back.</p>
       <p><b>4. Stop three needles.</b> <b>Direction</b> pushes it left or right, <b>Strength</b> sends it long or short, and <b>Height</b> changes the arc, so it lands somewhere else and slides a different amount. Only three perfect stops go exactly where you planned.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: if you throw 4 and they throw 1, you score 3 and they score nothing. First to 21 wins. Knock your opponent's bags off, or knock your own in.</p>
@@ -217,7 +217,7 @@ const G = 32.17, FY = 27, BY = 31, HW = 1, FH = 0.25, BH = 1;
 const HOLE = { x: 0, y: BY - 0.75 }, HR = 0.25, BAG = 0.5, BR = 0.25;
 const REL_H = 3, REL_Y = 0.5, REL_X = 1.6;
 const SLOPE = Math.atan2(BH - FH, BY - FY), SS = Math.sin(SLOPE), SC = Math.cos(SLOPE);
-const T = { mu: 0.35, rBase: 0.75, rSteep: 0.6, rest: 0.35, cap: 0.22, stop: 0.08, dt: 1 / 240,
+const T = { mu: 0.35, rBase: 0.75, rSteep: 0.6, rest: 0.35, cap: 0.22, stop: 0.08, dt: 1 / 240, carry: 1,
   minEl: 10 * Math.PI / 180, maxEl: 65 * Math.PI / 180, defEl: 32 * Math.PI / 180 };
 const deg = r => r * 180 / Math.PI, rad = d => d * Math.PI / 180;
 const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
@@ -346,17 +346,25 @@ class World {
       if (d >= md) continue;
       if (d < 1e-6) { dx = 0.01; dy = 0; d = 0.01; }
       const nx = dx / d, ny = dy / d;
-      const closing = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny;
+      // Flat bags don't glance off like balls: a sliding bag carries a resting one along its own line of travel.
+      let ex = nx, ey = ny, carried = false;
+      const pm = Math.hypot(p.vx, p.vy), qm = Math.hypot(q.vx, q.vy), vm = Math.max(pm, qm);
+      if (vm > 0.3 && Math.min(pm, qm) < 0.35 * vm) {
+        const mv = pm >= qm ? p : q, sg = mv === p ? 1 : -1, hx = sg * mv.vx / vm, hy = sg * mv.vy / vm;
+        if (hx * nx + hy * ny > 0) { const k = T.carry; ex = k * hx + (1 - k) * nx; ey = k * hy + (1 - k) * ny; const el = Math.hypot(ex, ey); ex /= el; ey /= el; carried = true; }
+      }
+      const closing = (q.vx - p.vx) * ex + (q.vy - p.vy) * ey;
       if (closing < 0) {
         const imp = -(1 + T.rest) * closing / 2;
-        p.vx -= nx * imp; p.vy -= ny * imp; q.vx += nx * imp; q.vy += ny * imp; p.curve = q.curve = 0;
+        p.vx -= ex * imp; p.vy -= ey * imp; q.vx += ex * imp; q.vy += ey * imp; p.curve = q.curve = 0;
         if (closing < -0.5) {
           const tw = this.random ? Math.random() * 6 - 3 : 1.5; p.spin += tw; q.spin -= tw;
           this.events.push({ type: "hit", a: p, b: q });
         }
       }
       const push = (md - d) / 2;
-      p.x -= nx * push; p.y -= ny * push; q.x += nx * push; q.y += ny * push;
+      if (carried) { const f = push / Math.max(ex * nx + ey * ny, 0.35); p.x -= ex * f; p.y -= ey * f; q.x += ex * f; q.y += ey * f; }
+      else { p.x -= nx * push; p.y -= ny * push; q.x += nx * push; q.y += ny * push; }
       for (const k of [p, q]) { if (Math.hypot(k.vx, k.vy) > T.stop) k.state = "sliding"; this.bounds(k); }
     }
   }
@@ -603,7 +611,7 @@ function refreshPlan(quick = false) {
   S.prev = simulate(S.ideal, S.player);
   S.push = null;
   if (S.prev.own && S.landD > 0.1) {
-    const base = S.ideal, t = solvePush(base, S.landing, S.end, S.player, S.prev.own, !quick);
+    const base = S.ideal, t = solvePush(base, S.landing, S.end, S.player, S.prev.own, false);
     if (t) { S.push = { extra: t.speed / base.speed - 1 }; S.ideal = t; S.prev = simulate(t, S.player); }
   }
 }
