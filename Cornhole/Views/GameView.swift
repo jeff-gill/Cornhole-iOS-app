@@ -1,21 +1,27 @@
 import SwiftUI
 
+import SpriteKit
+
 struct GameView: View {
     let game: GameModel
     var onQuit: () -> Void
 
+    @State private var scene: GameScene
     @State private var confirmQuit = false
     @State private var showHelp = false
+
+    init(game: GameModel, onQuit: @escaping () -> Void) {
+        self.game = game
+        self.onQuit = onQuit
+        _scene = State(initialValue: GameScene(game: game))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             ScoreboardView(game: game, onMenu: { confirmQuit = true }, onHelp: { showHelp = true })
-            SideView(game: game)
-                .frame(height: 140)
-            BoardView(game: game)
+            SpriteView(scene: scene, preferredFramesPerSecond: 60, options: [.ignoresSiblingOrder])
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.grass)
-                .overlay(alignment: .top) { BannerView(banner: game.banner) }
+                .overlay(alignment: .bottom) { BannerView(banner: game.banner) }
             ControlPanel(game: game)
         }
         .background(Theme.panel.ignoresSafeArea())
@@ -39,8 +45,6 @@ struct GameView: View {
                 EmptyView()
             }
         }
-        .onAppear { game.start() }
-        .onDisappear { game.stop() }
         .confirmationDialog("Leave this game?", isPresented: $confirmQuit, titleVisibility: .visible) {
             Button("Quit to menu", role: .destructive) { onQuit() }
             Button("Keep playing", role: .cancel) {}
@@ -56,7 +60,7 @@ private struct ScoreboardView: View {
     var onHelp: () -> Void
 
     var body: some View {
-        let live = game.liveInningPoints
+        let live = game.liveInning
         HStack(spacing: 8) {
             Button(action: onMenu) {
                 Image(systemName: "chevron.left").font(.headline)
@@ -64,7 +68,7 @@ private struct ScoreboardView: View {
             .foregroundStyle(.white)
             .frame(width: 32)
 
-            playerCard(0, live: live[0])
+            playerCard(0, live: live.winner == 0 ? live.awarded : 0)
 
             VStack(spacing: 0) {
                 Text("INNING").font(.system(size: 9, weight: .bold)).foregroundStyle(.white.opacity(0.6))
@@ -73,7 +77,7 @@ private struct ScoreboardView: View {
             }
             .frame(width: 48)
 
-            playerCard(1, live: live[1])
+            playerCard(1, live: live.winner == 1 ? live.awarded : 0)
 
             Button(action: onHelp) {
                 Image(systemName: "questionmark.circle").font(.headline)
@@ -100,7 +104,7 @@ private struct ScoreboardView: View {
                             .frame(width: 8, height: 8)
                     }
                 }
-                Text(live > 0 ? "+\(live) this inning" : " ")
+                Text(live > 0 ? "Inning +\(live)" : " ")
                     .font(.system(size: 9, weight: .semibold))
                     .opacity(0.85)
             }
@@ -140,7 +144,7 @@ private struct BannerView: View {
                     .id(banner.id)
             }
         }
-        .padding(.top, 14)
+        .padding(.bottom, 14)
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: banner)
         .allowsHitTesting(false)
     }
@@ -200,8 +204,11 @@ private struct InningSummaryView: View {
     }
 
     private var summaryLine: String {
-        guard let w = result.winner else { return "Wash – no points this inning." }
-        return "\(game.names[w]) +\(result.awarded)  •  \(game.scores[0]) – \(game.scores[1])"
+        guard let w = result.winner else {
+            return "\(result.raw[0]) − \(result.raw[1]) cancels out. No points this inning."
+        }
+        let verb = game.names[w] == "You" ? "score" : "scores"
+        return "\(result.raw[w]) − \(result.raw[1 - w]) → \(game.names[w]) \(verb) \(result.awarded)\nGame: \(game.names[0]) \(game.scores[0]), \(game.names[1]) \(game.scores[1])"
     }
 
     private func column(_ player: Int) -> some View {

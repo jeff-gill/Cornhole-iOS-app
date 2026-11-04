@@ -38,7 +38,7 @@ private struct AimingControls: View {
         VStack(spacing: 10) {
             HStack(spacing: 8) {
                 Circle().fill(Theme.player[game.currentPlayer]).frame(width: 12, height: 12)
-                Text("\(game.names[game.currentPlayer])'s throw")
+                Text(game.names[game.currentPlayer] == "You" ? "Your throw" : "\(game.names[game.currentPlayer])'s throw")
                     .font(.headline)
                     .foregroundStyle(.white)
                 Spacer()
@@ -48,7 +48,7 @@ private struct AimingControls: View {
             }
 
             planSummary
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
 
             HStack(spacing: 10) {
                 Button {
@@ -59,7 +59,7 @@ private struct AimingControls: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.white)
-                .disabled(game.landingTarget == nil)
+                .disabled(game.finish == nil)
 
                 Button {
                     game.stickIt()
@@ -69,7 +69,7 @@ private struct AimingControls: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.white)
-                .disabled(game.landingTarget == nil)
+                .disabled(game.finish == nil)
 
                 Button {
                     game.beginThrow()
@@ -80,7 +80,7 @@ private struct AimingControls: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Theme.player[game.currentPlayer])
-                .disabled(game.idealThrow == nil)
+                .disabled(game.plan == nil)
             }
             .controlSize(.large)
         }
@@ -88,29 +88,44 @@ private struct AimingControls: View {
 
     @ViewBuilder
     private var planSummary: some View {
-        if let ideal = game.idealThrow {
+        if let plan = game.plan {
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 14) {
-                    stat("Arc", String(format: "%.0f°", ideal.elevation.degrees))
-                    stat("Speed", String(format: "%.0f mph", ideal.speed * 0.6818))
-                    if game.showsTrajectoryPreview, let preview = game.preview {
-                        stat("Perfect throw", outcomeText(preview))
+                HStack(alignment: .top, spacing: 14) {
+                    stat("Arc", String(format: "%.0f°", plan.ideal.elevation.degrees))
+                    stat("Slide", plan.distance < 0.15 ? "Sticks" : String(format: "%.1f ft", plan.distance))
+                    stat("Spin", spinText(plan.ideal.spin))
+                    if let extra = plan.pushExtra {
+                        stat("Push shot", String(format: "+%.0f%% power", extra * 100), color: Theme.gold)
+                    }
+                    if game.showsTrajectoryPreview {
+                        stat("Perfect throw", outcomeText(plan.preview))
                     }
                 }
-                Text(game.endTarget == nil
-                     ? "No finish spot: a medium arc. Tap the board to set where it should stop."
-                     : "Flatter throws slide further, higher throws stick. Drag the markers to adjust.")
+                Text("Drag the yellow ring around the gold zone: near the green spot sticks, farther back slides, off to the side adds spin.")
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.6))
+                    .fixedSize(horizontal: false, vertical: true)
             }
         } else {
-            Text("Tap the board to mark where your bag should hit first, then tap again for where it should stop.")
+            Text("Tap the board where you want your bag to end up. Then drag the yellow ring to pick where it lands first.")
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.75))
         }
     }
 
+    private func spinText(_ spin: Double) -> String {
+        if abs(spin) < 0.05 { return "None" }
+        return (spin > 0 ? "Right " : "Left ") + String(format: "%.0f%%", abs(spin) * 100)
+    }
+
     private func outcomeText(_ preview: ThrowPreview) -> String {
+        if preview.pushesOwnBag(of: game.currentPlayer), let outcome = preview.pushOutcome {
+            switch outcome {
+            case .inHole: return "Pushes yours in"
+            case .resting, .sliding: return Court.isOnBoard(preview.pushEnd ?? .zero) ? "Pushes yours" : "Pushes yours off"
+            case .ground, .flying: return "Pushes yours off"
+            }
+        }
         switch preview.outcome {
         case .inHole: return "Cornhole"
         case .resting, .sliding: return Court.isOnBoard(preview.finalPosition) ? "On the board" : "Off the board"
@@ -118,10 +133,10 @@ private struct AimingControls: View {
         }
     }
 
-    private func stat(_ label: String, _ value: String) -> some View {
+    private func stat(_ label: String, _ value: String, color: Color = .white) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(label.uppercased()).font(.caption2.weight(.semibold)).foregroundStyle(.white.opacity(0.55))
-            Text(value).font(.subheadline.weight(.bold).monospacedDigit()).foregroundStyle(.white)
+            Text(value).font(.subheadline.weight(.bold).monospacedDigit()).foregroundStyle(color)
         }
     }
 }

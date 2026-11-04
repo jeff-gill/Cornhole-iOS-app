@@ -61,6 +61,11 @@ enum CPUPlayer {
             return Plan(landing: landing, end: end, description: "Slide it in")
         }
 
+        // Own bag sitting in front of the hole: push it in.
+        if blocker.owner == player, blocker.position.distance(to: hole) < 1.6, blocker.position.distance(to: landing) > 0.5 {
+            return Plan(landing: landing, end: hole, description: "Push it in")
+        }
+
         // Opponent bag sitting right in front of the hole: knock it off the line and follow it in.
         if blocker.owner != player, blocker.position.distance(to: hole) < 0.9, Bool.random() {
             let push = blocker.position - dir * 0.9

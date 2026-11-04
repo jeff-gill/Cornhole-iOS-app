@@ -13,6 +13,8 @@ struct ThrowParams: Equatable {
     var elevation: Double
     /// Heading in radians. 0 is straight down-range, positive is to the right ("direction").
     var azimuth: Double
+    /// -1...1. Positive spin kicks and hooks the slide to the right.
+    var spin: Double = 0
 
     var initialVelocity: Vec3 {
         let horizontal = speed * cos(elevation)
@@ -117,9 +119,15 @@ enum Physics {
         return tangential.xy * retention
     }
 
-    /// Advances one sliding bag on the sloped board. Returns false once it has stopped.
+    /// Slide velocity right after landing, including the sideways kick from spin.
+    static func landingVelocity(_ v: Vec3, spin: Double) -> Vec2 {
+        landingVelocity(v).rotated(by: spin * Tuning.spinKick)
+    }
+
+    /// Advances one sliding bag on the sloped board. `curve` (radians per foot) makes a
+    /// spinning bag hook. Returns false once it has stopped.
     @discardableResult
-    static func slideStep(position: inout Vec2, velocity: inout Vec2, dt: Double) -> Bool {
+    static func slideStep(position: inout Vec2, velocity: inout Vec2, curve: Double = 0, dt: Double) -> Bool {
         let speed = velocity.length
         if speed < Tuning.stopSpeed {
             velocity = .zero
@@ -128,10 +136,13 @@ enum Physics {
         let g = Court.gravity
         let friction = velocity.normalized * (-Tuning.friction * g * Court.slopeCos)
         let downhill = Vec2(x: 0, y: -g * Court.slopeSin * Court.slopeCos)
-        let newVelocity = velocity + (friction + downhill) * dt
+        var newVelocity = velocity + (friction + downhill) * dt
         if newVelocity.dot(velocity) <= 0 {
             velocity = .zero
             return false
+        }
+        if curve != 0 {
+            newVelocity = newVelocity.rotated(by: curve * newVelocity.length * dt)
         }
         velocity = newVelocity
         position += velocity * dt
@@ -156,8 +167,11 @@ struct Bag: Identifiable, Equatable {
     var position: Vec2
     var height: Double
     var velocity: Vec2 = .zero
+    /// Visual rotation (radians) and its rate.
     var angle: Double = 0
     var spin: Double = 0
+    /// Hook rate while sliding (radians per foot), from the throw's spin.
+    var curve: Double = 0
     var throwParams: ThrowParams?
     var flightTime: Double = 0
     var contact: FlightContact?
@@ -194,6 +208,10 @@ struct CornholeWorld {
         bags.allSatisfy { $0.state != .flying && $0.state != .sliding }
     }
 
+    func bag(id: Int) -> Bag? {
+        bags.first { $0.id == id }
+    }
+
     mutating func clear() {
         bags.removeAll()
         events.removeAll()
@@ -204,6 +222,18 @@ struct CornholeWorld {
         return events
     }
 
+    /// Puts a still copy of a bag on the board (used to play "what if" throws).
+    mutating func addRestingCopy(of b: Bag) {
+        var c = b
+        c.state = .resting
+        c.velocity = .zero
+        c.spin = 0
+        c.curve = 0
+        c.trail = []
+        bags.append(c)
+        nextID = max(nextID, b.id + 1)
+    }
+
     @discardableResult
     mutating func launch(_ t: ThrowParams, owner: Int) -> Int {
         let id = nextID
@@ -212,7 +242,7 @@ struct CornholeWorld {
         bag.throwParams = t
         bag.contact = Flight.contact(for: t)
         bag.angle = t.azimuth
-        bag.spin = randomizeSpin ? Double.random(in: -4...4) : 2
+        bag.spin = t.spin * 7 + (randomizeSpin ? Double.random(in: -1...1) : 0)
         bag.trail = [t.origin]
         bags.append(bag)
         return id
@@ -246,7 +276,7 @@ struct CornholeWorld {
         let p = t.position(at: b.flightTime)
         b.position = p.xy
         b.height = p.z
-        if Int(b.flightTime / dt) % 2 == 0 { b.trail.append(p) }
+        if Int((b.flightTime / dt).rounded()) % 2 == 0 { b.trail.append(p) }
 
         // Skimming low over the board straight into another bag: it lands right there.
         if Court.isOnBoard(p.xy), p.z - Court.boardPlaneHeight(atY: p.y) < 0.18 {
@@ -283,8 +313,10 @@ struct CornholeWorld {
             b.spin = 0
             events.append(.landedOnGround(bag: b.id))
         case .board:
+            let spin = b.throwParams?.spin ?? 0
             b.state = .sliding
-            b.velocity = Physics.landingVelocity(c.velocity)
+            b.velocity = Physics.landingVelocity(c.velocity, spin: spin)
+            b.curve = spin * Tuning.spinCurve
             b.spin *= 0.6
             events.append(.landedOnBoard(bag: b.id))
             checkBoardBounds(&b)
@@ -295,13 +327,14 @@ struct CornholeWorld {
 
     private mutating func stepSlide(_ i: Int, _ dt: Double) {
         var b = bags[i]
-        let moving = Physics.slideStep(position: &b.position, velocity: &b.velocity, dt: dt)
+        let moving = Physics.slideStep(position: &b.position, velocity: &b.velocity, curve: b.curve, dt: dt)
         b.height = Court.boardPlaneHeight(atY: b.position.y)
         b.angle += b.spin * dt
         b.spin *= max(0, 1 - 2.5 * dt)
         if !moving {
             b.state = .resting
             b.spin = 0
+            b.curve = 0
         }
         checkBoardBounds(&b)
         bags[i] = b
@@ -350,11 +383,31 @@ struct CornholeWorld {
                     distance = 0.01
                 }
                 let n = delta / distance
-                let closing = (bags[j].velocity - bags[i].velocity).dot(n)
+
+                // Flat bags don't glance off like balls: a sliding bag carries a resting one
+                // along its own line of travel.
+                var e = n
+                var carried = false
+                let pm = bags[i].velocity.length
+                let qm = bags[j].velocity.length
+                let vm = max(pm, qm)
+                if vm > 0.3 && min(pm, qm) < 0.35 * vm {
+                    let moverIsI = pm >= qm
+                    let mv = moverIsI ? bags[i].velocity : bags[j].velocity
+                    let h = mv / vm * (moverIsI ? 1 : -1)
+                    if h.dot(n) > 0 {
+                        e = (h * Tuning.carry + n * (1 - Tuning.carry)).normalized
+                        carried = true
+                    }
+                }
+
+                let closing = (bags[j].velocity - bags[i].velocity).dot(e)
                 if closing < 0 {
                     let impulse = -(1 + Tuning.restitution) * closing / 2
-                    bags[i].velocity -= n * impulse
-                    bags[j].velocity += n * impulse
+                    bags[i].velocity -= e * impulse
+                    bags[j].velocity += e * impulse
+                    bags[i].curve = 0
+                    bags[j].curve = 0
                     if closing < -0.5 {
                         let twist = randomizeSpin ? Double.random(in: -3...3) : 1.5
                         bags[i].spin += twist
@@ -362,9 +415,16 @@ struct CornholeWorld {
                         events.append(.bagHit(bag: bags[i].id, other: bags[j].id))
                     }
                 }
+
                 let push = (minDistance - distance) / 2
-                bags[i].position -= n * push
-                bags[j].position += n * push
+                if carried {
+                    let f = push / max(e.dot(n), 0.35)
+                    bags[i].position -= e * f
+                    bags[j].position += e * f
+                } else {
+                    bags[i].position -= n * push
+                    bags[j].position += n * push
+                }
 
                 for k in [i, j] {
                     if bags[k].velocity.length > Tuning.stopSpeed { bags[k].state = .sliding }

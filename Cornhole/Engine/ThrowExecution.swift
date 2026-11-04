@@ -134,6 +134,8 @@ enum ThrowExecution {
     static func apply(_ errors: ThrowErrors, to ideal: ThrowParams, difficulty: Difficulty) -> ThrowParams {
         var t = ideal
         t.azimuth += effective(errors.direction, difficulty: difficulty) * maxDirectionError
+        // A sloppy direction stop also puts the wrong spin on the bag.
+        t.spin = (t.spin + effective(errors.direction, difficulty: difficulty) * 0.35).clamped(-1, 1)
         t.speed *= 1 + effective(errors.power, difficulty: difficulty) * maxPowerError
         t.elevation = (t.elevation + effective(errors.height, difficulty: difficulty) * maxHeightError)
             .clamped(4.0.radians, 78.0.radians)

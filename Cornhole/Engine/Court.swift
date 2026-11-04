@@ -77,6 +77,12 @@ enum Tuning {
     /// Lowest and highest release angles the thrower can use.
     static let minElevation = 10.0.radians
     static let maxElevation = 65.0.radians
-    /// Release angle used when the player only marks a landing spot.
+    /// Release angle used when nothing else decides the arc.
     static let defaultElevation = 32.0.radians
+    /// At full spin the bag kicks this far sideways when it lands...
+    static let spinKick = 9.0.radians
+    /// ...and keeps hooking by this many radians per foot of slide.
+    static let spinCurve = 0.05
+    /// How much a sliding bag carries a resting one along its own line of travel (1 = entirely).
+    static let carry = 1.0
 }

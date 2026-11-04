@@ -9,6 +9,7 @@ enum Theme {
         Color(red: 0.55, green: 0.10, blue: 0.10),
         Color(red: 0.08, green: 0.24, blue: 0.55),
     ]
+    static let gold = Color(red: 0.96, green: 0.77, blue: 0.26)
     static let grass = Color(red: 0.30, green: 0.55, blue: 0.25)
     static let grassDark = Color(red: 0.22, green: 0.44, blue: 0.19)
     static let wood = Color(red: 0.86, green: 0.70, blue: 0.47)

@@ -65,3 +65,17 @@ extension Double {
 
     func clamped(_ lo: Double, _ hi: Double) -> Double { Swift.min(Swift.max(self, lo), hi) }
 }
+
+extension Vec2 {
+    /// Rotates clockwise as seen from above (toward +x when heading down-range), i.e. heading increases by `a`.
+    func rotated(by a: Double) -> Vec2 {
+        let c = cos(a), s = sin(a)
+        return Vec2(x: x * c + y * s, y: -x * s + y * c)
+    }
+
+    /// Compass-style heading: 0 is straight down-range, positive is to the right.
+    var heading: Double { atan2(x, y) }
+}
+
+/// Wraps an angle into -pi...pi.
+func wrapAngle(_ a: Double) -> Double { atan2(sin(a), cos(a)) }

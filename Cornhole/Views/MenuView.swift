@@ -133,9 +133,10 @@ struct HelpView: View {
         NavigationStack {
             List {
                 Section("Line it up") {
-                    row("scope", "Tap the board to mark where you want the bag to **land** (yellow).")
-                    row("flag.checkered", "Tap again to mark where you want it to **finish** (green). Drag either marker to adjust.")
-                    row("arrow.up.right", "The game works out the perfect throw: flatter throws slide further, higher throws stick.")
+                    row("flag.checkered", "Tap where you want the bag to **end up** (green). Tap elsewhere to move it.")
+                    row("scope", "Drag the yellow ring around the gold zone to choose where it **lands first**. Near the green spot it sticks, farther back it slides.")
+                    row("arrow.turn.up.right", "Put the ring off to one side to add **spin**, so the bag kicks and hooks toward the finish.")
+                    row("arrow.right.to.line", "**Push shots:** if your own bag is in the way, the game throws a bit harder so yours shoves it along your line, into the hole if that's the target.")
                 }
                 Section("Throw it") {
                     row("arrow.left.and.right", "**Direction** – stop the needle in the middle or the bag drifts left or right.")
@@ -146,7 +147,8 @@ struct HelpView: View {
                 Section("Score it") {
                     row("circle.fill", "In the hole: 3 points. On the board: 1 point.")
                     row("minus.circle", "Cancellation scoring – only the difference counts each inning.")
-                    row("trophy.fill", "First to 21 wins. Knock your opponent's bags off – or yours in!")
+                    row("equal.circle", "Example: you throw 4, they throw 1, so you score 3 and they score nothing.")
+                    row("trophy.fill", "First to 21 wins. Knock your opponent's bags off, or yours in!")
                 }
             }
             .navigationTitle("How to play")
