@@ -196,6 +196,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 28px; text-align: c
     <div class="help">
       <p><b>1. Pick the finish.</b> Tap where you want the bag to <b>end up</b> (green). A dotted line shows your throw from your hand to that spot. Tap anywhere else to move it.</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone to choose where the bag <b>hits first</b>. Land it close to the finish for a high arc that sticks, or farther back for a flat throw that slides in. <b>Stick it</b> drops the bag right on the finish.</p>
+      <p><b>Push shots.</b> If one of your own bags sits between the landing and the finish, the game throws a little harder so your bag shoves it onto the green spot. Great for knocking your blocker into the hole.</p>
       <p><b>3. Add spin.</b> Move the ring off the centre line and the bag gets spin, so it kicks and hooks toward the finish after landing. A longer slide has more room to hook, so the zone gets wider farther back.</p>
       <p><b>4. Stop three needles.</b> <b>Direction</b> pushes it left or right, <b>Strength</b> sends it long or short, and <b>Height</b> changes the arc, so it lands somewhere else and slides a different amount. Only three perfect stops go exactly where you planned.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: if you throw 4 and they throw 1, you score 3 and they score nothing. First to 21 wins. Knock your opponent's bags off, or knock your own in.</p>
@@ -308,7 +309,7 @@ class World {
       const other = this.bags.find(o => o !== b && onSurface(o) && dist(o, p) < BAG * 0.9);
       if (other) {
         this.land(b, { time: b.ft, p: { x: p.x, y: p.y, z: plane(p.y) }, v: velAt(b.t, b.ft), kind: "board" });
-        this.events.push({ type: "hit" });
+        this.events.push({ type: "hit", a: b, b: other });
       }
     }
   }
@@ -351,7 +352,7 @@ class World {
         p.vx -= nx * imp; p.vy -= ny * imp; q.vx += nx * imp; q.vy += ny * imp; p.curve = q.curve = 0;
         if (closing < -0.5) {
           const tw = this.random ? Math.random() * 6 - 3 : 1.5; p.spin += tw; q.spin -= tw;
-          this.events.push({ type: "hit" });
+          this.events.push({ type: "hit", a: p, b: q });
         }
       }
       const push = (md - d) / 2;
@@ -409,21 +410,67 @@ function solveSpin(o, L, E) {
   }
   return solveEl(o, L, u, D, s);
 }
-function preview(t) {
-  const w = new World(false); w.launch(t, 0);
-  const flight = [{ ...t.o }], slide = [];
-  for (let s = 1; s < 6000 && !w.settled; s++) {
+// Plays a throw out against the bags already on the board (without touching the real game).
+// Reports the thrown bag's path and the first bag it runs into.
+function simulate(t, pl, track = true) {
+  const w = new World(false);
+  for (const b of S.world.bags) if (onSurface(b)) w.bags.push({ ...b, vx: 0, vy: 0, state: "resting", spin: 0, curve: 0, trail: [] });
+  w.nextId = 1e6; w.launch(t, pl);
+  const me = w.bags[w.bags.length - 1];
+  const flight = [{ ...t.o }], slide = [], pushPath = [];
+  let hit = null;
+  for (let k = 1; k < 6000 && !w.settled; k++) {
     w.step(T.dt);
-    const b = w.bags[0];
-    if (s % 3 === 0 || w.settled) {
-      if (b.state === "flying") flight.push({ x: b.x, y: b.y, z: b.z });
-      else if (onSurface(b)) slide.push({ x: b.x, y: b.y });
+    if (!hit) for (const e of w.events) if (e.type === "hit" && (e.a === me || e.b === me)) { hit = e.a === me ? e.b : e.a; break; }
+    w.events.length = 0;
+    if (track && (k % 3 === 0 || w.settled)) {
+      if (me.state === "flying") flight.push({ x: me.x, y: me.y, z: me.z });
+      else if (onSurface(me)) slide.push({ x: me.x, y: me.y });
+      if (hit && (onSurface(hit) || pushPath.length === 0)) pushPath.push({ x: hit.x, y: hit.y });
     }
   }
-  const b = w.bags[0];
-  flight.push({ ...b.c.p });
-  if (slide.length) slide.unshift({ x: b.c.p.x, y: b.c.p.y });
-  return { flight, slide, outcome: b.state, end: { x: b.x, y: b.y } };
+  flight.push({ ...me.c.p });
+  if (slide.length) slide.unshift({ x: me.c.p.x, y: me.c.p.y });
+  if (hit && hit.state === "inHole") pushPath.push({ ...HOLE });
+  return { flight, slide, outcome: me.state, end: { x: me.x, y: me.y }, hit,
+    own: hit && hit.owner === pl ? hit : null, pushPath, pushOutcome: hit ? hit.state : null, pushEnd: hit ? (hit.state === "inHole" ? { ...HOLE } : { x: hit.x, y: hit.y }) : null };
+}
+const preview = t => simulate(t, S.player);
+// Push shot: one of your own bags is in the way, so throw harder until it is pushed onto the finish spot.
+// The distance comes from the arc (flatter = harder); with `aim`, spin is also tuned so the bag
+// strikes the blocker at the angle that sends it toward the finish (like aiming a pool shot).
+function solvePush(base, L, E, pl, own, aim) {
+  const D = dist(L, E); if (D < 0.05) return null;
+  const u = { x: (E.x - L.x) / D, y: (E.y - L.y) / D }, B = { x: own.x, y: own.y };
+  const sunk = r => r.pushOutcome === "inHole" && dist(E, HOLE) < HR;
+  const mk = (el, spin) => { const t = throwFor(base.o, L, el); if (t) t.spin = spin; return t; };
+  const run = (el, spin) => { const t = mk(el, spin); if (!t) return null; const r = simulate(t, pl, false); return r.hit && r.hit.id === own.id ? r : null; };
+  const reach = r => sunk(r) ? D + 0.01 : (r.pushEnd.x - L.x) * u.x + (r.pushEnd.y - L.y) * u.y;
+  const forSpin = spin => {
+    let lo = T.minEl, hi = base.el;
+    const rLo = run(lo, spin); if (!rLo) return null;
+    if (reach(rLo) <= D) return { t: mk(lo, spin), r: rLo };
+    let best = { t: mk(lo, spin), r: rLo };
+    for (let k = 0; k < (aim ? 14 : 20); k++) {
+      const m = (lo + hi) / 2, r = run(m, spin);
+      if (!r || reach(r) < D) hi = m; else { lo = m; best = { t: mk(m, spin), r }; }
+    }
+    return best;
+  };
+  const side = r => sunk(r) ? 0 : wrap(heading({ x: E.x - B.x, y: E.y - B.y }) - heading({ x: r.pushEnd.x - B.x, y: r.pushEnd.y - B.y }));
+  let a = forSpin(base.spin); if (!a) return null;
+  if (!aim) return a.t;
+  let ea = side(a.r);
+  if (Math.abs(ea) < 0.01) return a.t;
+  let sb = clamp(base.spin + (ea > 0 ? 0.15 : -0.15), -1, 1), b = forSpin(sb), best = a, bestErr = Math.abs(ea);
+  for (let k = 0; k < 5 && b; k++) {
+    const eb = side(b.r);
+    if (Math.abs(eb) < bestErr) { best = b; bestErr = Math.abs(eb); }
+    if (bestErr < 0.01 || eb === ea) break;
+    const sn = clamp(sb - eb * (sb - a.t.spin) / (eb - ea), -1, 1);
+    a = b; ea = eb; sb = sn; b = forSpin(sb);
+  }
+  return best.t;
 }
 
 // ───────────────────────── Aiming: finish spot + landing distance along the throwing line
@@ -505,6 +552,7 @@ function cpuPlan(pl, bags) {
   const landing = { x: HOLE.x - dir.x * 1.7, y: HOLE.y - dir.y * 1.7 }, end = { x: HOLE.x + dir.x * 0.1, y: HOLE.y + dir.y * 0.1 };
   const blocker = bags.filter(onSurface).find(b => segDist(b, landing, HOLE) < 0.42);
   if (!blocker) return { landing, end, label: "Slide it in" };
+  if (blocker.owner === pl && dist(blocker, HOLE) < 1.6 && dist(blocker, landing) > 0.5) return { landing, end: { ...HOLE }, label: "Push it in" };
   if (blocker.owner !== pl && dist(blocker, HOLE) < 0.9 && Math.random() < 0.5)
     return { landing: { x: blocker.x - dir.x * 0.9, y: blocker.y - dir.y * 0.9 }, end: { x: HOLE.x + dir.x * 0.4, y: HOLE.y + dir.y * 0.4 }, label: "Push through" };
   return { landing: { ...HOLE }, end: { ...HOLE }, label: "Airmail" };
@@ -533,7 +581,7 @@ const S = {
   mode: "cpu", level: "medium", names: ["You", "CPU"], world: new World(), scores: [0, 0], inning: 1, thrown: [0, 0],
   player: 0, leader: 0, phase: "menu", landing: null, end: null, landD: null, landPhi: 0, plan: null, ideal: null, prev: null, meter: 0, meterT: 0,
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, lastId: null, cpuT: 0, cpuPlan: null,
-  saved: {}, settleT: 0, acc: 0, fx: [], shake: 0, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
+  saved: {}, settleT: 0, acc: 0, push: null, fx: [], shake: 0, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
 };
 const lv = () => LEVELS[S.level];
 const isCPU = p => S.mode === "cpu" && p === 1;
@@ -547,12 +595,17 @@ function newGame() {
   beginTurn();
 }
 const DEFAULT_SLIDE = 1.5;
-function refreshPlan() {
+function refreshPlan(quick = false) {
   S.plan = S.end ? planThrow(S.player, S.end, S.landD ?? DEFAULT_SLIDE, S.landPhi || 0) : null;
   if (!S.plan) { S.landing = S.ideal = S.prev = null; return; }
   S.landD = S.plan.D; S.landPhi = S.plan.phi; // keep what was actually achievable
   S.landing = S.plan.landing; S.ideal = S.plan.ideal;
-  S.prev = preview(S.ideal);
+  S.prev = simulate(S.ideal, S.player);
+  S.push = null;
+  if (S.prev.own && S.landD > 0.1) {
+    const base = S.ideal, t = solvePush(base, S.landing, S.end, S.player, S.prev.own, !quick);
+    if (t) { S.push = { extra: t.speed / base.speed - 1 }; S.ideal = t; S.prev = simulate(t, S.player); }
+  }
 }
 function setMarker(kind, p) {
   if (!canEdit()) return;
@@ -562,7 +615,7 @@ function setMarker(kind, p) {
     const v = { x: p.x - S.end.x, y: p.y - S.end.y };
     S.landD = Math.hypot(v.x, v.y); S.landPhi = wrap(heading(v) - heading(S.plan.z.back));
   }
-  refreshPlan(); ui();
+  refreshPlan(dragging !== null); ui();
 }
 function beginTurn() {
   S.cpuPlan = null;
@@ -954,6 +1007,14 @@ function drawBoard() {
       c.fillStyle = "rgba(255,255,255,.95)"; c.fillText("flat · slides", fx + 22 * dpr, fy - 10 * dpr); c.fillText("off-centre = spin", fx + 22 * dpr, fy + 4 * dpr);
     }
   }
+  if (showPreview() && S.prev && S.prev.pushPath.length > 1 && S.phase !== "flight") {
+    c.strokeStyle = "rgba(244,197,66,.95)"; c.lineWidth = 2.5 * dpr; c.setLineDash([2 * dpr, 4 * dpr]); c.lineCap = "round";
+    c.beginPath(); c.moveTo(...m.pt(S.prev.pushPath[0])); for (const q of S.prev.pushPath) c.lineTo(...m.pt(q)); c.stroke(); c.setLineDash([]);
+    if (S.prev.pushOutcome !== "inHole") {
+      const [ex, ey] = m.pt(S.prev.pushEnd), z = BAG * s; c.setLineDash([3 * dpr, 3 * dpr]); c.lineWidth = 1.5 * dpr;
+      rrect(c, ex - z / 2, ey - z / 2, z, z, z * .25); c.stroke(); c.setLineDash([]);
+    }
+  }
   if (showPreview() && S.prev && S.prev.slide.length > 1 && S.phase !== "flight") {
     c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 2 * dpr; c.setLineDash([5 * dpr, 5 * dpr]); c.lineCap = "round";
     c.beginPath(); c.moveTo(...m.pt(S.prev.slide[0])); for (const p of S.prev.slide) c.lineTo(...m.pt(p)); c.stroke();
@@ -1156,7 +1217,7 @@ boardC.addEventListener("pointermove", e => {
   const r = boardC.getBoundingClientRect();
   setMarker(dragging, bmap().world((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr));
 });
-const endDrag = () => { dragging = null; };
+const endDrag = () => { if (dragging !== null) { dragging = null; if (canEdit()) { refreshPlan(); ui(); } } };
 boardC.addEventListener("pointerup", endDrag); boardC.addEventListener("pointercancel", endDrag);
 
 // ───────────────────────── DOM UI
@@ -1181,6 +1242,10 @@ function renderBanner() {
   else el.classList.remove("show");
 }
 function outcomeText(p) {
+  if (p.own) {
+    if (p.pushOutcome === "inHole") return "Pushes yours in";
+    return onSurface({ state: p.pushOutcome }) && onBoard(p.pushEnd) ? "Pushes yours" : "Pushes yours off";
+  }
   if (p.outcome === "inHole") return "Cornhole";
   if (onSurface({ state: p.outcome }) && onBoard(p.end)) return "On the board";
   return "Off the board";
@@ -1199,6 +1264,7 @@ function ui() {
       plan = `<div class="stats">
         <div class="stat"><small>Arc</small><b>${deg(S.ideal.el).toFixed(0)}°</b></div>
         <div class="stat"><small>Slide</small><b>${S.landD < 0.15 ? "Sticks" : S.landD.toFixed(1) + " ft"}</b></div>
+        ${S.push ? `<div class="stat"><small>Push shot</small><b style="color:${COL.gold}">+${Math.round(S.push.extra * 100)}% power</b></div>` : ""}
         <div class="stat"><small>Spin</small><b>${Math.abs(S.ideal.spin) < 0.05 ? "None" : (S.ideal.spin > 0 ? "Right " : "Left ") + Math.round(Math.abs(S.ideal.spin) * 100) + "%"}</b></div>
         ${showPreview() && S.prev ? `<div class="stat"><small>Perfect throw</small><b>${outcomeText(S.prev)}</b></div>` : ""}
       </div><div class="muted">Land near the green spot to stick it, farther back to slide it in. Off to the side adds spin to hook it.</div>`;
