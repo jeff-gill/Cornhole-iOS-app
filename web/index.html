@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
@@ -747,9 +747,20 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
 const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0 });
+// Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
+const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
+function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
+const haptic = kind => postNative("haptic", kind);
 let career = fresh();
-try { const raw = localStorage.getItem(SAVE_KEY); if (raw) career = { ...fresh(), ...JSON.parse(raw) }; } catch (e) { /* storage unavailable: play without saving */ }
-function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(career)); } catch (e) { /* ignore */ } }
+try {
+  const raw = window.__nativeCareer || localStorage.getItem(SAVE_KEY);
+  if (raw) career = { ...fresh(), ...(typeof raw === "string" ? JSON.parse(raw) : raw) };
+} catch (e) { /* storage unavailable: play without saving */ }
+function save() {
+  const json = JSON.stringify(career);
+  postNative("save", json);
+  try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
+}
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
 const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
 const venueUnlocked = i => career.unlocked.includes(VENUES[i].id);
@@ -882,7 +893,7 @@ function beginThrow() {
   S.saved[S.player] = [S.end, S.landD, S.landPhi];
   S.errors = { dir: 0, pow: 0, ht: 0 };
   S.pull = { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 };
-  S.phase = "throw"; sfx.tick(); ui();
+  S.phase = "throw"; sfx.tick(); haptic("tap"); ui();
 }
 // One move: the pull sets the power, the swinging arrow sets the direction; overdrive makes both wild.
 function updatePull(dt) {
@@ -923,7 +934,7 @@ function releaseBag(e) {
   if (S.overdrive) S.feedback.push({ title: "Overdrive", text: "Wild!" });
   S.perfect = !S.overdrive && S.feedback.every(f => f.text === "Perfect");
   S.lastId = S.world.launch(actual, S.player);
-  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh();
+  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh(); haptic("release");
   if (S.overdrive) showBanner("OVERDRIVE!", S.player); else if (S.perfect) showBanner("PERFECT!", S.player);
   ui();
 }
@@ -978,10 +989,10 @@ function checkFourBagger() {
 }
 function handleEvents(evts) {
   for (const e of evts) {
-    if (e.type === "swish") { showBanner("SWISH!", e.bag.owner); sfx.hole(); confetti(e.bag.owner); }
-    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); confetti(e.bag.owner); }
-    else if (e.type === "land") { sfx.thud(); dust(e.bag, groundDust()); squash(e.bag.id); }
-    else if (e.type === "hit") sfx.thud();
+    if (e.type === "swish") { showBanner("SWISH!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
+    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
+    else if (e.type === "land") { sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
+    else if (e.type === "hit") { sfx.thud(); haptic("light"); }
     else if (e.type === "ground") { dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
     else if (e.type === "off") showBanner(e.bag.id === S.lastId ? "Slid off" : "Knocked off!", e.bag.owner);
   }
@@ -1655,6 +1666,7 @@ function fourBagger(owner) {
     }, k * 260);
   }
   shake = 0.8;
+  haptic("big");
   const el = $("fourbag");
   el.textContent = "4-BAGGER!";
   el.style.setProperty("--c1", COL.pl[owner]); el.style.setProperty("--c2", COL.p[owner]);
@@ -1706,8 +1718,9 @@ function updateCamera(dt) {
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   if (mode === "intro") {
+    // Slow orbit; looking a little below the board keeps it in the top half, above the clubhouse card.
     const a = S.time * 0.1;
-    tPos.set(Math.sin(a) * 13, 7.5, -FY - 2 + Math.cos(a) * 13); tLook.set(0, 1.2, -FY - 2);
+    tPos.set(Math.sin(a) * 9.5, 5.2, -FY - 2 + Math.cos(a) * 9.5); tLook.set(0, -2.6, -FY - 2);
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
   } else if (mode === "throw") {
