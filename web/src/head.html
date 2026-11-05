@@ -1,0 +1,301 @@
+<title>Backyard Cornhole</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap">
+<style>
+/* Layout: one-screen portrait game. Glossy scoreboard on top, full-bleed 3D yard in the middle, chunky control deck at the bottom. Single deliberate look (bright casual-game palette). */
+:root {
+  color-scheme: dark;
+  --deck: #12203a;
+  --deck-2: #1b2f52;
+  --deck-edge: #0a1426;
+  --ink: #ffffff;
+  --ink-dim: #b8c6e3;
+  --p0: #ff4b3a; --p0-dark: #b5170c;
+  --p1: #2f86ff; --p1-dark: #0b4bb3;
+  --gold: #ffc93a; --gold-dark: #c98a00;
+  --go: #3ee07a; --go-dark: #12974a;
+  --font-display: "Lilita One", "Arial Rounded MT Bold", "Arial Black", sans-serif;
+  --font-body: "Nunito", "Avenir Next", system-ui, sans-serif;
+}
+html, body { height: 100%; }
+[hidden] { display: none !important; }
+body {
+  background: var(--deck); color: var(--ink); font-family: var(--font-body); font-weight: 800;
+  overflow: hidden; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+body.inhub .score, body.inhub #panel { display: none; }
+#app { height: 100%; display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; position: relative; }
+
+/* Scoreboard */
+.score {
+  display: grid; grid-template-columns: 38px 1fr 56px 1fr 38px; gap: 6px; align-items: center;
+  padding-block: 8px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px));
+  background: linear-gradient(#1d3563, var(--deck)); border-bottom: 2px solid var(--deck-edge);
+}
+.roundbtn {
+  width: 36px; height: 36px; border-radius: 50%; border: 0; display: grid; place-items: center;
+  background: linear-gradient(#36558f, #22395f); box-shadow: 0 3px 0 var(--deck-edge), inset 0 1px 0 rgba(255,255,255,.25);
+  font-family: var(--font-display); font-size: 18px;
+}
+.card {
+  position: relative; border-radius: 16px; padding: 6px 10px 7px; display: flex; justify-content: space-between; align-items: center; gap: 6px;
+  border: 3px solid rgba(255,255,255,.35); min-width: 0; transition: transform .2s, border-color .2s, filter .2s; filter: saturate(.55) brightness(.8);
+  box-shadow: 0 4px 0 rgba(0,0,0,.35);
+}
+.card::after { content: ""; position: absolute; inset: 2px 2px 50% 2px; border-radius: 12px 12px 6px 6px; background: linear-gradient(rgba(255,255,255,.32), rgba(255,255,255,0)); pointer-events: none; }
+.card.p0 { background: linear-gradient(#ff7262, var(--p0) 55%, var(--p0-dark)); }
+.card.p1 { background: linear-gradient(#5aa2ff, var(--p1) 55%, var(--p1-dark)); }
+.card.active { filter: none; border-color: #fff; transform: translateY(-1px) scale(1.03); }
+.card .name { font-family: var(--font-display); font-size: 15px; letter-spacing: .02em; text-shadow: 0 2px 0 rgba(0,0,0,.25); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .dots { display: flex; gap: 3px; margin-top: 3px; }
+.card .dots i { width: 9px; height: 9px; border-radius: 3px; background: rgba(0,0,0,.25); }
+.card .dots i.on { background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.card .live { font-size: 11px; min-height: 14px; white-space: nowrap; }
+.card .pts { font-family: var(--font-display); font-size: 34px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); font-variant-numeric: tabular-nums; }
+.inning { text-align: center; display: flex; flex-direction: column; }
+.inning small { font-size: 10px; letter-spacing: .1em; color: var(--ink-dim); text-transform: uppercase; }
+.inning b { font-family: var(--font-display); font-size: 24px; line-height: 1.05; font-weight: 400; }
+
+/* 3D stage */
+#stage { position: relative; flex: 1 1 auto; min-height: 0; background: #9fd0f0; overflow: hidden; touch-action: none; }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#banner {
+  position: absolute; top: 64px; left: 50%; transform: translateX(-50%) scale(.5) rotate(-3deg); opacity: 0; pointer-events: none;
+  font-family: var(--font-display); font-size: 24px; padding: 7px 18px 9px; border-radius: 16px; white-space: nowrap; color: #fff; max-width: calc(100% - 90px); overflow: hidden; text-overflow: ellipsis;
+  border: 3px solid #fff; text-shadow: 0 3px 0 rgba(0,0,0,.3); box-shadow: 0 6px 0 rgba(0,0,0,.25);
+  transition: transform .28s cubic-bezier(.3,1.7,.5,1), opacity .2s;
+}
+#banner.show { transform: translateX(-50%) scale(1) rotate(-3deg); opacity: 1; }
+#hint {
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+  font-size: 14px; background: rgba(10,20,38,.72); padding: 7px 14px; border-radius: 999px; border: 2px solid rgba(255,255,255,.25);
+}
+
+/* Pull-back gauge */
+#gauge { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); width: 44px; height: min(58%, 290px); pointer-events: none; }
+#gauge .tube { position: absolute; inset: 0; border-radius: 24px; background: rgba(10,20,38,.75); border: 4px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.3); overflow: hidden; }
+#gauge .od { position: absolute; left: 0; right: 0; top: 0; height: 20%; background: repeating-linear-gradient(45deg, rgba(255,60,40,.55) 0 6px, rgba(255,60,40,.25) 6px 12px); }
+#gauge .fill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(0deg, #3ee07a, #ffe14a 55%, #ff8a3a 80%, #ff3a2a); }
+#gauge .target { position: absolute; left: -10px; right: -10px; border-radius: 6px; background: rgba(255,201,58,.3); border: 3px solid var(--gold); }
+#gauge .label { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-size: 12px; text-shadow: 0 2px 0 rgba(0,0,0,.5); white-space: nowrap; }
+/* Swinging aim arrow */
+#aim { position: absolute; left: 50%; bottom: 0; width: 240px; height: 72%; transform: translateX(-50%); pointer-events: none; }
+#aim svg { width: 100%; height: 100%; overflow: visible; }
+/* Wind */
+#wind { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; display: flex; align-items: center; gap: 8px; pointer-events: none;
+  background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8); border-radius: 999px; padding: 4px 12px 4px 4px; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
+#wind .dial { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(#2b4a80, #12203a); display: grid; place-items: center; }
+#wind b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
+#wind small { display: block; font-size: 9px; letter-spacing: .1em; color: var(--ink-dim); }
+#opp { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; pointer-events: none; background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8);
+  border-radius: 14px; padding: 4px 10px; font-size: 12px; box-shadow: 0 4px 0 rgba(0,0,0,.25); text-align: right; }
+#opp b { font-family: var(--font-display); font-size: 15px; font-weight: 400; display: block; }
+
+/* Control deck */
+#panel {
+  background: linear-gradient(var(--deck-2), var(--deck)); border-top: 3px solid var(--deck-edge); min-height: 186px;
+  padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 10px;
+}
+.row { display: flex; align-items: center; gap: 8px; }
+.who { font-family: var(--font-display); font-size: 21px; font-weight: 400; letter-spacing: .01em; }
+.who i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 8px; vertical-align: 0; border: 2px solid #fff; }
+.muted { color: var(--ink-dim); font-size: 13px; font-weight: 700; }
+.spacer { flex: 1; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.12); border-radius: 12px; padding: 4px 9px; }
+.chip small { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+.chip b { font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.chip.gold { border-color: var(--gold); } .chip.gold b { color: var(--gold); }
+.btns { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 10px; }
+.btn {
+  border-radius: 16px; border: 0; padding: 13px 6px 12px; font-family: var(--font-display); font-size: 18px; letter-spacing: .02em; font-weight: 400;
+  background: linear-gradient(#4b6aa5, #2c4677); box-shadow: 0 5px 0 var(--deck-edge), inset 0 2px 0 rgba(255,255,255,.25);
+  text-shadow: 0 2px 0 rgba(0,0,0,.3); white-space: nowrap; transition: transform .08s, box-shadow .08s;
+}
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--deck-edge), inset 0 2px 0 rgba(255,255,255,.25); }
+.btn:disabled { opacity: .4; cursor: default; transform: none; }
+.btn.go { font-size: 22px; }
+.btn.red { background: linear-gradient(#ff7a6a, var(--p0) 50%, var(--p0-dark)); box-shadow: 0 5px 0 #6e0c05, inset 0 2px 0 rgba(255,255,255,.35); }
+.btn.blue { background: linear-gradient(#69adff, var(--p1) 50%, var(--p1-dark)); box-shadow: 0 5px 0 #062b66, inset 0 2px 0 rgba(255,255,255,.35); }
+.btn.green { background: linear-gradient(#7af0a3, var(--go) 50%, var(--go-dark)); box-shadow: 0 5px 0 #075c2b, inset 0 2px 0 rgba(255,255,255,.35); }
+.pullpad { display: flex; align-items: center; gap: 14px; }
+.pullpad .bag { width: 64px; height: 64px; flex: none; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--font-display); font-size: 26px; }
+.big { font-family: var(--font-display); font-size: 22px; font-weight: 400; line-height: 1.1; }
+.feedback { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fb { background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.12); border-radius: 14px; padding: 8px 4px; text-align: center; }
+.fb small { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+.fb b { font-size: 15px; color: #ffb35a; font-weight: 900; }
+.fb b.perfect { color: var(--go); }
+.center { text-align: center; }
+.linkbtn { background: none; border: 0; color: var(--ink-dim); font-weight: 800; font-size: 14px; text-decoration: underline; }
+
+/* Overlays */
+.overlay {
+  position: fixed; inset: 0; z-index: 20; background: rgba(6,12,24,.55); display: flex; align-items: center; justify-content: center;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.sheet {
+  background: linear-gradient(var(--deck-2), var(--deck)); border: 4px solid #fff; border-radius: 26px; padding: 22px; width: 100%; max-width: 400px;
+  max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 0 rgba(0,0,0,.35);
+}
+#menu { background: linear-gradient(rgba(6,12,24,.1), rgba(6,12,24,.65)); align-items: flex-end; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.logo { font-family: var(--font-display); font-size: 50px; line-height: .9; text-align: center; text-shadow: 0 5px 0 rgba(0,0,0,.35); font-weight: 400; }
+.logo span { color: var(--gold); display: block; font-size: 58px; }
+.tag { text-align: center; color: var(--ink-dim); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
+.seg button { border: 0; background: none; padding: 10px; border-radius: 12px; font-family: var(--font-display); font-size: 17px; font-weight: 400; color: var(--ink-dim); }
+.seg button.on { background: #fff; color: var(--deck); box-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.label { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); }
+.levels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lvl { text-align: left; border: 3px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); border-radius: 14px; padding: 8px 10px; }
+.lvl b { font-family: var(--font-display); font-size: 17px; font-weight: 400; display: block; }
+.lvl span { font-size: 11px; color: var(--ink-dim); font-weight: 700; }
+.lvl.on { border-color: var(--gold); background: rgba(255,201,58,.14); }
+.help { display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.45; font-weight: 700; }
+.help p { margin: 0; }
+.help b { color: var(--gold); font-weight: 900; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.col { border-radius: 18px; padding: 12px 6px; text-align: center; border: 3px solid rgba(255,255,255,.6); }
+.col .big2 { font-family: var(--font-display); font-size: 44px; line-height: 1.1; font-weight: 400; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.col small { font-size: 12px; }
+h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: center; font-weight: 400; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
+/* Clubhouse */
+#hub { align-items: stretch; justify-content: space-between; flex-direction: column; background: linear-gradient(rgba(6,12,24,.35), rgba(6,12,24,0) 30%, rgba(6,12,24,0) 45%, rgba(6,12,24,.75));
+  padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); gap: 12px; }
+.hubtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; max-width: 560px; margin: 0 auto; }
+.pill { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(#2b4a80, #12203a); border: 3px solid #fff; border-radius: 999px; padding: 3px 12px 3px 4px; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+.pill .ico { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 16px; }
+.pill b { font-family: var(--font-display); font-size: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.hubbottom { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 560px; margin: 0 auto; }
+.venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
+.venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
+.venue .facts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.venue .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); font-family: var(--font-display); font-size: 20px; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.venue .nav:disabled { opacity: .3; }
+.venue .prev { left: -14px; } .venue .next { right: -14px; }
+.locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 22px; }
+.hubrow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.btn.small { font-size: 15px; padding: 10px 4px; }
+.progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
+.progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff1a8); }
+/* Shop */
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
+.tabs button { border: 0; background: none; padding: 9px; border-radius: 12px; font-family: var(--font-display); font-size: 17px; font-weight: 400; color: var(--ink-dim); }
+.tabs button.on { background: #fff; color: var(--deck); }
+.items { display: flex; flex-direction: column; gap: 10px; }
+.item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; background: rgba(255,255,255,.06); border: 3px solid rgba(255,255,255,.12); border-radius: 16px; padding: 10px; }
+.item.eq { border-color: var(--go); }
+.item canvas { width: 64px; height: 64px; border-radius: 12px; }
+.item h4 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.stat { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-dim); }
+.stat span { width: 62px; }
+.stat i { width: 9px; height: 9px; border-radius: 2px; background: rgba(255,255,255,.15); }
+.stat i.on { background: var(--gold); }
+.tagfeel { display: inline-block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 1px 6px; border-radius: 6px; background: rgba(255,255,255,.12); margin-top: 3px; }
+.item .btn { font-size: 15px; padding: 9px 12px; min-width: 86px; }
+.big3 { font-family: var(--font-display); font-size: 46px; font-weight: 400; text-align: center; line-height: 1; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.rewards { display: flex; justify-content: center; gap: 10px; }
+/* 4-BAGGER title */
+#fourbag { position: fixed; left: 0; right: 0; top: 34%; z-index: 30; text-align: center; pointer-events: none; opacity: 0;
+  font-family: var(--font-display); font-size: clamp(56px, 17vw, 120px); line-height: 1; color: #fff; letter-spacing: .02em;
+  -webkit-text-stroke: 4px #0a1426; paint-order: stroke fill;
+  background: linear-gradient(var(--c1, #ffe14a), var(--c2, #ff8a1f)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 8px 0 rgba(0,0,0,.35)); }
+#fourbag.go { animation: fourbag 2.8s cubic-bezier(.2,.9,.3,1) forwards; }
+@keyframes fourbag {
+  0% { opacity: 0; transform: translateX(-110%) skewX(-12deg) scale(.8); }
+  14% { opacity: 1; transform: translateX(4%) skewX(-12deg) scale(1.1); }
+  22% { transform: translateX(0) skewX(-8deg) scale(1); }
+  78% { opacity: 1; transform: translateX(0) skewX(-8deg) scale(1.04); }
+  100% { opacity: 0; transform: translateX(110%) skewX(-12deg) scale(.9); }
+}
+#loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 22px; color: #12203a; }
+@media (prefers-reduced-motion: reduce) { #banner, .card, .btn { transition: none; } #fourbag.go { animation-duration: .01s; } }
+</style>
+
+<div id="app">
+  <header class="score">
+    <button class="roundbtn" id="menuBtn" aria-label="Menu">☰</button>
+    <div class="card p0" id="card0"><div style="min-width:0"><div class="name" id="name0">You</div><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div>
+    <div class="inning"><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
+    <div class="card p1" id="card1"><div style="min-width:0"><div class="name" id="name1">CPU</div><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div>
+    <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
+  </header>
+  <div id="stage">
+    <div id="loading">Setting up the yard…</div>
+    <canvas id="gl"></canvas>
+    <div id="banner"></div>
+    <div id="hint" hidden></div>
+    <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
+    <div id="opp" hidden></div>
+    <div id="aim" hidden></div>
+    <div id="gauge" hidden><div class="tube"><div class="od"></div><div class="fill" id="gaugeFill"></div></div><div class="target" id="gaugeTarget"></div><div class="label" style="top:-22px">OVERDRIVE</div></div>
+  </div>
+  <section id="panel"></section>
+</div>
+
+<div id="fourbag" aria-live="polite"></div>
+
+<div class="overlay" id="hub">
+  <div class="hubtop">
+    <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="coins">0</b></div>
+    <div class="logo" style="font-size:22px;line-height:1">BACKYARD<span style="font-size:24px">CORNHOLE</span></div>
+    <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div>
+  </div>
+  <div class="hubbottom">
+    <div class="venue" id="venueCard"></div>
+    <button class="btn green go" id="playBtn">PLAY</button>
+    <div class="hubrow">
+      <button class="btn small" id="shopBtn">SHOP</button>
+      <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
+      <button class="btn small" id="onlineBtn" disabled>ONLINE<br><span style="font-size:11px">coming soon</span></button>
+    </div>
+    <div class="row" style="justify-content:center"><button class="linkbtn" id="menuHelp">How to play</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="shop" hidden>
+  <div class="sheet">
+    <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>
+    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button></div>
+    <div class="items" id="shopItems"></div>
+    <button class="btn" id="shopClose">DONE</button>
+  </div>
+</div>
+
+<div class="overlay" id="pause" hidden>
+  <div class="sheet">
+    <h2>Paused</h2>
+    <button class="btn green go" id="resumeBtn">RESUME</button>
+    <button class="btn" id="forfeitBtn">QUIT MATCH</button>
+    <div class="muted center" id="forfeitNote"></div>
+  </div>
+</div>
+
+<div class="overlay" id="helpSheet" hidden>
+  <div class="sheet">
+    <h2>How to play</h2>
+    <div class="help">
+      <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
+      <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
+      <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
+      <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
+      <p><b>Career.</b> Win matches for stars and coins. Stars unlock new venues with bigger prizes, slicker boards and tougher opponents. Spend coins on bags with better accuracy, control and spin, and on new board designs.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins.</p>
+      <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>
+    </div>
+    <button class="btn green go" id="helpClose">GOT IT</button>
+  </div>
+</div>
+
+<div class="overlay" id="inningSheet" hidden>
+  <div class="sheet" id="inningBody"></div>
+</div>
