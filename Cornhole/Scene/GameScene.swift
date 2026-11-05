@@ -18,7 +18,11 @@ final class GameScene: SKScene {
     private let sideBackground = SKSpriteNode()
     private let thrower = ThrowerNode()
     private let previewArc = SKShapeNode()
-    private let trail = SKShapeNode()
+    /// Pooled dots for the flight trail (cheaper than rebuilding a shape every frame).
+    private var trailDots: [SKSpriteNode] = []
+    private var fireflies: SKEmitterNode?
+    /// 0 = whole lane, 1 = zoomed in on the target board.
+    private var sideZoom: CGFloat = 0
     private var sideBags: [Int: SKSpriteNode] = [:]
     private let flightShadow = SKSpriteNode()
 
@@ -44,6 +48,9 @@ final class GameScene: SKScene {
     private var shadowTexture = SKTexture()
     private var dotTexture = SKTexture()
     private var confettiTexture = SKTexture()
+    private var bagNormals: [String: SKTexture] = [:]
+    private var sideBagTexture: [Int: SKTexture] = [:]
+    private let sunlight = SKLightNode()
 
     private var shownPlanVersion = -1
     private var shownPhase: GamePhase?
@@ -86,10 +93,13 @@ final class GameScene: SKScene {
         style(previewArc, color: UIColor(white: 1, alpha: 0.95), width: 1.5)
         previewArc.zPosition = 6
         sideLayer.addChild(previewArc)
-        trail.fillColor = UIColor(white: 1, alpha: 0.6)
-        trail.strokeColor = .clear
-        trail.zPosition = 7
-        sideLayer.addChild(trail)
+        for _ in 0..<90 {
+            let d = SKSpriteNode()
+            d.zPosition = 7
+            d.isHidden = true
+            trailDots.append(d)
+            sideLayer.addChild(d)
+        }
         flightShadow.zPosition = 3
         flightShadow.alpha = 0
         sideLayer.addChild(flightShadow)
@@ -131,6 +141,14 @@ final class GameScene: SKScene {
         zoneLabel.text = "flat · slides"
         zoneLabel2.text = "off-centre = spin"
 
+        // Warm, low evening sun from the top left: lights the board and bags (via normal maps).
+        sunlight.categoryBitMask = 1
+        sunlight.lightColor = UIColor(red: 0.62, green: 0.54, blue: 0.42, alpha: 1)
+        sunlight.ambientColor = UIColor(white: 0.62, alpha: 1)
+        sunlight.falloff = 0.12
+        sunlight.zPosition = 100
+        boardLayer.addChild(sunlight)
+
         landingMarker.zPosition = 30
         boardLayer.addChild(landingMarker)
         finishMarker.zPosition = 31
@@ -167,11 +185,18 @@ final class GameScene: SKScene {
         sideBackground.position = sideMap.rect.origin
 
         // Board view art.
-        grass.texture = SKTexture(image: Art.grass(size: boardMap.rect.size, footScale: boardMap.scale))
+        let grassTexture = SKTexture(image: Art.grass(size: boardMap.rect.size, footScale: boardMap.scale))
+        grass.texture = grassTexture
+        grass.normalTexture = grassTexture.generatingNormalMap(withSmoothness: 0.4, contrast: 0.6)
+        grass.lightingBitMask = 1
         grass.size = boardMap.rect.size
         grass.position = boardMap.rect.origin
         let board = Art.boardTop(footScale: boardMap.scale)
-        boardSprite.texture = SKTexture(image: board.image)
+        let boardTexture = SKTexture(image: board.image)
+        boardSprite.texture = boardTexture
+        boardSprite.normalTexture = boardTexture.generatingNormalMap(withSmoothness: 0.15, contrast: 1.4)
+        boardSprite.lightingBitMask = 1
+        sunlight.position = CGPoint(x: boardMap.rect.minX - boardMap.rect.width * 0.3, y: boardMap.rect.maxY + boardMap.rect.height * 0.25)
         boardSprite.size = board.image.size
         let corner = boardMap.point(Vec2(x: -Court.boardHalfWidth, y: Court.boardFrontY))
         boardSprite.position = CGPoint(x: corner.x - board.padding, y: corner.y - board.padding)
@@ -184,13 +209,23 @@ final class GameScene: SKScene {
         for owner in 0..<2 {
             for dim in [false, true] {
                 let key = "\(owner)\(dim)"
-                bagTextures[key] = SKTexture(image: Art.bagTop(owner: owner, dim: dim, size: bagPoints))
+                let bagTexture = SKTexture(image: Art.bagTop(owner: owner, dim: dim, size: bagPoints))
+                bagTextures[key] = bagTexture
+                bagNormals[key] = bagTexture.generatingNormalMap(withSmoothness: 0.3, contrast: 2.5)
                 sideBagTextures[key] = SKTexture(image: Art.bagSide(owner: owner, dim: dim, size: sideBagSize))
             }
         }
         shadowTexture = SKTexture(image: Art.softShadow(size: CGSize(width: 64, height: 64)))
         dotTexture = SKTexture(image: Art.dot(diameter: 8))
         confettiTexture = SKTexture(image: Art.confettiPiece())
+        for d in trailDots { d.texture = dotTexture }
+        for owner in 0..<2 {
+            sideBagTexture[owner] = SKTexture(image: Art.bagSide(owner: owner, dim: false,
+                                                                  size: CGSize(width: 0.6 * Art.partScale, height: 0.26 * Art.partScale)))
+        }
+        fireflies?.removeFromParent()
+        fireflies = makeFireflies()
+        if let f = fireflies { sideLayer.addChild(f) }
         flightShadow.texture = shadowTexture
         flightShadow.size = CGSize(width: 14, height: 4)
 
@@ -374,6 +409,7 @@ final class GameScene: SKScene {
             } else {
                 let shadow = SKSpriteNode(texture: shadowTexture)
                 let bag = SKSpriteNode(texture: bagTextures["\(b.owner)false"])
+                bag.lightingBitMask = 1
                 boardLayer.addChild(shadow)
                 boardLayer.addChild(bag)
                 nodes = (shadow, bag)
@@ -389,6 +425,7 @@ final class GameScene: SKScene {
                 sprite.isHidden = false
                 shadow.isHidden = false
                 sprite.texture = bagTextures["\(b.owner)\(dim)"]
+                sprite.normalTexture = bagNormals["\(b.owner)\(dim)"]
                 sprite.size = CGSize(width: z * 1.2, height: z * 1.2)
                 sprite.position = boardMap.point(b.position)
                 sprite.zRotation = CGFloat(-b.angle)
@@ -403,6 +440,7 @@ final class GameScene: SKScene {
                 sprite.isHidden = false
                 shadow.isHidden = false
                 sprite.texture = bagTextures["\(b.owner)false"]
+                sprite.normalTexture = bagNormals["\(b.owner)false"]
                 sprite.size = CGSize(width: z * 1.2 * (1 + lift), height: z * 1.2 * (1 + lift))
                 sprite.position = boardMap.point(Vec2(x: b.position.x, y: b.position.y + above * 0.08))
                 sprite.zRotation = CGFloat(-b.angle)
@@ -421,7 +459,9 @@ final class GameScene: SKScene {
 
     private func updateSide() {
         thrower.position = sideMap.point(-1.2, 0)
-        thrower.update(pose: ThrowerPose.current(for: game), unit: sideMap.kz, player: game.currentPlayer)
+        thrower.update(pose: ThrowerPose.current(for: game), unit: sideMap.kz, player: game.currentPlayer,
+                       shadowTexture: shadowTexture, bagTexture: sideBagTexture[game.currentPlayer])
+        updateSideCamera()
 
         let bags = game.world.bags
         let ids = Set(bags.map(\.id))
@@ -480,28 +520,78 @@ final class GameScene: SKScene {
         }
 
         // Fading trail behind the last throw.
+        var used = 0
         if let last = game.lastThrownBagID, let b = game.world.bag(id: last), b.trail.count > 1 {
-            let path = CGMutablePath()
+            let step = max(2, Int((Double(b.trail.count) / Double(trailDots.count)).rounded(.up)))
             var i = 0
-            while i < b.trail.count {
-                let p = sideMap.point(b.trail[i].y, b.trail[i].z)
-                let r: CGFloat = 0.6 + 0.9 * CGFloat(i) / CGFloat(b.trail.count)
-                path.addEllipse(in: CGRect(x: p.x - r, y: p.y - r, width: 2 * r, height: 2 * r))
-                i += 2
+            while i < b.trail.count && used < trailDots.count {
+                let d = trailDots[used]
+                let t = CGFloat(i) / CGFloat(b.trail.count)
+                d.isHidden = false
+                d.position = sideMap.point(b.trail[i].y, b.trail[i].z)
+                let r = 1.2 + 1.8 * t
+                d.size = CGSize(width: r, height: r)
+                d.alpha = 0.15 + 0.6 * t
+                used += 1
+                i += step
             }
-            trail.path = path
-        } else {
-            trail.path = nil
         }
+        for k in used..<trailDots.count where !trailDots[k].isHidden { trailDots[k].isHidden = true }
+    }
+
+    /// Eases the side view in on the target board while a bag comes down, and back out afterwards.
+    private func updateSideCamera() {
+        var target: CGFloat = 0
+        if game.phase == .inFlight, let id = game.lastThrownBagID, let b = game.world.bag(id: id) {
+            if b.state != .flying || b.position.y > 16 { target = 1 }
+        }
+        sideZoom += (target - sideZoom) * (target > sideZoom ? 0.06 : 0.1)
+        if abs(sideZoom - target) < 0.001 { sideZoom = target }
+        let zoom = 1 + 0.9 * sideZoom
+        let focus = sideMap.point(Court.boardFrontY + 1.5, 1.2)
+        sideLayer.setScale(zoom)
+        sideLayer.position = CGPoint(x: focus.x * (1 - zoom) - sideMap.rect.width * 0.08 * sideZoom,
+                                     y: focus.y * (1 - zoom) + sideMap.rect.height * 0.05 * sideZoom)
+    }
+
+    private func makeFireflies() -> SKEmitterNode {
+        let e = SKEmitterNode()
+        e.particleTexture = dotTexture
+        e.particleBirthRate = 1.6
+        e.particleLifetime = 5
+        e.particleLifetimeRange = 2
+        e.particlePositionRange = CGVector(dx: sideMap.rect.width, dy: sideMap.rect.height * 0.35)
+        e.position = CGPoint(x: sideMap.rect.midX, y: sideMap.groundY + sideMap.rect.height * 0.35)
+        e.emissionAngleRange = .pi * 2
+        e.particleSpeed = 6
+        e.particleSpeedRange = 4
+        e.particleScale = 0.28
+        e.particleScaleRange = 0.12
+        e.particleColor = UIColor(red: 1, green: 0.92, blue: 0.55, alpha: 1)
+        e.particleColorBlendFactor = 1
+        e.particleBlendMode = .add
+        e.particleAlpha = 0
+        e.particleAlphaSequence = SKKeyframeSequence(keyframeValues: [0, 0.9, 0.2, 0.9, 0] as [NSNumber], times: [0, 0.2, 0.45, 0.7, 1] as [NSNumber])
+        e.zPosition = 4
+        e.advanceSimulationTime(6)
+        return e
     }
 
     // MARK: Effects
 
     private func play(_ effect: GameEffect) {
         switch effect {
-        case .landed(let p):
+        case .landed(let p, let id):
             dust(at: p, color: UIColor(red: 0.92, green: 0.84, blue: 0.67, alpha: 1))
             ring(at: p)
+            if let bag = boardBags[id]?.bag {
+                bag.removeAction(forKey: "squash")
+                bag.run(.sequence([
+                    .group([.scaleX(to: 1.18, duration: 0.06), .scaleY(to: 0.82, duration: 0.06)]),
+                    .group([.scaleX(to: 0.94, duration: 0.08), .scaleY(to: 1.06, duration: 0.08)]),
+                    .scale(to: 1, duration: 0.1),
+                ]), withKey: "squash")
+            }
         case .landedOnGrass(let p):
             dust(at: p, color: UIColor(red: 0.43, green: 0.33, blue: 0.2, alpha: 1))
         case .cornhole(let player):

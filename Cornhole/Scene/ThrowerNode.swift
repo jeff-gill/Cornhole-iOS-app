@@ -51,150 +51,166 @@ struct ThrowerPose {
     }
 }
 
-/// A cartoon cornhole player in a team jersey, built from shape nodes and re-posed every frame.
+/// A cartoon cornhole player in a team jersey. Every body part is a pre-painted sprite that is
+/// only moved and rotated each frame, which keeps it cheap to animate.
 /// The node's origin sits on the ground between the feet; the player faces +x (down-range).
 final class ThrowerNode: SKNode {
-    private var parts: [String: SKShapeNode] = [:]
+    private static let limbTexture = SKTexture(image: Art.limb())
+    private static let discTexture = SKTexture(image: Art.disc())
+
+    private var sprites: [String: SKSpriteNode] = [:]
+    private var configuredPlayer = -1
+    private let shadow = SKSpriteNode()
+
+    /// Back-to-front drawing order.
     private let order = [
-        "shadow", "backShin", "backSock", "backThigh", "backShoe", "backShoeStripe",
-        "farArmUpper", "farArmFore", "farSleeve", "farHand",
-        "torso", "torsoStripe",
-        "frontShin", "frontSock", "frontThigh", "frontShoe", "frontShoeStripe",
-        "neck", "hair", "head", "ear", "eye", "cap", "brim", "capButton",
-        "armUpper", "armFore", "sleeve", "hand", "heldBag",
+        "backThigh", "backShin", "backKnee", "backSock", "backShoe",
+        "farUpper", "farFore", "farElbow", "farSleeve", "farHand",
+        "hips", "torso",
+        "frontThigh", "frontShin", "frontKnee", "frontSock", "frontShoe",
+        "neck", "head",
+        "upper", "fore", "elbow", "sleeve", "hand", "heldBag",
     ]
 
     override init() {
         super.init()
+        shadow.zPosition = -1
+        addChild(shadow)
         for (i, name) in order.enumerated() {
-            let n = SKShapeNode()
-            n.zPosition = CGFloat(i) * 0.01
-            n.isAntialiased = true
-            n.lineCap = .round
-            n.lineJoin = .round
-            parts[name] = n
-            addChild(n)
+            let s = SKSpriteNode()
+            s.zPosition = CGFloat(i) * 0.01
+            s.colorBlendFactor = 1
+            sprites[name] = s
+            addChild(s)
         }
     }
 
     required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    private func part(_ name: String) -> SKShapeNode { parts[name]! }
+    private func sprite(_ name: String) -> SKSpriteNode { sprites[name]! }
 
-    private func line(_ name: String, _ a: CGPoint, _ b: CGPoint, width: CGFloat, color: UIColor) {
-        let p = CGMutablePath()
-        p.move(to: a)
-        p.addLine(to: b)
-        let n = part(name)
-        n.path = p
-        n.lineWidth = width
-        n.strokeColor = color
-        n.fillColor = .clear
+    private func configure(player pl: Int, shadowTexture: SKTexture, bagTexture: SKTexture?) {
+        configuredPlayer = pl
+        shadow.texture = shadowTexture
+        for name in order {
+            let s = sprite(name)
+            s.texture = Self.limbTexture
+            s.color = .white
+            s.colorBlendFactor = 1
+            s.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        }
+        for name in ["backKnee", "frontKnee", "farElbow", "elbow", "farHand", "hand", "hips"] {
+            sprite(name).texture = Self.discTexture
+        }
+        let skin = Palette.skin[pl], skinD = Palette.skinDark[pl]
+        for name in ["frontShin", "frontKnee", "upper", "fore", "elbow", "hand"] { sprite(name).color = skin }
+        for name in ["backShin", "backKnee", "farUpper", "farFore", "farElbow", "farHand", "neck"] { sprite(name).color = skinD }
+        for name in ["frontThigh", "hips"] { sprite(name).color = Palette.shorts }
+        sprite("backThigh").color = Palette.shortsDark
+        for name in ["frontSock", "backSock"] { sprite(name).color = UIColor(hex: 0xF3EFE4) }
+        sprite("sleeve").color = Palette.player[pl]
+        sprite("farSleeve").color = Palette.playerDark[pl]
+
+        let torso = Art.torso(player: pl)
+        sprite("torso").texture = SKTexture(image: torso.0)
+        sprite("torso").anchorPoint = torso.1
+        sprite("torso").colorBlendFactor = 0
+        sprite("head").texture = SKTexture(image: Art.head(player: pl))
+        sprite("head").anchorPoint = CGPoint(x: 0.7 / 1.5, y: 1 - 0.8 / 1.5)
+        sprite("head").colorBlendFactor = 0
+        let shoe = Art.shoe(player: pl)
+        for name in ["frontShoe", "backShoe"] {
+            sprite(name).texture = SKTexture(image: shoe.0)
+            sprite(name).anchorPoint = shoe.1
+            sprite(name).colorBlendFactor = 0
+        }
+        sprite("backShoe").color = UIColor(white: 0.85, alpha: 1)
+        sprite("backShoe").colorBlendFactor = 0.25
+        sprite("heldBag").texture = bagTexture
+        sprite("heldBag").colorBlendFactor = 0
     }
 
-    private func shape(_ name: String, _ path: CGPath, fill: UIColor, stroke: UIColor = .clear, width: CGFloat = 0) {
-        let n = part(name)
-        n.path = path
-        n.fillColor = fill
-        n.strokeColor = stroke
-        n.lineWidth = width
+    /// A limb from a to b.
+    private func limb(_ name: String, _ a: CGPoint, _ b: CGPoint, width: CGFloat) {
+        let s = sprite(name)
+        let dx = b.x - a.x, dy = b.y - a.y
+        s.position = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+        s.size = CGSize(width: max(1, hypot(dx, dy) + width * 0.3), height: width)
+        s.zRotation = atan2(dy, dx)
     }
 
-    private func circle(_ name: String, _ c: CGPoint, _ r: CGFloat, fill: UIColor) {
-        shape(name, CGPath(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2 * r, height: 2 * r), transform: nil), fill: fill)
+    private func dot(_ name: String, _ p: CGPoint, diameter: CGFloat) {
+        let s = sprite(name)
+        s.position = p
+        s.size = CGSize(width: diameter, height: diameter)
+        s.zRotation = 0
     }
 
     /// Re-poses the player. `u` is points per foot.
-    func update(pose: ThrowerPose, unit u: CGFloat, player pl: Int) {
-        let P = { (x: Double, y: Double) -> CGPoint in CGPoint(x: CGFloat(x) * u, y: CGFloat(y) * u) }
-        let W = { (v: Double) -> CGFloat in CGFloat(v) * u }
-        let skin = Palette.skin[pl], skinD = Palette.skinDark[pl]
-        let jersey = Palette.player[pl], jerseyD = Palette.playerDark[pl]
+    func update(pose: ThrowerPose, unit u: CGFloat, player pl: Int, shadowTexture: SKTexture, bagTexture: SKTexture?) {
+        if pl != configuredPlayer { configure(player: pl, shadowTexture: shadowTexture, bagTexture: bagTexture) }
+        sprite("heldBag").texture = bagTexture
+
+        func P(_ x: Double, _ y: Double) -> CGPoint { CGPoint(x: CGFloat(x) * u, y: CGFloat(y) * u) }
+        func W(_ v: Double) -> CGFloat { CGFloat(v) * u }
 
         let hip = (x: 0.05 + pose.step * 0.35, y: 3.0 + pose.bob)
         let lean = pose.lean
-        func up(_ len: Double, _ extra: Double = 0) -> (x: Double, y: Double) {
-            (hip.x + sin(lean + extra) * len, hip.y + cos(lean + extra) * len)
-        }
+        func up(_ len: Double) -> (x: Double, y: Double) { (hip.x + sin(lean) * len, hip.y + cos(lean) * len) }
         let shoulder = up(1.9), neck = up(2.15), head = up(2.62)
 
-        // Ground shadow.
-        let sc = P(pose.step * 0.4, 0)
-        let sw = W(1.2 + pose.step * 0.4)
-        shape("shadow", CGPath(ellipseIn: CGRect(x: sc.x - sw, y: sc.y - W(0.18), width: 2 * sw, height: W(0.36)), transform: nil),
-              fill: UIColor(white: 0, alpha: 0.22))
+        shadow.position = P(pose.step * 0.4, 0)
+        shadow.size = CGSize(width: W(2.6 + pose.step * 0.8), height: W(0.4))
+        shadow.alpha = 0.55
 
-        // Legs.
-        func leg(_ prefix: String, foot: (x: Double, y: Double), forward: Double, dark: Bool) {
+        func leg(_ side: String, foot: (x: Double, y: Double), forward: Double) {
             let knee = ((hip.x + foot.x) / 2 + forward, (hip.y + foot.y) / 2 + 0.05)
-            let H = P(hip.x, hip.y), K = P(knee.0, knee.1), F = P(foot.x + 0.12, foot.y + 0.25)
-            line(prefix + "Shin", K, F, width: W(0.36), color: dark ? skinD : skin)
-            line(prefix + "Sock", CGPoint(x: F.x, y: F.y + W(0.15)), F, width: W(0.38), color: UIColor(hex: 0xF3EFE4))
-            line(prefix + "Thigh", H, K, width: W(0.48), color: dark ? Palette.shortsDark : Palette.shorts)
-            let s = P(foot.x, foot.y)
-            shape(prefix + "Shoe", UIBezierPath(roundedRect: CGRect(x: s.x - W(0.2), y: s.y, width: W(0.78), height: W(0.3)),
-                                                cornerRadius: W(0.12)).cgPath,
-                  fill: dark ? UIColor(hex: 0xD8D2C4) : UIColor(hex: 0xF6F2E8), stroke: UIColor(hex: 0x3A3A3A), width: max(0.5, W(0.04)))
-            shape(prefix + "ShoeStripe", CGPath(rect: CGRect(x: s.x + W(0.05), y: s.y + W(0.15), width: W(0.3), height: W(0.07)), transform: nil),
-                  fill: jersey)
+            let H = P(hip.x, hip.y), K = P(knee.0, knee.1), F = P(foot.x + 0.12, foot.y + 0.3)
+            limb(side + "Thigh", H, K, width: W(0.5))
+            limb(side + "Shin", K, F, width: W(0.36))
+            dot(side + "Knee", K, diameter: W(0.4))
+            limb(side + "Sock", CGPoint(x: F.x, y: F.y + W(0.12)), F, width: W(0.38))
+            let shoe = sprite(side + "Shoe")
+            shoe.position = P(foot.x, foot.y)
+            shoe.size = CGSize(width: W(0.9), height: W(0.4))
         }
-        leg("back", foot: (-0.65 - pose.step * 0.15, 0), forward: 0.25, dark: true)
+        leg("back", foot: (-0.65 - pose.step * 0.15, 0), forward: 0.25)
+        leg("front", foot: (0.45 + pose.step * 1.0, 0), forward: 0.32)
+        dot("hips", P(hip.x, hip.y + 0.1), diameter: W(0.85))
 
-        // Arms.
-        func arm(_ names: (upper: String, fore: String, sleeve: String, hand: String), angle: Double, dark: Bool) -> (point: CGPoint, foreAngle: Double) {
-            let dir = (sin(angle), -cos(angle))
-            let elbow = (shoulder.x + dir.0 * 1.0, shoulder.y + dir.1 * 1.0)
+        func arm(_ prefix: String, angle: Double) -> (point: CGPoint, foreAngle: Double) {
+            let elbow = (shoulder.x + sin(angle) * 1.0, shoulder.y - cos(angle) * 1.0)
             let fa = angle + 0.25
             let hand = (elbow.0 + sin(fa) * 0.95, elbow.1 - cos(fa) * 0.95)
             let S = P(shoulder.x, shoulder.y), E = P(elbow.0, elbow.1), Hd = P(hand.0, hand.1)
-            line(names.upper, S, E, width: W(0.3), color: dark ? skinD : skin)
-            line(names.fore, E, Hd, width: W(0.27), color: dark ? skinD : skin)
-            line(names.sleeve, S, CGPoint(x: S.x + (E.x - S.x) * 0.45, y: S.y + (E.y - S.y) * 0.45), width: W(0.42), color: dark ? jerseyD : jersey)
-            circle(names.hand, Hd, W(0.16), fill: dark ? skinD : skin)
+            let n = { (part: String) -> String in
+                prefix.isEmpty ? part : prefix + part.prefix(1).uppercased() + String(part.dropFirst())
+            }
+            limb(n("upper"), S, E, width: W(0.3))
+            limb(n("fore"), E, Hd, width: W(0.27))
+            dot(n("elbow"), E, diameter: W(0.3))
+            limb(n("sleeve"), S, CGPoint(x: S.x + (E.x - S.x) * 0.45, y: S.y + (E.y - S.y) * 0.45), width: W(0.44))
+            dot(n("hand"), Hd, diameter: W(0.34))
             return (Hd, fa)
         }
-        _ = arm(("farArmUpper", "farArmFore", "farSleeve", "farHand"), angle: -pose.arm * 0.5 - 0.15, dark: true)
+        _ = arm("far", angle: -pose.arm * 0.5 - 0.15)
 
-        // Torso, leaning with the throw.
-        func torsoPoint(_ dx: Double, _ dy: Double) -> CGPoint {
-            let x = dx * cos(lean) + dy * sin(lean), y = -dx * sin(lean) + dy * cos(lean)
-            return P(hip.x + x, hip.y + y)
-        }
-        let torso = CGMutablePath()
-        torso.move(to: torsoPoint(-0.42, 0.05))
-        torso.addLine(to: torsoPoint(0.38, 0.05))
-        torso.addLine(to: torsoPoint(0.44, 1.95))
-        torso.addQuadCurve(to: torsoPoint(-0.46, 1.95), control: torsoPoint(0, 2.12))
-        torso.closeSubpath()
-        shape("torso", torso, fill: jersey, stroke: jerseyD, width: max(0.5, W(0.05)))
-        line("torsoStripe", torsoPoint(-0.05, 0.2), torsoPoint(-0.05, 1.75), width: W(0.07), color: UIColor(white: 1, alpha: 0.85))
+        let torso = sprite("torso")
+        torso.position = P(hip.x, hip.y)
+        torso.size = CGSize(width: W(1.1), height: W(2.35))
+        torso.zRotation = CGFloat(-lean)
 
-        leg("front", foot: (0.45 + pose.step * 1.0, 0), forward: 0.32, dark: false)
+        limb("neck", P(shoulder.x, shoulder.y), P(neck.0, neck.1), width: W(0.28))
+        let headSprite = sprite("head")
+        headSprite.position = P(head.0, head.1)
+        headSprite.size = CGSize(width: W(1.5), height: W(1.5))
+        headSprite.zRotation = CGFloat(-lean * 0.5)
 
-        // Neck and head.
-        line("neck", P(shoulder.x, shoulder.y), P(neck.0, neck.1), width: W(0.28), color: skinD)
-        let hc = P(head.0, head.1), hr = W(0.42)
-        circle("hair", CGPoint(x: hc.x - W(0.08), y: hc.y - W(0.02)), hr, fill: Palette.hair[pl])
-        circle("head", CGPoint(x: hc.x + W(0.04), y: hc.y - W(0.04)), hr * 0.95, fill: skin)
-        circle("ear", CGPoint(x: hc.x - W(0.08), y: hc.y - W(0.08)), W(0.1), fill: skinD)
-        circle("eye", CGPoint(x: hc.x + W(0.28), y: hc.y + W(0.02)), max(0.8, W(0.05)), fill: UIColor(white: 0.13, alpha: 1))
-        let cap = CGMutablePath()
-        cap.addArc(center: CGPoint(x: hc.x, y: hc.y + W(0.05)), radius: hr * 1.02, startAngle: .pi * 0.02, endAngle: .pi * 0.98, clockwise: false)
-        cap.closeSubpath()
-        shape("cap", cap, fill: jersey)
-        shape("brim", UIBezierPath(roundedRect: CGRect(x: hc.x + W(0.1), y: hc.y + W(0.02), width: W(0.55), height: W(0.1)), cornerRadius: W(0.05)).cgPath,
-              fill: jerseyD)
-        circle("capButton", CGPoint(x: hc.x, y: hc.y + hr * 1.02 + W(0.03)), W(0.05), fill: .white)
-
-        // Throwing arm in front, holding the bag until release.
-        let hand = arm(("armUpper", "armFore", "sleeve", "hand"), angle: pose.arm, dark: false)
-        let held = part("heldBag")
-        held.isHidden = !pose.holdingBag
-        if pose.holdingBag {
-            let r = CGRect(x: -W(0.3), y: -W(0.12), width: W(0.6), height: W(0.24))
-            var t = CGAffineTransform(translationX: hand.point.x, y: hand.point.y - W(0.05)).rotated(by: CGFloat(hand.foreAngle * 0.6))
-            let path = CGPath(roundedRect: r, cornerWidth: W(0.08), cornerHeight: W(0.08), transform: &t)
-            shape("heldBag", path, fill: Palette.player[pl], stroke: Palette.playerDark[pl], width: max(0.5, W(0.04)))
-        }
+        let hand = arm("", angle: pose.arm)
+        let held = sprite("heldBag")
+        held.isHidden = !pose.holdingBag || bagTexture == nil
+        held.position = CGPoint(x: hand.point.x, y: hand.point.y - W(0.08))
+        held.size = CGSize(width: W(0.62), height: W(0.26))
+        held.zRotation = CGFloat(hand.foreAngle * 0.6)
     }
 }

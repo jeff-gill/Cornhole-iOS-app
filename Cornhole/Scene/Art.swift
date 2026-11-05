@@ -494,3 +494,148 @@ enum Art {
         }
     }
 }
+
+// MARK: - Thrower parts (drawn once, then moved/rotated as sprites every frame)
+
+extension Art {
+    /// Pixels-per-foot the thrower parts are painted at (they are scaled down on screen).
+    static let partScale: CGFloat = 48
+
+    /// A white bar with soft edges and a subtle top-lit gradient; tinted per limb.
+    static func limb() -> UIImage {
+        UIGraphicsImageRenderer(size: CGSize(width: 16, height: 16)).image { ctx in
+            let c = ctx.cgContext
+            let r = CGRect(x: 0, y: 1, width: 16, height: 14)
+            c.saveGState()
+            c.clip(to: r)
+            c.drawLinearGradient(
+                CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                           colors: [UIColor.white.cgColor, UIColor(white: 0.78, alpha: 1).cgColor] as CFArray, locations: [0.2, 1])!,
+                start: CGPoint(x: 0, y: r.minY), end: CGPoint(x: 0, y: r.maxY), options: [])
+            c.restoreGState()
+        }
+    }
+
+    /// A white disc with a soft highlight; tinted for joints, hands and so on.
+    static func disc() -> UIImage {
+        UIGraphicsImageRenderer(size: CGSize(width: 32, height: 32)).image { ctx in
+            let c = ctx.cgContext
+            c.addEllipse(in: CGRect(x: 1, y: 1, width: 30, height: 30))
+            c.clip()
+            c.drawRadialGradient(
+                CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                           colors: [UIColor.white.cgColor, UIColor(white: 0.8, alpha: 1).cgColor] as CFArray, locations: [0, 1])!,
+                startCenter: CGPoint(x: 12, y: 11), startRadius: 0, endCenter: CGPoint(x: 16, y: 16), endRadius: 16, options: [.drawsAfterEndLocation])
+        }
+    }
+
+    /// Jersey torso, hip at the anchor point. Returns the image and the anchor (unit coordinates, y up).
+    static func torso(player pl: Int) -> (UIImage, CGPoint) {
+        let k = partScale
+        let size = CGSize(width: 1.1 * k, height: 2.35 * k)
+        // Feet relative to the hip (x forward, y up) -> image (y down).
+        func P(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: (x + 0.55) * k, y: (2.25 - y) * k) }
+        let image = UIGraphicsImageRenderer(size: size).image { ctx in
+            let c = ctx.cgContext
+            let body = CGMutablePath()
+            body.move(to: P(-0.42, 0.05))
+            body.addLine(to: P(0.38, 0.05))
+            body.addLine(to: P(0.44, 1.92))
+            body.addQuadCurve(to: P(-0.46, 1.92), control: P(0, 2.14))
+            body.closeSubpath()
+            c.saveGState()
+            c.addPath(body)
+            c.clip()
+            c.drawLinearGradient(gradient([Palette.playerDark[pl], Palette.player[pl], Palette.playerLight[pl]], [0, 0.55, 1]),
+                                 start: P(-0.45, 1), end: P(0.45, 1), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            // Side panel stripe and a darker hem.
+            c.setStrokeColor(UIColor(white: 1, alpha: 0.9).cgColor)
+            c.setLineWidth(0.09 * k)
+            c.beginPath(); c.move(to: P(-0.08, 0.15)); c.addLine(to: P(-0.04, 1.8)); c.strokePath()
+            c.setFillColor(UIColor(white: 0, alpha: 0.18).cgColor)
+            c.fill(CGRect(x: 0, y: P(0, 0.2).y, width: size.width, height: 0.2 * k))
+            // Number on the back.
+            let number = NSAttributedString(string: pl == 0 ? "7" : "23", attributes: [
+                .font: UIFont.systemFont(ofSize: 0.55 * k, weight: .black),
+                .foregroundColor: UIColor(white: 1, alpha: 0.9),
+            ])
+            number.draw(at: CGPoint(x: P(-0.42, 0).x, y: P(0, 1.45).y))
+            c.restoreGState()
+            // Collar.
+            c.setStrokeColor(Palette.playerDark[pl].cgColor)
+            c.setLineWidth(0.06 * k)
+            c.addPath(body)
+            c.strokePath()
+            c.setStrokeColor(UIColor(white: 1, alpha: 0.85).cgColor)
+            c.setLineWidth(0.07 * k)
+            c.beginPath(); c.addArc(center: P(0.02, 2.0), radius: 0.2 * k, startAngle: 0.2, endAngle: .pi - 0.2, clockwise: false); c.strokePath()
+        }
+        return (image, CGPoint(x: 0.5, y: 0.1 / 2.35))
+    }
+
+    /// Head with hair, face, ear, eye and team cap; centred on the anchor.
+    static func head(player pl: Int) -> UIImage {
+        let k = partScale
+        let size = CGSize(width: 1.5 * k, height: 1.5 * k)
+        let o = CGPoint(x: 0.7 * k, y: 0.8 * k) // head centre
+        func P(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: o.x + x * k, y: o.y + y * k) } // y down
+        return UIGraphicsImageRenderer(size: size).image { ctx in
+            let c = ctx.cgContext
+            let r = 0.42 * k
+            func disc(_ center: CGPoint, _ radius: CGFloat, _ color: UIColor) {
+                c.setFillColor(color.cgColor)
+                c.fillEllipse(in: CGRect(x: center.x - radius, y: center.y - radius, width: 2 * radius, height: 2 * radius))
+            }
+            disc(P(-0.08, 0.02), r, Palette.hair[pl])
+            // Face with soft shading.
+            let face = P(0.04, 0.04)
+            c.saveGState()
+            c.addEllipse(in: CGRect(x: face.x - r * 0.95, y: face.y - r * 0.95, width: 1.9 * r, height: 1.9 * r))
+            c.clip()
+            c.drawRadialGradient(gradient([Palette.skin[pl], Palette.skinDark[pl]], [0.3, 1]),
+                                 startCenter: P(0.16, -0.06), startRadius: 0, endCenter: face, endRadius: r * 1.05, options: [.drawsAfterEndLocation])
+            c.restoreGState()
+            // Nose, ear, eye, smile.
+            disc(P(0.42, 0.06), 0.07 * k, Palette.skinDark[pl])
+            disc(P(-0.08, 0.08), 0.1 * k, Palette.skinDark[pl])
+            disc(P(0.26, -0.02), 0.05 * k, UIColor(white: 0.12, alpha: 1))
+            c.setStrokeColor(UIColor(white: 0.15, alpha: 0.6).cgColor)
+            c.setLineWidth(0.025 * k)
+            c.beginPath(); c.addArc(center: P(0.25, 0.14), radius: 0.09 * k, startAngle: 0.3, endAngle: 1.4, clockwise: false); c.strokePath()
+            // Cap: crown, front panel highlight, brim, button.
+            c.saveGState()
+            let crown = CGMutablePath()
+            crown.addArc(center: P(0, -0.05), radius: r * 1.03, startAngle: .pi * 1.02, endAngle: .pi * 1.98, clockwise: false)
+            crown.closeSubpath()
+            c.addPath(crown)
+            c.clip()
+            c.drawLinearGradient(gradient([Palette.playerLight[pl], Palette.player[pl], Palette.playerDark[pl]], [0, 0.5, 1]),
+                                 start: P(0.3, -0.45), end: P(-0.3, -0.05), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            c.restoreGState()
+            c.setFillColor(Palette.playerDark[pl].cgColor)
+            c.addPath(UIBezierPath(roundedRect: CGRect(x: P(0.1, 0).x, y: P(0, -0.13).y, width: 0.6 * k, height: 0.11 * k), cornerRadius: 0.05 * k).cgPath)
+            c.fillPath()
+            disc(P(0, -0.05 - 0.42 * 1.0), 0.05 * k, .white)
+        }
+    }
+
+    /// Sneaker, toe pointing right; the anchor is under the heel-to-ball midpoint.
+    static func shoe(player pl: Int) -> (UIImage, CGPoint) {
+        let k = partScale
+        let size = CGSize(width: 0.9 * k, height: 0.4 * k)
+        return (UIGraphicsImageRenderer(size: size).image { ctx in
+            let c = ctx.cgContext
+            let upper = UIBezierPath(roundedRect: CGRect(x: 0.04 * k, y: 0.06 * k, width: 0.8 * k, height: 0.28 * k), cornerRadius: 0.12 * k)
+            c.saveGState()
+            c.addPath(upper.cgPath)
+            c.clip()
+            c.drawLinearGradient(gradient([.white, UIColor(hex: 0xD9D3C6)], [0, 1]),
+                                 start: .zero, end: CGPoint(x: 0, y: size.height), options: [])
+            c.setFillColor(Palette.player[pl].cgColor)
+            c.fill(CGRect(x: 0.25 * k, y: 0.12 * k, width: 0.32 * k, height: 0.08 * k))
+            c.restoreGState()
+            c.setFillColor(UIColor(hex: 0x3A3A3A).cgColor)
+            c.fill(CGRect(x: 0.04 * k, y: 0.3 * k, width: 0.8 * k, height: 0.07 * k))
+        }, CGPoint(x: 0.27, y: 0.08))
+    }
+}

@@ -60,7 +60,7 @@ private struct ScoreboardView: View {
     var onHelp: () -> Void
 
     var body: some View {
-        let live = game.liveInning
+        let live = game.inningSoFar
         HStack(spacing: 8) {
             Button(action: onMenu) {
                 Image(systemName: "chevron.left").font(.headline)

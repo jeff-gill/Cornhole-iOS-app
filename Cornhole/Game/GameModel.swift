@@ -42,7 +42,7 @@ struct Banner: Equatable {
 
 /// One-off visual effects for the scene to play.
 enum GameEffect {
-    case landed(Vec2)
+    case landed(Vec2, bag: Int)
     case landedOnGrass(Vec2)
     case cornhole(player: Int)
 }
@@ -53,7 +53,10 @@ final class GameModel {
     let difficulty: Difficulty
     let names: [String]
 
-    private(set) var world = CornholeWorld()
+    /// The physics world. Not observed: the scene reads it every frame, and SwiftUI only needs `inningSoFar`.
+    @ObservationIgnored private(set) var world = CornholeWorld()
+    /// Points thrown so far this inning (refreshed when something happens, not every frame).
+    private(set) var inningSoFar = InningResult(bags: [])
     private(set) var scores = [0, 0]
     private(set) var inning = 1
     private(set) var thrownThisInning = [0, 0]
@@ -86,6 +89,7 @@ final class GameModel {
     @ObservationIgnored private var landDistance: Double?
     @ObservationIgnored private var landAngle = 0.0
     @ObservationIgnored private var dragging: MarkerKind?
+    @ObservationIgnored private var pendingDrag: Vec2?
     @ObservationIgnored private var inningLeader = 0
     @ObservationIgnored private var savedAim: [Int: (Vec2, Double, Double)] = [:]
     @ObservationIgnored private var accumulator = 0.0
@@ -107,6 +111,7 @@ final class GameModel {
 
     func restart() {
         world.clear()
+        inningSoFar = InningResult(bags: [])
         scores = [0, 0]
         inning = 1
         thrownThisInning = [0, 0]
@@ -138,8 +143,6 @@ final class GameModel {
     var idealThrow: ThrowParams? { plan?.ideal }
     var preview: ThrowPreview? { plan?.preview }
 
-    /// Points for the inning so far, after cancellation.
-    var liveInning: InningResult { InningResult(bags: world.bags) }
 
     func drainEffects() -> [GameEffect] {
         defer { effects.removeAll() }
@@ -154,12 +157,17 @@ final class GameModel {
         moveMarker(to: p)
     }
 
+    /// Touch moves can arrive several times per frame; only the latest is planned, once per frame.
     func drag(to p: Vec2) {
         guard canEditMarkers, dragging != nil else { return }
-        moveMarker(to: p)
+        pendingDrag = p
     }
 
-    func endDrag() { dragging = nil }
+    func endDrag() {
+        if let p = pendingDrag, canEditMarkers, dragging != nil { moveMarker(to: p) }
+        pendingDrag = nil
+        dragging = nil
+    }
 
     private func grabsLandingRing(at p: Vec2) -> Bool {
         guard let plan, let finish else { return false }
@@ -325,6 +333,7 @@ final class GameModel {
     func nextInning() {
         guard phase == .inningOver else { return }
         world.clear()
+        inningSoFar = InningResult(bags: [])
         inning += 1
         thrownThisInning = [0, 0]
         currentPlayer = inningLeader
@@ -336,6 +345,10 @@ final class GameModel {
 
     func tick(_ dt: Double) {
         clock += dt
+        if let p = pendingDrag {
+            pendingDrag = nil
+            if canEditMarkers, dragging != nil { moveMarker(to: p) }
+        }
         timeSinceRelease += dt
         hitHapticCooldown = max(0, hitHapticCooldown - dt)
         if banner != nil {
@@ -358,7 +371,9 @@ final class GameModel {
             let events = w.drainEvents()
             world = w
             handle(events)
+            if !events.isEmpty { inningSoFar = InningResult(bags: world.bags) }
             if world.isSettled {
+                if settleTimer == 0 { inningSoFar = InningResult(bags: world.bags) }
                 settleTimer += dt
                 if settleTimer > 1.0 { endTurn() }
             }
@@ -406,7 +421,7 @@ final class GameModel {
                 effects.append(.cornhole(player: who))
                 haptics.success()
             case .landedOnBoard(let id):
-                if let b = world.bag(id: id) { effects.append(.landed(b.position)) }
+                if let b = world.bag(id: id) { effects.append(.landed(b.position, bag: id)) }
                 haptics.thud()
             case .landedOnGround(let id):
                 if let b = world.bag(id: id) { effects.append(.landedOnGrass(b.position)) }
