@@ -53,9 +53,20 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
 const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0 });
+// Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
+const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
+function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
+const haptic = kind => postNative("haptic", kind);
 let career = fresh();
-try { const raw = localStorage.getItem(SAVE_KEY); if (raw) career = { ...fresh(), ...JSON.parse(raw) }; } catch (e) { /* storage unavailable: play without saving */ }
-function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(career)); } catch (e) { /* ignore */ } }
+try {
+  const raw = window.__nativeCareer || localStorage.getItem(SAVE_KEY);
+  if (raw) career = { ...fresh(), ...(typeof raw === "string" ? JSON.parse(raw) : raw) };
+} catch (e) { /* storage unavailable: play without saving */ }
+function save() {
+  const json = JSON.stringify(career);
+  postNative("save", json);
+  try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
+}
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
 const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
 const venueUnlocked = i => career.unlocked.includes(VENUES[i].id);
@@ -188,7 +199,7 @@ function beginThrow() {
   S.saved[S.player] = [S.end, S.landD, S.landPhi];
   S.errors = { dir: 0, pow: 0, ht: 0 };
   S.pull = { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 };
-  S.phase = "throw"; sfx.tick(); ui();
+  S.phase = "throw"; sfx.tick(); haptic("tap"); ui();
 }
 // One move: the pull sets the power, the swinging arrow sets the direction; overdrive makes both wild.
 function updatePull(dt) {
@@ -229,7 +240,7 @@ function releaseBag(e) {
   if (S.overdrive) S.feedback.push({ title: "Overdrive", text: "Wild!" });
   S.perfect = !S.overdrive && S.feedback.every(f => f.text === "Perfect");
   S.lastId = S.world.launch(actual, S.player);
-  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh();
+  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh(); haptic("release");
   if (S.overdrive) showBanner("OVERDRIVE!", S.player); else if (S.perfect) showBanner("PERFECT!", S.player);
   ui();
 }
@@ -284,10 +295,10 @@ function checkFourBagger() {
 }
 function handleEvents(evts) {
   for (const e of evts) {
-    if (e.type === "swish") { showBanner("SWISH!", e.bag.owner); sfx.hole(); confetti(e.bag.owner); }
-    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); confetti(e.bag.owner); }
-    else if (e.type === "land") { sfx.thud(); dust(e.bag, groundDust()); squash(e.bag.id); }
-    else if (e.type === "hit") sfx.thud();
+    if (e.type === "swish") { showBanner("SWISH!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
+    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
+    else if (e.type === "land") { sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
+    else if (e.type === "hit") { sfx.thud(); haptic("light"); }
     else if (e.type === "ground") { dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
     else if (e.type === "off") showBanner(e.bag.id === S.lastId ? "Slid off" : "Knocked off!", e.bag.owner);
   }

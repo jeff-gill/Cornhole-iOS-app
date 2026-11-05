@@ -18,8 +18,9 @@ function updateCamera(dt) {
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   if (mode === "intro") {
+    // Slow orbit; looking a little below the board keeps it in the top half, above the clubhouse card.
     const a = S.time * 0.1;
-    tPos.set(Math.sin(a) * 13, 7.5, -FY - 2 + Math.cos(a) * 13); tLook.set(0, 1.2, -FY - 2);
+    tPos.set(Math.sin(a) * 9.5, 5.2, -FY - 2 + Math.cos(a) * 9.5); tLook.set(0, -2.6, -FY - 2);
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
   } else if (mode === "throw") {

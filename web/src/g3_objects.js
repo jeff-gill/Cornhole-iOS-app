@@ -300,6 +300,7 @@ function fourBagger(owner) {
     }, k * 260);
   }
   shake = 0.8;
+  haptic("big");
   const el = $("fourbag");
   el.textContent = "4-BAGGER!";
   el.style.setProperty("--c1", COL.pl[owner]); el.style.setProperty("--c2", COL.p[owner]);
