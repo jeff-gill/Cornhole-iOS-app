@@ -2005,7 +2005,8 @@ $("helpClose").onclick = () => { $("helpSheet").hidden = true; };
 // ───────────────────────── Loop
 let lastT = 0;
 function frame(now) {
-  const dt = lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60; lastT = now;
+  // __timeScale / __skipRender are test hooks for automated playthroughs; unused in normal play.
+  const dt = (lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60) * (window.__timeScale || 1); lastT = now;
   S.time += dt; S.relT += dt;
   if (S.banner) { S.bannerT -= dt; if (S.bannerT <= 0) { S.banner = null; renderBanner(); } }
   if (pendingDrag && dragging) { moveMarker(dragging, pendingDrag); pendingDrag = null; }
@@ -2030,7 +2031,7 @@ function frame(now) {
   updateBags(dt);
   updateFx(dt);
   updateCamera(dt);
-  renderer.render(scene, camera);
+  if (!window.__skipRender) renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
 
