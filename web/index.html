@@ -4,189 +4,204 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<style>[hidden]{display:none!important}</style>
 </head>
 <body>
 <title>Backyard Cornhole</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap">
 <style>
-/* Layout: one-screen portrait game — scoreboard, side-on lane, top-down board, control deck. Single deliberate night-tailgate look. */
+/* Layout: one-screen portrait game. Glossy scoreboard on top, full-bleed 3D yard in the middle, chunky control deck at the bottom. Single deliberate look (bright casual-game palette). */
 :root {
   color-scheme: dark;
-  --deck: #17201b;          /* panel: dark pine */
-  --deck-2: #212c25;
-  --line: #34433a;
-  --ink: #f3efe4;            /* canvas-bag cream */
-  --ink-dim: #a9b3a6;
-  --p0: #d9412f;             /* red bags */
-  --p0-dark: #8c2318;
-  --p1: #2f6fd9;             /* blue bags */
-  --p1-dark: #173f85;
-  --gold: #f4c542;
-  --go: #4be38a;
-  --grass: #4c8a3f;
-  --font-display: "Bowlby One", "Arial Black", Impact, sans-serif;
-  --font-label: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
-  --font-body: "Barlow", system-ui, -apple-system, sans-serif;
+  --deck: #12203a;
+  --deck-2: #1b2f52;
+  --deck-edge: #0a1426;
+  --ink: #ffffff;
+  --ink-dim: #b8c6e3;
+  --p0: #ff4b3a; --p0-dark: #b5170c;
+  --p1: #2f86ff; --p1-dark: #0b4bb3;
+  --gold: #ffc93a; --gold-dark: #c98a00;
+  --go: #3ee07a; --go-dark: #12974a;
+  --font-display: "Lilita One", "Arial Rounded MT Bold", "Arial Black", sans-serif;
+  --font-body: "Nunito", "Avenir Next", system-ui, sans-serif;
 }
 html, body { height: 100%; }
 [hidden] { display: none !important; }
 body {
-  background: var(--deck); color: var(--ink); font-family: var(--font-body);
+  background: var(--deck); color: var(--ink); font-family: var(--font-body); font-weight: 800;
   overflow: hidden; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
 }
 button { font: inherit; color: inherit; cursor: pointer; }
-button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-#app { height: 100%; display: flex; flex-direction: column; max-width: 560px; margin: 0 auto; }
+button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+#app { height: 100%; display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; position: relative; }
 
 /* Scoreboard */
 .score {
-  display: grid; grid-template-columns: 34px 1fr 54px 1fr 34px; gap: 6px; align-items: stretch;
-  padding-block: 6px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 38px 1fr 56px 1fr 38px; gap: 6px; align-items: center;
+  padding-block: 8px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px));
+  background: linear-gradient(#1d3563, var(--deck)); border-bottom: 2px solid var(--deck-edge);
 }
-.iconbtn { background: none; border: 0; font-size: 20px; color: var(--ink-dim); }
+.roundbtn {
+  width: 36px; height: 36px; border-radius: 50%; border: 0; display: grid; place-items: center;
+  background: linear-gradient(#36558f, #22395f); box-shadow: 0 3px 0 var(--deck-edge), inset 0 1px 0 rgba(255,255,255,.25);
+  font-family: var(--font-display); font-size: 18px;
+}
 .card {
-  border-radius: 12px; padding: 5px 9px; display: flex; justify-content: space-between; align-items: center; gap: 6px;
-  opacity: .55; border: 2px solid transparent; transition: opacity .2s, border-color .2s; min-width: 0;
+  position: relative; border-radius: 16px; padding: 6px 10px 7px; display: flex; justify-content: space-between; align-items: center; gap: 6px;
+  border: 3px solid rgba(255,255,255,.35); min-width: 0; transition: transform .2s, border-color .2s, filter .2s; filter: saturate(.55) brightness(.8);
+  box-shadow: 0 4px 0 rgba(0,0,0,.35);
 }
-.card.p0 { background: var(--p0); } .card.p1 { background: var(--p1); }
-.card.active { opacity: 1; border-color: var(--ink); }
-.card .name { font-family: var(--font-label); font-weight: 700; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card::after { content: ""; position: absolute; inset: 2px 2px 50% 2px; border-radius: 12px 12px 6px 6px; background: linear-gradient(rgba(255,255,255,.32), rgba(255,255,255,0)); pointer-events: none; }
+.card.p0 { background: linear-gradient(#ff7262, var(--p0) 55%, var(--p0-dark)); }
+.card.p1 { background: linear-gradient(#5aa2ff, var(--p1) 55%, var(--p1-dark)); }
+.card.active { filter: none; border-color: #fff; transform: translateY(-1px) scale(1.03); }
+.card .name { font-family: var(--font-display); font-size: 15px; letter-spacing: .02em; text-shadow: 0 2px 0 rgba(0,0,0,.25); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .dots { display: flex; gap: 3px; margin-top: 3px; }
-.card .dots i { width: 8px; height: 8px; border-radius: 2px; background: rgba(255,255,255,.25); }
-.card .dots i.on { background: var(--ink); }
-.card .live { font-family: var(--font-label); font-size: 11px; opacity: .9; min-height: 13px; white-space: nowrap; }
-.card .pts { font-family: var(--font-display); font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
-.inning { text-align: center; font-family: var(--font-label); display: flex; flex-direction: column; justify-content: center; }
+.card .dots i { width: 9px; height: 9px; border-radius: 3px; background: rgba(0,0,0,.25); }
+.card .dots i.on { background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.card .live { font-size: 11px; min-height: 14px; white-space: nowrap; }
+.card .pts { font-family: var(--font-display); font-size: 34px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); font-variant-numeric: tabular-nums; }
+.inning { text-align: center; display: flex; flex-direction: column; }
 .inning small { font-size: 10px; letter-spacing: .1em; color: var(--ink-dim); text-transform: uppercase; }
-.inning b { font-family: var(--font-display); font-size: 20px; line-height: 1.1; }
+.inning b { font-family: var(--font-display); font-size: 24px; line-height: 1.05; font-weight: 400; }
 
-/* Views */
-#side { width: 100%; flex: 0 0 27%; display: block; }
-.boardwrap { position: relative; flex: 1 1 auto; min-height: 0; background: var(--grass); }
-#board { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+/* 3D stage */
+#stage { position: relative; flex: 1 1 auto; min-height: 0; background: #9fd0f0; overflow: hidden; touch-action: none; }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 #banner {
-  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%) scale(.6); opacity: 0; pointer-events: none;
-  font-family: var(--font-display); font-size: 24px; padding: 8px 20px; border-radius: 999px; white-space: nowrap;
-  color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.35); transition: transform .25s cubic-bezier(.3,1.6,.5,1), opacity .2s;
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%) scale(.5) rotate(-3deg); opacity: 0; pointer-events: none;
+  font-family: var(--font-display); font-size: 30px; padding: 8px 24px 10px; border-radius: 18px; white-space: nowrap; color: #fff;
+  border: 3px solid #fff; text-shadow: 0 3px 0 rgba(0,0,0,.3); box-shadow: 0 6px 0 rgba(0,0,0,.25);
+  transition: transform .28s cubic-bezier(.3,1.7,.5,1), opacity .2s;
 }
-#banner.show { transform: translateX(-50%) scale(1); opacity: 1; }
+#banner.show { transform: translateX(-50%) scale(1) rotate(-3deg); opacity: 1; }
 #hint {
-  position: absolute; left: 10px; top: 10px; pointer-events: none; font-family: var(--font-label); font-weight: 600;
-  font-size: 13px; background: rgba(0,0,0,.5); padding: 6px 11px; border-radius: 999px;
+  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+  font-size: 14px; background: rgba(10,20,38,.72); padding: 7px 14px; border-radius: 999px; border: 2px solid rgba(255,255,255,.25);
 }
+
+/* Power gauge (pull back) */
+#power { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); width: 46px; height: min(60%, 300px); pointer-events: none; }
+#power .tube { position: absolute; inset: 0; border-radius: 26px; background: rgba(10,20,38,.75); border: 4px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.3); overflow: hidden; }
+#power .fill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(0deg, #3ee07a, #ffe14a 60%, #ff5a3a); }
+#power .target { position: absolute; left: -10px; right: -10px; border-radius: 6px; background: rgba(255,201,58,.35); border: 3px solid var(--gold); }
+#power .label { position: absolute; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-size: 13px; text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+
+/* Accuracy ring */
+#ring { position: absolute; left: 50%; top: 50%; width: min(78vw, 300px, 62vh); aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; }
+#ring svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 6px 0 rgba(0,0,0,.25)); }
 
 /* Control deck */
 #panel {
-  background: var(--deck); border-top: 1px solid var(--line); min-height: 178px;
-  padding-top: 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(var(--deck-2), var(--deck)); border-top: 3px solid var(--deck-edge); min-height: 186px;
+  padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: flex; flex-direction: column; gap: 10px;
 }
 .row { display: flex; align-items: center; gap: 8px; }
-.who { font-family: var(--font-label); font-weight: 700; font-size: 17px; letter-spacing: .02em; }
-.who i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-.muted { color: var(--ink-dim); font-size: 13px; }
+.who { font-family: var(--font-display); font-size: 21px; font-weight: 400; letter-spacing: .01em; }
+.who i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 8px; vertical-align: 0; border: 2px solid #fff; }
+.muted { color: var(--ink-dim); font-size: 13px; font-weight: 700; }
 .spacer { flex: 1; }
-.stats { display: flex; gap: 18px; flex-wrap: wrap; }
-.stat small { display: block; font-family: var(--font-label); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
-.stat b { font-family: var(--font-label); font-size: 17px; font-variant-numeric: tabular-nums; }
-.btns { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 8px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.12); border-radius: 12px; padding: 4px 9px; }
+.chip small { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+.chip b { font-size: 15px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.chip.gold { border-color: var(--gold); } .chip.gold b { color: var(--gold); }
+.btns { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 10px; }
 .btn {
-  border-radius: 12px; border: 1px solid var(--line); background: var(--deck-2); padding: 12px 6px;
-  font-family: var(--font-label); font-weight: 700; font-size: 15px; letter-spacing: .04em; text-transform: uppercase;
+  border-radius: 16px; border: 0; padding: 13px 6px 12px; font-family: var(--font-display); font-size: 18px; letter-spacing: .02em; font-weight: 400;
+  background: linear-gradient(#4b6aa5, #2c4677); box-shadow: 0 5px 0 var(--deck-edge), inset 0 2px 0 rgba(255,255,255,.25);
+  text-shadow: 0 2px 0 rgba(0,0,0,.3); white-space: nowrap; transition: transform .08s, box-shadow .08s;
 }
-.btn:disabled { opacity: .35; cursor: default; }
-.btn.go { border: 0; color: #fff; font-family: var(--font-display); font-size: 18px; letter-spacing: .03em; }
-.meter { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 10px; }
-.meter label { font-family: var(--font-label); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; }
-.meter.waiting label { opacity: .4; }
-.track {
-  position: relative; height: 24px; border-radius: 999px;
-  background: linear-gradient(90deg, #c8321f, #e8892a 22%, #f2d34a 40%, #4be38a 50%, #f2d34a 60%, #e8892a 78%, #c8321f);
-}
-.meter.waiting .track { opacity: .28; }
-.track .zone { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,.85); border-radius: 2px; }
-.track .needle { position: absolute; top: -5px; bottom: -5px; width: 5px; margin-left: -2.5px; border-radius: 3px; background: #111; box-shadow: 0 0 0 1.5px #fff; }
-.track .lo, .track .hi { position: absolute; top: 50%; transform: translateY(-50%); font-family: var(--font-label); font-weight: 700; font-size: 10px; color: rgba(0,0,0,.6); text-transform: uppercase; }
-.track .lo { left: 9px; } .track .hi { right: 9px; }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--deck-edge), inset 0 2px 0 rgba(255,255,255,.25); }
+.btn:disabled { opacity: .4; cursor: default; transform: none; }
+.btn.go { font-size: 22px; }
+.btn.red { background: linear-gradient(#ff7a6a, var(--p0) 50%, var(--p0-dark)); box-shadow: 0 5px 0 #6e0c05, inset 0 2px 0 rgba(255,255,255,.35); }
+.btn.blue { background: linear-gradient(#69adff, var(--p1) 50%, var(--p1-dark)); box-shadow: 0 5px 0 #062b66, inset 0 2px 0 rgba(255,255,255,.35); }
+.btn.green { background: linear-gradient(#7af0a3, var(--go) 50%, var(--go-dark)); box-shadow: 0 5px 0 #075c2b, inset 0 2px 0 rgba(255,255,255,.35); }
+.pullpad { display: flex; align-items: center; gap: 14px; }
+.pullpad .bag { width: 64px; height: 64px; flex: none; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--font-display); font-size: 26px; }
+.big { font-family: var(--font-display); font-size: 22px; font-weight: 400; line-height: 1.1; }
 .feedback { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.fb { background: var(--deck-2); border-radius: 10px; padding: 8px 4px; text-align: center; }
-.fb small { display: block; font-family: var(--font-label); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
-.fb b { font-family: var(--font-label); font-size: 15px; color: #f0a24a; }
+.fb { background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.12); border-radius: 14px; padding: 8px 4px; text-align: center; }
+.fb small { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+.fb b { font-size: 15px; color: #ffb35a; font-weight: 900; }
 .fb b.perfect { color: var(--go); }
 .center { text-align: center; }
-.title-sm { font-family: var(--font-display); font-size: 18px; }
+.linkbtn { background: none; border: 0; color: var(--ink-dim); font-weight: 800; font-size: 14px; text-decoration: underline; }
 
 /* Overlays */
 .overlay {
-  position: fixed; inset: 0; z-index: 20; background: rgba(8,12,10,.72); display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; z-index: 20; background: rgba(6,12,24,.55); display: flex; align-items: center; justify-content: center;
   padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.sheet { background: var(--deck); border: 1px solid var(--line); border-radius: 22px; padding: 22px; width: 100%; max-width: 400px; max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-#menu { background: radial-gradient(120% 70% at 50% 0%, #2c4a32 0%, var(--deck) 70%); }
-.logo { font-family: var(--font-display); font-size: 44px; line-height: .95; text-align: center; letter-spacing: .01em; text-wrap: balance; }
-.logo span { color: var(--gold); }
-.tag { text-align: center; color: var(--ink-dim); font-family: var(--font-label); font-size: 15px; letter-spacing: .06em; text-transform: uppercase; }
-.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--deck-2); padding: 4px; border-radius: 12px; }
-.seg button { border: 0; background: none; padding: 10px; border-radius: 9px; font-family: var(--font-label); font-weight: 700; font-size: 15px; }
-.seg button.on { background: var(--ink); color: var(--deck); }
-.label { font-family: var(--font-label); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); }
-.levels { display: flex; flex-direction: column; gap: 6px; }
-.lvl { text-align: left; border: 1px solid var(--line); background: var(--deck-2); border-radius: 12px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.lvl b { font-family: var(--font-label); font-size: 16px; display: block; }
-.lvl span { font-size: 12px; color: var(--ink-dim); }
-.lvl.on { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
-.lvl .tick { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
-.lvl.on .tick { border-color: var(--gold); background: var(--gold); }
-.play { border: 0; border-radius: 14px; padding: 15px; background: var(--p0); color: #fff; font-family: var(--font-display); font-size: 24px; }
-.linkbtn { background: none; border: 0; color: var(--ink-dim); font-family: var(--font-label); font-weight: 600; font-size: 15px; text-decoration: underline; }
-.help { display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.45; color: var(--ink); }
+.sheet {
+  background: linear-gradient(var(--deck-2), var(--deck)); border: 4px solid #fff; border-radius: 26px; padding: 22px; width: 100%; max-width: 400px;
+  max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 8px 0 rgba(0,0,0,.35);
+}
+#menu { background: linear-gradient(rgba(6,12,24,.1), rgba(6,12,24,.65)); align-items: flex-end; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.logo { font-family: var(--font-display); font-size: 50px; line-height: .9; text-align: center; text-shadow: 0 5px 0 rgba(0,0,0,.35); font-weight: 400; }
+.logo span { color: var(--gold); display: block; font-size: 58px; }
+.tag { text-align: center; color: var(--ink-dim); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
+.seg button { border: 0; background: none; padding: 10px; border-radius: 12px; font-family: var(--font-display); font-size: 17px; font-weight: 400; color: var(--ink-dim); }
+.seg button.on { background: #fff; color: var(--deck); box-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.label { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); }
+.levels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.lvl { text-align: left; border: 3px solid rgba(255,255,255,.15); background: rgba(255,255,255,.06); border-radius: 14px; padding: 8px 10px; }
+.lvl b { font-family: var(--font-display); font-size: 17px; font-weight: 400; display: block; }
+.lvl span { font-size: 11px; color: var(--ink-dim); font-weight: 700; }
+.lvl.on { border-color: var(--gold); background: rgba(255,201,58,.14); }
+.help { display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.45; font-weight: 700; }
 .help p { margin: 0; }
-.help b { color: var(--gold); font-weight: 600; }
+.help b { color: var(--gold); font-weight: 900; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.col { border-radius: 14px; padding: 12px 6px; text-align: center; }
-.col .big { font-family: var(--font-display); font-size: 40px; line-height: 1.1; }
-.col small { font-family: var(--font-label); font-size: 13px; opacity: .9; }
-h2 { margin: 0; font-family: var(--font-display); font-size: 28px; text-align: center; font-weight: 400; }
-@media (prefers-reduced-motion: reduce) { #banner { transition: none; } }
+.col { border-radius: 18px; padding: 12px 6px; text-align: center; border: 3px solid rgba(255,255,255,.6); }
+.col .big2 { font-family: var(--font-display); font-size: 44px; line-height: 1.1; font-weight: 400; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.col small { font-size: 12px; }
+h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: center; font-weight: 400; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
+#loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 22px; color: #12203a; }
+@media (prefers-reduced-motion: reduce) { #banner, .card, .btn { transition: none; } }
 </style>
 
 <div id="app">
   <header class="score">
-    <button class="iconbtn" id="menuBtn" aria-label="Menu">☰</button>
+    <button class="roundbtn" id="menuBtn" aria-label="Menu">☰</button>
     <div class="card p0" id="card0"><div style="min-width:0"><div class="name" id="name0">You</div><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div>
     <div class="inning"><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
     <div class="card p1" id="card1"><div style="min-width:0"><div class="name" id="name1">CPU</div><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div>
-    <button class="iconbtn" id="helpBtn" aria-label="How to play">?</button>
+    <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
   </header>
-  <canvas id="side"></canvas>
-  <div class="boardwrap">
-    <canvas id="board"></canvas>
+  <div id="stage">
+    <div id="loading">Setting up the yard…</div>
+    <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
+    <div id="power" hidden><div class="tube"><div class="fill" id="powerFill"></div></div><div class="target" id="powerTarget"></div><div class="label" style="top:-24px">MAX</div></div>
+    <div id="ring" hidden></div>
   </div>
   <section id="panel"></section>
 </div>
 
 <div class="overlay" id="menu">
   <div class="sheet">
-    <div class="logo">BACKYARD<br><span>CORNHOLE</span></div>
-    <div class="tag">Mark it · Meter it · Sink it</div>
-    <div class="label">Game</div>
+    <div class="logo">BACKYARD<span>CORNHOLE</span></div>
+    <div class="tag">Mark it · Pull it · Sink it</div>
     <div class="seg" id="modeSeg">
       <button data-mode="cpu" class="on">vs Computer</button>
       <button data-mode="two">2 Players</button>
     </div>
     <div class="label">Difficulty</div>
     <div class="levels" id="levels"></div>
-    <button class="play" id="playBtn">PLAY</button>
-    <button class="linkbtn" id="menuHelp">How to play</button>
-    <button class="linkbtn" id="resumeBtn" hidden>Back to game</button>
+    <button class="btn green go" id="playBtn">PLAY</button>
+    <div class="row" style="justify-content:center;gap:18px">
+      <button class="linkbtn" id="menuHelp">How to play</button>
+      <button class="linkbtn" id="resumeBtn" hidden>Back to game</button>
+    </div>
   </div>
 </div>
 
@@ -194,15 +209,15 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 28px; text-align: c
   <div class="sheet">
     <h2>How to play</h2>
     <div class="help">
-      <p><b>1. Pick the finish.</b> Tap where you want the bag to <b>end up</b> (green). A dotted line shows your throw from your hand to that spot. Tap anywhere else to move it.</p>
-      <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone to choose where the bag <b>hits first</b>. Land it close to the finish for a high arc that sticks, or farther back for a flat throw that slides in. <b>Stick it</b> drops the bag right on the finish.</p>
-      <p><b>Push shots.</b> If one of your own bags sits between the landing and the finish, the game throws a little harder so your bag shoves it as far as the green spot. Your bag pushes it the way your throw is travelling, so line your throw up through the blocker. A sloppy Direction stop pushes it off-line too.</p>
-      <p><b>3. Add spin.</b> Move the ring off the centre line and the bag gets spin, so it kicks and hooks toward the finish after landing. A longer slide has more room to hook, so the zone gets wider farther back.</p>
-      <p><b>4. Stop three needles.</b> <b>Direction</b> pushes it left or right, <b>Strength</b> sends it long or short, and <b>Height</b> changes the arc, so it lands somewhere else and slides a different amount. Only three perfect stops go exactly where you planned.</p>
-      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: if you throw 4 and they throw 1, you score 3 and they score nothing. First to 21 wins. Knock your opponent's bags off, or knock your own in.</p>
+      <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
+      <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b> so it hooks toward the finish.</p>
+      <p><b>3. Pull back.</b> Tap THROW, then drag down anywhere and let go when the power bar is in the gold band. Too far is long, not enough is short.</p>
+      <p><b>4. Hit the ring.</b> Tap to stop the left-right needle, then the up-down needle. The closer to the centre, the straighter and truer the arc.</p>
+      <p><b>Push shots.</b> If one of your own bags is in the way, the game throws a bit harder so yours shoves it along your line.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app.</p>
     </div>
-    <button class="play" id="helpClose">GOT IT</button>
+    <button class="btn green go" id="helpClose">GOT IT</button>
   </div>
 </div>
 
@@ -584,29 +599,57 @@ const sfx = {
   whoosh: () => tone(300, 0.25, "sawtooth", 0.04),
 };
 
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+
+// ───────────────────────── Helpers
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const lerp = (a, b, t) => a + (b - a) * t;
+// Court feet (x lateral, y down-range, z up) -> three.js world (y up, down-range is -z).
+const W = (x, y, z) => new THREE.Vector3(x, z, -y);
+const COL = { p: ["#ff4b3a", "#2f86ff"], pd: ["#b5170c", "#0b4bb3"], pl: ["#ff8a7a", "#7ab4ff"], gold: "#ffc93a", go: "#3ee07a" };
+function rng(seed) { return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function canvasTex(w, h, paint, repeat) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  paint(c.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat[0], repeat[1]); }
+  return t;
+}
+
 // ───────────────────────── Game state
 const S = {
   mode: "cpu", level: "medium", names: ["You", "CPU"], world: new World(), scores: [0, 0], inning: 1, thrown: [0, 0],
-  player: 0, leader: 0, phase: "menu", landing: null, end: null, landD: null, landPhi: 0, plan: null, ideal: null, prev: null, meter: 0, meterT: 0,
+  player: 0, leader: 0, phase: "menu", landing: null, end: null, landD: null, landPhi: 0, plan: null, ideal: null, prev: null,
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, lastId: null, cpuT: 0, cpuPlan: null,
-  saved: {}, settleT: 0, acc: 0, push: null, fx: [], shake: 0, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
+  saved: {}, settleT: 0, acc: 0, push: null, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
+  pull: { active: false, startY: 0, fill: 0, raw: 0 }, ring: { stage: 0, t: 0 }, planVersion: 0,
 };
+globalThis.S = S; // the engine's what-if simulation reads the board from here
 const lv = () => LEVELS[S.level];
 const isCPU = p => S.mode === "cpu" && p === 1;
 const canEdit = () => S.phase === "aiming" && !isCPU(S.player);
 const showPreview = () => lv().preview || isCPU(S.player);
+const POWER_TARGET = 0.75;
 
 function newGame() {
   S.names = S.mode === "cpu" ? ["You", "CPU"] : ["Player 1", "Player 2"];
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.player = 0; S.leader = 0;
-  S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null; S.fx = []; S.relT = 99;
+  S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99;
+  clearBagMeshes();
   beginTurn();
 }
 const DEFAULT_SLIDE = 1.5;
-function refreshPlan(quick = false) {
+function refreshPlan() {
   S.plan = S.end ? planThrow(S.player, S.end, S.landD ?? DEFAULT_SLIDE, S.landPhi || 0) : null;
-  if (!S.plan) { S.landing = S.ideal = S.prev = null; return; }
-  S.landD = S.plan.D; S.landPhi = S.plan.phi; // keep what was actually achievable
+  S.planVersion++;
+  if (!S.plan) { S.landing = S.ideal = S.prev = null; S.push = null; return; }
+  S.landD = S.plan.D; S.landPhi = S.plan.phi;
   S.landing = S.plan.landing; S.ideal = S.plan.ideal;
   S.prev = simulate(S.ideal, S.player);
   S.push = null;
@@ -615,19 +658,26 @@ function refreshPlan(quick = false) {
     if (t) { S.push = { extra: t.speed / base.speed - 1 }; S.ideal = t; S.prev = simulate(t, S.player); }
   }
 }
-function setMarker(kind, p) {
+let dragging = null, pendingDrag = null;
+function moveMarker(kind, p) {
   if (!canEdit()) return;
   if (kind === "end") {
-    S.end = { x: clamp(p.x, -1.8, 1.8), y: clamp(p.y, FY + 0.2, BY + 0.6) };
+    S.end = { x: clamp(p.x, -1.8, 1.8), y: clamp(p.y, FY + 0.2, BY + 0.25) };
   } else if (S.plan) {
     const v = { x: p.x - S.end.x, y: p.y - S.end.y };
     S.landD = Math.hypot(v.x, v.y); S.landPhi = wrap(heading(v) - heading(S.plan.z.back));
   }
-  refreshPlan(dragging !== null); ui();
+  refreshPlan(); ui();
+}
+function grabsLanding(p) {
+  if (!S.plan || !S.landing || dist(p, S.end) <= 0.3) return false;
+  if (dist(p, S.landing) < 0.55) return true;
+  const z = S.plan.z, v = { x: p.x - S.end.x, y: p.y - S.end.y }, D = Math.hypot(v.x, v.y);
+  return D >= z.Dmin - 0.25 && D <= z.Dmax + 0.3 && Math.abs(wrap(heading(v) - heading(z.back))) <= maxPhi(D) + 0.12;
 }
 function beginTurn() {
   S.cpuPlan = null;
-  if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.cpuT = 0; S.phase = "cpu"; }
+  if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.phase = "cpu"; }
   else {
     const s = S.saved[S.player]; S.end = s ? s[0] : null; S.landD = s ? s[1] : null; S.landPhi = s ? s[2] : 0;
     S.phase = "aiming"; refreshPlan();
@@ -637,12 +687,24 @@ function beginTurn() {
 function beginThrow() {
   if (!canEdit() || !S.ideal) return;
   S.saved[S.player] = [S.end, S.landD, S.landPhi];
-  S.errors = { dir: 0, pow: 0, ht: 0 }; S.meter = 0; S.meterT = 0; S.phase = "meter"; sfx.tick(); ui();
+  S.errors = { dir: 0, pow: 0, ht: 0 };
+  S.pull = { active: false, startY: 0, fill: 0, raw: 0 };
+  S.phase = "power"; sfx.tick(); ui();
 }
-function stopMeter() {
-  if (S.phase !== "meter") return;
-  S.errors[METERS[S.meter].key] = needleAt(S.meterT, lv()); sfx.tick();
-  if (S.meter < 2) { S.meter++; S.meterT = 0; ui(); } else releaseBag(S.errors);
+function releasePull() {
+  const f = S.pull.fill;
+  S.pull.active = false;
+  if (f < 0.08) { updatePowerGauge(); return; } // a tap, not a pull
+  const e = clamp((f - POWER_TARGET) / 0.5, -1, 1);
+  S.errors.pow = Math.abs(e) <= lv().zone * 2 ? 0 : e; // strength gets a slightly bigger sweet spot (it's a finger drag)
+  S.ring = { stage: 0, t: 0 };
+  S.phase = "ring"; sfx.tick(); ui();
+}
+function stopRing() {
+  if (S.phase !== "ring") return;
+  const v = needleAt(S.ring.t, lv());
+  if (S.ring.stage === 0) { S.errors.dir = v; S.ring = { stage: 1, t: 0 }; sfx.tick(); ui(); }
+  else { S.errors.ht = v; sfx.tick(); releaseBag(S.errors); }
 }
 function releaseBag(e) {
   if (!S.ideal) return;
@@ -651,7 +713,7 @@ function releaseBag(e) {
   S.perfect = S.feedback.every(f => f.text === "Perfect");
   S.lastId = S.world.launch(actual, S.player);
   S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh();
-  if (S.perfect) showBanner("Perfect release!", S.player);
+  if (S.perfect) showBanner("PERFECT!", S.player);
   ui();
 }
 function endTurn() {
@@ -674,565 +736,634 @@ function finishInning() {
   ui();
 }
 function nextInning() {
-  S.world.clear(); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fx = []; beginTurn();
+  S.world.clear(); clearBagMeshes(); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; beginTurn();
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.6; renderBanner(); }
 function handleEvents(evts) {
   for (const e of evts) {
-    if (e.type === "swish") { showBanner("SWISH! Cornhole!", e.bag.owner); sfx.hole(); spawnConfetti(e.bag.owner); }
-    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "Knocked in!", e.bag.owner); sfx.hole(); spawnConfetti(e.bag.owner); }
-    else if (e.type === "land") { sfx.thud(); spawnDust(e.bag); }
+    if (e.type === "swish") { showBanner("SWISH!", e.bag.owner); sfx.hole(); confetti(e.bag.owner); }
+    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); confetti(e.bag.owner); }
+    else if (e.type === "land") { sfx.thud(); dust(e.bag, 0xf1dcb0); squash(e.bag.id); }
     else if (e.type === "hit") sfx.thud();
-    else if (e.type === "ground") { spawnDust(e.bag, 8, "110,85,50"); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
+    else if (e.type === "ground") { dust(e.bag, 0x8a6a3a); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
     else if (e.type === "off") showBanner(e.bag.id === S.lastId ? "Slid off" : "Knocked off!", e.bag.owner);
   }
 }
 
-// ───────────────────────── Loop
-let lastT = 0;
-function frame(now) {
-  const dt = lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60; lastT = now;
-  S.time += dt; S.relT += dt; updateFx(dt);
-  if (S.banner) { S.bannerT -= dt; if (S.bannerT <= 0) { S.banner = null; renderBanner(); } }
-  if (S.phase === "meter") { S.meterT += dt; updateNeedle(); }
-  else if (S.phase === "cpu") {
-    S.cpuT += dt;
-    if (!S.cpuPlan && S.cpuT > 0.7) {
-      S.cpuPlan = cpuPlan(S.player, S.world.bags); S.end = S.cpuPlan.end;
-      S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0; refreshPlan(); ui();
+// ───────────────────────── Renderer, scene, lights
+const canvas = $("gl"), stage = $("stage");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xf2cfa0, 90, 260);
+const camera = new THREE.PerspectiveCamera(44, 1, 0.1, 600);
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  // Keep the board a good size on narrow portrait screens.
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+// Sky dome: late-afternoon gradient with a warm glow toward the sun.
+const sunDir = new THREE.Vector3(-0.55, 0.32, 0.2).normalize();
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(500, 32, 16), new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false, fog: false,
+  uniforms: { sunDir: { value: sunDir } },
+  vertexShader: "varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+  fragmentShader: `varying vec3 vDir; uniform vec3 sunDir;
+    void main(){
+      float h = vDir.y;
+      vec3 horizon = vec3(1.0, 0.83, 0.62), mid = vec3(0.56, 0.78, 0.95), top = vec3(0.19, 0.44, 0.80);
+      vec3 col = mix(horizon, mid, smoothstep(-0.02, 0.22, h));
+      col = mix(col, top, smoothstep(0.22, 0.85, h));
+      float s = max(dot(normalize(vDir), sunDir), 0.0);
+      col += vec3(1.0, 0.75, 0.45) * pow(s, 8.0) * 0.35 + vec3(1.0, 0.95, 0.8) * pow(s, 300.0) * 1.5;
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+})));
+// Puffy clouds.
+{
+  const r = rng(9), mat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xffe8cc, emissiveIntensity: 0.35, flatShading: true, fog: false });
+  const geo = new THREE.IcosahedronGeometry(1, 1);
+  for (let i = 0; i < 9; i++) {
+    const g = new THREE.Group(), a = -Math.PI / 2 + (r() - 0.5) * 2.4, d = 260 + r() * 120;
+    g.position.set(Math.cos(a) * d, 70 + r() * 70, Math.sin(a) * d);
+    for (let k = 0; k < 5; k++) {
+      const m = new THREE.Mesh(geo, mat), s = 10 + r() * 14;
+      m.scale.set(s * 1.6, s * 0.7, s);
+      m.position.set((k - 2) * 14 + r() * 6, r() * 6, r() * 8);
+      g.add(m);
     }
-    if (S.cpuT > 2.0 && S.ideal) releaseBag({ dir: gauss(lv().cpu), pow: gauss(lv().cpu), ht: gauss(lv().cpu) });
-  } else if (S.phase === "flight") {
-    S.acc += dt;
-    while (S.acc >= T.dt) { S.world.step(T.dt); S.acc -= T.dt; }
-    const ev = S.world.events; S.world.events = []; handleEvents(ev);
-    if (S.world.settled) { S.settleT += dt; if (S.settleT > 1.0) endTurn(); }
-    renderScore();
+    scene.add(g);
   }
-  draw();
-  requestAnimationFrame(frame);
 }
 
-// ───────────────────────── Canvas setup
-const sideC = document.getElementById("side"), boardC = document.getElementById("board");
-const sx = sideC.getContext("2d"), bx = boardC.getContext("2d");
-let dpr = 1;
-const tex = {}; // pre-rendered scenery, rebuilt on resize
-function fit() {
-  dpr = Math.min(window.devicePixelRatio || 1, 3);
-  for (const c of [sideC, boardC]) { c.width = Math.round(c.clientWidth * dpr); c.height = Math.round(c.clientHeight * dpr); }
-  buildTextures();
-}
-new ResizeObserver(fit).observe(document.querySelector(".boardwrap"));
-window.addEventListener("resize", fit);
+const hemi = new THREE.HemisphereLight(0xd6ecff, 0x557a2c, 1.25);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe3b8, 2.9);
+sun.position.set(-26, 20, -18);
+sun.target.position.set(0, 0, -27);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 90 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.02;
+sun.shadow.radius = 3;
+scene.add(sun, sun.target);
 
-const COL = { p: ["#d9412f", "#2f6fd9"], pd: ["#8c2318", "#173f85"], pl: ["#f47a62", "#6aa2f5"],
-  skin: ["#e3b088", "#9a6646"], skinD: ["#c58f68", "#7c4f34"], hair: ["#5a3a22", "#1d1512"],
-  shorts: "#2a2f38", wood: "#dcb37a", woodD: "#9c6f3d", navy: "#1f3552", gold: "#f4c542", go: "#4be38a", hole: "#140d08" };
-
-// Board mapping: down-range is up the screen.
-const BM = { minX: -2.2, maxX: 2.2, minY: FY - 1.1, maxY: BY + 0.9 };
-function bmap() {
-  const w = boardC.width, h = boardC.height;
-  const s = Math.min(w / (BM.maxX - BM.minX), h / (BM.maxY - BM.minY));
-  const ox = (w - (BM.maxX - BM.minX) * s) / 2, oy = (h - (BM.maxY - BM.minY) * s) / 2;
-  return { s, pt: p => [ox + (p.x - BM.minX) * s, oy + (BM.maxY - p.y) * s],
-    world: (X, Y) => ({ x: (X - ox) / s + BM.minX, y: BM.maxY - (Y - oy) / s }) };
-}
-// Side view mapping.
-const SV = { minY: -3, maxY: 33, maxZ: 13 };
-function smap() {
-  const W = sideC.width, H = sideC.height, gs = 16 * dpr, gy = H - gs;
-  const kx = W / (SV.maxY - SV.minY), kz = (gy - 4 * dpr) / SV.maxZ;
-  return { W, H, gy, gs, kx, kz, pt: (y, z) => [(y - SV.minY) * kx, gy - z * kz] };
-}
-function rrect(c, x, y, w, h, r) { c.beginPath(); c.roundRect ? c.roundRect(x, y, w, h, r) : c.rect(x, y, w, h); }
-function mkCanvas(w, h) { const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
-function rng(seed) { return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-const lerp = (a, b, t) => a + (b - a) * t;
-
-// ───────────────────────── Pre-rendered art
-function buildTextures() {
-  if (boardC.width > 2 && boardC.height > 2) { tex.grass = paintGrass(); tex.board = paintBoardTop(); }
-  if (sideC.width > 2 && sideC.height > 2) tex.side = paintSideScene();
-}
-function paintGrass() {
-  const W = boardC.width, H = boardC.height, g = mkCanvas(W, H), c = g.getContext("2d"), r = rng(11), m = bmap(), s = m.s;
-  const base = c.createLinearGradient(0, 0, 0, H); base.addColorStop(0, "#4a8a3d"); base.addColorStop(1, "#57983f");
-  c.fillStyle = base; c.fillRect(0, 0, W, H);
-  // mowing stripes, 1 ft wide
-  for (let y = 0, k = 0; y < H; y += s, k++) { c.fillStyle = k % 2 ? "rgba(255,255,255,.055)" : "rgba(0,30,0,.06)"; c.fillRect(0, y, W, s); }
-  // blades
-  const n = Math.min(26000, (W * H) / (55 * dpr * dpr));
-  c.lineCap = "round";
-  for (let i = 0; i < n; i++) {
-    const x = r() * W, y = r() * H, len = (2.5 + r() * 4.5) * dpr, a = -Math.PI / 2 + (r() - 0.5) * 0.9;
-    c.strokeStyle = `hsla(${92 + r() * 22},${38 + r() * 22}%,${24 + r() * 26}%,${0.35 + r() * 0.4})`;
-    c.lineWidth = (0.6 + r() * 0.8) * dpr;
-    c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); c.stroke();
+// ───────────────────────── Ground and scenery
+const grassTex = canvasTex(512, 512, (c, w, h) => {
+  const r = rng(4);
+  // Two 3-ft mowing stripes per tile.
+  c.fillStyle = "#5fae3e"; c.fillRect(0, 0, w, h / 2);
+  c.fillStyle = "#4f9a33"; c.fillRect(0, h / 2, w, h / 2);
+  for (let i = 0; i < 9000; i++) {
+    const x = r() * w, y = r() * h, l = 2 + r() * 5;
+    c.strokeStyle = `hsla(${92 + r() * 24},${45 + r() * 25}%,${28 + r() * 26}%,${0.35 + r() * 0.4})`;
+    c.lineWidth = 1 + r();
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() - 0.5) * 2, y - l); c.stroke();
   }
-  // a few clover clumps
-  for (let i = 0; i < W * H / (9000 * dpr * dpr); i++) {
-    const x = r() * W, y = r() * H; c.fillStyle = "rgba(120,170,80,.35)";
-    for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(x + Math.cos(k * 2.1) * 2 * dpr, y + Math.sin(k * 2.1) * 2 * dpr, 1.8 * dpr, 0, 7); c.fill(); }
+}, [1, 1]);
+grassTex.anisotropy = maxAniso;
+{
+  const size = 420;
+  grassTex.repeat.set(size / 6, size / 6);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.z = -30;
+  ground.receiveShadow = true;
+  scene.add(ground);
+}
+
+// Stylized trees: chunky low-poly blobs on stubby trunks.
+{
+  const r = rng(21);
+  const trunkGeo = new THREE.CylinderGeometry(0.5, 0.8, 6, 7);
+  const trunkMat = new THREE.MeshLambertMaterial({ color: 0x7a5232 });
+  const blobGeo = new THREE.IcosahedronGeometry(1, 1);
+  const greens = [0x3f9a3c, 0x2f8a46, 0x58b043, 0x2b7a3a, 0x6cbf4a].map(c => new THREE.MeshLambertMaterial({ color: c, flatShading: true }));
+  const place = (x, z, s) => {
+    const g = new THREE.Group();
+    const t = new THREE.Mesh(trunkGeo, trunkMat); t.position.y = 3; g.add(t);
+    const n = 2 + Math.floor(r() * 3), mat = greens[Math.floor(r() * greens.length)];
+    for (let k = 0; k < n; k++) {
+      const b = new THREE.Mesh(blobGeo, mat), bs = 3.6 + r() * 2.2;
+      b.scale.set(bs, bs * (0.85 + r() * 0.3), bs);
+      b.position.set((r() - 0.5) * 3, 7 + k * 2.2 + r(), (r() - 0.5) * 3);
+      b.rotation.set(r() * 3, r() * 3, r() * 3);
+      g.add(b);
+    }
+    g.position.set(x, 0, z); g.scale.setScalar(s);
+    scene.add(g);
+  };
+  for (let x = -70; x <= 70; x += 7 + r() * 6) place(x, -58 - r() * 22, 0.9 + r() * 0.6);
+  for (let z = -50; z <= 20; z += 8 + r() * 6) { place(-30 - r() * 14, z, 0.8 + r() * 0.5); place(30 + r() * 14, z, 0.8 + r() * 0.5); }
+}
+
+// Wooden privacy fence around the yard.
+{
+  const r = rng(33), plank = new THREE.BoxGeometry(0.5, 5.2, 0.12);
+  const spots = [];
+  for (let x = -26; x <= 26; x += 0.52) spots.push([x, -46, 0]);
+  for (let z = -46; z <= 10; z += 0.52) { spots.push([-26, z, Math.PI / 2]); spots.push([26, z, Math.PI / 2]); }
+  const mesh = new THREE.InstancedMesh(plank, new THREE.MeshLambertMaterial({ color: 0xffffff }), spots.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color();
+  spots.forEach(([x, z, a], i) => {
+    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), a);
+    m.compose(new THREE.Vector3(x, 2.6 + (i % 2) * 0.08, z), q, new THREE.Vector3(1, 1, 1));
+    mesh.setMatrixAt(i, m);
+    mesh.setColorAt(i, col.setHSL(0.075 + r() * 0.015, 0.45, 0.5 + r() * 0.08));
+  });
+  scene.add(mesh);
+  const railMat = new THREE.MeshLambertMaterial({ color: 0x8f6338 });
+  for (const h of [1.1, 4.2]) {
+    const back = new THREE.Mesh(new THREE.BoxGeometry(52, 0.3, 0.12), railMat); back.position.set(0, h, -45.85); scene.add(back);
+    for (const x of [-25.85, 25.85]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.3, 56), railMat); s.position.set(x, h, -18); scene.add(s); }
   }
-  const v = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
-  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,20,0,.32)");
-  c.fillStyle = v; c.fillRect(0, 0, W, H);
+}
+
+// String lights over the far end of the lane.
+const bulbMeshes = [];
+{
+  const poleMat = new THREE.MeshLambertMaterial({ color: 0x3b2a1c });
+  const poles = [[-9, -38], [9, -38], [-9, -14], [9, -14]];
+  for (const [x, z] of poles) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 11, 6), poleMat); p.position.set(x, 5.5, z); scene.add(p); }
+  const spans = [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]], [[-9, -14], [9, -26]], [[9, -14], [-9, -26]]];
+  const bulbGeo = new THREE.SphereGeometry(0.16, 10, 8), bulbMat = new THREE.MeshBasicMaterial({ color: 0xfff1b8 });
+  const glowTex = canvasTex(64, 64, (c) => { const g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, "rgba(255,236,170,1)"); g.addColorStop(1, "rgba(255,210,120,0)"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); });
+  const glowMat = new THREE.SpriteMaterial({ map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 });
+  const wireMat = new THREE.LineBasicMaterial({ color: 0x2a2018 });
+  for (const [a, b] of spans) {
+    const pts = [];
+    for (let k = 0; k <= 24; k++) {
+      const t = k / 24;
+      pts.push(new THREE.Vector3(lerp(a[0], b[0], t), 10.6 - 1.6 * 4 * t * (1 - t), lerp(a[1], b[1], t)));
+    }
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), wireMat));
+    for (let k = 2; k < 24; k += 2) {
+      const bulb = new THREE.Mesh(bulbGeo, bulbMat); bulb.position.copy(pts[k]).add(new THREE.Vector3(0, -0.25, 0)); scene.add(bulb);
+      const g = new THREE.Sprite(glowMat); g.position.copy(bulb.position); g.scale.setScalar(1.6); scene.add(g);
+      bulbMeshes.push(g);
+    }
+  }
+}
+
+// A cooler and a couple of lawn chairs for some life.
+{
+  const cooler = new THREE.Group();
+  const body = new THREE.Mesh(new RoundedBoxGeometry(2.1, 1.3, 1.3, 3, 0.15), new THREE.MeshStandardMaterial({ color: 0xe8392b, roughness: 0.5 }));
+  body.position.y = 0.65; body.castShadow = true;
+  const lid = new THREE.Mesh(new RoundedBoxGeometry(2.2, 0.3, 1.4, 3, 0.12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }));
+  lid.position.y = 1.4; lid.castShadow = true;
+  cooler.add(body, lid); cooler.position.set(4.2, 0, -24); cooler.rotation.y = 0.4; scene.add(cooler);
+  const chairMat = new THREE.MeshStandardMaterial({ color: 0x2f86ff, roughness: 0.7 }), legMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.6, roughness: 0.3 });
+  for (const [x, z, a, c] of [[-5, -31, 0.6, 0x2f86ff], [5.6, -32, -0.7, 0xff4b3a]]) {
+    const ch = new THREE.Group();
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.12, 1.6), chairMat.clone()); seat.material.color.setHex(c); seat.position.y = 1.2; seat.rotation.x = -0.12;
+    const back = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2, 0.12), seat.material); back.position.set(0, 2.1, 0.85); back.rotation.x = -0.25;
+    ch.add(seat, back);
+    for (const lx of [-0.85, 0.85]) for (const lz of [-0.7, 0.7]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.2, 6), legMat); l.position.set(lx, 0.6, lz); ch.add(l); }
+    ch.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    ch.position.set(x, 0, z); ch.rotation.y = a; scene.add(ch);
+  }
+}
+
+// ───────────────────────── Boards
+function paintBoardTop(c, w, h) {
+  const r = rng(5), s = w / 2; // pixels per foot
+  const g = c.createLinearGradient(0, 0, w, 0);
+  g.addColorStop(0, "#f0d29c"); g.addColorStop(0.35, "#e6c086"); g.addColorStop(0.7, "#eecd97"); g.addColorStop(1, "#ddb37a");
+  c.fillStyle = g; c.fillRect(0, 0, w, h);
+  const grain = (n, rgb, alpha) => {
+    for (let i = 0; i < n; i++) {
+      const x0 = r() * w, amp = 1 + r() * 5, f = 2 + r() * 4, ph = r() * 6;
+      c.strokeStyle = `rgba(${rgb},${alpha * (0.4 + r() * 0.8)})`; c.lineWidth = 0.8 + r() * 2.2;
+      c.beginPath(); for (let k = 0; k <= 30; k++) { const y = h * k / 30, x = x0 + Math.sin(k / 30 * f + ph) * amp; k ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
+    }
+  };
+  grain(90, "140,90,40", 0.17);
+  // Painted design: navy band with gold pinstripes, a border, and rings around the hole.
+  c.save(); c.globalAlpha = 0.95;
+  const band = (y0, y1, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(-5, h * y0 + 0.5 * s); c.lineTo(w + 5, h * y0 - 0.5 * s); c.lineTo(w + 5, h * y1 - 0.5 * s); c.lineTo(-5, h * y1 + 0.5 * s); c.closePath(); c.fill(); };
+  band(0.585, 0.6, "#ffc93a"); band(0.61, 0.76, "#1f3a6e"); band(0.77, 0.785, "#ffc93a");
+  c.strokeStyle = "#1f3a6e"; c.lineWidth = 0.04 * s; c.strokeRect(0.1 * s, 0.1 * s, w - 0.2 * s, h - 0.2 * s);
+  const hx = w / 2, hy = 0.75 * s;
+  c.strokeStyle = "#ffc93a"; c.lineWidth = 0.06 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.1) * s, 0, 7); c.stroke();
+  c.strokeStyle = "#1f3a6e"; c.lineWidth = 0.03 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.17) * s, 0, 7); c.stroke();
+  c.restore();
+  grain(40, "90,55,20", 0.07);
+  const sh = c.createLinearGradient(0, 0, w * 0.8, h * 0.6);
+  sh.addColorStop(0, "rgba(255,255,255,.18)"); sh.addColorStop(0.5, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,.05)");
+  c.fillStyle = sh; c.fillRect(0, 0, w, h);
+}
+const boardTopTex = canvasTex(512, 1024, paintBoardTop);
+boardTopTex.anisotropy = maxAniso;
+boardTopTex.repeat.set(0.5, 0.25);
+boardTopTex.offset.set(0.5, 0);
+
+function makeBoard() {
+  const g = new THREE.Group();
+  const tilt = new THREE.Group();
+  tilt.position.y = FH - 0.06;
+  tilt.rotation.x = SLOPE;
+  tilt.scale.z = 1 / SC; // so the footprint matches the physics (4 ft along the ground)
+  g.add(tilt);
+  const shape = new THREE.Shape();
+  shape.moveTo(-HW, 0); shape.lineTo(HW, 0); shape.lineTo(HW, BY - FY); shape.lineTo(-HW, BY - FY); shape.closePath();
+  const hole = new THREE.Path(); hole.absarc(0, HOLE.y - FY, HR, 0, Math.PI * 2, true); shape.holes.push(hole);
+  const topGeo = new THREE.ExtrudeGeometry(shape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.012, bevelSegments: 2, curveSegments: 48 });
+  topGeo.rotateX(-Math.PI / 2);
+  const top = new THREE.Mesh(topGeo, [
+    new THREE.MeshStandardMaterial({ map: boardTopTex, roughness: 0.55 }),
+    new THREE.MeshStandardMaterial({ color: 0xc89a62, roughness: 0.7 }),
+  ]);
+  top.castShadow = true; top.receiveShadow = true;
+  tilt.add(top);
+  const L = BY - FY, navy = new THREE.MeshStandardMaterial({ color: 0x1f3a6e, roughness: 0.55 }), gold = new THREE.MeshStandardMaterial({ color: 0xffc93a, roughness: 0.4 });
+  const frame = [
+    [new THREE.BoxGeometry(0.08, 0.3, L), HW - 0.04, -L / 2], [new THREE.BoxGeometry(0.08, 0.3, L), -HW + 0.04, -L / 2],
+    [new THREE.BoxGeometry(2 * HW, 0.3, 0.08), 0, -0.04], [new THREE.BoxGeometry(2 * HW, 0.3, 0.08), 0, -L + 0.04],
+  ];
+  for (const [geo, x, z] of frame) { const m = new THREE.Mesh(geo, navy); m.position.set(x, -0.15, z); m.castShadow = true; m.receiveShadow = true; tilt.add(m); }
+  for (const x of [HW + 0.002, -HW - 0.002]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.035, L - 0.3), gold); s.position.set(x, -0.1, -L / 2); tilt.add(s); }
+  // The hole has depth: a dark tube under the top.
+  const tube = new THREE.Mesh(new THREE.CylinderGeometry(HR, HR, 0.4, 40, 1, true), new THREE.MeshBasicMaterial({ color: 0x120c08, side: THREE.BackSide }));
+  tube.position.set(0, -0.15, -(HOLE.y - FY)); tilt.add(tube);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(HR, 32), new THREE.MeshBasicMaterial({ color: 0x050302 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.set(0, -0.32, -(HOLE.y - FY)); tilt.add(floor);
+  // Back legs.
+  const legMat = new THREE.MeshStandardMaterial({ color: 0x9c6f3d, roughness: 0.8 });
+  for (const x of [-HW + 0.12, HW - 0.12]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, BH - 0.2, 0.28), legMat);
+    leg.position.set(x, (BH - 0.2) / 2, -(L - 0.4)); leg.castShadow = true; g.add(leg);
+  }
   return g;
 }
-function woodGrain(c, x, y, w, h, r, dark, n, alpha) {
-  c.lineCap = "round";
-  for (let i = 0; i < n; i++) {
-    const x0 = x + r() * w, amp = (0.5 + r() * 2.5) * dpr, freq = 2 + r() * 4, ph = r() * 6;
-    c.strokeStyle = `rgba(${dark},${alpha * (0.4 + r() * 0.8)})`; c.lineWidth = (0.4 + r() * 1.3) * dpr;
-    c.beginPath();
-    for (let k = 0; k <= 24; k++) { const yy = y + h * k / 24, xx = x0 + Math.sin(k / 24 * freq + ph) * amp; k ? c.lineTo(xx, yy) : c.moveTo(xx, yy); }
-    c.stroke();
-  }
+const targetBoard = makeBoard(); targetBoard.position.z = -FY; scene.add(targetBoard);
+const ownBoard = makeBoard(); ownBoard.rotation.y = Math.PI; scene.add(ownBoard);
+
+// ───────────────────────── Bags
+function fabricTex(owner) {
+  return canvasTex(256, 256, (c, w, h) => {
+    const g = c.createRadialGradient(w * 0.38, h * 0.35, 10, w / 2, h / 2, w * 0.75);
+    g.addColorStop(0, COL.pl[owner]); g.addColorStop(0.55, COL.p[owner]); g.addColorStop(1, COL.pd[owner]);
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 1;
+    for (let k = -w; k < w; k += 4) { c.beginPath(); c.moveTo(k, 0); c.lineTo(k + w, h); c.stroke(); c.beginPath(); c.moveTo(k + w, 0); c.lineTo(k, h); c.stroke(); }
+    c.setLineDash([7, 6]); c.strokeStyle = "rgba(255,255,255,.75)"; c.lineWidth = 3;
+    c.strokeRect(w * 0.12, h * 0.12, w * 0.76, h * 0.76); c.setLineDash([]);
+  });
 }
-function paintBoardTop() {
-  const m = bmap(), s = m.s, bw = 2 * HW * s, bh = (BY - FY) * s, pad = Math.ceil(0.5 * s);
-  const g = mkCanvas(bw + 2 * pad, bh + 2 * pad), c = g.getContext("2d"), r = rng(5);
-  const X = pad, Y = pad;
-  // shadow: the raised back throws a longer shadow
-  c.save(); c.fillStyle = "rgba(0,0,0,.42)"; c.shadowColor = "rgba(0,0,0,.5)"; c.shadowBlur = 0.18 * s;
-  c.beginPath(); c.moveTo(X + 0.05 * s, Y + bh + 0.02 * s); c.lineTo(X + bw + 0.07 * s, Y + bh + 0.02 * s);
-  c.lineTo(X + bw + 0.3 * s, Y + 0.12 * s); c.lineTo(X + 0.25 * s, Y + 0.12 * s); c.closePath(); c.fill(); c.restore();
-  // frame (2x4 rim)
-  const rim = 0.07 * s;
-  const fg = c.createLinearGradient(X, Y, X + bw, Y); fg.addColorStop(0, "#a8773f"); fg.addColorStop(0.5, "#c08c50"); fg.addColorStop(1, "#946634");
-  c.fillStyle = fg; rrect(c, X, Y, bw, bh, 0.06 * s); c.fill();
-  // plywood top
-  const tx = X + rim, ty = Y + rim, tw = bw - 2 * rim, th = bh - 2 * rim;
-  c.save(); rrect(c, tx, ty, tw, th, 0.03 * s); c.clip();
-  const wg = c.createLinearGradient(tx, 0, tx + tw, 0);
-  wg.addColorStop(0, "#e9cb98"); wg.addColorStop(0.35, "#dfb880"); wg.addColorStop(0.7, "#e6c48f"); wg.addColorStop(1, "#d8ad74");
-  c.fillStyle = wg; c.fillRect(tx, ty, tw, th);
-  woodGrain(c, tx, ty, tw, th, r, "140,90,40", 70, 0.16);
-  for (let k = 0; k < 2; k++) { // knots
-    const kx = tx + (0.2 + r() * 0.6) * tw, ky = ty + (0.15 + r() * 0.7) * th;
-    c.fillStyle = "rgba(130,80,35,.25)"; c.beginPath(); c.ellipse(kx, ky, 1.2 * dpr, 2.6 * dpr, 0, 0, 7); c.fill();
-    for (let j = 2; j > 0; j--) { c.strokeStyle = `rgba(120,70,30,${0.06 + j * 0.03})`; c.lineWidth = 0.7 * dpr; c.beginPath(); c.ellipse(kx, ky, j * 1.3 * dpr + 1.2 * dpr, j * 2.6 * dpr + 2.6 * dpr, 0, 0, 7); c.stroke(); }
+const bagGeo = (() => {
+  const g = new RoundedBoxGeometry(BAG * 0.98, 0.14, BAG * 0.98, 4, 0.06);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { // pillow: puffy in the middle, flatter at the seams
+    const x = p.getX(i) / (BAG / 2), z = p.getZ(i) / (BAG / 2), k = Math.min(1, (x * x + z * z) / 2);
+    p.setY(i, p.getY(i) * (1.15 - 0.55 * k));
   }
-  // painted design: navy band with gold pinstripes running diagonally across the lower half
-  const hx = X + bw / 2, hy = Y + 0.75 * s;
-  c.save(); c.globalAlpha = 0.9;
-  const band = (y0, y1, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(tx - 5, ty + th * y0 + 0.5 * s); c.lineTo(tx + tw + 5, ty + th * y0 - 0.5 * s); c.lineTo(tx + tw + 5, ty + th * y1 - 0.5 * s); c.lineTo(tx - 5, ty + th * y1 + 0.5 * s); c.closePath(); c.fill(); };
-  band(0.585, 0.6, COL.gold); band(0.61, 0.76, COL.navy); band(0.77, 0.785, COL.gold);
-  // inset border pinstripe
-  c.strokeStyle = COL.navy; c.lineWidth = 0.035 * s; rrect(c, tx + 0.09 * s, ty + 0.09 * s, tw - 0.18 * s, th - 0.18 * s, 0.05 * s); c.stroke();
-  // ring around the hole
-  c.strokeStyle = COL.gold; c.lineWidth = 0.05 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.1) * s, 0, 7); c.stroke();
-  c.strokeStyle = COL.navy; c.lineWidth = 0.025 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.16) * s, 0, 7); c.stroke();
-  c.restore();
-  woodGrain(c, tx, ty, tw, th, r, "90,55,20", 40, 0.07); // grain showing through the paint
-  // varnish sheen
-  const sh = c.createLinearGradient(tx, ty, tx + tw * 0.8, ty + th * 0.6);
-  sh.addColorStop(0, "rgba(255,255,255,.22)"); sh.addColorStop(0.45, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,.06)");
-  c.fillStyle = sh; c.fillRect(tx, ty, tw, th);
-  c.restore();
-  // rim highlight and edge
-  c.strokeStyle = "rgba(255,240,210,.35)"; c.lineWidth = dpr; rrect(c, tx, ty, tw, th, 0.03 * s); c.stroke();
-  c.strokeStyle = "rgba(70,40,15,.8)"; c.lineWidth = 1.5 * dpr; rrect(c, X, Y, bw, bh, 0.06 * s); c.stroke();
-  // the hole: dark, with the far inner wall catching light
-  const hr = HR * s;
-  c.save(); c.beginPath(); c.arc(hx, hy, hr, 0, 7); c.clip();
-  c.fillStyle = "#8a6034"; c.fillRect(hx - hr, hy - hr, 2 * hr, 2 * hr);
-  const hg = c.createRadialGradient(hx, hy + hr * 0.3, 0, hx, hy + hr * 0.25, hr * 1.1); hg.addColorStop(0, "#000"); hg.addColorStop(1, COL.hole);
-  c.fillStyle = hg; c.beginPath(); c.arc(hx, hy + 0.09 * s, hr, 0, 7); c.fill();
-  c.restore();
-  c.strokeStyle = "rgba(60,35,15,.9)"; c.lineWidth = 1.5 * dpr; c.beginPath(); c.arc(hx, hy, hr, 0, 7); c.stroke();
-  c.strokeStyle = "rgba(255,240,210,.4)"; c.lineWidth = dpr; c.beginPath(); c.arc(hx, hy, hr + dpr, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke();
-  const [ox, oy] = m.pt({ x: -HW, y: BY });
-  return { canvas: g, x: ox - pad, y: oy - pad };
-}
-function paintSideScene() {
-  const sm = smap(), { W, H, gy, kx, kz } = sm, g = mkCanvas(W, H), c = g.getContext("2d"), r = rng(3);
-  // golden-hour sky
-  const sky = c.createLinearGradient(0, 0, 0, gy);
-  sky.addColorStop(0, "#2c5d94"); sky.addColorStop(0.55, "#86b5d8"); sky.addColorStop(0.85, "#f3cf96"); sky.addColorStop(1, "#f6b978");
-  c.fillStyle = sky; c.fillRect(0, 0, W, gy);
-  const sunX = W * 0.8, sunY = gy * 0.5;
-  const glow = c.createRadialGradient(sunX, sunY, 0, sunX, sunY, H * 0.9);
-  glow.addColorStop(0, "rgba(255,240,190,.9)"); glow.addColorStop(0.12, "rgba(255,220,150,.45)"); glow.addColorStop(1, "rgba(255,200,120,0)");
-  c.fillStyle = glow; c.fillRect(0, 0, W, gy);
-  c.fillStyle = "#fff6d8"; c.beginPath(); c.arc(sunX, sunY, H * 0.07, 0, 7); c.fill();
-  // clouds
-  for (let i = 0; i < 4; i++) {
-    const cx = (0.08 + i * 0.25 + r() * 0.08) * W, cy = (0.12 + r() * 0.22) * gy, w = (0.07 + r() * 0.06) * W;
-    c.fillStyle = "rgba(255,255,255,.55)";
-    for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse(cx + (r() - 0.5) * w, cy + (r() - 0.5) * w * 0.15, w * (0.25 + r() * 0.2), w * (0.1 + r() * 0.08), 0, 0, 7); c.fill(); }
-  }
-  // hazy hills, then tree line
-  c.fillStyle = "rgba(96,128,140,.55)"; c.beginPath(); c.moveTo(0, gy);
-  for (let x = 0; x <= W; x += 6 * dpr) c.lineTo(x, gy - kz * (7.5 + 1.5 * Math.sin(x / W * 5 + 1) + Math.sin(x / W * 13) * 0.6));
-  c.lineTo(W, gy); c.fill();
-  for (const [col, h0, h1, step] of [["#3a6a45", 5.5, 9, 0.9], ["#2c5535", 4.5, 7.5, 0.7]]) {
-    c.fillStyle = col;
-    for (let y = SV.minY - 1; y < SV.maxY + 1; y += step + r() * step) {
-      const [x] = sm.pt(y, 0), h = (h0 + r() * (h1 - h0)) * kz, w = (0.9 + r() * 1.1) * kx;
-      c.beginPath(); c.ellipse(x, gy - h, w, h * 0.55, 0, 0, 7); c.fill(); c.fillRect(x - w, gy - h, 2 * w, h);
-    }
-  }
-  // wooden privacy fence
-  const fh = 4.2 * kz, plank = Math.max(3 * dpr, 0.45 * kx);
-  for (let x = 0, k = 0; x < W; x += plank, k++) {
-    const pg = c.createLinearGradient(0, gy - fh, 0, gy);
-    const tone = k % 3 === 0 ? ["#c99a63", "#9c6f40"] : k % 3 === 1 ? ["#bf8f58", "#93663a"] : ["#c4955e", "#986b3d"];
-    pg.addColorStop(0, tone[0]); pg.addColorStop(1, tone[1]);
-    c.fillStyle = pg; c.fillRect(x, gy - fh - (k % 2) * dpr, plank - 0.6 * dpr, fh + (k % 2) * dpr);
-  }
-  c.fillStyle = "rgba(60,35,15,.35)"; c.fillRect(0, gy - fh * 0.78, W, 1.2 * dpr); c.fillRect(0, gy - fh * 0.25, W, 1.2 * dpr);
-  c.fillStyle = "rgba(255,230,190,.25)"; c.fillRect(0, gy - fh - dpr, W, dpr);
-  // string lights between two poles
-  const poles = [sm.pt(1.5, 0)[0], sm.pt(15, 0)[0], sm.pt(31.5, 0)[0]], top = gy - 9.5 * kz;
-  c.strokeStyle = "#3b2a1c"; c.lineWidth = 2 * dpr; for (const p of poles) { c.beginPath(); c.moveTo(p, gy); c.lineTo(p, top - 3 * dpr); c.stroke(); }
-  for (let i = 0; i < poles.length - 1; i++) {
-    const a = poles[i], b = poles[i + 1], sag = 1.6 * kz, pts = [];
-    for (let k = 0; k <= 30; k++) { const t = k / 30; pts.push([lerp(a, b, t), top + sag * 4 * t * (1 - t)]); }
-    c.strokeStyle = "rgba(40,30,20,.85)"; c.lineWidth = 1 * dpr; c.beginPath(); pts.forEach((p, k) => k ? c.lineTo(...p) : c.moveTo(...p)); c.stroke();
-    for (let k = 2; k < 30; k += 3) {
-      const [x, y] = pts[k], bg = c.createRadialGradient(x, y + 3 * dpr, 0, x, y + 3 * dpr, 7 * dpr);
-      bg.addColorStop(0, "rgba(255,236,170,.85)"); bg.addColorStop(1, "rgba(255,220,140,0)");
-      c.fillStyle = bg; c.beginPath(); c.arc(x, y + 3 * dpr, 7 * dpr, 0, 7); c.fill();
-      c.fillStyle = "#fff4cf"; c.beginPath(); c.ellipse(x, y + 3 * dpr, 1.6 * dpr, 2.2 * dpr, 0, 0, 7); c.fill();
-    }
-  }
-  // lawn
-  const lg = c.createLinearGradient(0, gy, 0, H); lg.addColorStop(0, "#5f9f49"); lg.addColorStop(1, "#3e7632");
-  c.fillStyle = lg; c.fillRect(0, gy, W, H - gy);
-  c.lineCap = "round";
-  for (let i = 0; i < W / dpr * 1.4; i++) {
-    const x = r() * W, y = gy + r() * (H - gy), len = (2 + r() * 4) * dpr;
-    c.strokeStyle = `hsla(${95 + r() * 20},45%,${28 + r() * 20}%,.7)`; c.lineWidth = dpr;
-    c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() - 0.5) * 2 * dpr, y - len); c.stroke();
-  }
-  // soft shading where lawn meets fence
-  const sh = c.createLinearGradient(0, gy - 3 * dpr, 0, gy + 6 * dpr); sh.addColorStop(0, "rgba(0,0,0,0)"); sh.addColorStop(1, "rgba(0,0,0,.12)");
-  c.fillStyle = sh; c.fillRect(0, gy - 3 * dpr, W, 9 * dpr);
+  g.computeVertexNormals();
   return g;
+})();
+const bagMats = [0, 1].map(o => new THREE.MeshStandardMaterial({ map: fabricTex(o), roughness: 0.92 }));
+const bagMeshes = new Map(); // id -> { mesh, dropT, squashT }
+function clearBagMeshes() { for (const v of bagMeshes.values()) scene.remove(v.mesh); bagMeshes.clear(); }
+function bagMesh(b) {
+  let v = bagMeshes.get(b.id);
+  if (!v) {
+    const mesh = new THREE.Mesh(bagGeo, bagMats[b.owner]);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    mesh.rotation.order = "XYZ";
+    scene.add(mesh);
+    v = { mesh, dropT: 0, squashT: 9 };
+    bagMeshes.set(b.id, v);
+  }
+  return v;
+}
+function squash(id) { const v = bagMeshes.get(id); if (v) v.squashT = 0; }
+function updateBags(dt) {
+  for (const b of S.world.bags) {
+    const v = bagMesh(b), m = v.mesh;
+    m.visible = true;
+    v.squashT += dt;
+    const sq = v.squashT < 0.3 ? Math.sin(v.squashT / 0.3 * Math.PI) * Math.exp(-v.squashT * 6) : 0;
+    m.scale.set(1 + 0.25 * sq, 1 - 0.45 * sq, 1 + 0.25 * sq);
+    if (b.state === "flying") {
+      m.position.copy(W(b.x, b.y, b.z));
+      m.rotation.set(0.2 * Math.sin(b.angle * 1.7), -b.angle, 0.15 * Math.cos(b.angle * 1.3));
+    } else if (b.state === "inHole") {
+      v.dropT += dt;
+      const base = b.c && b.c.kind === "hole" ? plane(HOLE.y) : plane(b.y);
+      m.position.copy(W(b.x + (HOLE.x - b.x) * Math.min(1, v.dropT * 6), b.y + (HOLE.y - b.y) * Math.min(1, v.dropT * 6), base - v.dropT * 2.2));
+      m.visible = v.dropT < 0.5;
+    } else {
+      const ground = b.state === "ground";
+      m.position.copy(W(b.x, b.y, (ground ? 0 : plane(b.y)) + 0.075));
+      m.rotation.set(ground ? 0 : SLOPE, -b.angle, 0);
+    }
+  }
+}
+
+// ───────────────────────── Aiming guides (3D)
+const guides = new THREE.Group(); scene.add(guides);
+const lift = 0.012;
+const surfaceAt = p => surf(p) + lift;
+function flatOnBoard(obj, p) { obj.position.copy(W(p.x, p.y, surfaceAt(p))); obj.rotation.set(-Math.PI / 2 + (onBoard(p) ? SLOPE : 0), 0, 0); }
+const finishMarker = new THREE.Group();
+{
+  const outline = new THREE.Mesh(new THREE.RingGeometry(0.15, 0.26, 48), new THREE.MeshBasicMaterial({ color: 0x0a1426, transparent: true, opacity: 0.45, depthWrite: false }));
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.17, 0.24, 48), new THREE.MeshBasicMaterial({ color: 0x3ee07a }));
+  const dot = new THREE.Mesh(new THREE.CircleGeometry(0.06, 24), new THREE.MeshBasicMaterial({ color: 0x3ee07a }));
+  ring.position.z = 0.002; dot.position.z = 0.002;
+  finishMarker.add(outline, ring, dot);
+}
+const landingMarker = new THREE.Group();
+{
+  const outline = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.31, 48), new THREE.MeshBasicMaterial({ color: 0x0a1426, transparent: true, opacity: 0.45, depthWrite: false }));
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.22, 0.29, 48), new THREE.MeshBasicMaterial({ color: 0xffc93a }));
+  ring.position.z = 0.002;
+  landingMarker.add(outline, ring);
+  for (let k = 0; k < 4; k++) {
+    const tick = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.035), new THREE.MeshBasicMaterial({ color: 0xffc93a }));
+    const a = k * Math.PI / 2; tick.position.set(Math.cos(a) * 0.38, Math.sin(a) * 0.38, 0.002); tick.rotation.z = a;
+    landingMarker.add(tick);
+  }
+}
+for (const m of [finishMarker, landingMarker]) m.traverse(o => { if (o.isMesh) o.renderOrder = 5; });
+scene.add(finishMarker, landingMarker);
+// Flight-arc dots stay the same size on screen whatever the camera distance.
+const arcGeo = new THREE.BufferGeometry();
+arcGeo.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(90 * 3), 3));
+arcGeo.setDrawRange(0, 0);
+let arcDots = null; // created once dotTex exists (below)
+let zoneMesh = null, zoneLine = null, slideLine = null, pushLine = null, ghostA = null, ghostB = null;
+function disposeGuide(o) { if (!o) return; guides.remove(o); o.geometry.dispose(); }
+function dashedLine(points, color, dash, gap, width = 1) {
+  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineDashedMaterial({ color, dashSize: dash, gapSize: gap, linewidth: width, transparent: true, opacity: 0.95, depthTest: false }));
+  l.computeLineDistances(); l.renderOrder = 6; return l;
+}
+function ghostSquare(p, color) {
+  const h = BAG / 2, pts = [[-h, -h], [h, -h], [h, h], [-h, h], [-h, -h]].map(([dx, dy]) => { const q = { x: p.x + dx, y: p.y + dy }; return W(q.x, q.y, surfaceAt(q) + 0.005); });
+  return dashedLine(pts, color, 0.06, 0.05);
+}
+let shownPlan = -1, shownPhase = "";
+function rebuildGuides() {
+  shownPlan = S.planVersion; shownPhase = S.phase;
+  for (const o of [zoneMesh, zoneLine, slideLine, pushLine, ghostA, ghostB]) disposeGuide(o);
+  zoneMesh = zoneLine = slideLine = pushLine = ghostA = ghostB = null;
+  arcGeo.setDrawRange(0, 0);
+  const visible = S.plan && ["aiming", "power", "ring", "cpu"].includes(S.phase);
+  finishMarker.visible = !!(visible && S.end);
+  landingMarker.visible = !!(visible && S.landing);
+  if (!visible) return;
+  flatOnBoard(finishMarker, S.end);
+  flatOnBoard(landingMarker, S.landing);
+  const z = S.plan.z, E = S.end;
+  if (canEdit() && z.Dmax - z.Dmin > 0.02) {
+    const N = 18, pos = [], idx = [], outline = [];
+    for (let i = 0; i <= N; i++) {
+      const D = z.Dmin + (z.Dmax - z.Dmin) * i / N, a = maxPhi(D);
+      for (const s of [-1, 1]) { const q = landingFrom(z, E, D, s * a); const w = W(q.x, q.y, surfaceAt(q)); pos.push(w.x, w.y, w.z); }
+      if (i < N) { const b = i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+    }
+    for (let i = 0; i <= N; i++) outline.push(new THREE.Vector3(pos[i * 6], pos[i * 6 + 1], pos[i * 6 + 2]));
+    for (let i = N; i >= 0; i--) outline.push(new THREE.Vector3(pos[i * 6 + 3], pos[i * 6 + 4], pos[i * 6 + 5]));
+    outline.push(outline[0].clone());
+    const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx);
+    zoneMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffc93a, transparent: true, opacity: 0.3, depthWrite: false, side: THREE.DoubleSide }));
+    zoneMesh.renderOrder = 4;
+    zoneLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(outline), new THREE.LineBasicMaterial({ color: 0xffc93a }));
+    zoneLine.renderOrder = 4;
+    guides.add(zoneMesh, zoneLine);
+  }
+  if (!showPreview() || !S.prev) return;
+  const pv = S.prev;
+  if (pv.slide.length > 1) {
+    slideLine = dashedLine(pv.slide.map(p => W(p.x, p.y, surfaceAt(p) + 0.01)), 0xffffff, 0.12, 0.09); guides.add(slideLine);
+    if (pv.outcome !== "inHole") { ghostA = ghostSquare(pv.end, 0xffffff); guides.add(ghostA); }
+  }
+  if (pv.pushPath.length > 1) {
+    pushLine = dashedLine(pv.pushPath.map(p => W(p.x, p.y, surfaceAt(p) + 0.01)), 0xffc93a, 0.08, 0.08); guides.add(pushLine);
+    if (pv.pushOutcome !== "inHole") { ghostB = ghostSquare(pv.pushEnd, 0xffc93a); guides.add(ghostB); }
+  }
+  // Flight arc as a string of glowing dots, about one every foot.
+  const arr = arcGeo.attributes.position.array;
+  let last = null, n = 0;
+  for (const p of pv.flight) {
+    const w = W(p.x, p.y, p.z);
+    if (last && w.distanceTo(last) < 0.9) continue;
+    last = w; arr[n * 3] = w.x; arr[n * 3 + 1] = w.y; arr[n * 3 + 2] = w.z; n++;
+    if (n >= 90) break;
+  }
+  arcGeo.attributes.position.needsUpdate = true;
+  arcGeo.setDrawRange(0, n);
+  arcGeo.computeBoundingSphere();
 }
 
 // ───────────────────────── Effects
-function spawnDust(p, n = 10, col = "235,214,170") {
+const dotTex = canvasTex(64, 64, (c) => { const g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); });
+const fx = [];
+arcDots = new THREE.Points(arcGeo, new THREE.PointsMaterial({ map: dotTex, color: 0xffffff, size: 11, sizeAttenuation: false, transparent: true, depthWrite: false }));
+arcDots.renderOrder = 7; arcDots.frustumCulled = false; scene.add(arcDots);
+function dust(b, color) {
+  for (let i = 0; i < 12; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color, transparent: true, opacity: 0.8, depthWrite: false }));
+    const a = Math.random() * Math.PI * 2, v = 0.6 + Math.random() * 1.2;
+    s.position.copy(W(b.x, b.y, surf(b) + 0.08)); s.scale.setScalar(0.12);
+    scene.add(s);
+    fx.push({ o: s, vel: new THREE.Vector3(Math.cos(a) * v, 0.6 + Math.random() * 0.8, Math.sin(a) * v), life: 0.6 + Math.random() * 0.3, max: 0.9, grow: 0.5, kind: "dust" });
+  }
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.26, 40), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.7, depthWrite: false }));
+  flatOnBoard(ring, b); ring.position.y += 0.01; scene.add(ring);
+  fx.push({ o: ring, life: 0.45, max: 0.45, kind: "ring" });
+}
+const confettiGeo = new THREE.PlaneGeometry(0.09, 0.05);
+function confetti(owner) {
+  const cols = [COL.p[owner], COL.gold, "#ffffff", COL.pl[owner], COL.go];
+  const n = 90, mesh = new THREE.InstancedMesh(confettiGeo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true }), n);
+  const parts = [], col = new THREE.Color();
   for (let i = 0; i < n; i++) {
-    const a = Math.random() * 7, v = 0.5 + Math.random() * 1.4;
-    S.fx.push({ k: "dust", x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.5 + Math.random() * 0.35, max: 0.85, size: 0.04 + Math.random() * 0.06, col });
+    const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 5;
+    parts.push({ p: W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.1), v: new THREE.Vector3(Math.cos(a) * v * 0.6, 5 + Math.random() * 7, Math.sin(a) * v * 0.6), r: new THREE.Euler(Math.random() * 6, Math.random() * 6, 0), w: (Math.random() - 0.5) * 18 });
+    mesh.setColorAt(i, col.set(cols[i % cols.length]));
   }
-  S.fx.push({ k: "ring", x: p.x, y: p.y, life: 0.4, max: 0.4 });
+  scene.add(mesh);
+  fx.push({ o: mesh, parts, life: 2.2, max: 2.2, kind: "confetti" });
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0xffd76a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+  glow.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.2)); glow.scale.setScalar(0.8); scene.add(glow);
+  fx.push({ o: glow, life: 0.9, max: 0.9, kind: "glow" });
+  shake = 0.45;
 }
-function spawnConfetti(pl) {
-  const cols = [COL.p[pl], COL.gold, "#ffffff", COL.pl[pl]];
-  for (let i = 0; i < 56; i++) {
-    const a = Math.random() * 7, v = 1.5 + Math.random() * 5;
-    S.fx.push({ k: "conf", x: HOLE.x, y: HOLE.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1 + Math.random() * 0.7, max: 1.7,
-      size: 0.07 + Math.random() * 0.07, rot: Math.random() * 7, vr: (Math.random() - 0.5) * 14, col: cols[i % cols.length] });
-  }
-  S.fx.push({ k: "glow", x: HOLE.x, y: HOLE.y, life: 0.9, max: 0.9, col: COL.gold });
-  S.shake = 0.35;
-}
+let shake = 0;
+const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), one = new THREE.Vector3(1, 1, 1);
 function updateFx(dt) {
-  for (const f of S.fx) {
-    f.life -= dt;
-    if (f.vx !== undefined) { const drag = Math.pow(f.k === "conf" ? 0.2 : 0.05, dt); f.vx *= drag; f.vy *= drag; f.x += f.vx * dt; f.y += f.vy * dt; }
-    if (f.rot !== undefined) f.rot += f.vr * dt;
-  }
-  S.fx = S.fx.filter(f => f.life > 0);
-  S.shake = Math.max(0, S.shake - dt);
-}
-function drawFx(c, m) {
-  for (const f of S.fx) {
-    const [x, y] = m.pt(f), a = Math.max(0, f.life / f.max);
-    if (f.k === "dust") { c.fillStyle = `rgba(${f.col},${0.65 * a})`; c.beginPath(); c.arc(x, y, f.size * m.s * (1.6 - a * 0.6), 0, 7); c.fill(); }
-    else if (f.k === "ring") { c.strokeStyle = `rgba(255,255,255,${0.55 * a})`; c.lineWidth = 2 * dpr; c.beginPath(); c.arc(x, y, (0.2 + (1 - a) * 0.45) * m.s, 0, 7); c.stroke(); }
-    else if (f.k === "glow") {
-      const rr = (0.3 + (1 - a) * 0.9) * m.s, gl = c.createRadialGradient(x, y, 0, x, y, rr);
-      gl.addColorStop(0, `rgba(255,220,90,${0.6 * a})`); gl.addColorStop(1, "rgba(255,220,90,0)"); c.fillStyle = gl; c.beginPath(); c.arc(x, y, rr, 0, 7); c.fill();
-    } else if (f.k === "conf") {
-      const z = f.size * m.s; c.save(); c.globalAlpha = Math.min(1, a * 1.5); c.translate(x, y); c.rotate(f.rot);
-      c.fillStyle = f.col; c.fillRect(-z / 2, -z / 4, z, z / 2 * (0.4 + Math.abs(Math.sin(f.rot)))); c.restore();
+  for (let i = fx.length - 1; i >= 0; i--) {
+    const f = fx[i]; f.life -= dt; const a = Math.max(0, f.life / f.max);
+    if (f.kind === "dust") { f.o.position.addScaledVector(f.vel, dt); f.vel.multiplyScalar(Math.pow(0.05, dt)); f.o.scale.setScalar(0.12 + (1 - a) * f.grow); f.o.material.opacity = 0.75 * a; }
+    else if (f.kind === "ring") { const s = 1 + (1 - a) * 2.6; f.o.scale.set(s, s, s); f.o.material.opacity = 0.7 * a; }
+    else if (f.kind === "glow") { f.o.scale.setScalar(0.8 + (1 - a) * 3); f.o.material.opacity = a; }
+    else if (f.kind === "confetti") {
+      f.parts.forEach((p, k) => {
+        p.v.y -= 14 * dt; p.v.multiplyScalar(Math.pow(0.35, dt)); p.p.addScaledVector(p.v, dt);
+        if (p.p.y < 0.03) { p.p.y = 0.03; p.v.set(0, 0, 0); }
+        p.r.x += p.w * dt; p.r.y += p.w * 0.7 * dt;
+        tmpM.compose(p.p, tmpQ.setFromEuler(p.r), one); f.o.setMatrixAt(k, tmpM);
+      });
+      f.o.instanceMatrix.needsUpdate = true; f.o.material.opacity = Math.min(1, a * 2);
     }
+    if (f.life <= 0) { scene.remove(f.o); if (f.o.geometry && f.kind !== "confetti") f.o.geometry.dispose(); fx.splice(i, 1); }
   }
+  shake = Math.max(0, shake - dt);
 }
 
-// ───────────────────────── Top-down view
-function pillow(c, h, bulge) {
-  c.beginPath(); c.moveTo(-h, -h);
-  c.quadraticCurveTo(0, -h - bulge, h, -h); c.quadraticCurveTo(h + bulge, 0, h, h);
-  c.quadraticCurveTo(0, h + bulge, -h, h); c.quadraticCurveTo(-h - bulge, 0, -h, -h); c.closePath();
+// ───────────────────────── Cameras
+const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);
+const tPos = new THREE.Vector3(), tLook = new THREE.Vector3();
+function camMode() {
+  if (S.phase === "menu") return "intro";
+  if (S.phase === "aiming") return "aim";
+  if (S.phase === "power" || S.phase === "ring") return "throw";
+  if (S.phase === "cpu") return S.cpuT < 0.6 ? "aim" : "throw";
+  if (S.phase === "flight") {
+    const b = S.world.bags.find(x => x.id === S.lastId);
+    if (b && b.state === "flying" && b.y < FY - 7) return "follow";
+    return "watch";
+  }
+  return "watch";
 }
-function drawBagTop(c, x, y, z, angle, owner, dim, shadow = true) {
-  const h = z / 2;
-  c.save(); c.translate(x, y); c.rotate(angle);
-  if (shadow) { c.shadowColor = "rgba(0,0,0,.42)"; c.shadowBlur = z * 0.22; c.shadowOffsetX = z * 0.07; c.shadowOffsetY = z * 0.12; }
-  const gr = c.createRadialGradient(-h * 0.3, -h * 0.35, z * 0.04, 0, 0, z * 0.8);
-  gr.addColorStop(0, dim ? COL.p[owner] : COL.pl[owner]); gr.addColorStop(0.55, dim ? COL.pd[owner] : COL.p[owner]); gr.addColorStop(1, COL.pd[owner]);
-  c.fillStyle = gr; pillow(c, h * 0.92, z * 0.07); c.fill();
-  c.shadowColor = "transparent";
-  // duck-cloth weave
-  c.save(); pillow(c, h * 0.92, z * 0.07); c.clip();
-  c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 0.6 * dpr;
-  for (let k = -z; k < z; k += 2.2 * dpr) { c.beginPath(); c.moveTo(k, -h); c.lineTo(k + z, h); c.stroke(); }
-  c.restore();
-  // seam and corner pinches
-  c.setLineDash([1.6 * dpr, 1.6 * dpr]); c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = 0.8 * dpr;
-  pillow(c, h * 0.72, z * 0.05); c.stroke(); c.setLineDash([]);
-  c.strokeStyle = "rgba(0,0,0,.28)"; c.lineWidth = 0.8 * dpr;
-  for (const [sx_, sy_] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { c.beginPath(); c.moveTo(sx_ * h * 0.9, sy_ * h * 0.9); c.lineTo(sx_ * h * 0.62, sy_ * h * 0.62); c.stroke(); }
-  c.strokeStyle = "rgba(0,0,0,.45)"; c.lineWidth = 0.9 * dpr; pillow(c, h * 0.92, z * 0.07); c.stroke();
-  c.restore();
-}
-
-function drawBoard() {
-  const c = bx, W = boardC.width, H = boardC.height, m = bmap(), s = m.s;
-  if (!tex.grass || tex.grass.width !== W || tex.grass.height !== H) buildTextures();
-  c.save();
-  if (S.shake > 0) c.translate((Math.random() - 0.5) * S.shake * 22 * dpr, (Math.random() - 0.5) * S.shake * 22 * dpr);
-  c.drawImage(tex.grass, 0, 0);
-  c.drawImage(tex.board.canvas, tex.board.x, tex.board.y);
-
-  if (S.plan && S.phase !== "flight") {
-    const z = S.plan.z, E = S.end;
-    const d = { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) };
-    c.strokeStyle = COL.p[S.player] + "dd"; c.lineWidth = 2.5 * dpr; c.lineCap = "round"; c.setLineDash([0.1, 6 * dpr]);
-    c.beginPath(); c.moveTo(...m.pt({ x: S.landing.x - d.x * 8, y: S.landing.y - d.y * 8 })); c.lineTo(...m.pt(S.landing)); c.stroke(); c.setLineDash([]);
-    if (canEdit() && z.Dmax - z.Dmin > 0.02) {
-      const N = 16, left = [], right = [];
-      for (let i = 0; i <= N; i++) {
-        const D = z.Dmin + (z.Dmax - z.Dmin) * i / N, a = maxPhi(D);
-        left.push(m.pt(landingFrom(z, E, D, -a))); right.push(m.pt(landingFrom(z, E, D, a)));
-      }
-      c.beginPath(); c.moveTo(...left[0]); for (const q of left) c.lineTo(...q); for (const q of right.reverse()) c.lineTo(...q); c.closePath();
-      c.fillStyle = "rgba(244,197,66,.24)"; c.fill();
-      c.strokeStyle = "rgba(244,197,66,.85)"; c.lineWidth = 1.5 * dpr; c.stroke();
-      c.strokeStyle = "rgba(255,255,255,.4)"; c.setLineDash([3 * dpr, 4 * dpr]);
-      c.beginPath(); c.moveTo(...m.pt(landingFrom(z, E, z.Dmin, 0))); c.lineTo(...m.pt(landingFrom(z, E, z.Dmax, 0))); c.stroke(); c.setLineDash([]);
-      c.font = `600 ${11 * dpr}px "Barlow Semi Condensed", sans-serif`; c.textAlign = "left";
-      const ea = m.pt(landingFrom(z, E, z.Dmax, maxPhi(z.Dmax))), eb = m.pt(landingFrom(z, E, z.Dmax, -maxPhi(z.Dmax)));
-      const [fx, fy] = ea[0] > eb[0] ? ea : eb;
-      c.fillStyle = "rgba(0,0,0,.45)"; c.fillText("flat · slides", fx + 23 * dpr, fy - 9 * dpr); c.fillText("off-centre = spin", fx + 23 * dpr, fy + 5 * dpr);
-      c.fillStyle = "rgba(255,255,255,.95)"; c.fillText("flat · slides", fx + 22 * dpr, fy - 10 * dpr); c.fillText("off-centre = spin", fx + 22 * dpr, fy + 4 * dpr);
-    }
+function updateCamera(dt) {
+  const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
+  let k = 3, fov = narrow ? 50 : 42;
+  if (mode === "intro") {
+    const a = S.time * 0.12;
+    tPos.set(Math.sin(a) * 12, 7.5, -FY - 2 + Math.cos(a) * 12); tLook.set(0, 0.5, -FY - 2);
+  } else if (mode === "aim") {
+    tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
+  } else if (mode === "throw") {
+    tPos.set(rel.x * 1.1, 5.0, 2.8); tLook.set(rel.x * 0.15, 2.6, -FY - 1);
+    fov = narrow ? 38 : 32;
+  } else if (mode === "follow") {
+    const b = S.world.bags.find(x => x.id === S.lastId);
+    tPos.set(lerp(rel.x, b.x, 0.6), Math.max(3.2, b.z * 0.7 + 2.6), -b.y + 7.5); tLook.set(b.x * 0.5, b.z * 0.4, -b.y - 6);
+    k = 5;
+  } else {
+    tPos.set(rel.x * 0.4, narrow ? 6.3 : 5.6, -(FY - (narrow ? 3.8 : 4.4))); tLook.set(0, 0.3, -(FY + 2.0));
   }
-  if (showPreview() && S.prev && S.prev.pushPath.length > 1 && S.phase !== "flight") {
-    c.strokeStyle = "rgba(244,197,66,.95)"; c.lineWidth = 2.5 * dpr; c.setLineDash([2 * dpr, 4 * dpr]); c.lineCap = "round";
-    c.beginPath(); c.moveTo(...m.pt(S.prev.pushPath[0])); for (const q of S.prev.pushPath) c.lineTo(...m.pt(q)); c.stroke(); c.setLineDash([]);
-    if (S.prev.pushOutcome !== "inHole") {
-      const [ex, ey] = m.pt(S.prev.pushEnd), z = BAG * s; c.setLineDash([3 * dpr, 3 * dpr]); c.lineWidth = 1.5 * dpr;
-      rrect(c, ex - z / 2, ey - z / 2, z, z, z * .25); c.stroke(); c.setLineDash([]);
-    }
-  }
-  if (showPreview() && S.prev && S.prev.slide.length > 1 && S.phase !== "flight") {
-    c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 2 * dpr; c.setLineDash([5 * dpr, 5 * dpr]); c.lineCap = "round";
-    c.beginPath(); c.moveTo(...m.pt(S.prev.slide[0])); for (const p of S.prev.slide) c.lineTo(...m.pt(p)); c.stroke();
-    if (S.prev.outcome !== "inHole") {
-      const [ex, ey] = m.pt(S.prev.end), z = BAG * s; c.setLineDash([3 * dpr, 3 * dpr]); c.lineWidth = 1.5 * dpr;
-      rrect(c, ex - z / 2, ey - z / 2, z, z, z * .25); c.stroke();
-    }
-    c.setLineDash([]);
-  }
-  const bags = S.world.bags;
-  for (const b of bags) if (b.state === "ground") { const [x, y] = m.pt(b); drawBagTop(c, x, y, BAG * s, b.angle, b.owner, true); }
-  for (const b of bags) if (onSurface(b)) { const [x, y] = m.pt(b); drawBagTop(c, x, y, BAG * s, b.angle, b.owner, false); }
-  drawFx(c, m);
-  if (S.landing && S.phase !== "flight") {
-    const [x, y] = m.pt(S.landing), r = 0.24 * s;
-    c.lineWidth = 4.5 * dpr; c.strokeStyle = "rgba(0,0,0,.45)"; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
-    c.lineWidth = 2.5 * dpr; c.strokeStyle = COL.gold; c.stroke();
-    c.lineWidth = 1.5 * dpr; c.beginPath(); c.moveTo(x - r * 1.5, y); c.lineTo(x - r * 0.5, y); c.moveTo(x + r * 0.5, y); c.lineTo(x + r * 1.5, y);
-    c.moveTo(x, y - r * 1.5); c.lineTo(x, y - r * 0.5); c.moveTo(x, y + r * 0.5); c.lineTo(x, y + r * 1.5); c.stroke();
-  }
-  if (S.end && S.phase !== "flight") {
-    const [x, y] = m.pt(S.end), r = 0.16 * s + 3 * dpr, pulse = 1 + 0.08 * Math.sin(S.time * 4);
-    c.lineWidth = 4.5 * dpr; c.strokeStyle = "rgba(0,0,0,.45)"; c.beginPath(); c.arc(x, y, r * pulse, 0, 7); c.stroke();
-    c.lineWidth = 2.5 * dpr; c.strokeStyle = COL.go; c.stroke();
-    c.fillStyle = COL.go; c.beginPath(); c.arc(x, y, r * 0.35, 0, 7); c.fill();
-  }
-  for (const b of bags) if (b.state === "flying") {
-    const above = Math.max(0, b.z - surf(b)), [x, y] = m.pt(b), z = BAG * s;
-    const sz = z * (1 - Math.min(0.45, above * 0.035));
-    c.fillStyle = `rgba(0,0,0,${Math.max(0.08, 0.32 - above * 0.02)})`; c.beginPath(); c.ellipse(x + above * 0.6 * dpr, y + above * 0.9 * dpr, sz * 0.55, sz * 0.5, 0, 0, 7); c.fill();
-    const lift = Math.min(1.2, above * 0.09), [lx, ly] = m.pt({ x: b.x, y: b.y + above * 0.08 });
-    drawBagTop(c, lx, ly, z * (1 + lift), b.angle, b.owner, false, false);
-  }
-  c.restore();
+  const t = 1 - Math.exp(-dt * k);
+  if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = lerp(camera.fov, fov, t); camera.updateProjectionMatrix(); }
+  camPos.lerp(tPos, t); camLook.lerp(tLook, t);
+  camera.position.copy(camPos);
+  if (shake > 0) camera.position.add(new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), 0).multiplyScalar(shake * 0.25));
+  camera.lookAt(camLook);
 }
 
-// ───────────────────────── Side view
-function sideBoard(c, sm, front, back, frontH, backH) {
-  const P = sm.pt, depth = 0.3, dir = Math.sign(back - front);
-  // back leg
-  const legY = back - dir * 0.35, [lx, ly] = P(legY, backH - depth), [lx2, ly2] = P(legY + dir * 0.22, 0);
-  c.fillStyle = "#7a5430"; c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + (lx2 - lx), ly); c.lineTo(lx2 + dir * 1.5 * dpr, ly2); c.lineTo(lx - dir * 0.5 * dpr, ly2); c.closePath(); c.fill();
-  // painted frame side
-  const fg = c.createLinearGradient(0, P(0, backH)[1], 0, P(0, 0)[1]); fg.addColorStop(0, "#284569"); fg.addColorStop(1, "#16273d");
-  c.fillStyle = fg; c.beginPath();
-  c.moveTo(...P(front, Math.max(0, frontH - depth))); c.lineTo(...P(front, frontH)); c.lineTo(...P(back, backH)); c.lineTo(...P(back, backH - depth)); c.closePath(); c.fill();
-  // gold pinstripe and wood top edge
-  c.strokeStyle = COL.gold; c.lineWidth = Math.max(1, 0.8 * dpr); c.beginPath(); c.moveTo(...P(front + dir * 0.15, frontH - 0.12 + 0.01)); c.lineTo(...P(back - dir * 0.15, backH - 0.12)); c.stroke();
-  c.strokeStyle = "#e6c48f"; c.lineWidth = Math.max(1.5, 2 * dpr); c.beginPath(); c.moveTo(...P(front, frontH)); c.lineTo(...P(back, backH)); c.stroke();
+// ───────────────────────── Input
+const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+// Where a screen point hits the (extended) board plane, in court feet.
+function courtPoint(e) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  raycaster.setFromCamera(ndc, camera);
+  const o = raycaster.ray.origin, d = raycaster.ray.direction, k = (BH - FH) / (BY - FY);
+  const denom = d.y + k * d.z;
+  if (Math.abs(denom) < 1e-6) return null;
+  const t = (FH - k * FY - k * o.z - o.y) / denom;
+  if (t <= 0) return null;
+  const p = o.clone().addScaledVector(d, t);
+  return { x: p.x, y: -p.z };
 }
-function bagSide(c, sm, b, sf) {
-  const P = sm.pt, y0 = b.y - BAG / 2, y1 = b.y + BAG / 2, t = 0.2;
-  const gr = c.createLinearGradient(0, P(0, sf(b.y) + t)[1], 0, P(0, sf(b.y))[1]);
-  gr.addColorStop(0, b.state === "ground" ? COL.p[b.owner] : COL.pl[b.owner]); gr.addColorStop(1, COL.pd[b.owner]);
-  c.fillStyle = gr; c.beginPath();
-  c.moveTo(...P(y0, sf(y0))); c.lineTo(...P(y1, sf(y1)));
-  const [ax, ay] = P(y1, sf(y1) + t), [bx_, by_] = P(y0, sf(y0) + t), [mx, my] = P(b.y, sf(b.y) + t * 1.35);
-  c.lineTo(ax, ay); c.quadraticCurveTo(mx, my, bx_, by_); c.closePath(); c.fill();
-}
-function throwerPose() {
-  const t = S.time;
-  const p = { arm: -0.12 + 0.05 * Math.sin(t * 2.2), step: 0, lean: 0.04, bob: 0.03 * Math.sin(t * 2.2), holding: true };
-  if (S.phase === "meter") { p.arm = -0.3 - 0.36 * S.meter - 0.06 * Math.sin(t * 7); p.lean = 0.08 + 0.05 * S.meter; p.bob = -0.08 * S.meter; }
-  else if (S.phase === "cpu" && S.cpuT > 1.2) { const k = clamp((S.cpuT - 1.2) / 0.8, 0, 1); p.arm = lerp(-0.12, -1.05, k); p.lean = 0.04 + 0.12 * k; p.bob = -0.15 * k; }
-  else if (S.phase === "flight" || (S.relT < 1.2 && S.phase !== "aiming" && S.phase !== "cpu")) {
-    const r = clamp(S.relT / 0.3, 0, 1), e = 1 - Math.pow(1 - r, 3), back = clamp((S.relT - 0.9) / 0.6, 0, 1);
-    p.arm = lerp(-1.05, 1.95, e) - back * 1.4; p.step = e * (1 - back * 0.3); p.lean = 0.3 * e - 0.15 * back; p.bob = -0.2 * e; p.holding = false;
-  }
-  return p;
-}
-function limb(c, a, b, w, col) { c.strokeStyle = col; c.lineWidth = w; c.lineCap = "round"; c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.stroke(); }
-function drawPlayer(c, ox, oy, u, pl, pose) {
-  // Character in feet; screen y grows downward. Facing +x (down-range).
-  const S2 = (x, y) => [ox + x * u, oy - y * u];
-  const rotp = (p, o, a) => { const dx = p[0] - o[0], dy = p[1] - o[1]; return [o[0] + dx * Math.cos(a) + dy * Math.sin(a), o[1] - dx * Math.sin(a) + dy * Math.cos(a)]; };
-  const hip = [0.05 + pose.step * 0.35, 3.0 + pose.bob];
-  const lean = pose.lean;
-  const up = (len, extra = 0) => [hip[0] + Math.sin(lean + extra) * len, hip[1] + Math.cos(lean + extra) * len];
-  const shoulder = up(1.9), neck = up(2.15), head = up(2.62);
-  const backFoot = [-0.65 - pose.step * 0.15, 0], frontFoot = [0.45 + pose.step * 1.0, 0];
-  const knee = (foot, fwd) => [(hip[0] + foot[0]) / 2 + fwd, (hip[1] + foot[1]) / 2 + 0.05];
-  const skin = COL.skin[pl], skinD = COL.skinD[pl], jersey = COL.p[pl], jerseyD = COL.pd[pl];
-  const W = v => v * u;
-  const shoe = (f, dark) => {
-    const [x, y] = S2(f[0], f[1]);
-    c.fillStyle = dark ? "#d8d2c4" : "#f6f2e8"; rrect(c, x - W(0.2), y - W(0.3), W(0.78), W(0.3), W(0.12)); c.fill();
-    c.fillStyle = jersey; c.fillRect(x + W(0.05), y - W(0.22), W(0.3), W(0.07));
-    c.fillStyle = "#3a3a3a"; c.fillRect(x - W(0.2), y - W(0.06), W(0.78), W(0.06));
-  };
-  const leg = (foot, fwd, dark) => {
-    const k = knee(foot, fwd), H = S2(...hip), K = S2(...k), F = S2(foot[0] + 0.12, foot[1] + 0.25);
-    limb(c, K, F, W(0.36), dark ? skinD : skin);
-    limb(c, [F[0], F[1] - W(0.15)], F, W(0.38), "#f3efe4"); // sock
-    limb(c, H, K, W(0.48), dark ? "#1f232a" : COL.shorts); // shorts
-    shoe(foot, dark);
-  };
-  const arm = (angle, dark, holding) => {
-    const sh = S2(...shoulder), dir = [Math.sin(angle), -Math.cos(angle)];
-    const el = [shoulder[0] + dir[0] * 1.0, shoulder[1] + dir[1] * 1.0];
-    const fa = angle + 0.25, hand = [el[0] + Math.sin(fa) * 0.95, el[1] - Math.cos(fa) * 0.95];
-    const E = S2(...el), Hd = S2(...hand);
-    limb(c, sh, E, W(0.3), dark ? skinD : skin); limb(c, E, Hd, W(0.27), dark ? skinD : skin);
-    limb(c, sh, [lerp(sh[0], E[0], 0.45), lerp(sh[1], E[1], 0.45)], W(0.42), dark ? jerseyD : jersey); // sleeve
-    c.fillStyle = dark ? skinD : skin; c.beginPath(); c.arc(Hd[0], Hd[1], W(0.16), 0, 7); c.fill();
-    if (holding) {
-      c.save(); c.translate(Hd[0], Hd[1] + W(0.05)); c.rotate(-fa * 0.6);
-      const g = c.createLinearGradient(0, -W(0.3), 0, W(0.3)); g.addColorStop(0, COL.pl[pl]); g.addColorStop(1, COL.pd[pl]);
-      c.fillStyle = g; rrect(c, -W(0.3), -W(0.1), W(0.6), W(0.24), W(0.08)); c.fill(); c.restore();
-    }
-  };
-  // ground shadow
-  c.fillStyle = "rgba(0,0,0,.22)"; c.beginPath(); c.ellipse(...S2(pose.step * 0.4, 0), W(1.2 + pose.step * 0.4), W(0.18), 0, 0, 7); c.fill();
-  leg(backFoot, 0.25, true);
-  arm(-pose.arm * 0.5 - 0.15, true, false); // far arm swings opposite
-  // torso
-  const tpts = [[-0.42, 0.05], [0.38, 0.05], [0.44, 1.95], [-0.46, 1.95]].map(([x, y]) => rotp(S2(hip[0] + x, hip[1] + y), S2(...hip), -lean));
-  const tg = c.createLinearGradient(tpts[0][0], 0, tpts[1][0], 0); tg.addColorStop(0, jerseyD); tg.addColorStop(0.6, jersey); tg.addColorStop(1, jersey);
-  c.fillStyle = tg; c.beginPath(); c.moveTo(...tpts[0]); c.lineTo(...tpts[1]); c.lineTo(...tpts[2]);
-  c.quadraticCurveTo(...S2(...up(2.05, 0.05)), ...tpts[3]); c.closePath(); c.fill();
-  c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = W(0.07); c.beginPath(); c.moveTo(...rotp(S2(hip[0] - 0.05, hip[1] + 0.2), S2(...hip), -lean)); c.lineTo(...rotp(S2(hip[0] - 0.05, hip[1] + 1.75), S2(...hip), -lean)); c.stroke();
-  leg(frontFoot, 0.32, false);
-  // neck + head
-  limb(c, S2(...shoulder), S2(...neck), W(0.28), skinD);
-  const [hx, hy] = S2(...head), hr = W(0.42);
-  c.fillStyle = COL.hair[pl]; c.beginPath(); c.arc(hx - W(0.08), hy + W(0.02), hr, 0, 7); c.fill();
-  const hg = c.createRadialGradient(hx + W(0.12), hy - W(0.08), 0, hx, hy, hr * 1.1); hg.addColorStop(0, skin); hg.addColorStop(1, skinD);
-  c.fillStyle = hg; c.beginPath(); c.arc(hx + W(0.04), hy + W(0.04), hr * 0.95, 0, 7); c.fill();
-  c.fillStyle = skinD; c.beginPath(); c.arc(hx - W(0.08), hy + W(0.08), W(0.1), 0, 7); c.fill(); // ear
-  c.fillStyle = "#222"; c.beginPath(); c.arc(hx + W(0.28), hy - W(0.02), Math.max(1, W(0.05)), 0, 7); c.fill(); // eye
-  // cap
-  c.fillStyle = jersey; c.beginPath(); c.arc(hx, hy - W(0.05), hr * 1.02, Math.PI * 1.02, Math.PI * 1.98); c.closePath(); c.fill();
-  c.fillStyle = jerseyD; rrect(c, hx + W(0.1), hy - W(0.12), W(0.55), W(0.1), W(0.05)); c.fill();
-  c.fillStyle = "#fff"; c.beginPath(); c.arc(hx, hy - hr * 0.98, W(0.05), 0, 7); c.fill();
-  // throwing arm in front
-  arm(pose.arm, false, pose.holding);
-}
-function drawSide() {
-  const c = sx, sm = smap(), P = sm.pt;
-  if (!tex.side || tex.side.width !== sm.W || tex.side.height !== sm.H) buildTextures();
-  c.drawImage(tex.side, 0, 0);
-  // own board (front at the foul line) and target board
-  sideBoard(c, sm, 0, -4, FH, BH);
-  sideBoard(c, sm, FY, BY, FH, BH);
-  const h0 = HOLE.y - HR, h1 = HOLE.y + HR;
-  c.strokeStyle = COL.hole; c.lineWidth = 3 * dpr; c.beginPath(); c.moveTo(...P(h0, plane(h0))); c.lineTo(...P(h1, plane(h1))); c.stroke();
-  // thrower
-  drawPlayer(c, P(-1.2, 0)[0], sm.gy, sm.kz, S.player, throwerPose());
-  // preview arc
-  if (showPreview() && S.prev && S.phase !== "flight") {
-    c.strokeStyle = "rgba(255,255,255,.95)"; c.lineWidth = 1.6 * dpr; c.setLineDash([4 * dpr, 4 * dpr]);
-    c.beginPath(); c.moveTo(...P(S.prev.flight[0].y, S.prev.flight[0].z)); for (const p of S.prev.flight) c.lineTo(...P(p.y, p.z)); c.stroke(); c.setLineDash([]);
-  }
-  for (const b of S.world.bags) {
-    if (onSurface(b)) bagSide(c, sm, b, plane);
-    else if (b.state === "ground") bagSide(c, sm, b, () => 0);
-  }
-  // trail: fading dots
-  const last = S.world.bags.find(b => b.id === S.lastId);
-  if (last && last.trail.length > 1) {
-    const n = last.trail.length;
-    for (let i = 0; i < n; i += 2) {
-      const p = last.trail[i], [x, y] = P(p.y, p.z);
-      c.fillStyle = `rgba(255,255,255,${0.15 + 0.55 * i / n})`; c.beginPath(); c.arc(x, y, 1.3 * dpr, 0, 7); c.fill();
-    }
-  }
-  for (const b of S.world.bags) if (b.state === "flying") {
-    const v = velAt(b.t, b.ft), [x, y] = P(b.y, b.z), [gx, gy] = P(b.y, surf(b));
-    const above = b.z - surf(b);
-    c.fillStyle = `rgba(0,0,0,${Math.max(0.05, 0.25 - above * 0.015)})`; c.beginPath(); c.ellipse(gx, gy, 6 * dpr, 1.6 * dpr, 0, 0, 7); c.fill();
-    const L = Math.max(13 * dpr, BAG * sm.kx * 1.5) * (0.78 + 0.22 * Math.abs(Math.cos(b.angle))), T2 = L * 0.34;
-    const pitch = Math.atan2(-v.z * sm.kz, v.y * sm.kx) * 0.6 + 0.12 * Math.sin(b.angle * 2);
-    c.save(); c.translate(x, y); c.rotate(pitch);
-    const g = c.createLinearGradient(0, -T2 / 2, 0, T2 / 2); g.addColorStop(0, COL.pl[b.owner]); g.addColorStop(1, COL.pd[b.owner]);
-    c.fillStyle = g; rrect(c, -L / 2, -T2 / 2, L, T2, T2 * 0.45); c.fill();
-    c.strokeStyle = "rgba(255,255,255,.5)"; c.setLineDash([1.5 * dpr, 1.5 * dpr]); c.lineWidth = 0.7 * dpr;
-    c.beginPath(); c.moveTo(-L / 2 + 2 * dpr, 0); c.lineTo(L / 2 - 2 * dpr, 0); c.stroke(); c.setLineDash([]);
-    c.restore();
-  }
-}
-function draw() { if (boardC.width > 2) drawBoard(); if (sideC.width > 2) drawSide(); }
-
-// ───────────────────────── Input on the board
-let dragging = null;
-boardC.addEventListener("pointerdown", e => {
+stage.addEventListener("pointerdown", e => {
   initAudio();
-  if (!canEdit()) return;
-  boardC.setPointerCapture(e.pointerId);
-  const r = boardC.getBoundingClientRect(), p = bmap().world((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr);
-  // Grab the landing ring if the touch is near it or inside the landing zone; otherwise move the finish spot.
-  let inZone = false;
-  if (S.plan) {
-    const z = S.plan.z, v = { x: p.x - S.end.x, y: p.y - S.end.y }, D = Math.hypot(v.x, v.y);
-    inZone = D >= z.Dmin - 0.25 && D <= z.Dmax + 0.3 && Math.abs(wrap(heading(v) - heading(z.back))) <= maxPhi(D) + 0.12;
+  if (S.phase === "aiming" && canEdit()) {
+    const p = courtPoint(e); if (!p) return;
+    stage.setPointerCapture(e.pointerId);
+    dragging = grabsLanding(p) ? "landing" : "end";
+    moveMarker(dragging, p);
+  } else if (S.phase === "power") {
+    stage.setPointerCapture(e.pointerId);
+    S.pull = { active: true, startY: e.clientY, fill: 0, raw: 0 };
+    updatePowerGauge();
+  } else if (S.phase === "ring") {
+    stopRing();
   }
-  dragging = S.landing && (dist(p, S.landing) < 0.55 || inZone) && dist(p, S.end) > 0.3 ? "landing" : "end";
-  setMarker(dragging, p);
 });
-boardC.addEventListener("pointermove", e => {
-  if (!dragging) return;
-  const r = boardC.getBoundingClientRect();
-  setMarker(dragging, bmap().world((e.clientX - r.left) * dpr, (e.clientY - r.top) * dpr));
+stage.addEventListener("pointermove", e => {
+  if (dragging) { const p = courtPoint(e); if (p) pendingDrag = p; }
+  else if (S.phase === "power" && S.pull.active) {
+    S.pull.raw = Math.max(0, (e.clientY - S.pull.startY) / Math.max(160, stage.clientHeight * 0.55));
+  }
 });
-const endDrag = () => { if (dragging !== null) { dragging = null; if (canEdit()) { refreshPlan(); ui(); } } };
-boardC.addEventListener("pointerup", endDrag); boardC.addEventListener("pointercancel", endDrag);
+const endPointer = () => {
+  if (dragging) { if (pendingDrag) { moveMarker(dragging, pendingDrag); pendingDrag = null; } dragging = null; }
+  else if (S.phase === "power" && S.pull.active) releasePull();
+};
+stage.addEventListener("pointerup", endPointer);
+stage.addEventListener("pointercancel", endPointer);
+$("panel").addEventListener("pointerdown", e => {
+  if (S.phase === "ring" && !e.target.closest("button")) { e.preventDefault(); stopRing(); }
+  else if (S.phase === "power" && !e.target.closest("button")) {
+    $("panel").setPointerCapture(e.pointerId);
+    S.pull = { active: true, startY: e.clientY, fill: 0, raw: 0 };
+  }
+});
+$("panel").addEventListener("pointermove", e => { if (S.phase === "power" && S.pull.active) S.pull.raw = Math.max(0, (e.clientY - S.pull.startY) / Math.max(120, stage.clientHeight * 0.4)); });
+$("panel").addEventListener("pointerup", () => { if (S.phase === "power" && S.pull.active) releasePull(); });
+
+// ───────────────────────── HUD: power gauge and accuracy ring
+const WOBBLE = { easy: 0.012, medium: 0.022, hard: 0.035, pro: 0.05 };
+function updatePowerGauge() {
+  const el = $("power"); el.hidden = S.phase !== "power";
+  if (el.hidden) return;
+  if (S.pull.active) S.pull.fill = clamp(S.pull.raw + Math.sin(S.time * 11) * WOBBLE[S.level] * Math.min(1, S.pull.raw * 4), 0, 1.15);
+  $("powerFill").style.height = (Math.min(1, S.pull.fill) * 100) + "%";
+  const zone = lv().zone * 2 * 0.5; // in fill units
+  const tgt = $("powerTarget");
+  tgt.style.bottom = `calc(${(POWER_TARGET - zone) * 100}% - 4px)`;
+  tgt.style.height = `calc(${zone * 2 * 100}% + 8px)`;
+}
+function ringSVG() {
+  const zone = lv().zone, R = 100, z = Math.max(4, zone * R);
+  const v = needleAt(S.ring.t, lv());
+  const dirX = S.ring.stage === 0 ? v * R : S.errors.dir * R;
+  const htY = S.ring.stage === 1 ? -v * R : null;
+  const needleCol = S.ring.stage === 0 ? "#ffc93a" : "#ffffff";
+  return `<svg viewBox="-130 -130 260 260" aria-hidden="true">
+    <defs><radialGradient id="rg" cx="50%" cy="40%"><stop offset="0" stop-color="#ffffff" stop-opacity=".18"/><stop offset="1" stop-color="#0a1426" stop-opacity=".55"/></radialGradient>
+    <clipPath id="rc"><circle r="${R}"/></clipPath></defs>
+    <circle r="${R + 12}" fill="none" stroke="#0a1426" stroke-opacity=".55" stroke-width="10"/>
+    <circle r="${R}" fill="url(#rg)" stroke="#ffffff" stroke-width="7"/>
+    <circle r="${R * 0.66}" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="2"/>
+    <circle r="${R * 0.33}" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="2"/>
+    <circle r="${z + 3}" fill="#3ee07a" fill-opacity=".9" stroke="#ffffff" stroke-width="2"/>
+    <line x1="-${R}" y1="0" x2="${R}" y2="0" stroke="#fff" stroke-opacity=".3" stroke-width="2"/>
+    <line x1="0" y1="-${R}" x2="0" y2="${R}" stroke="#fff" stroke-opacity=".3" stroke-width="2"/>
+    <text x="-${R - 10}" y="-6" fill="#fff" font-family="Lilita One, sans-serif" font-size="13" opacity=".8">LEFT</text>
+    <text x="${R - 10}" y="-6" fill="#fff" font-family="Lilita One, sans-serif" font-size="13" text-anchor="end" opacity=".8">RIGHT</text>
+    <text x="6" y="-${R - 18}" fill="#fff" font-family="Lilita One, sans-serif" font-size="13" opacity=".8">HIGH</text>
+    <text x="6" y="${R - 8}" fill="#fff" font-family="Lilita One, sans-serif" font-size="13" opacity=".8">FLAT</text>
+    <g clip-path="url(#rc)">
+      <line x1="${dirX}" y1="-${R}" x2="${dirX}" y2="${R}" stroke="#0a1426" stroke-width="9"/>
+      <line x1="${dirX}" y1="-${R}" x2="${dirX}" y2="${R}" stroke="${needleCol}" stroke-width="5"/>
+      ${htY === null ? "" : `<line x1="-${R}" y1="${htY}" x2="${R}" y2="${htY}" stroke="#0a1426" stroke-width="9"/><line x1="-${R}" y1="${htY}" x2="${R}" y2="${htY}" stroke="#ffc93a" stroke-width="5"/>`}
+    </g>
+  </svg>`;
+}
+function updateRing() {
+  const el = $("ring"); el.hidden = S.phase !== "ring";
+  if (!el.hidden) el.innerHTML = ringSVG();
+}
 
 // ───────────────────────── DOM UI
-const $ = id => document.getElementById(id);
 const panel = $("panel");
-const esc = s => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
-
 function renderScore() {
   const ir = inningResult();
   for (const p of [0, 1]) {
@@ -1246,7 +1377,7 @@ function renderScore() {
 }
 function renderBanner() {
   const el = $("banner");
-  if (S.banner) { el.textContent = S.banner.text; el.style.background = COL.p[S.banner.pl] || "#333"; el.classList.add("show"); }
+  if (S.banner) { el.textContent = S.banner.text; el.style.background = `linear-gradient(${COL.pl[S.banner.pl] || "#666"}, ${COL.p[S.banner.pl] || "#333"})`; el.classList.add("show"); }
   else el.classList.remove("show");
 }
 function outcomeText(p) {
@@ -1258,70 +1389,74 @@ function outcomeText(p) {
   if (onSurface({ state: p.outcome }) && onBoard(p.end)) return "On the board";
   return "Off the board";
 }
+const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${label}</small><b>${value}</b></div>`;
 function ui() {
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
   else if (canEdit() && S.landing) { hint.textContent = "Drag the yellow ring around the gold zone"; hint.hidden = false; }
+  else if (S.phase === "power") { hint.textContent = "Pull down, let go in the gold band"; hint.hidden = false; }
+  else if (S.phase === "ring") { hint.textContent = S.ring.stage === 0 ? "Tap to stop LEFT–RIGHT" : "Tap to stop HIGH–FLAT"; hint.hidden = false; }
   else hint.hidden = true;
 
+  const color = S.player === 0 ? "red" : "blue";
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${S.names[S.player] === "You" ? "Your" : esc(S.names[S.player]) + "'s"} throw</div>`;
   if (S.phase === "aiming") {
-    let plan = `<div class="muted">Tap the board where you want your bag to end up. Then drag the yellow ring to pick where it lands first.</div>`;
+    let plan = `<div class="muted">Tap the board where you want your bag to end up, then drag the yellow ring to pick where it lands first.</div>`;
     if (S.ideal) {
-      plan = `<div class="stats">
-        <div class="stat"><small>Arc</small><b>${deg(S.ideal.el).toFixed(0)}°</b></div>
-        <div class="stat"><small>Slide</small><b>${S.landD < 0.15 ? "Sticks" : S.landD.toFixed(1) + " ft"}</b></div>
-        ${S.push ? `<div class="stat"><small>Push shot</small><b style="color:${COL.gold}">+${Math.round(S.push.extra * 100)}% power</b></div>` : ""}
-        <div class="stat"><small>Spin</small><b>${Math.abs(S.ideal.spin) < 0.05 ? "None" : (S.ideal.spin > 0 ? "Right " : "Left ") + Math.round(Math.abs(S.ideal.spin) * 100) + "%"}</b></div>
-        ${showPreview() && S.prev ? `<div class="stat"><small>Perfect throw</small><b>${outcomeText(S.prev)}</b></div>` : ""}
-      </div><div class="muted">Land near the green spot to stick it, farther back to slide it in. Off to the side adds spin to hook it.</div>`;
+      const spin = Math.abs(S.ideal.spin) < 0.05 ? "None" : (S.ideal.spin > 0 ? "Right " : "Left ") + Math.round(Math.abs(S.ideal.spin) * 100) + "%";
+      plan = `<div class="chips">
+        ${chip("Arc", deg(S.ideal.el).toFixed(0) + "°")}
+        ${chip("Slide", S.landD < 0.15 ? "Sticks" : S.landD.toFixed(1) + " ft")}
+        ${chip("Spin", spin)}
+        ${S.push ? chip("Push shot", "+" + Math.round(S.push.extra * 100) + "%", "gold") : ""}
+        ${showPreview() && S.prev ? chip("Perfect throw", outcomeText(S.prev)) : ""}
+      </div>`;
     }
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">Bag ${S.thrown[S.player] + 1} of 4</span></div>
-      <div style="min-height:52px;display:flex;flex-direction:column;gap:4px">${plan}</div>
+      <div style="min-height:50px">${plan}</div>
       <div class="btns">
-        <button class="btn" id="clearBtn" ${S.landing ? "" : "disabled"}>Clear</button>
-        <button class="btn" id="stickBtn" ${S.landing ? "" : "disabled"}>Stick it</button>
-        <button class="btn go" id="throwBtn" style="background:${COL.p[S.player]}" ${S.ideal ? "" : "disabled"}>THROW</button>
+        <button class="btn" id="clearBtn" ${S.end ? "" : "disabled"}>CLEAR</button>
+        <button class="btn" id="stickBtn" ${S.end ? "" : "disabled"}>STICK IT</button>
+        <button class="btn go ${color}" id="throwBtn" ${S.ideal ? "" : "disabled"}>THROW</button>
       </div>`;
     $("clearBtn").onclick = () => { S.end = null; S.landD = null; S.landPhi = 0; refreshPlan(); ui(); };
     $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };
-  } else if (S.phase === "meter") {
-    const z = lv().zone * 100;
-    panel.innerHTML = METERS.map((m, i) => `<div class="meter ${i > S.meter ? "waiting" : ""}"><label>${m.title}</label>
-      <div class="track"><span class="lo">${m.lo}</span><span class="hi">${m.hi}</span><div class="zone" style="width:max(3px,${z}%)"></div>
-      ${i <= S.meter ? `<div class="needle" id="needle${i}" style="left:${(clamp(i < S.meter ? S.errors[m.key] : -1, -1, 1) + 1) * 50}%"></div>` : ""}</div></div>`).join("") +
-      `<div class="row"><button class="linkbtn" id="cancelBtn">Cancel</button><span class="spacer"></span><span class="muted">Tap anywhere here to stop the ${METERS[S.meter].title.toLowerCase()} needle</span></div>`;
-    $("cancelBtn").onclick = e => { e.stopPropagation(); S.phase = "aiming"; ui(); };
+  } else if (S.phase === "power") {
+    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><button class="linkbtn" id="backBtn">Back to aiming</button></div>
+      <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
+      <div><div class="big">Pull back to power up</div><div class="muted">Drag down anywhere and let go when the bar is in the gold band.</div></div></div>`;
+    $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
+  } else if (S.phase === "ring") {
+    const strength = grade(S.errors.pow, METERS[1], lv());
+    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span>${chip("Strength", strength, strength === "Perfect" ? "gold" : "")}</div>
+      <div class="center big" style="margin-top:6px">${S.ring.stage === 0 ? "Tap to stop the LEFT–RIGHT needle" : "Now the HIGH–FLAT needle"}</div>
+      <div class="center muted">Centre of the ring is a perfect throw</div>`;
   } else if (S.phase === "cpu") {
-    panel.innerHTML = `<div class="center" style="margin:auto"><div class="title-sm">${esc(S.names[S.player])} is ${S.cpuPlan ? "going for: " + esc(S.cpuPlan.label) : "lining up…"}</div></div>`;
+    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[S.player])} is ${S.cpuPlan ? "going for: " + esc(S.cpuPlan.label) : "lining up…"}</div></div>`;
   } else {
-    panel.innerHTML = S.feedback.length ? `<div class="center title-sm" style="color:${S.perfect ? COL.gold : "inherit"}">${S.perfect ? "Perfect release" : "Release"}</div>
+    panel.innerHTML = S.feedback.length ? `<div class="center big" style="color:${S.perfect ? COL.gold : "inherit"}">${S.perfect ? "Perfect throw!" : "Release"}</div>
       <div class="feedback">${S.feedback.map(f => `<div class="fb"><small>${f.title}</small><b class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</b></div>`).join("")}</div>` : "";
   }
+  updatePowerGauge(); updateRing();
 
   const sheet = $("inningSheet");
   if ((S.phase === "inning" || S.phase === "over") && S.lastInning) {
     const r = S.lastInning;
-    const col = p => `<div class="col" style="background:${COL.p[p]}"><div class="title-sm">${esc(S.names[p])}</div><div class="big">${r.raw[p]}</div><small>${r.hole[p]} in · ${r.on[p]} on<br>points thrown</small></div>`;
-    const line = r.winner === null
-      ? `${r.raw[0]} − ${r.raw[1]} cancels out. No points this inning.`
-      : `${r.raw[r.winner]} − ${r.raw[1 - r.winner]} → ${esc(S.names[r.winner])} ${S.names[r.winner] === "You" ? "score" : "scores"} ${r.awarded}<br><span class="muted">Game: ${esc(S.names[0])} ${S.scores[0]}, ${esc(S.names[1])} ${S.scores[1]}</span>`;
+    const col = p => `<div class="col" style="background:linear-gradient(${COL.pl[p]}, ${COL.p[p]} 55%, ${COL.pd[p]})"><div class="who" style="font-size:18px">${esc(S.names[p])}</div><div class="big2">${r.raw[p]}</div><small>${r.hole[p]} in · ${r.on[p]} on</small></div>`;
+    const line = r.winner === null ? `${r.raw[0]} − ${r.raw[1]} cancels out. No points this inning.`
+      : `${r.raw[r.winner]} − ${r.raw[1 - r.winner]} → ${esc(S.names[r.winner])} ${S.names[r.winner] === "You" ? "score" : "scores"} ${r.awarded}`;
     const head = S.phase === "over" ? `<h2 style="color:${COL.gold}">🏆 ${esc(S.names[S.winner])} ${S.names[S.winner] === "You" ? "win" : "wins"}!</h2>` : `<h2>Inning ${S.inning}</h2>`;
-    $("inningBody").innerHTML = `${head}<div class="cols">${col(0)}${col(1)}</div><div class="center who">${line}</div>
-      <button class="play" id="nextBtn" style="background:${COL.p[r.winner ?? 0]}">${S.phase === "over" ? "PLAY AGAIN" : "NEXT INNING"}</button>
+    $("inningBody").innerHTML = `${head}<div class="cols">${col(0)}${col(1)}</div><div class="center" style="font-size:17px">${line}</div>
+      <div class="center muted">Game: ${esc(S.names[0])} ${S.scores[0]}, ${esc(S.names[1])} ${S.scores[1]}</div>
+      <button class="btn go ${r.winner === 1 ? "blue" : "red"}" id="nextBtn">${S.phase === "over" ? "PLAY AGAIN" : "NEXT INNING"}</button>
       ${S.phase === "over" ? `<button class="linkbtn" id="toMenu">Main menu</button>` : ""}`;
     $("nextBtn").onclick = () => { sheet.hidden = true; if (S.phase === "over") newGame(); else nextInning(); };
     if ($("toMenu")) $("toMenu").onclick = () => { sheet.hidden = true; openMenu(false); };
     sheet.hidden = false;
   } else sheet.hidden = true;
 }
-function updateNeedle() {
-  const n = $("needle" + S.meter);
-  if (n) n.style.left = ((needleAt(S.meterT, lv()) + 1) * 50) + "%";
-}
-panel.addEventListener("pointerdown", e => { if (S.phase === "meter" && e.target.id !== "cancelBtn") { e.preventDefault(); stopMeter(); } });
 
 // ───────────────────────── Menu
 function prefs(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -1329,14 +1464,14 @@ S.mode = prefs("mode") || "cpu"; S.level = LEVELS[prefs("level")] ? prefs("level
 function renderMenu() {
   for (const b of $("modeSeg").children) b.classList.toggle("on", b.dataset.mode === S.mode);
   $("levels").innerHTML = Object.entries(LEVELS).map(([k, l]) =>
-    `<button class="lvl ${k === S.level ? "on" : ""}" data-level="${k}"><div><b>${l.title}</b><span>${l.sub}</span></div><div class="tick"></div></button>`).join("");
+    `<button class="lvl ${k === S.level ? "on" : ""}" data-level="${k}"><b>${l.title}</b><span>${l.sub}</span></button>`).join("");
   for (const b of $("levels").children) b.onclick = () => { S.level = b.dataset.level; prefs("level", S.level); renderMenu(); };
 }
 for (const b of $("modeSeg").children) b.onclick = () => { S.mode = b.dataset.mode; prefs("mode", S.mode); renderMenu(); };
 let pausedPhase = null;
 function openMenu(canResume) {
-  pausedPhase = canResume ? S.phase : null; if (canResume) S.phase = "menu";
-  $("resumeBtn").hidden = !canResume; renderMenu(); $("menu").hidden = false;
+  pausedPhase = canResume ? S.phase : null; S.phase = "menu";
+  $("resumeBtn").hidden = !canResume; renderMenu(); $("menu").hidden = false; ui();
 }
 $("playBtn").onclick = () => { initAudio(); $("menu").hidden = true; newGame(); };
 $("resumeBtn").onclick = () => { $("menu").hidden = true; S.phase = pausedPhase || "aiming"; ui(); };
@@ -1345,7 +1480,43 @@ $("helpBtn").onclick = () => { $("helpSheet").hidden = false; };
 $("menuHelp").onclick = () => { $("helpSheet").hidden = false; };
 $("helpClose").onclick = () => { $("helpSheet").hidden = true; };
 
-renderMenu(); fit(); ui(); requestAnimationFrame(frame);
+// ───────────────────────── Loop
+let lastT = 0;
+function frame(now) {
+  const dt = lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60; lastT = now;
+  S.time += dt; S.relT += dt;
+  if (S.banner) { S.bannerT -= dt; if (S.bannerT <= 0) { S.banner = null; renderBanner(); } }
+  if (pendingDrag && dragging) { moveMarker(dragging, pendingDrag); pendingDrag = null; }
+  if (S.phase === "power") updatePowerGauge();
+  else if (S.phase === "ring") { S.ring.t += dt; updateRing(); }
+  else if (S.phase === "cpu") {
+    S.cpuT += dt;
+    if (!S.cpuPlan && S.cpuT > 0.6) {
+      S.cpuPlan = cpuPlan(S.player, S.world.bags); S.end = S.cpuPlan.end;
+      S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0; refreshPlan(); ui();
+    }
+    if (S.cpuT > 2.4 && S.ideal) releaseBag({ dir: gauss(lv().cpu), pow: gauss(lv().cpu), ht: gauss(lv().cpu) });
+  } else if (S.phase === "flight") {
+    S.acc += dt;
+    while (S.acc >= T.dt) { S.world.step(T.dt); S.acc -= T.dt; }
+    const ev = S.world.events; S.world.events = []; handleEvents(ev);
+    if (ev.length) renderScore();
+    if (S.world.settled) { S.settleT += dt; if (S.settleT > 1.3) endTurn(); }
+  }
+  if (S.planVersion !== shownPlan || S.phase !== shownPhase) rebuildGuides();
+  if (finishMarker.visible) finishMarker.scale.setScalar(1 + 0.08 * Math.sin(S.time * 4));
+  for (const g of bulbMeshes) g.material.opacity = 0.5 + 0.08 * Math.sin(S.time * 2);
+  updateBags(dt);
+  updateFx(dt);
+  updateCamera(dt);
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+
+renderMenu(); resize(); ui();
+$("loading").hidden = true;
+requestAnimationFrame(frame);
+window.__cornhole = { S, beginThrow, releaseBag, moveMarker, refreshPlan, camera, courtPoint };
 </script>
 
 </body>
