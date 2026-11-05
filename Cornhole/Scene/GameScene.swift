@@ -171,7 +171,7 @@ final class GameScene: SKScene {
         if !force && size == layoutSize { return }
         layoutSize = size
 
-        let sideHeight = (size.height * 0.36).rounded()
+        let sideHeight = (size.height * 0.32).rounded()
         sideMap = SideMap(rect: CGRect(x: 0, y: size.height - sideHeight, width: size.width, height: sideHeight))
         boardMap = BoardMap(rect: CGRect(x: 0, y: 0, width: size.width, height: size.height - sideHeight))
 
@@ -458,7 +458,7 @@ final class GameScene: SKScene {
     // MARK: Side view
 
     private func updateSide() {
-        thrower.position = sideMap.point(-1.2, 0)
+        thrower.position = sideMap.point(-1.7, 0)
         thrower.update(pose: ThrowerPose.current(for: game), unit: sideMap.kz, player: game.currentPlayer,
                        shadowTexture: shadowTexture, bagTexture: sideBagTexture[game.currentPlayer])
         updateSideCamera()

@@ -263,20 +263,20 @@ enum Art {
             c.move(to: CGPoint(x: 0, y: gy))
             var x: CGFloat = 0
             while x <= W {
-                c.addLine(to: CGPoint(x: x, y: gy - kz * (7.5 + 1.5 * sin(x / W * 5 + 1) + sin(x / W * 13) * 0.6)))
+                c.addLine(to: CGPoint(x: x, y: gy - kz * (6.2 + 1.2 * sin(x / W * 5 + 1) + sin(x / W * 13) * 0.5)))
                 x += 4
             }
             c.addLine(to: CGPoint(x: W, y: gy))
             c.closePath()
             c.fillPath()
-            for (color, h0, h1, step) in [(UIColor(hex: 0x3A6A45), 5.5, 9.0, 0.9), (UIColor(hex: 0x2C5535), 4.5, 7.5, 0.7)] {
+            for (color, h0, h1, step) in [(UIColor(hex: 0x3A6A45), 4.6, 6.4, 1.1), (UIColor(hex: 0x2C5535), 3.8, 5.4, 0.8)] {
                 c.setFillColor(color.cgColor)
                 var y = SideMap.minY - 1
                 while y < SideMap.maxY + 1 {
                     let px = m.imagePoint(y, 0).x
                     let h = CGFloat(h0 + Double(rng.next()) * (h1 - h0)) * kz
                     let w = (0.9 + rng.next() * 1.1) * kx
-                    c.fillEllipse(in: CGRect(x: px - w, y: gy - h - h * 0.55, width: 2 * w, height: h * 1.1))
+                    c.fillEllipse(in: CGRect(x: px - w, y: gy - h - h * 0.35, width: 2 * w, height: h * 0.7))
                     c.fill(CGRect(x: px - w, y: gy - h, width: 2 * w, height: h))
                     y += step + Double(rng.next()) * step
                 }

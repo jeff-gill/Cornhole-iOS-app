@@ -55,34 +55,26 @@ private struct AimingControls: View {
                     game.clearMarkers()
                 } label: {
                     Label("Clear", systemImage: "xmark")
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
-                .tint(.white)
+                .buttonStyle(PanelButtonStyle())
                 .disabled(game.finish == nil)
 
                 Button {
                     game.stickIt()
                 } label: {
                     Label("Stick it", systemImage: "pin.fill")
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.bordered)
-                .tint(.white)
+                .buttonStyle(PanelButtonStyle())
                 .disabled(game.finish == nil)
 
                 Button {
                     game.beginThrow()
                 } label: {
-                    Text("Throw")
-                        .font(.headline.weight(.heavy))
-                        .frame(maxWidth: .infinity)
+                    Text("THROW")
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Theme.player[game.currentPlayer])
+                .buttonStyle(PanelButtonStyle(fill: Theme.player[game.currentPlayer]))
                 .disabled(game.plan == nil)
             }
-            .controlSize(.large)
         }
     }
 
@@ -263,5 +255,30 @@ private struct FeedbackView: View {
                 }
             }
         }
+    }
+}
+
+/// Chunky, always-readable buttons for the control panel. Disabled buttons fade but stay legible.
+struct PanelButtonStyle: ButtonStyle {
+    var fill: Color?
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(fill == nil ? .subheadline.weight(.bold) : .headline.weight(.heavy))
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(fill ?? Color.white.opacity(0.12))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.white.opacity(fill == nil ? 0.25 : 0), lineWidth: 1)
+            )
+            .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.4)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
     }
 }

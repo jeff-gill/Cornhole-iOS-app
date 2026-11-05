@@ -183,7 +183,7 @@ final class GameModel {
     private func moveMarker(to p: Vec2) {
         switch dragging {
         case .finish:
-            finish = Vec2(x: p.x.clamped(-1.8, 1.8), y: p.y.clamped(Court.boardFrontY + 0.2, Court.boardBackY + 0.6))
+            finish = Vec2(x: p.x.clamped(-1.8, 1.8), y: p.y.clamped(Court.boardFrontY + 0.2, Court.boardBackY + 0.25))
         case .landing:
             guard let plan, let finish else { return }
             let v = p - finish

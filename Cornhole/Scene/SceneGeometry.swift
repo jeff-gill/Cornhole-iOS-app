@@ -6,8 +6,9 @@ import Foundation
 struct BoardMap {
     static let minX = -2.2
     static let maxX = 2.2
-    static let minY = Court.boardFrontY - 1.1
-    static let maxY = Court.boardBackY + 0.9
+    // Just a little grass around the board so it fills the view.
+    static let minY = Court.boardFrontY - 0.5
+    static let maxY = Court.boardBackY + 0.35
 
     let rect: CGRect
 
@@ -35,7 +36,7 @@ struct BoardMap {
 
 /// Maps (down-range distance, height) in feet to scene points for the side-on view.
 struct SideMap {
-    static let minY = -3.0
+    static let minY = -4.0
     static let maxY = 33.0
     static let maxZ = 13.0
 
