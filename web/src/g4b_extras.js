@@ -29,12 +29,12 @@ function openLives() { renderLives(); $("livesSheet").hidden = false; }
 function renderLives() {
   tickLives();
   const price = lifePrice(), full = career.lives >= MAX_LIVES;
-  $("livesBody").innerHTML = `<div class="lifebig">🎟️</div><h2>Lives: ${career.lives}</h2>
-    <div class="liferow">${Array.from({ length: Math.max(MAX_LIVES, career.lives) }, (_, i) => `<span class="${i < career.lives ? "" : "gone"}">🎟️</span>`).join("")}</div>
+  $("livesBody").innerHTML = `<div class="lifebig"><i class="tkt big"></i></div><h2>Lives: ${career.lives}</h2>
+    <div class="liferow">${Array.from({ length: Math.max(MAX_LIVES, career.lives) }, (_, i) => `<span class="${i < career.lives ? "" : "gone"}"><i class="tkt"></i></span>`).join("")}</div>
     <div class="muted">Each match uses a ticket. Win and you get it back. One refills every hour, up to ${MAX_LIVES}.</div>
     <div class="big">${full ? "Full!" : `Next one in ${clockText(nextLifeIn())}`}</div>
-    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 🎟️ · <i class="coin"></i> ${short(price)}</button>
-    <button class="btn green" id="lifeCaps" ${career.caps >= LIFE_CAPS ? "" : "disabled"}>+1 🎟️ · <i class="bcap"></i> ${LIFE_CAPS}</button>
+    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 <i class="tkt"></i> · <i class="coin"></i> ${short(price)}</button>
+    <button class="btn green" id="lifeCaps" ${career.caps >= LIFE_CAPS ? "" : "disabled"}>+1 <i class="tkt"></i> · <i class="bcap"></i> ${LIFE_CAPS}</button>
     <button class="btn blue" id="lifeStore">MORE IN THE STORE</button>
     <button class="btn ghost" id="alertsBtn">🔔 Tell me when they're full: ${career.alerts ? "ON" : "OFF"}</button>
     <button class="btn" id="livesClose">DONE</button>`;
@@ -76,9 +76,10 @@ function canTapped(i) {
 // ── A small info sheet (can odds), reusing the lives sheet frame
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
-  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Start one opening at a time; the better the can, the longer it takes. Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
-    ${CANS.map(c => `<div class="oddsrow"><i class="minican" style="background:linear-gradient(90deg, ${c.color}, ${c.rim} 40%, ${c.color})"></i><span>${c.name} · ${c.pulls} prizes</span><b>${c.express ? "Instant" : durText(openMs(c.id))}</b></div>`).join("")}`;
+  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Open one at a time: the better the can, the longer it takes, and Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
+    <div class="cangrid">${CANS.map(c => `<div><i class="minican" style="background:linear-gradient(90deg, ${c.color}, ${c.rim} 40%, ${c.color})"></i><span>${c.name}</span></div>`).join("")}</div>`;
 }
+
 
 
 // ── Avatar picker
@@ -153,7 +154,7 @@ function mistFrame(now) {
 function prizeHTML(p) {
   if (p.kind === "coins") return { pic: `<div class="pic"><i class="coin big"></i></div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `<i class="coin"></i> ${short(p.n)}` };
   if (p.kind === "caps") return { pic: `<div class="pic"><i class="bcap big"></i></div>`, line: `<b>+${p.n} bottle caps</b><small>Open cans early with these</small>`, chip: `<i class="bcap"></i> ${p.n}` };
-  if (p.kind === "life") return { pic: `<div class="pic">🎟️</div>`, line: `<b>+1 life!</b><small>A bonus ticket</small>`, chip: "🎟️ +1" };
+  if (p.kind === "life") return { pic: `<div class="pic"><i class="tkt big"></i></div>`, line: `<b>+1 life!</b><small>A bonus ticket</small>`, chip: '<i class="tkt"></i> +1' };
   const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
   const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];
   const status = p.unlocked ? `<small class="new">UNLOCKED!</small>` : p.owned ? `<small>Already yours: +${p.coins.toLocaleString()} coins</small>` : `<small>${p.have} / ${p.need} cards</small>`;

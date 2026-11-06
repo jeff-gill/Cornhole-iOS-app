@@ -239,6 +239,9 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .prizes span { background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 3px 8px; font-size: 13px; font-weight: 900; }
 .canhint { position: absolute; bottom: 12%; font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
 #canDone { position: absolute; bottom: 7%; min-width: 200px; }
+.cangrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.cangrid div { display: grid; justify-items: center; gap: 6px; padding: 10px 4px; border-radius: 14px; background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); font-size: 12px; font-weight: 900; text-align: center; }
+.cangrid .minican { width: 26px; height: 42px; }
 .oddsrow { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; font-size: 14px; text-align: left; }
 
 .coin { display: inline-block; width: 1.05em; height: 1.05em; border-radius: 50%; vertical-align: -0.18em; position: relative; flex: none;
@@ -248,14 +251,17 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .pill > .coin::after { font-size: 18px; }
 .coin.big { width: 64px; height: 64px; } .coin.big::after { font-size: 42px; }
 .hubhead { width: 100%; max-width: 560px; margin: 0 auto; }
-.hubtitle { font-family: var(--font-display); text-transform: uppercase; text-align: center; white-space: nowrap; line-height: 1; font-size: 40px; text-shadow: 0 4px 0 rgba(0,0,0,.4); letter-spacing: .01em; }
-.hubtitle span { color: var(--gold); }
+.hubtitle { margin-top: 10px; font-family: var(--font-display); text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .92; font-size: 34px; text-shadow: 0 4px 0 rgba(0,0,0,.4); letter-spacing: .01em; }
+.hubtitle span { display: block; color: var(--gold); font-size: 1.12em; }
 .hubhead .gcname { text-align: center; margin: 2px 0 0; }
-.hubhead .hubtop { margin-top: 8px; }
+.hubhead .hubtop { margin-top: 0; }
 .hubright { display: flex; align-items: center; gap: 6px; }
 .hubright .pill, .hubleft .pill { padding: 2px 8px 2px 3px; gap: 4px; border-width: 2px; }
 .hubtop .pill b { font-size: 16px; }
 .hubtop .pill .ico, .hubtop .pill > .coin, .hubtop .pill > .bcap { width: 24px; height: 24px; font-size: 13px; }
+.tkt { display: inline-block; width: 1.35em; height: 1em; vertical-align: -0.15em; flex: none; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2048%27%3E%3Cg%20transform%3D%27rotate%28-12%2032%2024%29%27%3E%3Cpath%20d%3D%27M6%2010h52v8a6%206%200%200%200%200%2012v8H6v-8a6%206%200%200%200%200-12z%27%20fill%3D%27%23a01810%27%20transform%3D%27translate%280%202%29%27/%3E%3Cpath%20d%3D%27M6%2010h52v8a6%206%200%200%200%200%2012v8H6v-8a6%206%200%200%200%200-12z%27%20fill%3D%27%23e8392b%27%20stroke%3D%27%23fff%27%20stroke-width%3D%272.2%27%20stroke-linejoin%3D%27round%27/%3E%3Cpath%20d%3D%27M22%2012v24%27%20stroke%3D%27%23fff%27%20stroke-width%3D%272%27%20stroke-dasharray%3D%273%203%27/%3E%3Cpolygon%20points%3D%2738.0%2C17.0%2039.9%2C21.9%2045.1%2C22.2%2041.0%2C25.5%2042.4%2C30.6%2038.0%2C27.7%2033.6%2C30.6%2035.0%2C25.5%2030.9%2C22.2%2036.1%2C21.9%27%20fill%3D%27%23ffe27a%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2717%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2722%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2727%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
+.pill > .tkt { width: 34px; height: 26px; vertical-align: middle; }
+.tkt.big { width: 84px; height: 62px; }
 .hubtop .pill > .coin::after { font-size: 15px; }
 .hubleft, .hubright { gap: 5px; min-width: 0; }
 .hubtop .avatarbtn { width: 38px; height: 38px; }
@@ -286,6 +292,17 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .pill > .bcap { width: 28px; height: 28px; vertical-align: middle; }
 .bcap.big { width: 64px; height: 64px; }
 .cappill { color: #fff; font: inherit; }
+.vcarousel { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.vcarousel .venue { width: 80%; margin: 0 auto; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
+.vcarousel .venue.side { position: absolute; top: 0; bottom: 0; opacity: .55; overflow: hidden; padding: 14px 16px; cursor: pointer; }
+.vcarousel .venue.side.prev { left: calc(-70% - 8px); }
+.vcarousel .venue.side.next { left: calc(90% + 8px); }
+.vcarousel .venue.side .lvlno, .vcarousel .venue.side h3 { white-space: nowrap; }
+.vcarousel.dragging .venue { transition: none; }
+.vdots { display: flex; justify-content: center; gap: 5px; margin-top: 8px; }
+.vdots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); transition: width .2s; }
+.vdots i.on { width: 16px; background: var(--gold); }
+#hub { overflow-x: hidden; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -460,16 +477,16 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
-    <div class="hubtitle" id="hubTitle">__GAME_TITLE_HTML__</div>
-    <div class="gcname" id="gcName" hidden></div>
     <div class="hubtop">
-      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill" id="livesBtn"><span class="ico" style="background:#c3c9d3">🎟️</span><b id="lives">5</b><small id="livesTimer"></small></button></div>
+      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill" id="livesBtn"><i class="tkt"></i><b id="lives">5</b><small id="livesTimer"></small></button></div>
       <div class="hubright"><div class="pill"><i class="coin"></i><b id="coins">0</b></div><button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button><div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
     </div>
+    <div class="hubtitle" id="hubTitle">__GAME_TITLE_HTML__</div>
+    <div class="gcname" id="gcName" hidden></div>
   </div>
   <div class="hubbottom">
     <div class="cooler" id="cooler"></div>
-    <div class="venue" id="venueCard"></div>
+    <div class="vcarousel" id="venueCard"></div>
     <button class="btn green go" id="playBtn">PLAY</button>
     <div class="hubrow">
       <button class="btn small" id="shopBtn">SHOP</button>
