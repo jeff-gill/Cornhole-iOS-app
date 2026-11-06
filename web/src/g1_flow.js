@@ -80,6 +80,9 @@ const STORE = [
   { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 25000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "25,000 coins + Firecracker bags + Neon Nights board" },
   { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
+  { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Pitcher of Cocktails", icon: "🍹", blurb: "+5 lives, even past the usual 5" },
+  { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Ale can", icon: "🥫", blurb: "5 prizes: coins and cards" },
+  { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Pils can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
   { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
 ];
 // Throw effects: a trail behind your bag in flight (shop "Throw" tab).
@@ -138,7 +141,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti" });
+const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -183,6 +186,11 @@ function grantPurchase(id, restored) {
   const item = STORE.find(x => x.id === id);
   if (!item) return null;
   if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
+  if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
+  if (item.kind === "can") { // bought cans skip the cooler limit
+    if (!restored) career.cans.push({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
+    save(); return item;
+  }
   if (career.purchases.includes(id)) return item;
   career.purchases.push(id);
   if (item.coins && !restored) career.coins += item.coins;
@@ -261,15 +269,16 @@ function startMatch(kind, vi, online = null) {
   S.online = null;
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
+    if (!useLife()) return;
     if (!houseCovers(vi)) career.coins -= v.fee;
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
       S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
-      S.opponent = { name: online.name, live: true, skill: 0, rating: 0 };
+      S.opponent = { name: online.name, live: true, skill: 0, rating: 0, avatar: online.avatar || "a0" };
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
       const [hi, lo] = v.cpu, skill = rand(lo, hi);
-      S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      S.opponent = { avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
     }
     S.names = ["You", S.opponent.name];
@@ -278,7 +287,7 @@ function startMatch(kind, vi, online = null) {
     S.names = ["Player 1", "Player 2"];
     S.gear = [bagById(career.bag), RIVAL_BAGS[0]];
   }
-  S.kind = kind; S.venue = vi;
+  S.kind = kind; S.venue = vi; S.botRematch = null;
   // Coin flip for pitcher's boxes: who throws from the left and who from the right.
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
@@ -441,12 +450,14 @@ function finishMatch() {
   if (S.kind !== "career") { S.result = null; return; }
   const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
   const coins = won ? pot(v) : 0;
+  let can = null, coolerFull = false;
+  if (won) { refundLife(); can = rollCan(); coolerFull = !giveCan(can, S.venue); }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
   const newly = updateUnlocks();
   save();
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name) };
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, lifeLost: !won };
   postScores();
 }
 // A court's stars stay between 0 and its max.
@@ -463,7 +474,7 @@ function checkFourBagger() {
     if (inHole >= 4) {
       S.fourBagger[p] = true;
       fourBagger(p);
-      if (S.kind === "career" && p === 0) { career.coins += Math.max(100, venue().fee); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
+      if (S.kind === "career" && p === 0) { career.coins += Math.max(50, Math.round(venue().fee / 2)); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
     }
   }
 }

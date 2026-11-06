@@ -192,6 +192,58 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .courtstars .muted { font-family: var(--font-body, inherit); font-size: 12px; }
 .pausebars { display: inline-flex; gap: 4px; align-items: center; justify-content: center; } .pausebars i { width: 5px; height: 16px; border-radius: 2px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.35); }
 .gcname { margin-top: 4px; font-family: var(--font-body, inherit); font-size: 12px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.5); letter-spacing: 0; }
+
+.hubleft { display: flex; align-items: center; gap: 6px; }
+.avatarbtn { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; padding: 0; background: none; box-shadow: 0 4px 0 rgba(0,0,0,.3); overflow: hidden; }
+.avatar { display: inline-grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; font-size: 24px; line-height: 1; }
+.avatar.sm { width: 22px; height: 22px; font-size: 13px; vertical-align: -4px; margin-right: 5px; border: 2px solid rgba(255,255,255,.8); }
+.hubmid { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; max-width: 560px; margin: 8px auto 0; }
+.livespill { color: #fff; font: inherit; }
+.livespill b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
+.livespill small { font-size: 11px; color: var(--ink-dim); font-weight: 900; }
+.cooler { display: flex; gap: 6px; }
+.cslot { width: 34px; height: 46px; border-radius: 9px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.35); display: grid; place-items: center; padding: 0; }
+.cslot.full { border: 2px solid #fff; animation: canbob 1.6s ease-in-out infinite; }
+@keyframes canbob { 50% { transform: translateY(-3px); } }
+.minican { width: 20px; height: 32px; border-radius: 5px 5px 4px 4px; box-shadow: inset -4px 0 0 rgba(0,0,0,.25), inset 3px 0 0 rgba(255,255,255,.35); position: relative; }
+.minican::before { content: ""; position: absolute; left: 2px; right: 2px; top: -3px; height: 4px; border-radius: 3px; background: inherit; filter: brightness(1.3); }
+.avgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; overflow-y: auto; max-height: 60vh; padding: 4px; }
+.avpick { width: 100%; }
+.avpick { position: relative; aspect-ratio: 1; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); padding: 0; background: none; overflow: hidden; }
+.avpick .avatar { font-size: 32px; }
+.avpick.on { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,201,58,.45); }
+.avpick.avlock .avatar { filter: grayscale(1) brightness(.45); }
+.avpick small { position: absolute; inset: auto 0 6px; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px #000; }
+.lifebig { font-size: 54px; line-height: 1; }
+.liferow { display: flex; justify-content: center; gap: 4px; font-size: 30px; }
+.liferow .gone { filter: grayscale(1) opacity(.3); }
+.cardprog { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; font-weight: 900; color: var(--ink-dim); }
+.cardprog .progress { flex: 1; margin: 0; height: 7px; }
+#canSheet { background: radial-gradient(circle at 50% 45%, rgba(40,60,110,.95), rgba(4,8,18,.97)); }
+.canstage { position: relative; width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; }
+#mist { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.cantitle { position: absolute; top: 12%; font-family: var(--font-display); font-size: 30px; text-align: center; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.can { position: relative; width: 120px; height: 200px; border-radius: 22px 22px 18px 18px; transition: transform .4s cubic-bezier(.5,1.6,.5,1), opacity .4s; }
+.can::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, rgba(0,0,0,.28), rgba(255,255,255,.35) 28%, rgba(255,255,255,0) 45%, rgba(0,0,0,.3)); }
+.cantop { position: absolute; left: 6px; right: 6px; top: -10px; height: 18px; border-radius: 50%; background: var(--rim, #ccc); box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+.cantop .tab { position: absolute; left: 38%; top: 3px; width: 26px; height: 10px; border-radius: 6px; border: 3px solid rgba(0,0,0,.35); transform-origin: 0 50%; transition: transform .25s; }
+.can.open .tab { transform: rotate(-70deg); }
+.canlabel { position: absolute; left: 0; right: 0; top: 70px; text-align: center; font-family: var(--font-display); font-size: 17px; line-height: 1.1; padding: 0 8px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.45); z-index: 1; }
+.can.shake { animation: shake .5s ease-in-out infinite; }
+@keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-7deg) translateY(-4px); } 75% { transform: rotate(7deg) translateY(-4px); } }
+.can.gone { transform: translateY(140px) scale(.7); opacity: .25; }
+.prize { position: absolute; top: 34%; width: 230px; padding: 16px; border-radius: 22px; border: 4px solid #fff; background: linear-gradient(135deg, #1b2f52, #12203a); text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,.35); transform: scale(0); transition: transform .35s cubic-bezier(.4,1.8,.5,1); }
+.prize.show { transform: scale(1); }
+.prize .pic { font-size: 50px; line-height: 1.1; }
+.prize canvas { width: 70px; height: 70px; }
+.prize b { display: block; font-family: var(--font-display); font-size: 24px; font-weight: 400; margin-top: 4px; }
+.prize small { display: block; font-size: 13px; font-weight: 900; color: var(--ink-dim); }
+.prize .new { color: var(--gold); }
+.prizes { position: absolute; bottom: 21%; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 92%; }
+.prizes span { background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 3px 8px; font-size: 13px; font-weight: 900; }
+.canhint { position: absolute; bottom: 12%; font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
+#canDone { position: absolute; bottom: 7%; min-width: 200px; }
+.oddsrow { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; font-size: 14px; text-align: left; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -349,9 +401,13 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 
 <div class="overlay" id="hub">
   <div class="hubtop">
-    <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="coins">0</b></div>
+    <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="coins">0</b></div></div>
     <div class="logo" style="font-size:22px;line-height:1">BACKYARD<span style="font-size:24px">CORNHOLE</span><div class="gcname" id="gcName" hidden></div></div>
     <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div>
+  </div>
+  <div class="hubmid">
+    <button class="pill livespill" id="livesBtn"><span class="ico" style="background:#ff7aa8">🍹</span><b id="lives">5</b><small id="livesTimer"></small></button>
+    <div class="cooler" id="cooler"></div>
   </div>
   <div class="hubbottom">
     <div class="venue" id="venueCard"></div>
@@ -365,6 +421,19 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
   </div>
 </div>
 
+<div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
+<div class="overlay" id="avatarSheet" hidden><div class="sheet"><h2>Choose your avatar</h2><div class="avgrid" id="avatarGrid"></div><button class="btn" id="avatarClose">DONE</button></div></div>
+<div class="overlay" id="canSheet" hidden>
+  <div class="canstage" id="canStage">
+    <canvas id="mist"></canvas>
+    <div class="cantitle" id="canTitle"></div>
+    <div class="can" id="canBody"><div class="cantop"><i class="tab"></i></div><div class="canlabel" id="canLabel"></div></div>
+    <div class="prize" id="prize"></div>
+    <div class="prizes" id="prizeList"></div>
+    <div class="canhint" id="canHint">Tap to open</div>
+    <button class="btn green" id="canDone" hidden>COLLECT</button>
+  </div>
+</div>
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
     <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>

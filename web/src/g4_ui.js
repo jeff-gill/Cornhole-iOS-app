@@ -125,7 +125,8 @@ const panel = $("panel");
 function renderScore() {
   const ir = inningResult();
   for (const p of [0, 1]) {
-    $("name" + p).textContent = S.names[p];
+    const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
+    $("name" + p).innerHTML = (S.kind === "career" ? avatarHTML(av, "sm") : "") + esc(S.names[p]);
     $("pts" + p).textContent = S.scores[p];
     $("live" + p).innerHTML = S.phase === "hub" ? "" : `Inning <b>${ir.raw[p]}</b>`;
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : ""}"></i>`).join("");
@@ -270,18 +271,23 @@ function renderInningSheet() {
       : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`;
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
-        <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${res.coins}</b></div></div>
+        <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${short(res.coins)}</b></div>
+        ${res.lifeLost ? `<div class="pill"><span class="ico" style="background:#ff7aa8">🍹</span><b>−1</b></div>` : ""}</div>
+        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
-    const O = S.online, R = O && O.rematch, who = esc(S.names[1]);
+    const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
     const again = !canAgain ? "NOT ENOUGH COINS"
+      : bot && S.botRematch === "asking" ? `WAITING FOR ${who}…`
+      : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
+      : bot ? `REMATCH · 🪙 ${short(fee)}`
       : !O ? "PLAY AGAIN" + (fee ? ` · 🪙 ${short(fee)}` : "")
       : O.gone ? `${who} left`
       : R.me ? `WAITING FOR ${who}…`
       : R.them ? `${who} WANTS A REMATCH! · 🪙 ${short(fee)}`
       : `REMATCH · 🪙 ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) ? "" : "disabled"}>${again}</button>
+      <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
@@ -294,6 +300,11 @@ function renderInningSheet() {
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => {
     if (S.online) { wantRematch(); return; }
+    if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
+      S.botRematch = "asking"; renderInningSheet();
+      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; renderInningSheet(); } }, 2000 + Math.random() * 5000);
+      return;
+    }
     sheet.hidden = true; const k = S.kind, v = S.venue; openHub();
     if (k === "career") playCourt(v); else startMatch(k, v);
   };
@@ -344,10 +355,10 @@ function openHub() {
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   const today = new Date().toDateString();
   if (career.lastDaily !== today) {
-    // Daily bonus: one buy-in at the highest court you've opened (at least 100).
-    const top = VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]), bonus = Math.max(100, top.fee);
-    career.lastDaily = today; career.coins += bonus; save(); renderHub();
-    const t = document.createElement("div"); t.className = "toast"; t.textContent = `Daily bonus 🪙 +${short(bonus)}`;
+    // Daily: a free can (mostly the low tiers), if there's room in the cooler.
+    const id = rollCan(DAILY_ODDS), t = document.createElement("div"); t.className = "toast";
+    if (giveCan(id, topCourt())) { career.lastDaily = today; save(); renderHub(); t.textContent = `Free daily can: ${canById(id).name} 🥫`; }
+    else t.textContent = "Cooler full! Open a can for today's free one";
     $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
   }
 }
@@ -370,15 +381,17 @@ function renderHub() {
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
   $("vNext").onclick = () => { hubVenue = Math.min(VENUES.length - 1, hubVenue + 1); renderHub(); };
   const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
-  play.disabled = !open || !afford;
-  play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
+  renderHubExtras();
+  const noLives = career.lives <= 0;
+  play.disabled = !open || (!afford && !noLives);
+  play.textContent = !open ? "LOCKED" : noLives ? `NO LIVES · 🍹 IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
 window.__gcPlayer = p => { const el = $("gcName"); el.hidden = !p; if (p) el.textContent = "👤 " + p.name; if (p) postScores(); };
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
-$("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
+$("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
 let shopTab = "bags";
 function swatch(item, kind) {
@@ -398,7 +411,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "lives" ? "+5 lives! 🍹" : item.kind === "can" ? `${item.title} is in your cooler!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
   renderShop(); renderHub();
 };
@@ -406,6 +419,12 @@ window.__restoreDone = count => { shopMsg = count ? "Purchases restored" : "Noth
 function buy(id) {
   if (!canBuy()) { shopMsg = "Purchases are available in the iPhone app."; renderShop(); return; }
   pendingBuy = id; shopMsg = ""; postNative("purchase", id); renderShop();
+}
+// Cards collected toward an item (from cans).
+function cardProgress(cat, it) {
+  if (it.premium || !it.price) return "";
+  const have = career.cards[cardKey(cat, it)] || 0, need = cardsNeeded(cat, it);
+  return `<div class="cardprog">🃏 ${have}/${need}<div class="progress"><i style="width:${have / need * 100}%"></i></div></div>`;
 }
 function storeHTML() {
   const price = it => storePrices[it.id] || it.price;
@@ -421,6 +440,12 @@ function storeHTML() {
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
   parts.push(`<div class="label">Coins</div>`);
   for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
+  parts.push(`<div class="label">Lives and cans</div>`);
+  for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
+    const ic = it.kind === "can" ? `<i class="minican" style="width:30px;height:46px;background:linear-gradient(90deg, ${canById(it.can).color}, ${canById(it.can).rim} 40%, ${canById(it.can).color})"></i>` : it.icon;
+    parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
+  }
+  parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can? (odds)</button></div>`);
   parts.push(`<div class="label">Exclusive sets</div>`);
   for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
     parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
@@ -442,6 +467,7 @@ function renderShop() {
       else { const tmp = document.createElement("canvas"); tmp.width = 80; tmp.height = 160; paintBoard(tmp.getContext("2d"), 80, 160, boardById(key)); ctx.drawImage(tmp, 20, 0, 40, 80); }
     }
     for (const b of list.querySelectorAll("[data-buy]")) b.onclick = () => buy(b.dataset.buy);
+    $("oddsBtn").onclick = () => showInfo(cansInfoHTML());
     $("restoreBtn").onclick = () => { if (!canBuy()) { shopMsg = "Restore works in the iPhone app."; renderShop(); return; } shopMsg = "Restoring…"; postNative("restore", ""); renderShop(); };
     return;
   }
@@ -451,7 +477,7 @@ function renderShop() {
     for (const it of all) {
       const owned = mine.includes(it.id), equipped = (isThrow ? career.trail : career.effect) === it.id;
       const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
-      row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div></div>`;
+      row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div>${owned ? "" : cardProgress(catByKey(isThrow ? "trail" : "fx"), it)}</div>`;
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
@@ -478,7 +504,7 @@ function renderShop() {
     const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
     row.appendChild(swatch(it, shopTab));
     const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<div class="muted">Board design</div>`;
-    const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}`;
+    const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}${owned ? "" : cardProgress(catByKey(shopTab === "bags" ? "bag" : "board"), it)}`;
     row.appendChild(info);
     const btn = document.createElement("button");
     if (it.premium && !owned) {
@@ -585,6 +611,7 @@ function frame(now) {
   updateBags(dt);
   updateAimRig(dt);
   updateOnline(dt);
+  if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); if (career.lives <= 0) renderHub(); }
   updatePreview(dt);
   updateFx(dt);
   venueTick(dt, S.time);
@@ -598,4 +625,4 @@ postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { ui, finishMatch, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };

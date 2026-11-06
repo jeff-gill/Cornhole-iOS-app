@@ -5,7 +5,10 @@ A 3D cornhole game for iPhone (and the web) with a career mode. It's built with 
 ## How it plays
 
 - **Career:** eight venues (Backyard, Tailgate Lot, Beach Bar, Brewery Patio, Mountain Lodge, Bonfire Beach, Island Hop, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with stronger wind, a faster aim arrow, a smaller sweet spot, slicker boards and better opponents. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
-- **Pro Shop:** spend coins on bags (Accuracy, Control and Spin stats, plus a sticky, neutral or fast slide) and on board designs.
+- **Pro Shop:** spend coins on bags (Accuracy, Control and Spin stats, plus a sticky, neutral or fast slide), board designs, throw effects and cornhole effects. Every coin item can also be unlocked by collecting its cards from cans.
+- **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Reserve. Rarer cans hold more prizes (coins, item cards, now and then a life). Opening one sprays mist and the prizes pop out one at a time.
+- **Lives (🍹):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra lives come from the Store, from coins (at a steep price), or rarely from a can. The iPhone app can notify you when they're full.
+- **Avatars:** 4 to start, and 2 more with each court you open.
 - **Aiming:** tap where the bag should finish, then drag the landing ring around the gold zone. Near the finish it sticks, farther back it slides, and off to the side it adds spin.
 - **Throwing:** one move. Pull back for power, and the arrow swings faster the harder you pull. Let go in the gold band with the arrow straight. Pulling into overdrive makes the throw wild.
 - **Wind:** steady for each inning, from any direction, and stronger at higher venues. The aiming guide ignores it.
@@ -56,3 +59,38 @@ In App Store Connect:
   - `com.jeffgill.cornhole.wins`
   - `com.jeffgill.cornhole.fourbaggers`
 - Create the in-app purchases listed in `Cornhole/App/StoreManager.swift`.
+
+## Economy
+
+The aim is slow, earned progress: no easy maxing out and no runaway bank balance.
+
+| Source or sink | Amount |
+|---|---|
+| Match | Both pay the buy-in, and the winner takes the pot (net +1 buy-in, or −1 if you lose) |
+| Win | Pot, stars, a can (if the cooler has room) and your life back |
+| Loss | Buy-in, stars and a life |
+| 4-bagger | Half a buy-in |
+| Daily | A free can (mostly Black or White) |
+| Life for coins | 3 buy-ins at your highest open court |
+| Duplicate card | 0.25% of the item's price per card |
+
+At an even win rate, coins barely grow, and a court's winnings buy the shop tier or two that match it.
+
+**Cans.** Chance per win and contents. Coins are counted in buy-ins of the court where the can was won.
+
+| Can | Chance | Prizes | Coins | Cards | Life chance per prize |
+|---|---|---|---|---|---|
+| Backyard Black | 40% | 2 | 0.2–0.5 | 2–4 | 1% |
+| Picnic White | 25% | 3 | 0.3–0.8 | 4–7 | 1.5% |
+| Bronze Lager | 15% | 3 | 0.5–1.2 | 6–10 | 2% |
+| Silver Stout | 10.5% | 4 | 0.8–2 | 10–16 | 3% |
+| Golden Ale | 6% | 5 | 1.5–3.5 | 16–26 | 4% |
+| Royal Purple | 2.4% | 6 | 2.5–5 | 26–40 | 5% |
+| Platinum Pils | 0.9% | 7 | 4–8 | 40–60 | 6% |
+| Diamond Reserve | 0.2% | 8 | 6–12 | 60–90 | 8% |
+
+Rolls are skewed toward the low end of each range, so a rare can is usually good but not always.
+
+**Cards needed** to unlock an item go from 3 (the cheapest item in its tab) to 90 (the most expensive), and the steps get bigger near the top. Cards for cheap items are common; rarer cans reach further up the list.
+
+The App Store requires loot-box odds to be shown before purchase. The Store's "What's in a can?" link and the cooler both show the chances.

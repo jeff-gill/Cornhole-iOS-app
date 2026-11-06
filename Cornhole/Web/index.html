@@ -204,6 +204,58 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .courtstars .muted { font-family: var(--font-body, inherit); font-size: 12px; }
 .pausebars { display: inline-flex; gap: 4px; align-items: center; justify-content: center; } .pausebars i { width: 5px; height: 16px; border-radius: 2px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.35); }
 .gcname { margin-top: 4px; font-family: var(--font-body, inherit); font-size: 12px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.5); letter-spacing: 0; }
+
+.hubleft { display: flex; align-items: center; gap: 6px; }
+.avatarbtn { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; padding: 0; background: none; box-shadow: 0 4px 0 rgba(0,0,0,.3); overflow: hidden; }
+.avatar { display: inline-grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; font-size: 24px; line-height: 1; }
+.avatar.sm { width: 22px; height: 22px; font-size: 13px; vertical-align: -4px; margin-right: 5px; border: 2px solid rgba(255,255,255,.8); }
+.hubmid { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; max-width: 560px; margin: 8px auto 0; }
+.livespill { color: #fff; font: inherit; }
+.livespill b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
+.livespill small { font-size: 11px; color: var(--ink-dim); font-weight: 900; }
+.cooler { display: flex; gap: 6px; }
+.cslot { width: 34px; height: 46px; border-radius: 9px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.35); display: grid; place-items: center; padding: 0; }
+.cslot.full { border: 2px solid #fff; animation: canbob 1.6s ease-in-out infinite; }
+@keyframes canbob { 50% { transform: translateY(-3px); } }
+.minican { width: 20px; height: 32px; border-radius: 5px 5px 4px 4px; box-shadow: inset -4px 0 0 rgba(0,0,0,.25), inset 3px 0 0 rgba(255,255,255,.35); position: relative; }
+.minican::before { content: ""; position: absolute; left: 2px; right: 2px; top: -3px; height: 4px; border-radius: 3px; background: inherit; filter: brightness(1.3); }
+.avgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; overflow-y: auto; max-height: 60vh; padding: 4px; }
+.avpick { width: 100%; }
+.avpick { position: relative; aspect-ratio: 1; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); padding: 0; background: none; overflow: hidden; }
+.avpick .avatar { font-size: 32px; }
+.avpick.on { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,201,58,.45); }
+.avpick.avlock .avatar { filter: grayscale(1) brightness(.45); }
+.avpick small { position: absolute; inset: auto 0 6px; font-size: 10px; font-weight: 900; color: #fff; text-shadow: 0 1px 2px #000; }
+.lifebig { font-size: 54px; line-height: 1; }
+.liferow { display: flex; justify-content: center; gap: 4px; font-size: 30px; }
+.liferow .gone { filter: grayscale(1) opacity(.3); }
+.cardprog { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 12px; font-weight: 900; color: var(--ink-dim); }
+.cardprog .progress { flex: 1; margin: 0; height: 7px; }
+#canSheet { background: radial-gradient(circle at 50% 45%, rgba(40,60,110,.95), rgba(4,8,18,.97)); }
+.canstage { position: relative; width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; }
+#mist { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.cantitle { position: absolute; top: 12%; font-family: var(--font-display); font-size: 30px; text-align: center; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.can { position: relative; width: 120px; height: 200px; border-radius: 22px 22px 18px 18px; transition: transform .4s cubic-bezier(.5,1.6,.5,1), opacity .4s; }
+.can::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(90deg, rgba(0,0,0,.28), rgba(255,255,255,.35) 28%, rgba(255,255,255,0) 45%, rgba(0,0,0,.3)); }
+.cantop { position: absolute; left: 6px; right: 6px; top: -10px; height: 18px; border-radius: 50%; background: var(--rim, #ccc); box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+.cantop .tab { position: absolute; left: 38%; top: 3px; width: 26px; height: 10px; border-radius: 6px; border: 3px solid rgba(0,0,0,.35); transform-origin: 0 50%; transition: transform .25s; }
+.can.open .tab { transform: rotate(-70deg); }
+.canlabel { position: absolute; left: 0; right: 0; top: 70px; text-align: center; font-family: var(--font-display); font-size: 17px; line-height: 1.1; padding: 0 8px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.45); z-index: 1; }
+.can.shake { animation: shake .5s ease-in-out infinite; }
+@keyframes shake { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-7deg) translateY(-4px); } 75% { transform: rotate(7deg) translateY(-4px); } }
+.can.gone { transform: translateY(140px) scale(.7); opacity: .25; }
+.prize { position: absolute; top: 34%; width: 230px; padding: 16px; border-radius: 22px; border: 4px solid #fff; background: linear-gradient(135deg, #1b2f52, #12203a); text-align: center; box-shadow: 0 8px 0 rgba(0,0,0,.35); transform: scale(0); transition: transform .35s cubic-bezier(.4,1.8,.5,1); }
+.prize.show { transform: scale(1); }
+.prize .pic { font-size: 50px; line-height: 1.1; }
+.prize canvas { width: 70px; height: 70px; }
+.prize b { display: block; font-family: var(--font-display); font-size: 24px; font-weight: 400; margin-top: 4px; }
+.prize small { display: block; font-size: 13px; font-weight: 900; color: var(--ink-dim); }
+.prize .new { color: var(--gold); }
+.prizes { position: absolute; bottom: 21%; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 92%; }
+.prizes span { background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 3px 8px; font-size: 13px; font-weight: 900; }
+.canhint { position: absolute; bottom: 12%; font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
+#canDone { position: absolute; bottom: 7%; min-width: 200px; }
+.oddsrow { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; font-size: 14px; text-align: left; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -361,9 +413,13 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 
 <div class="overlay" id="hub">
   <div class="hubtop">
-    <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="coins">0</b></div>
+    <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="coins">0</b></div></div>
     <div class="logo" style="font-size:22px;line-height:1">BACKYARD<span style="font-size:24px">CORNHOLE</span><div class="gcname" id="gcName" hidden></div></div>
     <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div>
+  </div>
+  <div class="hubmid">
+    <button class="pill livespill" id="livesBtn"><span class="ico" style="background:#ff7aa8">🍹</span><b id="lives">5</b><small id="livesTimer"></small></button>
+    <div class="cooler" id="cooler"></div>
   </div>
   <div class="hubbottom">
     <div class="venue" id="venueCard"></div>
@@ -377,6 +433,19 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
   </div>
 </div>
 
+<div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
+<div class="overlay" id="avatarSheet" hidden><div class="sheet"><h2>Choose your avatar</h2><div class="avgrid" id="avatarGrid"></div><button class="btn" id="avatarClose">DONE</button></div></div>
+<div class="overlay" id="canSheet" hidden>
+  <div class="canstage" id="canStage">
+    <canvas id="mist"></canvas>
+    <div class="cantitle" id="canTitle"></div>
+    <div class="can" id="canBody"><div class="cantop"><i class="tab"></i></div><div class="canlabel" id="canLabel"></div></div>
+    <div class="prize" id="prize"></div>
+    <div class="prizes" id="prizeList"></div>
+    <div class="canhint" id="canHint">Tap to open</div>
+    <button class="btn green" id="canDone" hidden>COLLECT</button>
+  </div>
+</div>
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
     <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>
@@ -886,6 +955,9 @@ const STORE = [
   { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 25000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "25,000 coins + Firecracker bags + Neon Nights board" },
   { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
+  { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Pitcher of Cocktails", icon: "🍹", blurb: "+5 lives, even past the usual 5" },
+  { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Ale can", icon: "🥫", blurb: "5 prizes: coins and cards" },
+  { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Pils can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
   { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
 ];
 // Throw effects: a trail behind your bag in flight (shop "Throw" tab).
@@ -944,7 +1016,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti" });
+const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -989,6 +1061,11 @@ function grantPurchase(id, restored) {
   const item = STORE.find(x => x.id === id);
   if (!item) return null;
   if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
+  if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
+  if (item.kind === "can") { // bought cans skip the cooler limit
+    if (!restored) career.cans.push({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
+    save(); return item;
+  }
   if (career.purchases.includes(id)) return item;
   career.purchases.push(id);
   if (item.coins && !restored) career.coins += item.coins;
@@ -1067,15 +1144,16 @@ function startMatch(kind, vi, online = null) {
   S.online = null;
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
+    if (!useLife()) return;
     if (!houseCovers(vi)) career.coins -= v.fee;
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
       S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
-      S.opponent = { name: online.name, live: true, skill: 0, rating: 0 };
+      S.opponent = { name: online.name, live: true, skill: 0, rating: 0, avatar: online.avatar || "a0" };
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
       const [hi, lo] = v.cpu, skill = rand(lo, hi);
-      S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      S.opponent = { avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
     }
     S.names = ["You", S.opponent.name];
@@ -1084,7 +1162,7 @@ function startMatch(kind, vi, online = null) {
     S.names = ["Player 1", "Player 2"];
     S.gear = [bagById(career.bag), RIVAL_BAGS[0]];
   }
-  S.kind = kind; S.venue = vi;
+  S.kind = kind; S.venue = vi; S.botRematch = null;
   // Coin flip for pitcher's boxes: who throws from the left and who from the right.
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
@@ -1247,12 +1325,14 @@ function finishMatch() {
   if (S.kind !== "career") { S.result = null; return; }
   const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
   const coins = won ? pot(v) : 0;
+  let can = null, coolerFull = false;
+  if (won) { refundLife(); can = rollCan(); coolerFull = !giveCan(can, S.venue); }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
   const newly = updateUnlocks();
   save();
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name) };
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, lifeLost: !won };
   postScores();
 }
 // A court's stars stay between 0 and its max.
@@ -1269,7 +1349,7 @@ function checkFourBagger() {
     if (inHole >= 4) {
       S.fourBagger[p] = true;
       fourBagger(p);
-      if (S.kind === "career" && p === 0) { career.coins += Math.max(100, venue().fee); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
+      if (S.kind === "career" && p === 0) { career.coins += Math.max(50, Math.round(venue().fee / 2)); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
     }
   }
 }
@@ -1439,6 +1519,7 @@ let search = null; // { vi, t, host, name, hello, setup }
 const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutorialDone;
 
 function playCourt(vi) {
+  tickLives(); if (career.lives <= 0) { openLives(); return; }
   if (!canGoOnline()) { startMatch("career", vi); return; }
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
@@ -1467,7 +1548,7 @@ window.__net = m => {
   if (m.t === "matched") {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
-    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect });
+    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
       netSend({ t: "setup", ...search.setup });
@@ -1495,7 +1576,7 @@ function tryStartOnline() {
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
   startMatch("career", s.vi, {
     ...s.setup, name: s.name, host: s.host,
-    bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"),
+    bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"), avatar: known(AVATARS, h.avatar, "a0"),
   });
 }
 function opponentLeft() {
@@ -1512,6 +1593,7 @@ function opponentLeft() {
 function wantRematch() {
   const O = S.online; if (!O || O.gone || O.rematch.me) return;
   if (career.coins < venue().fee && !houseCovers(S.venue)) return;
+  if (career.lives <= 0) { openLives(); return; }
   O.rematch.me = true; netSend({ t: "rematch" }); renderInningSheet(); tryRematch();
 }
 function tryRematch() {
@@ -1523,9 +1605,10 @@ function tryRematch() {
     netSend({ t: "resetup", ...R.setup });
   }
   if (!R.setup) return;
-  const { name, bag, trail, effect, host } = O;
+  if (career.lives <= 0) { O.gone = true; renderInningSheet(); return; }
+  const { name, bag, trail, effect, host, avatar } = O;
   $("inningSheet").hidden = true;
-  startMatch("career", S.venue, { ...R.setup, name, bag, trail, effect, host });
+  startMatch("career", S.venue, { ...R.setup, name, bag, trail, effect, host, avatar });
 }
 function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net", JSON.stringify({ op: "leave" })); } }
 
@@ -1575,6 +1658,148 @@ function renderClock() {
   if (on) { el.querySelector("b").textContent = Math.max(0, Math.ceil(S.clock)); el.classList.toggle("hurry", S.clock <= 5); }
 }
 $("searchCancel").onclick = () => { if (!search) return; const vi = search.vi; search = null; postNative("net", JSON.stringify({ op: "cancel" })); $("searching").hidden = true; renderHub(); void vi; };
+
+// ───────────────────────── Economy: cans, cards, lives, avatars
+// The money loop is deliberately tight. A win pays the pot (net +1 buy-in) and a can; a loss costs the buy-in and a
+// life. At an even win rate coins barely grow, so moving up takes real skill, and a court's winnings buy the shop tier
+// or two that match it. Cans are the treat: mostly small, now and then big. See README "Economy" for the numbers.
+
+// ── Cans (the game's chests). Rarer cans hold more prizes and better ones, but any can can be a dud.
+// pulls: how many prizes pop out; coins: range in buy-ins of the court the can came from; cards: total item cards;
+// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🍹 life.
+const CANS = [
+  { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.2, 0.5], cards: [2, 4], bias: 5, life: 0.01 },
+  { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.3, 0.8], cards: [4, 7], bias: 4.5, life: 0.015 },
+  { id: "bronze", name: "Bronze Lager", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.5, 1.2], cards: [6, 10], bias: 4, life: 0.02 },
+  { id: "silver", name: "Silver Stout", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.8, 2], cards: [10, 16], bias: 3.4, life: 0.03 },
+  { id: "gold", name: "Golden Ale", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [1.5, 3.5], cards: [16, 26], bias: 2.8, life: 0.04 },
+  { id: "purple", name: "Royal Purple", color: "#7a3ad6", rim: "#d8b8ff", odds: 2.4, pulls: 6, coins: [2.5, 5], cards: [26, 40], bias: 2.3, life: 0.05 },
+  { id: "platinum", name: "Platinum Pils", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [4, 8], cards: [40, 60], bias: 1.8, life: 0.06 },
+  { id: "diamond", name: "Diamond Reserve", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [6, 12], cards: [60, 90], bias: 1.3, life: 0.08 },
+];
+const COOLER_SIZE = 4;
+const canById = id => CANS.find(c => c.id === id) || CANS[0];
+// Daily free can: mostly the low tiers.
+const DAILY_ODDS = { black: 60, white: 30, bronze: 9, silver: 1 };
+function rollCan(odds) {
+  const list = odds ? CANS.filter(c => odds[c.id]) : CANS, w = c => (odds ? odds[c.id] : c.odds);
+  let x = Math.random() * list.reduce((t, c) => t + w(c), 0);
+  for (const c of list) { x -= w(c); if (x <= 0) return c.id; }
+  return list[0].id;
+}
+// Put a can in the cooler; returns false if the cooler is full.
+function giveCan(id, court) {
+  if (career.cans.length >= COOLER_SIZE) return false;
+  career.cans.push({ id, court }); save();
+  return true;
+}
+
+// ── Cards: every coin item in the shop can also be earned by collecting its cards. Pricier items need more.
+const CARD_CATS = [
+  { key: "bag", list: () => BAGS, owned: () => career.bags, weight: 30 },
+  { key: "board", list: () => BOARDS, owned: () => career.boards, weight: 25 },
+  { key: "trail", list: () => TRAILS, owned: () => career.trails, weight: 25 },
+  { key: "fx", list: () => EFFECTS, owned: () => career.effects, weight: 20 },
+];
+// Collectable items in a category: the coin items past the free one, cheapest first.
+const cardItems = cat => cat.list().filter(it => !it.premium && it.price > 0);
+// Cards needed: 3 for the cheapest item up to 90 for the most expensive, climbing faster near the top.
+function cardsNeeded(cat, it) {
+  const items = cardItems(cat), r = items.length > 1 ? items.indexOf(it) / (items.length - 1) : 0;
+  return Math.round(3 + 87 * r ** 1.6);
+}
+const cardKey = (cat, it) => `${cat.key}:${it.id}`;
+const catByKey = k => CARD_CATS.find(c => c.key === k);
+// A duplicate card (the item is already yours) pays a little: 0.25% of the item's price.
+const dupCoins = it => Math.max(2, Math.round(it.price * 0.0025));
+// Pick an item for a card stack: cheap items are common; a can's bias decides how often rare ones show up.
+function pickCardItem(bias) {
+  let x = Math.random() * CARD_CATS.reduce((t, c) => t + c.weight, 0), cat = CARD_CATS[0];
+  for (const c of CARD_CATS) { x -= c.weight; if (x <= 0) { cat = c; break; } }
+  const items = cardItems(cat), w = items.map((_, i) => Math.exp(-bias * i / Math.max(1, items.length - 1)));
+  let y = Math.random() * w.reduce((t, v) => t + v, 0);
+  for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) return { cat, it: items[i] }; }
+  return { cat, it: items[0] };
+}
+// Add cards; returns what happened so the can reveal can show it.
+function addCards(cat, it, n) {
+  const owned = cat.owned().includes(it.id);
+  if (owned) { const c = dupCoins(it) * n; career.coins += c; return { owned: true, coins: c }; }
+  const k = cardKey(cat, it), need = cardsNeeded(cat, it);
+  career.cards[k] = (career.cards[k] || 0) + n;
+  if (career.cards[k] >= need) { delete career.cards[k]; cat.owned().push(it.id); return { unlocked: true, have: need, need }; }
+  return { have: career.cards[k], need };
+}
+
+// ── Opening a can: decide every prize up front, then the reveal plays them one by one.
+function openCan(index) {
+  const slot = career.cans[index]; if (!slot) return null;
+  const can = canById(slot.id), fee = VENUES[clamp(slot.court | 0, 0, VENUES.length - 1)].fee;
+  career.cans.splice(index, 1);
+  const prizes = [];
+  // Coins: one pile, anywhere in the can's range (often near the bottom).
+  const coinRoll = can.coins[0] + (can.coins[1] - can.coins[0]) * Math.random() ** 1.8;
+  const coins = Math.max(5, Math.round(fee * coinRoll / 5) * 5);
+  career.coins += coins; prizes.push({ kind: "coins", n: coins });
+  // Cards: the can's total split into stacks over its remaining prizes.
+  let cards = Math.round(can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5);
+  const stacks = can.pulls - 1;
+  for (let k = 0; k < stacks; k++) {
+    if (Math.random() < can.life) { career.lives += 1; prizes.push({ kind: "life", n: 1 }); continue; }
+    const n = k === stacks - 1 ? Math.max(1, cards) : Math.max(1, Math.round(cards * (0.2 + Math.random() * 0.5)));
+    cards = Math.max(0, cards - n);
+    const { cat, it } = pickCardItem(can.bias), res = addCards(cat, it, n);
+    prizes.push({ kind: "cards", cat: cat.key, id: it.id, name: it.name, n, ...res });
+  }
+  save();
+  return { can, prizes };
+}
+
+// ── Lives: you hold up to 5 cocktails; one refills every hour. A match takes one up front and gives it back if
+// you win, so closing the app mid-match can't dodge a loss. Bought lives can go past 5.
+const MAX_LIVES = 5, LIFE_MS = 60 * 60 * 1000;
+function tickLives() {
+  const now = Date.now();
+  if (career.lives >= MAX_LIVES) { career.livesAt = now; return; }
+  const gained = Math.floor((now - (career.livesAt || now)) / LIFE_MS);
+  if (gained > 0) {
+    career.lives = Math.min(MAX_LIVES, career.lives + gained);
+    career.livesAt = career.lives >= MAX_LIVES ? now : career.livesAt + gained * LIFE_MS;
+    save(); scheduleLivesAlert();
+  }
+}
+const nextLifeIn = () => (career.lives >= MAX_LIVES ? 0 : Math.max(0, career.livesAt + LIFE_MS - Date.now()));
+const fullLivesAt = () => career.livesAt + (MAX_LIVES - career.lives) * LIFE_MS;
+function useLife() {
+  tickLives();
+  if (career.lives <= 0) return false;
+  if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); // the refill clock starts when you drop below full
+  career.lives--; save(); scheduleLivesAlert();
+  return true;
+}
+function refundLife() { career.lives++; if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); save(); scheduleLivesAlert(); }
+// A life for coins costs 3 buy-ins at your highest open court: possible, never cheap.
+const lifePrice = () => 3 * VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]).fee;
+// iPhone app: a local notification when the lives are full again (if the player turned alerts on).
+function scheduleLivesAlert() {
+  if (!career.alerts) { postNative("notify", JSON.stringify({ op: "cancel" })); return; }
+  if (career.lives >= MAX_LIVES) postNative("notify", JSON.stringify({ op: "cancel" }));
+  else postNative("notify", JSON.stringify({ op: "schedule", at: fullLivesAt(), title: "Your cocktails are full! 🍹", body: "5 lives ready. Time to throw some bags." }));
+}
+
+// ── Avatars: 4 to start, 2 more with every court you open.
+const AVATARS = [
+  ["😎", "#2f86ff", 0], ["🤠", "#ff8a1f", 0], ["🥳", "#ff2e88", 0], ["🙂", "#2fbf71", 0],
+  ["😺", "#ffc93a", 1], ["🐶", "#8a5a32", 1], ["🦊", "#ff6a1a", 2], ["🐻", "#6a4a2a", 2],
+  ["🐼", "#3a3a44", 3], ["🐨", "#8a9aa8", 3], ["🐯", "#ff9a1f", 4], ["🦁", "#e8a020", 4],
+  ["🐸", "#3fae4a", 5], ["🐵", "#a0704a", 5], ["🦄", "#c86aff", 6], ["🐲", "#2fbf71", 6],
+  ["👽", "#5ad86a", 7], ["🤖", "#7a8aa8", 7], ["🧙", "#5b3bd6", 8], ["🧛", "#8a1020", 8],
+  ["🥷", "#1c1c22", 9], ["🧑‍🚀", "#2a4a8a", 9], ["🦸", "#c8102e", 10], ["🧜", "#0fb5a5", 10],
+  ["👑", "#f2b705", 11], ["🏆", "#e8b020", 11],
+].map(([e, bg, court], i) => ({ id: "a" + i, e, bg, court }));
+const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
+const avatarOpen = a => venueUnlocked(a.court);
+const avatarHTML = (id, cls = "") => { const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}">${a.e}</span>`; };
 
 // ───────────────────────── Renderer, sky, lights
 const canvas = $("gl"), stage = $("stage");
@@ -3003,6 +3228,155 @@ function updateCelebrationFx(f, dt, a) {
   return false;
 }
 
+// ───────────────────────── Clubhouse extras: avatar, lives, the cooler of cans, and opening a can
+const clockText = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+const topCourt = () => VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
+
+function renderHubExtras() {
+  tickLives();
+  $("avatarBtn").innerHTML = avatarHTML(career.avatar);
+  $("lives").textContent = career.lives;
+  $("livesTimer").textContent = career.lives < MAX_LIVES ? ` +1 in ${clockText(nextLifeIn())}` : career.lives === MAX_LIVES ? " FULL" : "";
+  const cooler = $("cooler"); cooler.innerHTML = "";
+  const slots = Math.max(COOLER_SIZE, career.cans.length);
+  for (let i = 0; i < slots; i++) {
+    const c = career.cans[i], b = document.createElement("button");
+    b.className = "cslot" + (c ? " full" : "");
+    b.setAttribute("aria-label", c ? `Open ${canById(c.id).name}` : "Empty cooler slot");
+    if (c) { const k = canById(c.id); b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i>`; b.onclick = () => openCanSheet(i); }
+    else b.onclick = () => showInfo(cansInfoHTML());
+    cooler.appendChild(b);
+  }
+}
+
+// ── Lives sheet
+function openLives() { renderLives(); $("livesSheet").hidden = false; }
+function renderLives() {
+  tickLives();
+  const price = lifePrice(), full = career.lives >= MAX_LIVES;
+  $("livesBody").innerHTML = `<div class="lifebig">🍹</div><h2>Lives: ${career.lives}</h2>
+    <div class="liferow">${Array.from({ length: Math.max(MAX_LIVES, career.lives) }, (_, i) => `<span class="${i < career.lives ? "" : "gone"}">🍹</span>`).join("")}</div>
+    <div class="muted">Each match uses a cocktail. Win and you get it back. One refills every hour, up to ${MAX_LIVES}.</div>
+    <div class="big">${full ? "Full!" : `Next one in ${clockText(nextLifeIn())}`}</div>
+    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 🍹 · 🪙 ${short(price)}</button>
+    <button class="btn blue" id="lifeStore">MORE IN THE STORE</button>
+    <button class="btn ghost" id="alertsBtn">🔔 Tell me when they're full: ${career.alerts ? "ON" : "OFF"}</button>
+    <button class="btn" id="livesClose">DONE</button>`;
+  $("lifeBuy").onclick = () => { if (career.coins < price) return; career.coins -= price; career.lives++; save(); scheduleLivesAlert(); sfx.tick(); renderLives(); renderHub(); };
+  $("lifeStore").onclick = () => { $("livesSheet").hidden = true; shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; };
+  $("alertsBtn").onclick = () => {
+    career.alerts = !career.alerts; save();
+    if (career.alerts) postNative("notify", JSON.stringify({ op: "permission" }));
+    scheduleLivesAlert(); renderLives();
+  };
+  $("livesClose").onclick = () => { $("livesSheet").hidden = true; };
+}
+$("livesBtn").onclick = openLives;
+
+// ── A small info sheet (can odds), reusing the lives sheet frame
+function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
+function cansInfoHTML() {
+  const total = CANS.reduce((t, c) => t + c.odds, 0);
+  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can (your cooler holds ${COOLER_SIZE}). There's a free can every day too. Rarer cans hold more prizes and better cards, but every can is a gamble.</div>
+    <div class="label">Chance per win</div>
+    ${CANS.map(c => `<div class="oddsrow"><i class="minican" style="background:linear-gradient(90deg, ${c.color}, ${c.rim} 40%, ${c.color})"></i><span>${c.name} · ${c.pulls} prizes</span><b>${(c.odds / total * 100).toFixed(c.odds < 1 ? 1 : 0)}%</b></div>`).join("")}`;
+}
+
+// ── Avatar picker
+function openAvatars() {
+  const grid = $("avatarGrid"); grid.innerHTML = "";
+  for (const a of AVATARS) {
+    const open = avatarOpen(a), b = document.createElement("button");
+    b.className = "avpick" + (career.avatar === a.id ? " on" : "") + (open ? "" : " avlock");
+    b.innerHTML = avatarHTML(a.id) + (open ? "" : `<small>🔒 Court ${a.court + 1}</small>`);
+    b.onclick = () => { if (!open) return; career.avatar = a.id; save(); openAvatars(); renderHubExtras(); };
+    grid.appendChild(b);
+  }
+  $("avatarSheet").hidden = false;
+}
+$("avatarBtn").onclick = openAvatars;
+$("avatarClose").onclick = () => { $("avatarSheet").hidden = true; };
+
+// ── Opening a can: tap, it shakes, the tab pops, a mist sprays out and the prizes come out one at a time.
+let canRun = null;
+function openCanSheet(i) {
+  const res = openCan(i); if (!res) return;
+  const { can } = res;
+  canRun = { ...res, step: "closed", shown: 0, mist: [] };
+  const body = $("canBody");
+  body.className = "can"; body.style.background = `linear-gradient(90deg, ${can.color}, ${can.rim} 35%, ${can.color} 70%)`;
+  body.style.setProperty("--rim", can.rim);
+  $("canLabel").innerHTML = can.name.replace(" ", "<br>");
+  $("canLabel").style.color = can.id === "white" || can.id === "platinum" ? "#1c2a44" : "#fff";
+  $("canTitle").textContent = can.name;
+  $("prize").className = "prize"; $("prizeList").innerHTML = "";
+  $("canHint").hidden = false; $("canHint").textContent = "Tap to open";
+  $("canDone").hidden = true;
+  $("canSheet").hidden = false;
+  renderHub();
+}
+$("canStage").onclick = e => {
+  if (!canRun || e.target.closest("button")) return;
+  initAudio();
+  if (canRun.step === "closed") {
+    canRun.step = "shaking"; $("canBody").classList.add("shake"); $("canHint").hidden = true; sfx.tick(); haptic("light");
+    setTimeout(popCan, 900);
+  } else if (canRun.step === "prizes") nextPrize();
+};
+function popCan() {
+  const R = canRun; if (!R) return;
+  const body = $("canBody"); body.classList.remove("shake"); body.classList.add("open");
+  sfx.whoosh(); haptic("big"); if (R.can.pulls >= 5) sfx.boom();
+  // The spray: more mist from rarer cans, tinted with the can's colour.
+  const cv = $("mist"), r = cv.getBoundingClientRect(); cv.width = r.width; cv.height = r.height;
+  const top = body.getBoundingClientRect(), x0 = top.left + top.width / 2 - r.left, y0 = top.top - r.top;
+  const n = 120 + R.can.pulls * 40;
+  for (let k = 0; k < n; k++) {
+    const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, v = 200 + Math.random() * 520;
+    R.mist.push({ x: x0 + (Math.random() - 0.5) * 30, y: y0, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 2 + Math.random() * 6, life: 1 + Math.random() * 1.2, max: 2.2, tint: Math.random() < 0.35 });
+  }
+  if (!R.anim) { R.last = performance.now(); R.anim = requestAnimationFrame(mistFrame); }
+  setTimeout(() => { body.classList.add("gone"); R.step = "prizes"; nextPrize(); }, 650);
+}
+function mistFrame(now) {
+  const R = canRun; if (!R) return;
+  const dt = Math.min(0.05, (now - R.last) / 1000); R.last = now;
+  const cv = $("mist"), c = cv.getContext("2d"); c.clearRect(0, 0, cv.width, cv.height);
+  for (const p of R.mist) {
+    p.vy += 260 * dt; p.vx *= Math.pow(0.35, dt); p.vy *= Math.pow(0.5, dt); p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; p.r += dt * 6;
+    if (p.life <= 0) continue;
+    c.globalAlpha = Math.min(1, p.life) * 0.55; c.fillStyle = p.tint ? R.can.rim : "#ffffff";
+    c.beginPath(); c.arc(p.x, p.y, p.r, 0, 7); c.fill();
+  }
+  R.mist = R.mist.filter(p => p.life > 0);
+  R.anim = R.mist.length ? requestAnimationFrame(mistFrame) : 0;
+}
+function prizeHTML(p) {
+  if (p.kind === "coins") return { pic: `<div class="pic">🪙</div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `🪙 ${short(p.n)}` };
+  if (p.kind === "life") return { pic: `<div class="pic">🍹</div>`, line: `<b>+1 life!</b><small>A bonus cocktail</small>`, chip: "🍹 +1" };
+  const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
+  const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];
+  const status = p.unlocked ? `<small class="new">UNLOCKED!</small>` : p.owned ? `<small>Already yours: +${p.coins.toLocaleString()} coins</small>` : `<small>${p.have} / ${p.need} cards</small>`;
+  return { pic: icon ? `<div class="pic">${icon}</div>` : `<canvas data-cat="${p.cat}" data-id="${p.id}" width="96" height="96"></canvas>`, line: `<b>${p.n} × ${esc(p.name)}</b><small>${kind} cards</small>${status}`, chip: `${icon || "🃏"} ${p.n}× ${esc(p.name)}${p.unlocked ? " ✨" : ""}` };
+}
+function nextPrize() {
+  const R = canRun; if (!R) return;
+  if (R.shown > 0) { const prev = R.prizes[R.shown - 1]; $("prizeList").insertAdjacentHTML("beforeend", `<span>${prizeHTML(prev).chip}</span>`); }
+  if (R.shown >= R.prizes.length) { $("prize").className = "prize"; $("canDone").hidden = false; R.step = "done"; return; }
+  const p = R.prizes[R.shown++], h = prizeHTML(p), el = $("prize");
+  el.className = "prize"; void el.offsetWidth;
+  el.innerHTML = h.pic + h.line; el.className = "prize show";
+  const cv = el.querySelector("canvas");
+  if (cv) {
+    const ctx = cv.getContext("2d");
+    if (cv.dataset.cat === "bag") paintBag(ctx, 96, 96, bagById(cv.dataset.id));
+    else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(cv.dataset.id)); ctx.drawImage(tmp, 24, 0, 48, 96); }
+  }
+  if (p.unlocked || p.kind === "life") { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
+  $("canHint").hidden = false; $("canHint").textContent = R.shown < R.prizes.length ? `Tap for the next prize (${R.prizes.length - R.shown} left)` : "Tap to finish";
+}
+$("canDone").onclick = () => { $("canSheet").hidden = true; canRun = null; renderHub(); };
+
 // ───────────────────────── Cameras
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);
 const tPos = new THREE.Vector3(), tLook = new THREE.Vector3();
@@ -3129,7 +3503,8 @@ const panel = $("panel");
 function renderScore() {
   const ir = inningResult();
   for (const p of [0, 1]) {
-    $("name" + p).textContent = S.names[p];
+    const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
+    $("name" + p).innerHTML = (S.kind === "career" ? avatarHTML(av, "sm") : "") + esc(S.names[p]);
     $("pts" + p).textContent = S.scores[p];
     $("live" + p).innerHTML = S.phase === "hub" ? "" : `Inning <b>${ir.raw[p]}</b>`;
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : ""}"></i>`).join("");
@@ -3274,18 +3649,23 @@ function renderInningSheet() {
       : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`;
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
-        <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${res.coins}</b></div></div>
+        <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${short(res.coins)}</b></div>
+        ${res.lifeLost ? `<div class="pill"><span class="ico" style="background:#ff7aa8">🍹</span><b>−1</b></div>` : ""}</div>
+        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
-    const O = S.online, R = O && O.rematch, who = esc(S.names[1]);
+    const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
     const again = !canAgain ? "NOT ENOUGH COINS"
+      : bot && S.botRematch === "asking" ? `WAITING FOR ${who}…`
+      : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
+      : bot ? `REMATCH · 🪙 ${short(fee)}`
       : !O ? "PLAY AGAIN" + (fee ? ` · 🪙 ${short(fee)}` : "")
       : O.gone ? `${who} left`
       : R.me ? `WAITING FOR ${who}…`
       : R.them ? `${who} WANTS A REMATCH! · 🪙 ${short(fee)}`
       : `REMATCH · 🪙 ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) ? "" : "disabled"}>${again}</button>
+      <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
@@ -3298,6 +3678,11 @@ function renderInningSheet() {
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => {
     if (S.online) { wantRematch(); return; }
+    if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
+      S.botRematch = "asking"; renderInningSheet();
+      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; renderInningSheet(); } }, 2000 + Math.random() * 5000);
+      return;
+    }
     sheet.hidden = true; const k = S.kind, v = S.venue; openHub();
     if (k === "career") playCourt(v); else startMatch(k, v);
   };
@@ -3348,10 +3733,10 @@ function openHub() {
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   const today = new Date().toDateString();
   if (career.lastDaily !== today) {
-    // Daily bonus: one buy-in at the highest court you've opened (at least 100).
-    const top = VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]), bonus = Math.max(100, top.fee);
-    career.lastDaily = today; career.coins += bonus; save(); renderHub();
-    const t = document.createElement("div"); t.className = "toast"; t.textContent = `Daily bonus 🪙 +${short(bonus)}`;
+    // Daily: a free can (mostly the low tiers), if there's room in the cooler.
+    const id = rollCan(DAILY_ODDS), t = document.createElement("div"); t.className = "toast";
+    if (giveCan(id, topCourt())) { career.lastDaily = today; save(); renderHub(); t.textContent = `Free daily can: ${canById(id).name} 🥫`; }
+    else t.textContent = "Cooler full! Open a can for today's free one";
     $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
   }
 }
@@ -3374,15 +3759,17 @@ function renderHub() {
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
   $("vNext").onclick = () => { hubVenue = Math.min(VENUES.length - 1, hubVenue + 1); renderHub(); };
   const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
-  play.disabled = !open || !afford;
-  play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
+  renderHubExtras();
+  const noLives = career.lives <= 0;
+  play.disabled = !open || (!afford && !noLives);
+  play.textContent = !open ? "LOCKED" : noLives ? `NO LIVES · 🍹 IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
 window.__gcPlayer = p => { const el = $("gcName"); el.hidden = !p; if (p) el.textContent = "👤 " + p.name; if (p) postScores(); };
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
-$("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
+$("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
 let shopTab = "bags";
 function swatch(item, kind) {
@@ -3402,7 +3789,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "lives" ? "+5 lives! 🍹" : item.kind === "can" ? `${item.title} is in your cooler!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
   renderShop(); renderHub();
 };
@@ -3410,6 +3797,12 @@ window.__restoreDone = count => { shopMsg = count ? "Purchases restored" : "Noth
 function buy(id) {
   if (!canBuy()) { shopMsg = "Purchases are available in the iPhone app."; renderShop(); return; }
   pendingBuy = id; shopMsg = ""; postNative("purchase", id); renderShop();
+}
+// Cards collected toward an item (from cans).
+function cardProgress(cat, it) {
+  if (it.premium || !it.price) return "";
+  const have = career.cards[cardKey(cat, it)] || 0, need = cardsNeeded(cat, it);
+  return `<div class="cardprog">🃏 ${have}/${need}<div class="progress"><i style="width:${have / need * 100}%"></i></div></div>`;
 }
 function storeHTML() {
   const price = it => storePrices[it.id] || it.price;
@@ -3425,6 +3818,12 @@ function storeHTML() {
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
   parts.push(`<div class="label">Coins</div>`);
   for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
+  parts.push(`<div class="label">Lives and cans</div>`);
+  for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
+    const ic = it.kind === "can" ? `<i class="minican" style="width:30px;height:46px;background:linear-gradient(90deg, ${canById(it.can).color}, ${canById(it.can).rim} 40%, ${canById(it.can).color})"></i>` : it.icon;
+    parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
+  }
+  parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can? (odds)</button></div>`);
   parts.push(`<div class="label">Exclusive sets</div>`);
   for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
     parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
@@ -3446,6 +3845,7 @@ function renderShop() {
       else { const tmp = document.createElement("canvas"); tmp.width = 80; tmp.height = 160; paintBoard(tmp.getContext("2d"), 80, 160, boardById(key)); ctx.drawImage(tmp, 20, 0, 40, 80); }
     }
     for (const b of list.querySelectorAll("[data-buy]")) b.onclick = () => buy(b.dataset.buy);
+    $("oddsBtn").onclick = () => showInfo(cansInfoHTML());
     $("restoreBtn").onclick = () => { if (!canBuy()) { shopMsg = "Restore works in the iPhone app."; renderShop(); return; } shopMsg = "Restoring…"; postNative("restore", ""); renderShop(); };
     return;
   }
@@ -3455,7 +3855,7 @@ function renderShop() {
     for (const it of all) {
       const owned = mine.includes(it.id), equipped = (isThrow ? career.trail : career.effect) === it.id;
       const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
-      row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div></div>`;
+      row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div>${owned ? "" : cardProgress(catByKey(isThrow ? "trail" : "fx"), it)}</div>`;
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
@@ -3482,7 +3882,7 @@ function renderShop() {
     const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
     row.appendChild(swatch(it, shopTab));
     const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<div class="muted">Board design</div>`;
-    const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}`;
+    const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}${owned ? "" : cardProgress(catByKey(shopTab === "bags" ? "bag" : "board"), it)}`;
     row.appendChild(info);
     const btn = document.createElement("button");
     if (it.premium && !owned) {
@@ -3589,6 +3989,7 @@ function frame(now) {
   updateBags(dt);
   updateAimRig(dt);
   updateOnline(dt);
+  if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); if (career.lives <= 0) renderHub(); }
   updatePreview(dt);
   updateFx(dt);
   venueTick(dt, S.time);
@@ -3602,7 +4003,7 @@ postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { ui, finishMatch, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
 </script>
 
 </body>

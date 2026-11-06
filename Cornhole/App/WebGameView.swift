@@ -25,6 +25,7 @@ struct WebGameView: UIViewRepresentable {
         controller.add(handler, name: "score")
         controller.add(handler, name: "leaderboards")
         controller.add(handler, name: "net")
+        controller.add(handler, name: "notify")
         if let saved = CareerStore.load() {
             controller.addUserScript(WKUserScript(source: "window.__nativeCareer = \(saved);",
                                                   injectionTime: .atDocumentStart, forMainFrameOnly: true))
@@ -82,6 +83,8 @@ struct WebGameView: UIViewRepresentable {
                 gameCenter.showLeaderboards()
             case "net":
                 if let json = message.body as? String { gameCenter.net(json) }
+            case "notify":
+                if let json = message.body as? String { LivesAlert.handle(json) }
             default:
                 break
             }

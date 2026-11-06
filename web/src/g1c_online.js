@@ -9,6 +9,7 @@ let search = null; // { vi, t, host, name, hello, setup }
 const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutorialDone;
 
 function playCourt(vi) {
+  tickLives(); if (career.lives <= 0) { openLives(); return; }
   if (!canGoOnline()) { startMatch("career", vi); return; }
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
@@ -37,7 +38,7 @@ window.__net = m => {
   if (m.t === "matched") {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
-    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect });
+    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
       netSend({ t: "setup", ...search.setup });
@@ -65,7 +66,7 @@ function tryStartOnline() {
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
   startMatch("career", s.vi, {
     ...s.setup, name: s.name, host: s.host,
-    bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"),
+    bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"), avatar: known(AVATARS, h.avatar, "a0"),
   });
 }
 function opponentLeft() {
@@ -82,6 +83,7 @@ function opponentLeft() {
 function wantRematch() {
   const O = S.online; if (!O || O.gone || O.rematch.me) return;
   if (career.coins < venue().fee && !houseCovers(S.venue)) return;
+  if (career.lives <= 0) { openLives(); return; }
   O.rematch.me = true; netSend({ t: "rematch" }); renderInningSheet(); tryRematch();
 }
 function tryRematch() {
@@ -93,9 +95,10 @@ function tryRematch() {
     netSend({ t: "resetup", ...R.setup });
   }
   if (!R.setup) return;
-  const { name, bag, trail, effect, host } = O;
+  if (career.lives <= 0) { O.gone = true; renderInningSheet(); return; }
+  const { name, bag, trail, effect, host, avatar } = O;
   $("inningSheet").hidden = true;
-  startMatch("career", S.venue, { ...R.setup, name, bag, trail, effect, host });
+  startMatch("career", S.venue, { ...R.setup, name, bag, trail, effect, host, avatar });
 }
 function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net", JSON.stringify({ op: "leave" })); } }
 
