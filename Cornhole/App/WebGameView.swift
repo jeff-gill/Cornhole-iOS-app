@@ -129,22 +129,36 @@ final class BundleSchemeHandler: NSObject, WKURLSchemeHandler {
     }
 }
 
-/// The player's career (coins, stars, gear) as the game's own JSON, kept in UserDefaults.
+/// The player's career (coins, stars, gear) as the game's own JSON. It is kept on the device (UserDefaults) and,
+/// when the app has the iCloud key-value capability, in the player's iCloud too, so it follows their Apple ID to a new
+/// phone with no sign-in screen. Whichever copy was saved most recently wins.
 enum CareerStore {
     private static let key = "career.v1"
+    private static var cloud: NSUbiquitousKeyValueStore { .default }
 
     static func load() -> String? {
-        guard let json = UserDefaults.standard.string(forKey: key), isValidJSONObject(json) else { return nil }
-        return json
+        cloud.synchronize()
+        let local = UserDefaults.standard.string(forKey: key).flatMap(validated)
+        let remote = cloud.string(forKey: key).flatMap(validated)
+        switch (local, remote) {
+        case let (l?, r?): return savedAt(r) > savedAt(l) ? r : l
+        default: return local ?? remote
+        }
     }
 
     static func save(_ json: String) {
-        guard isValidJSONObject(json) else { return }
+        guard validated(json) != nil else { return }
         UserDefaults.standard.set(json, forKey: key)
+        if json.utf8.count < 900_000 { cloud.set(json, forKey: key) } // iCloud key-value storage holds up to 1 MB
     }
 
-    private static func isValidJSONObject(_ json: String) -> Bool {
-        guard let data = json.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data) else { return false }
-        return object is [String: Any]
+    private static func validated(_ json: String) -> String? {
+        guard let data = json.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data), object is [String: Any] else { return nil }
+        return json
+    }
+
+    private static func savedAt(_ json: String) -> Double {
+        guard let data = json.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return 0 }
+        return (object["savedAt"] as? NSNumber)?.doubleValue ?? 0
     }
 }

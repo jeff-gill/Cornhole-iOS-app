@@ -9,10 +9,10 @@ import WebKit
 /// Product IDs must match those created in App Store Connect (and in a StoreKit configuration file for testing).
 final class StoreManager {
     static let productIDs = [
-        "com.jeffgill.cornhole.coins.1000",
-        "com.jeffgill.cornhole.coins.6000",
-        "com.jeffgill.cornhole.coins.15000",
-        "com.jeffgill.cornhole.coins.40000",
+        "com.jeffgill.cornhole.coins.small",
+        "com.jeffgill.cornhole.coins.medium",
+        "com.jeffgill.cornhole.coins.large",
+        "com.jeffgill.cornhole.coins.huge",
         "com.jeffgill.cornhole.starterpack",
         "com.jeffgill.cornhole.set.galaxy",
         "com.jeffgill.cornhole.set.inferno",

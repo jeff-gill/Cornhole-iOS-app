@@ -178,28 +178,26 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .pill .ico { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 16px; }
 .pill b { font-family: var(--font-display); font-size: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .hubbottom { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 560px; margin: 0 auto; }
-.lookbtn { position: absolute; top: -50px; right: 0; padding: 7px 14px; border-radius: 999px; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); color: #fff; font-family: var(--font-display); font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
-.lookbar { display: none; }
-body.looking #hub { background: none; touch-action: none; cursor: grab; }
-body.looking #hub .hubbottom { display: none; }
-body.looking .lookbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 6px; }
-.lookhint { font-family: var(--font-display); font-size: 17px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.5); animation: bob 1.6s ease-in-out infinite; }
-.lookbar .btn { min-width: 110px; }
+.courtstars { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; margin-top: 8px; font-family: var(--font-display); font-size: 15px; }
+.courtstars .progress { margin: 0; }
+.courtstars .muted { font-family: var(--font-body, inherit); font-size: 12px; }
+.pausebars { display: inline-flex; gap: 4px; align-items: center; justify-content: center; } .pausebars i { width: 5px; height: 16px; border-radius: 2px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.35); }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
-.venue .facts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.venue .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+.venue .facts .chip { padding: 4px 6px; min-width: 0; } .venue .facts .chip b { font-size: 14px; white-space: nowrap; }
 .venue .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); font-family: var(--font-display); font-size: 20px; box-shadow: 0 3px 0 rgba(0,0,0,.35); z-index: 2; }
 .venue .nav:disabled { opacity: .3; }
 .venue .prev { left: -14px; } .venue .next { right: -14px; }
-.locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 22px; pointer-events: none; }
+.locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 20px; line-height: 1.25; pointer-events: none; }
 .hubrow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 .btn.small { font-size: 15px; padding: 10px 4px; }
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff1a8); }
 /* Shop */
-.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
-.tabs button { border: 0; background: none; padding: 9px 2px; border-radius: 12px; font-family: var(--font-display); font-size: 15px; font-weight: 400; color: var(--ink-dim); }
+.tabs { display: grid; grid-template-columns: 0.85fr 1fr 0.95fr 1.3fr 0.95fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
+.tabs button { border: 0; background: none; padding: 9px 1px; border-radius: 12px; font-family: var(--font-display); font-size: 13px; font-weight: 400; color: var(--ink-dim); }
 .tabs button.on { background: #fff; color: var(--deck); }
 .items { display: flex; flex-direction: column; gap: 10px; }
 .item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; background: rgba(255,255,255,.06); border: 3px solid rgba(255,255,255,.12); border-radius: 16px; padding: 10px; }
@@ -316,7 +314,7 @@ body.looking .lookbar { display: flex; align-items: center; justify-content: spa
 
 <div id="app">
   <header class="score">
-    <button class="roundbtn" id="menuBtn" aria-label="Pause">⏸</button>
+    <button class="roundbtn" id="menuBtn" aria-label="Pause"><span class="pausebars"><i></i><i></i></span></button>
     <div class="card p0" id="card0"><div class="name" id="name0">You</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div></div>
     <div class="inning"><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
     <div class="card p1" id="card1"><div class="name" id="name1">CPU</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div></div>
@@ -354,13 +352,12 @@ body.looking .lookbar { display: flex; align-items: center; justify-content: spa
     </div>
     <div class="row" style="justify-content:center;gap:22px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button></div>
   </div>
-  <div class="lookbar"><span class="lookhint">👆 Drag to look around</span><button class="btn small" id="lookDone">DONE</button></div>
 </div>
 
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
     <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>
-    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="effects">EFFECTS</button><button data-tab="store">STORE</button></div>
+    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="throw">THROW</button><button data-tab="hole">CORNHOLE</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn" id="shopClose">DONE</button>
   </div>

@@ -3,10 +3,10 @@
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);
 const tPos = new THREE.Vector3(), tLook = new THREE.Vector3();
 let tFov = 50;
-// Clubhouse preview: hubYaw is the direction the mid-court camera faces; in "look around" mode you can drag it.
-let hubYaw = 0, hubLook = false, yawDrag = null;
-function setLook(on) { hubLook = on; yawDrag = null; document.body.classList.toggle("looking", on); }
+// Clubhouse: hubYaw is where the venue orbit camera is.
+let hubYaw = 0;
 function camMode() {
+  if (S.preview) return "preview";
   if (S.phase === "hub") return "intro";
   if (S.phase === "aiming") return "aim";
   if (S.phase === "throw") return "throw";
@@ -21,15 +21,26 @@ function camMode() {
 function updateCamera(dt) {
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
-  if (mode === "intro") {
-    // Standing between the boards at mid-court, near the ground, turning slowly on the spot: one board, the scenery
-    // around the edge, then the other board. In the clubhouse it tilts down so the board shows above the
-    // venue card; "Look around" hides the card and levels out to show the scenery.
-    if (!yawDrag) hubYaw += dt * 0.12;
-    const cz = -FY / 2 - 1, pitch = hubLook ? -0.1 : -0.42;
-    tPos.set(0, 3.2, cz);
-    tLook.set(Math.sin(hubYaw) * -10, 3.2 + Math.tan(pitch) * 10, cz - Math.cos(hubYaw) * 10);
-    fov = narrow ? (hubLook ? 70 : 64) : 55;
+  if (mode === "preview") {
+    // Shop previews: a close look at the hole, or a side-on look at a throw.
+    if (S.preview.kind === "hole") { tPos.set(1.6, 4.2, -(FY - 5.5)); tLook.set(0, 0.6, -(HOLE.y + 0.5)); }
+    else { tPos.set(2.5, 7.5, 9); tLook.set(0, 1.2, -17); } // behind the thrower: the whole flight and its trail
+    fov = narrow ? 58 : 46; k = 4;
+  } else if (mode === "intro") {
+    // A slow orbit outside the court looking in: both boards stay in view while the scenery turns behind them. The
+    // camera stays low enough to see the surroundings, pulls back and widens over the sides (a phone is narrow and the
+    // court is 31 ft long), and aims so the court rides above the clubhouse card.
+    hubYaw += dt * 0.12;
+    const a = hubYaw, side = Math.sin(a) ** 2, cz = -FY / 2 - 1;
+    let d = narrow ? 38 + 16 * side : 30 + 6 * side;
+    const wall = VENUE_LOOK[venueId]?.wall; // stay inside the stands
+    if (wall) d = Math.min(d, wall[0] / Math.max(Math.abs(Math.sin(a)), 0.01), wall[1] / Math.max(Math.abs(Math.cos(a)), 0.01));
+    const h = Math.min(narrow ? 8 + 4 * side : 9, d * 0.2); // closer in (inside the stands) means lower, so the crowd shows
+    fov = narrow ? 50 + 20 * side : 44;
+    tPos.set(Math.sin(a) * d, h, cz + Math.cos(a) * d);
+    const below = (narrow ? (wall ? 0.3 : 0.55) : 0.2) * fov / 2 * Math.PI / 180; // put the court centre this far above the screen centre
+    const drop = d * Math.tan(Math.atan2(h, d) + below) - h;
+    tLook.set(0, -drop, cz);
     k = 1.5;
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
@@ -262,7 +273,7 @@ function renderInningSheet() {
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
-      <button class="swipehint" id="nextBtn">Swipe away for inning ${S.inning + 1} <span>⇡</span></button>`;
+      <button class="swipehint" id="nextBtn">Tap or swipe up for inning ${S.inning + 1} <span>⇡</span></button>`;
   }
   $("inningBody").innerHTML = body;
   const wrap = $("inningBody").querySelector(".card-wrap");
@@ -274,7 +285,7 @@ function renderInningSheet() {
   body0.style.transition = "none"; body0.style.transform = ""; body0.style.opacity = "";
   sheet.hidden = false;
 }
-// The between-innings scorecard stays up until it's swiped away (any direction).
+// The between-innings scorecard stays up until it is tapped or swiped away.
 function dismissScorecard(dx, dy) {
   const el = $("inningBody"), sheet = $("inningSheet");
   const len = Math.hypot(dx, dy) || 1;
@@ -300,6 +311,7 @@ function dismissScorecard(dx, dy) {
     if (!start) return;
     const dx = e.clientX - start.x, dy = e.clientY - start.y; start = null;
     if (Math.hypot(dx, dy) > 70) dismissScorecard(dx, dy);
+    else if (Math.hypot(dx, dy) < 12) dismissScorecard(0, -1); // a tap sends it up and away
     else { el.style.transition = "transform .2s, opacity .2s"; el.style.transform = ""; el.style.opacity = ""; }
   };
   sheet.addEventListener("pointerup", end);
@@ -312,43 +324,38 @@ function openHub() {
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
-  setLook(false); renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
+  renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   const today = new Date().toDateString();
   if (career.lastDaily !== today) {
-    career.lastDaily = today; career.coins += 100; save(); renderHub();
-    const t = document.createElement("div"); t.className = "toast"; t.textContent = "Daily bonus 🪙 +100";
+    // Daily bonus: one buy-in at the highest court you've opened (at least 100).
+    const top = VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]), bonus = Math.max(100, top.fee);
+    career.lastDaily = today; career.coins += bonus; save(); renderHub();
+    const t = document.createElement("div"); t.className = "toast"; t.textContent = `Daily bonus 🪙 +${short(bonus)}`;
     $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
   }
 }
+// 1,500 → 1.5K, 2,000,000 → 2M
+function short(n) { if (n >= 1e6) return +(n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M"; if (n >= 1e4) return +(n / 1e3).toFixed(n % 1e3 ? 1 : 0) + "K"; return n.toLocaleString(); }
 function renderHub() {
   $("coins").textContent = career.coins.toLocaleString();
   $("stars").textContent = career.stars;
-  const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), nextV = VENUES.find(x => x.stars > career.stars);
+  const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
   buildVenue(v.id); setBoardDesign(career.board);
   venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
-  const prog = nextV ? `<div class="muted" style="margin-top:8px">Next venue: ${esc(nextV.name)} at ${nextV.stars} ⭐</div><div class="progress"><i style="width:${Math.min(100, career.stars / nextV.stars * 100)}%"></i></div>` : "";
-  $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous venue">‹</button>
-    <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next venue">›</button>
-    <div class="lvlno">Level ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Entry", houseCovers(hubVenue) ? "On the house" : "🪙 " + v.fee.toLocaleString())}${chip("Winner takes", "🪙 " + pot(v).toLocaleString())}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]} mph`)}${chip("Boards", v.speed.replace(" boards", ""))}</div>
-    ${prog}
-    ${open ? "" : `<div class="locked">🔒 ${v.stars} ⭐ to unlock</div>`}
-    <button class="lookbtn" id="lookBtn">👀 Look around</button>`;
-  $("lookBtn").onclick = () => setLook(true);
+  const prev = hubVenue ? VENUES[hubVenue - 1] : null;
+  const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? "to open Court " + (hubVenue + 2) : "to finish the tour"}</span></div>`;
+  $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous court">‹</button>
+    <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next court">›</button>
+    <div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : "🪙 " + short(v.fee))}${chip("Payout", "🪙 " + short(pot(v)))}${chip("Win / Loss", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+    ${open ? track : ""}
+    ${open ? "" : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}`;
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
   $("vNext").onclick = () => { hubVenue = Math.min(VENUES.length - 1, hubVenue + 1); renderHub(); };
   const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   play.disabled = !open || !afford;
-  play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${v.fee.toLocaleString()}`;
+  play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
   $("passBtn").disabled = !open;
-}
-$("lookDone").onclick = () => setLook(false);
-{
-  const hub = $("hub");
-  hub.addEventListener("pointerdown", e => { if (!hubLook || e.target.closest("button")) return; yawDrag = { x: e.clientX, yaw: hubYaw }; hub.setPointerCapture(e.pointerId); });
-  hub.addEventListener("pointermove", e => { if (yawDrag) hubYaw = yawDrag.yaw - (e.clientX - yawDrag.x) * 0.008; });
-  const end = () => { yawDrag = null; };
-  hub.addEventListener("pointerup", end); hub.addEventListener("pointercancel", end);
 }
 $("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
@@ -392,12 +399,10 @@ function storeHTML() {
   const parts = [];
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
   parts.push(`<div class="label">Coins</div>`);
-  for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${it.coins.toLocaleString()} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
+  for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Exclusive sets</div>`);
   for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
-    const trails = it.id === PID("trails") && career.purchases.includes(it.id)
-      ? `<div class="chiprow">${TRAILS.map(t => `<button data-trail="${t.id}" class="${career.trail === t.id ? "on" : ""}">${t.name}</button>`).join("")}</div>` : "";
-    parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}${trails}</div>${btn(it)}</div>`);
+    parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
   }
   if (career.purchases.includes(starter.id)) parts.push(`<div class="storeitem"><div class="ic">⭐</div><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div></div>${btn(starter)}</div>`);
   parts.push(`<div class="storenote">No ads, ever. Coins and items stay on this device.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
@@ -416,27 +421,33 @@ function renderShop() {
       else { const tmp = document.createElement("canvas"); tmp.width = 80; tmp.height = 160; paintBoard(tmp.getContext("2d"), 80, 160, boardById(key)); ctx.drawImage(tmp, 20, 0, 40, 80); }
     }
     for (const b of list.querySelectorAll("[data-buy]")) b.onclick = () => buy(b.dataset.buy);
-    for (const b of list.querySelectorAll("[data-trail]")) b.onclick = () => { career.trail = b.dataset.trail; save(); renderShop(); };
     $("restoreBtn").onclick = () => { if (!canBuy()) { shopMsg = "Restore works in the iPhone app."; renderShop(); return; } shopMsg = "Restoring…"; postNative("restore", ""); renderShop(); };
     return;
   }
-  if (shopTab === "effects") {
-    for (const it of EFFECTS) {
-      const owned = career.effects.includes(it.id), equipped = career.effect === it.id;
+  if (shopTab === "throw" || shopTab === "hole") {
+    const isThrow = shopTab === "throw", all = isThrow ? TRAILS : EFFECTS, mine = isThrow ? career.trails : career.effects;
+    list.insertAdjacentHTML("beforeend", `<div class="label">${isThrow ? "Throw effects: a trail behind your bag" : "Cornhole effects: when your bag drops in"}</div>`);
+    for (const it of all) {
+      const owned = mine.includes(it.id), equipped = (isThrow ? career.trail : career.effect) === it.id;
       const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
       row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div></div>`;
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      main.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
+      main.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${short(it.price)}` : "FREE";
       main.disabled = equipped || (!owned && career.coins < it.price);
-      main.onclick = () => { if (!owned) { career.coins -= it.price; career.effects.push(it.id); } career.effect = it.id; save(); renderShop(); renderHub(); };
-      const prev = document.createElement("button"); prev.className = "btn ghost"; prev.textContent = "▶ Preview";
-      prev.onclick = () => { // play it on the board behind the shop
-        $("shop").hidden = true; $("hub").hidden = true; initAudio(); sfx.hole(); celebrate(0, it.id);
-        setTimeout(() => { $("hub").hidden = S.phase !== "hub"; $("shop").hidden = false; }, 2300);
+      main.onclick = () => {
+        if (!owned) { career.coins -= it.price; mine.push(it.id); }
+        if (isThrow) career.trail = it.id; else career.effect = it.id;
+        save(); renderShop(); renderHub();
       };
-      btns.append(main, prev); row.appendChild(btns); list.appendChild(row);
+      btns.appendChild(main);
+      if (it.id !== "none") {
+        const prev = document.createElement("button"); prev.className = "btn ghost"; prev.textContent = "▶ Preview";
+        prev.onclick = () => previewEffect(isThrow ? "throw" : "hole", it.id);
+        btns.appendChild(prev);
+      }
+      row.appendChild(btns); list.appendChild(row);
     }
     return;
   }
@@ -465,6 +476,35 @@ function renderShop() {
     row.appendChild(btn); list.appendChild(row);
   }
 }
+// Shop previews: hide the shop, play the effect where you can see it, then come back.
+function previewEffect(kind, id) {
+  initAudio();
+  $("shop").hidden = true; $("hub").hidden = true; clearBagMeshes();
+  S.preview = { kind, id, t: 0, mesh: null };
+  if (kind === "hole") setTimeout(() => { sfx.hole(); celebrate(0, id); }, 450);
+  else {
+    const m = new THREE.Mesh(bagGeo, bagMaterial(bagById(career.bag))); m.castShadow = true; scene.add(m);
+    S.preview.mesh = m; sfx.whoosh();
+  }
+}
+function updatePreview(dt) {
+  const P = S.preview; if (!P) return;
+  P.t += dt;
+  if (P.mesh) { // a lob from the left box into the hole, trailing the effect
+    const k = Math.min(1, Math.max(0, (P.t - 0.35) / 1.3)), o = release(0);
+    const x = lerp(o.x, HOLE.x, k), y = lerp(o.y, HOLE.y, k), z = lerp(o.z, plane(HOLE.y), k) + 7 * k * (1 - k);
+    P.mesh.position.copy(W(x, y, z + 0.1)); P.mesh.rotation.set(0.2, -k * 6, 0.1);
+    P.mesh.visible = k < 1;
+    if (k > 0 && k < 1) trailPuff(P.mesh.position, P.id, 0);
+    if (k >= 1 && !P.landed) { P.landed = true; sfx.hole(); }
+  }
+  if (P.t > (P.mesh ? 2.4 : 3)) {
+    if (P.mesh) { scene.remove(P.mesh); P.mesh.material.dispose(); }
+    S.preview = null;
+    if (S.phase === "hub") $("hub").hidden = false;
+    $("shop").hidden = false;
+  }
+}
 $("shopBtn").onclick = () => { shopMsg = ""; renderShop(); $("shop").hidden = false; };
 $("shopClose").onclick = () => { $("shop").hidden = true; renderHub(); };
 for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { shopTab = b.dataset.tab; renderShop(); };
@@ -478,7 +518,7 @@ $("menuBtn").onclick = () => {
 };
 $("resumeBtn").onclick = () => { $("pause").hidden = true; S.phase = pausedPhase || "aiming"; ui(); };
 $("forfeitBtn").onclick = () => {
-  if (S.kind === "career") { career.stars = Math.max(0, career.stars - starsForLoss(S.venue)); career.losses++; save(); }
+  if (S.kind === "career") { addCourtStars(S.venue, -starsForLoss(S.venue)); career.losses++; save(); }
   openHub();
 };
 function renderSoundButtons() {
@@ -523,6 +563,7 @@ function frame(now) {
   if (finishMarker.visible) finishMarker.scale.setScalar(1 + 0.08 * Math.sin(S.time * 4));
   updateBags(dt);
   updateAimRig(dt);
+  updatePreview(dt);
   updateFx(dt);
   venueTick(dt, S.time);
   updateCamera(dt);
@@ -534,4 +575,4 @@ resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { setLook, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };

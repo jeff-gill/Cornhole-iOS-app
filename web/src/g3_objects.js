@@ -196,7 +196,7 @@ function updateBags(dt) {
     m.scale.set(1 + 0.25 * sq, 1 - 0.45 * sq, 1 + 0.25 * sq);
     if (b.state === "flying") {
       m.position.copy(W(b.x, b.y, b.z));
-      if (b.owner === 0 && career.trail !== "none") trailPuff(m.position, career.trail);
+      if (b.owner === 0 && S.kind === "career" && career.trail !== "none") trailPuff(m.position, career.trail, 0);
       m.rotation.set(0.2 * Math.sin(b.angle * 1.7), -b.angle, 0.15 * Math.cos(b.angle * 1.3));
     } else if (b.state === "inHole") {
       v.dropT += dt;
@@ -315,14 +315,31 @@ function dust(b, color) {
   flatOnBoard(ring, b); ring.position.y += 0.01; scene.add(ring);
   fx.push({ o: ring, life: 0.45, max: 0.45, kind: "ring" });
 }
-// Store "Bag Trails": a few glowing puffs per frame behind your bag in flight.
-function trailPuff(pos, kind) {
-  for (let k = 0; k < 2; k++) {
-    const col = kind === "fire" ? new THREE.Color().setHSL(0.02 + Math.random() * 0.09, 1, 0.55) : kind === "rainbow" ? new THREE.Color().setHSL((S.time * 0.8 + k * 0.1) % 1, 1, 0.6) : new THREE.Color(Math.random() < 0.5 ? 0xffffff : 0xffe27a);
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
-    s.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2));
-    s.scale.setScalar(kind === "sparkle" ? 0.25 : 0.4); scene.add(s);
-    fx.push({ o: s, vel: new THREE.Vector3(0, kind === "fire" ? 0.8 : 0.1, 0), life: 0.5, max: 0.5, grow: kind === "fire" ? 0.4 : 0.1, kind: "dust" });
+// Throw effects: a few particles per frame behind your bag in flight. Each trail: colour, texture, size, drift and glow.
+const TRAIL_FX = {
+  smoke: { n: 1, col: () => new THREE.Color().setHSL(0, 0, 0.75 + Math.random() * 0.2), size: 0.45, rise: 0.4, grow: 1.4, life: 0.9, add: false, op: 0.5 },
+  sparkle: { n: 2, col: () => new THREE.Color(Math.random() < 0.5 ? 0xffffff : 0xffe27a), size: 0.22, rise: 0.1, life: 0.5, add: true },
+  bubbles: { n: 1, tex: () => fxTex.bubble, col: () => new THREE.Color(0xffffff), size: 0.22, rise: 0.8, life: 1.1, add: false, jitter: 0.35 },
+  confetti: { n: 2, col: (o) => new THREE.Color([COL.p[o], COL.gold, "#ffffff", COL.pl[o]][Math.floor(Math.random() * 4)]), size: 0.12, rise: -1.2, life: 0.9, add: false, jitter: 0.3 },
+  hearts: { n: 1, tex: () => fxTex.heart, col: () => new THREE.Color().setHSL(0.93 + Math.random() * 0.06, 1, 0.6), size: 0.3, rise: 0.5, life: 0.9, add: false },
+  fire: { n: 2, col: () => new THREE.Color().setHSL(0.02 + Math.random() * 0.09, 1, 0.55), size: 0.4, rise: 0.8, grow: 0.4, life: 0.5, add: true },
+  ice: { n: 2, tex: () => (Math.random() < 0.4 ? fxTex.star : dotTex), col: () => new THREE.Color().setHSL(0.55, 0.8, 0.75 + Math.random() * 0.2), size: 0.22, rise: -0.3, life: 0.7, add: true },
+  stars: { n: 1, tex: () => fxTex.star, col: () => new THREE.Color(Math.random() < 0.5 ? 0xffe27a : 0xffffff), size: 0.3, rise: 0, life: 0.7, add: true, jitter: 0.3 },
+  lightning: { n: 2, col: () => new THREE.Color(Math.random() < 0.7 ? 0xbfe6ff : 0xffffff), size: 0.2, rise: 0, life: 0.25, add: true, jitter: 0.5, flicker: true },
+  neon: { n: 2, col: (o) => new THREE.Color(COL.pl[o]), size: 0.35, rise: 0, life: 0.6, add: true, jitter: 0.04 },
+  rainbow: { n: 2, col: (o, k) => new THREE.Color().setHSL((S.time * 0.8 + k * 0.1) % 1, 1, 0.6), size: 0.4, rise: 0.1, grow: 0.1, life: 0.5, add: true },
+  galaxy: { n: 3, tex: () => (Math.random() < 0.3 ? fxTex.star : dotTex), col: () => new THREE.Color().setHSL(0.68 + Math.random() * 0.15, 0.9, 0.55 + Math.random() * 0.3), size: 0.3, rise: 0, life: 0.8, add: true, jitter: 0.3 },
+  gold: { n: 1, tex: () => (Math.random() < 0.5 ? fxTex.coin : dotTex), col: () => new THREE.Color(Math.random() < 0.5 ? 0xffffff : 0xffd24a), size: 0.22, rise: -2.5, life: 0.9, add: false, jitter: 0.2 },
+  comet: { n: 3, col: (o, k) => new THREE.Color().setHSL(0.08 - k * 0.03, 1, 0.7 - k * 0.12), size: 0.6, rise: 0, grow: -0.6, life: 0.7, add: true, jitter: 0.08 },
+};
+function trailPuff(pos, kind, owner = 0) {
+  const t = TRAIL_FX[kind]; if (!t) return;
+  for (let k = 0; k < t.n; k++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t.tex ? t.tex() : dotTex, color: t.col(owner, k), blending: t.add ? THREE.AdditiveBlending : THREE.NormalBlending, transparent: true, depthWrite: false, opacity: t.op ?? 1 }));
+    const j = t.jitter ?? 0.1;
+    s.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * 2 * j, (Math.random() - 0.5) * 2 * j, (Math.random() - 0.5) * 2 * j));
+    s.scale.setScalar(t.size * (0.7 + Math.random() * 0.6)); scene.add(s);
+    fx.push({ o: s, vel: new THREE.Vector3((Math.random() - 0.5) * 0.3, t.rise, (Math.random() - 0.5) * 0.3), life: t.life, max: t.life, grow: t.grow ?? 0.1, s0: s.scale.x, op: t.op ?? 1, flicker: !!t.flicker, kind: "trail" });
   }
 }
 const confettiGeo = new THREE.PlaneGeometry(0.09, 0.05);
@@ -411,6 +428,7 @@ function updateFx(dt) {
   for (let i = fx.length - 1; i >= 0; i--) {
     const f = fx[i]; f.life -= dt; const a = Math.max(0, f.life / f.max);
     if (f.kind === "dust") { f.o.position.addScaledVector(f.vel, dt); f.vel.multiplyScalar(Math.pow(0.05, dt)); f.o.scale.setScalar(0.12 + (1 - a) * f.grow); f.o.material.opacity = 0.75 * a; }
+    else if (f.kind === "trail") { f.o.position.addScaledVector(f.vel, dt); f.o.scale.setScalar(Math.max(0.01, f.s0 * (1 + (1 - a) * f.grow))); f.o.material.opacity = f.op * a * (f.flicker && Math.random() < 0.4 ? 0.2 : 1); f.o.material.rotation += dt * 2; }
     else if (f.kind === "ring") { const s = 1 + (1 - a) * 2.6; f.o.scale.set(s, s, s); f.o.material.opacity = 0.7 * a; }
     else if (f.kind === "glow") { f.o.scale.setScalar(0.8 + (1 - a) * 3); f.o.material.opacity = a; }
     else if (f.kind === "flash") { f.o.scale.setScalar(4 + (1 - a) * 10); f.o.material.opacity = a; }

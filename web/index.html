@@ -186,28 +186,26 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .pill .ico { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 16px; }
 .pill b { font-family: var(--font-display); font-size: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .hubbottom { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 560px; margin: 0 auto; }
-.lookbtn { position: absolute; top: -50px; right: 0; padding: 7px 14px; border-radius: 999px; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); color: #fff; font-family: var(--font-display); font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
-.lookbar { display: none; }
-body.looking #hub { background: none; touch-action: none; cursor: grab; }
-body.looking #hub .hubbottom { display: none; }
-body.looking .lookbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 6px; }
-.lookhint { font-family: var(--font-display); font-size: 17px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.5); animation: bob 1.6s ease-in-out infinite; }
-.lookbar .btn { min-width: 110px; }
+.courtstars { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; margin-top: 8px; font-family: var(--font-display); font-size: 15px; }
+.courtstars .progress { margin: 0; }
+.courtstars .muted { font-family: var(--font-body, inherit); font-size: 12px; }
+.pausebars { display: inline-flex; gap: 4px; align-items: center; justify-content: center; } .pausebars i { width: 5px; height: 16px; border-radius: 2px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.35); }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
-.venue .facts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.venue .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+.venue .facts .chip { padding: 4px 6px; min-width: 0; } .venue .facts .chip b { font-size: 14px; white-space: nowrap; }
 .venue .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); font-family: var(--font-display); font-size: 20px; box-shadow: 0 3px 0 rgba(0,0,0,.35); z-index: 2; }
 .venue .nav:disabled { opacity: .3; }
 .venue .prev { left: -14px; } .venue .next { right: -14px; }
-.locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 22px; pointer-events: none; }
+.locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 20px; line-height: 1.25; pointer-events: none; }
 .hubrow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 .btn.small { font-size: 15px; padding: 10px 4px; }
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff1a8); }
 /* Shop */
-.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
-.tabs button { border: 0; background: none; padding: 9px 2px; border-radius: 12px; font-family: var(--font-display); font-size: 15px; font-weight: 400; color: var(--ink-dim); }
+.tabs { display: grid; grid-template-columns: 0.85fr 1fr 0.95fr 1.3fr 0.95fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
+.tabs button { border: 0; background: none; padding: 9px 1px; border-radius: 12px; font-family: var(--font-display); font-size: 13px; font-weight: 400; color: var(--ink-dim); }
 .tabs button.on { background: #fff; color: var(--deck); }
 .items { display: flex; flex-direction: column; gap: 10px; }
 .item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; background: rgba(255,255,255,.06); border: 3px solid rgba(255,255,255,.12); border-radius: 16px; padding: 10px; }
@@ -324,7 +322,7 @@ body.looking .lookbar { display: flex; align-items: center; justify-content: spa
 
 <div id="app">
   <header class="score">
-    <button class="roundbtn" id="menuBtn" aria-label="Pause">⏸</button>
+    <button class="roundbtn" id="menuBtn" aria-label="Pause"><span class="pausebars"><i></i><i></i></span></button>
     <div class="card p0" id="card0"><div class="name" id="name0">You</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div></div>
     <div class="inning"><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
     <div class="card p1" id="card1"><div class="name" id="name1">CPU</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div></div>
@@ -362,13 +360,12 @@ body.looking .lookbar { display: flex; align-items: center; justify-content: spa
     </div>
     <div class="row" style="justify-content:center;gap:22px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button></div>
   </div>
-  <div class="lookbar"><span class="lookhint">👆 Drag to look around</span><button class="btn small" id="lookDone">DONE</button></div>
 </div>
 
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
     <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>
-    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="effects">EFFECTS</button><button data-tab="store">STORE</button></div>
+    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="throw">THROW</button><button data-tab="hole">CORNHOLE</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn" id="shopClose">DONE</button>
   </div>
@@ -799,49 +796,53 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 }
 
 // ───────────────────────── Career content
-// Every venue is a new location. Higher venues: stronger steady wind, faster arrow, smaller sweet spot, slicker boards, better opponents.
-// Tuned with simulated throws (realistic human timing): a good player sinks about 40% at the Backyard down to about 23% at the
-// Stadium with the starter bag. CPU skill = spread of its release errors (smaller is better): ~13-21% in the hole at the
-// Backyard up to ~36-50% at the Stadium.
+// Twelve courts, each a new location. Higher courts: stronger steady wind, faster arrow, smaller sweet spot, slicker boards,
+// better opponents. Each court has its own star track: win stars there until it's full (max) to open the next court.
+// A win pays the pot (both buy-ins). Tuned with simulated throws: a good player sinks about 40% at the Backyard and
+// about 20% on the last courts with the starter bag.
 const VENUES = [
-  { id: "backyard", name: "Backyard", sub: "Where it all starts", stars: 0, fee: 25, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", stars: 12, fee: 150, swing: 0.65, zone: 0.05, wob: 0.021, cpu: [0.16, 0.10], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", stars: 30, fee: 500, swing: 0.75, zone: 0.045, wob: 0.030, cpu: [0.12, 0.08], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", stars: 60, fee: 1400, swing: 0.85, zone: 0.039, wob: 0.037, cpu: [0.10, 0.065], mu: 0.30, wind: [6, 12], speed: "Slick boards" },
-  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", stars: 100, fee: 2200, swing: 0.9, zone: 0.037, wob: 0.041, cpu: [0.09, 0.058], mu: 0.26, wind: [6, 14], speed: "Icy boards" },
-  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", stars: 150, fee: 3400, swing: 0.95, zone: 0.035, wob: 0.044, cpu: [0.082, 0.05], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
-  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", stars: 210, fee: 5000, swing: 1.0, zone: 0.033, wob: 0.048, cpu: [0.075, 0.045], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
-  { id: "stadium", name: "Stadium Finals", sub: "The big show", stars: 280, fee: 7500, swing: 1.05, zone: 0.032, wob: 0.051, cpu: [0.068, 0.038], mu: 0.28, wind: [8, 16], speed: "Fast pro boards" },
+  { id: "backyard", name: "Backyard", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.62, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
+  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
+  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.83, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [6, 13], speed: "Icy boards" },
+  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.88, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
+  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.92, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
+  { id: "rooftop", name: "City Rooftop", sub: "Skyline lights and swirling wind", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.96, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [9, 17], speed: "Slick boards" },
+  { id: "lakeside", name: "Lakeside Dock", sub: "Morning mist on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 1.0, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [8, 15], speed: "Dewy boards" },
+  { id: "canyon", name: "Desert Canyon", sub: "Red rock, hot gusts", max: 900, fee: 3000000, win: 30, loss: 32, swing: 1.03, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [10, 19], speed: "Dusty boards" },
+  { id: "carnival", name: "County Fair", sub: "Ferris wheel and midway lights", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 1.06, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [9, 17], speed: "Fast boards" },
+  { id: "stadium", name: "Stadium Finals", sub: "The big show", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 1.09, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [10, 18], speed: "Fast pro boards" },
 ];
-// Stakes: both players put in the entry and the winner takes the whole pot. Stars: a win is +2 at the first venue and
-// one more per level; a loss is -1 at the first venue and one more per level. Quitting counts as a loss.
 const pot = v => v.fee * 2;
-const starsForWin = vi => 2 + vi, starsForLoss = vi => 1 + vi;
-// The house covers your Backyard entry if you're short, so you can never get stuck.
+const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
+// Stars needed in total (all courts so far) to open court vi: the "Total to advance" column.
+const starsToReach = vi => VENUES.slice(0, vi).reduce((t, v) => t + v.max, 0);
+// The house covers your Backyard buy-in if you're short, so you can never get stuck.
 const houseCovers = vi => vi === 0 && career.coins < VENUES[0].fee;
-// Twenty coin bags. Prices climb with widening gaps (each about 35-40% more than the last), so maxing out takes a career:
-// the Gold Standard is roughly 15 Stadium wins. Stats rise gradually; a few mid-price bags are specialists.
+// Twenty coin bags. Prices about double each step (100 coins to 100 million), so each court's winnings buy the next tier
+// or two; the Gold Standard takes a few wins at the last court. Stats rise gradually; a few mid-price bags are specialists.
 const BAGS = [
   { id: "starter", name: "Duck Cloth", price: 0, acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#ff4b3a", pattern: "plain" },
-  { id: "backyard", name: "Backyard Pro", price: 150, acc: 2, ctrl: 1, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
+  { id: "backyard", name: "Backyard Pro", price: 100, acc: 2, ctrl: 1, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
   { id: "picnic", name: "Picnic Plaid", price: 220, acc: 1, ctrl: 2, spin: 2, feel: "sticky", c: "#d62828", pattern: "plaid" },
-  { id: "lemonade", name: "Lemonade", price: 320, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#f2c230", pattern: "dots" },
-  { id: "camo", name: "Camo Crew", price: 450, acc: 2, ctrl: 2, spin: 2, feel: "sticky", c: "#5b7a3a", pattern: "camo" },
-  { id: "skychev", name: "Sky Chevron", price: 650, acc: 2, ctrl: 3, spin: 2, feel: "neutral", c: "#2f86ff", pattern: "chevron" },
-  { id: "zigzag", name: "Zigzag", price: 900, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#0fb5a5", pattern: "zigzag" },
-  { id: "twotone", name: "Two-Tone", price: 1300, acc: 3, ctrl: 3, spin: 2, feel: "neutral", c: "#8a3ffc", pattern: "split" },
-  { id: "bullseye", name: "Bullseye", price: 1800, acc: 3, ctrl: 2, spin: 3, feel: "neutral", c: "#e8392b", pattern: "target" },
-  { id: "slick", name: "Slick Rick", price: 2600, acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#a24bff", pattern: "chevron" },
-  { id: "sticky", name: "Sticky Fingers", price: 3600, acc: 3, ctrl: 4, spin: 3, feel: "sticky", c: "#2fbf71", pattern: "dots" },
-  { id: "diamond", name: "Diamond Back", price: 5000, acc: 4, ctrl: 3, spin: 3, feel: "neutral", c: "#1f3a6e", pattern: "diamond" },
-  { id: "twister", name: "Twister", price: 7000, acc: 3, ctrl: 3, spin: 5, feel: "neutral", c: "#00b8c8", pattern: "swirl" },
-  { id: "thunder", name: "Thunder", price: 9500, acc: 4, ctrl: 4, spin: 3, feel: "fast", c: "#f2b705", pattern: "bolt" },
-  { id: "royal", name: "Royal", price: 13000, acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#6a2c91", pattern: "diamond" },
-  { id: "laser", name: "Laser", price: 18000, acc: 5, ctrl: 4, spin: 3, feel: "fast", c: "#ff2e88", pattern: "bolt" },
-  { id: "midnight", name: "Midnight", price: 25000, acc: 4, ctrl: 5, spin: 4, feel: "sticky", c: "#14214a", pattern: "star" },
-  { id: "champion", name: "Champion", price: 34000, acc: 5, ctrl: 4, spin: 5, feel: "neutral", c: "#c8102e", pattern: "star" },
-  { id: "platinum", name: "Platinum", price: 46000, acc: 5, ctrl: 5, spin: 4, feel: "neutral", c: "#9aa4b2", pattern: "diamond" },
-  { id: "gold", name: "Gold Standard", price: 62000, acc: 5, ctrl: 5, spin: 5, feel: "neutral", c: "#f2b705", pattern: "star" },
+  { id: "lemonade", name: "Lemonade", price: 460, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#f2c230", pattern: "dots" },
+  { id: "camo", name: "Camo Crew", price: 1000, acc: 2, ctrl: 2, spin: 2, feel: "sticky", c: "#5b7a3a", pattern: "camo" },
+  { id: "skychev", name: "Sky Chevron", price: 2200, acc: 2, ctrl: 3, spin: 2, feel: "neutral", c: "#2f86ff", pattern: "chevron" },
+  { id: "zigzag", name: "Zigzag", price: 4600, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#0fb5a5", pattern: "zigzag" },
+  { id: "twotone", name: "Two-Tone", price: 10000, acc: 3, ctrl: 3, spin: 2, feel: "neutral", c: "#8a3ffc", pattern: "split" },
+  { id: "bullseye", name: "Bullseye", price: 22000, acc: 3, ctrl: 2, spin: 3, feel: "neutral", c: "#e8392b", pattern: "target" },
+  { id: "slick", name: "Slick Rick", price: 46000, acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#a24bff", pattern: "chevron" },
+  { id: "sticky", name: "Sticky Fingers", price: 100000, acc: 3, ctrl: 4, spin: 3, feel: "sticky", c: "#2fbf71", pattern: "dots" },
+  { id: "diamond", name: "Diamond Back", price: 220000, acc: 4, ctrl: 3, spin: 3, feel: "neutral", c: "#1f3a6e", pattern: "diamond" },
+  { id: "twister", name: "Twister", price: 460000, acc: 3, ctrl: 3, spin: 5, feel: "neutral", c: "#00b8c8", pattern: "swirl" },
+  { id: "thunder", name: "Thunder", price: 1000000, acc: 4, ctrl: 4, spin: 3, feel: "fast", c: "#f2b705", pattern: "bolt" },
+  { id: "royal", name: "Royal", price: 2200000, acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#6a2c91", pattern: "diamond" },
+  { id: "laser", name: "Laser", price: 4600000, acc: 5, ctrl: 4, spin: 3, feel: "fast", c: "#ff2e88", pattern: "bolt" },
+  { id: "midnight", name: "Midnight", price: 10000000, acc: 4, ctrl: 5, spin: 4, feel: "sticky", c: "#14214a", pattern: "star" },
+  { id: "champion", name: "Champion", price: 22000000, acc: 5, ctrl: 4, spin: 5, feel: "neutral", c: "#c8102e", pattern: "star" },
+  { id: "platinum", name: "Platinum", price: 46000000, acc: 5, ctrl: 5, spin: 4, feel: "neutral", c: "#9aa4b2", pattern: "diamond" },
+  { id: "gold", name: "Gold Standard", price: 100000000, acc: 5, ctrl: 5, spin: 5, feel: "neutral", c: "#f2b705", pattern: "star" },
 ];
 // Premium items come only from the Store (real money). Exclusive looks; stats are good but never better than the
 // best coin bag, so nobody can buy wins.
@@ -853,16 +854,33 @@ BAGS.push(
 );
 // Store products (prices are placeholders until the App Store reports the real, local ones).
 const STORE = [
-  { id: PID("coins.1000"), kind: "coins", coins: 1000, price: "$0.99", title: "Handful of Coins", icon: "🪙" },
-  { id: PID("coins.6000"), kind: "coins", coins: 6000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
-  { id: PID("coins.15000"), kind: "coins", coins: 15000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
-  { id: PID("coins.40000"), kind: "coins", coins: 40000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
-  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 5000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "5,000 coins + Firecracker bags + Neon Nights board" },
-  { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb"], blurb: "Exclusive Galaxy bags and board" },
-  { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob"], blurb: "Exclusive Inferno bags and board" },
-  { id: PID("trails"), kind: "once", price: "$1.99", title: "Bag Trails", grants: ["trail:sparkle", "trail:fire", "trail:rainbow"], blurb: "Sparkle, fire and rainbow trails behind your bag" },
+  { id: PID("coins.small"), kind: "coins", coins: 20000, price: "$0.99", title: "Handful of Coins", icon: "🪙" },
+  { id: PID("coins.medium"), kind: "coins", coins: 150000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
+  { id: PID("coins.large"), kind: "coins", coins: 500000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
+  { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
+  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 25000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "25,000 coins + Firecracker bags + Neon Nights board" },
+  { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
+  { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
+  { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
 ];
-const TRAILS = [{ id: "none", name: "None" }, { id: "sparkle", name: "Sparkle" }, { id: "fire", name: "Fire" }, { id: "rainbow", name: "Rainbow" }];
+// Throw effects: a trail behind your bag in flight (shop "Throw" tab).
+const TRAILS = [
+  { id: "none", name: "No Trail", price: 0, icon: "➖", blurb: "Just the bag" },
+  { id: "smoke", name: "Smoke", price: 250, icon: "💨", blurb: "A puff of smoke behind the bag" },
+  { id: "sparkle", name: "Sparkle", price: 800, icon: "✨", blurb: "Glittering sparks" },
+  { id: "bubbles", name: "Bubbles", price: 2500, icon: "🫧", blurb: "A stream of bubbles" },
+  { id: "confetti", name: "Confetti", price: 6000, icon: "🎊", blurb: "Party bits in your colours" },
+  { id: "hearts", name: "Hearts", price: 15000, icon: "💖", blurb: "Love every throw" },
+  { id: "fire", name: "Fire", price: 40000, icon: "🔥", blurb: "A flaming tail" },
+  { id: "ice", name: "Ice", price: 100000, icon: "❄️", blurb: "Frosty crystals" },
+  { id: "stars", name: "Stars", price: 250000, icon: "⭐", blurb: "Shooting stars" },
+  { id: "lightning", name: "Lightning", price: 600000, icon: "⚡", blurb: "Crackling electricity" },
+  { id: "neon", name: "Neon", price: 1500000, icon: "💡", blurb: "A glowing ribbon in your colour" },
+  { id: "rainbow", name: "Rainbow", price: 4000000, icon: "🌈", blurb: "Every colour, all the way" },
+  { id: "galaxy", name: "Galaxy", price: 10000000, icon: "🌌", blurb: "Stardust and nebula" },
+  { id: "gold", name: "Gold Rush", price: 25000000, icon: "🪙", blurb: "Spills gold coins" },
+  { id: "comet", name: "Comet", price: 60000000, icon: "☄️", blurb: "A blazing comet tail" },
+];
 // Opponents and the second local player use these.
 const RIVAL_BAGS = [
   { id: "rival", name: "Blue Duck", acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#2f86ff", pattern: "plain" },
@@ -872,25 +890,25 @@ const RIVAL_BAGS = [
 // Twenty coin boards (looks only), on a similar but gentler climb, plus the exclusive Store boards.
 const BOARDS = [
   { id: "classic", name: "Classic Navy", price: 0, paint: "band", a: "#1f3a6e", b: "#ffc93a" },
-  { id: "redband", name: "Red Band", price: 100, paint: "band", a: "#c8102e", b: "#ffffff" },
+  { id: "redband", name: "Red Band", price: 80, paint: "band", a: "#c8102e", b: "#ffffff" },
   { id: "lake", name: "Lake Blue", price: 180, paint: "fade", a: "#2f86ff", b: "#0fb5a5" },
-  { id: "polka", name: "Polka Party", price: 280, paint: "polka", a: "#ff2e88", b: "#ffffff" },
-  { id: "sunburst", name: "Sunburst", price: 400, paint: "sunburst", a: "#ff8a1f", b: "#ffd84a" },
-  { id: "stripes", name: "Stars & Stripes", price: 600, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
-  { id: "diag", name: "Diagonal Rush", price: 850, paint: "diag", a: "#2f86ff", b: "#ffffff" },
-  { id: "plaid", name: "Picnic Plaid", price: 1200, paint: "plaid", a: "#c8102e", b: "#1f3a6e" },
-  { id: "sunset", name: "Sunset Fade", price: 1700, paint: "fade", a: "#ff7a3a", b: "#a83279" },
-  { id: "camo", name: "Camo", price: 2400, paint: "camo", a: "#5b7a3a", b: "#3d5229" },
-  { id: "checker", name: "Checkered Flag", price: 3300, paint: "checker", a: "#111111", b: "#ffffff" },
-  { id: "chev", name: "Chevron Charge", price: 4500, paint: "chev", a: "#ffc93a", b: "#1f3a6e" },
-  { id: "waves", name: "Ocean Waves", price: 6000, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
-  { id: "target", name: "Bullseye", price: 8000, paint: "target", a: "#e8392b", b: "#ffffff" },
-  { id: "split", name: "Split Decision", price: 11000, paint: "split", a: "#8a3ffc", b: "#ffc93a" },
-  { id: "retro", name: "Retro Rays", price: 15000, paint: "sunburst", a: "#a83279", b: "#ff7a3a" },
-  { id: "midband", name: "Midnight Band", price: 20000, paint: "band", a: "#0d1430", b: "#9aa4b2" },
-  { id: "tropic", name: "Tropical", price: 27000, paint: "waves", a: "#ff2e88", b: "#ffd84a" },
-  { id: "racing", name: "Racing Checker", price: 36000, paint: "checker", a: "#c8102e", b: "#111111" },
-  { id: "goldpro", name: "Gold Pro", price: 50000, paint: "gold", a: "#151515", b: "#ffd84a" },
+  { id: "polka", name: "Polka Party", price: 380, paint: "polka", a: "#ff2e88", b: "#ffffff" },
+  { id: "sunburst", name: "Sunburst", price: 800, paint: "sunburst", a: "#ff8a1f", b: "#ffd84a" },
+  { id: "stripes", name: "Stars & Stripes", price: 1700, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
+  { id: "diag", name: "Diagonal Rush", price: 3600, paint: "diag", a: "#2f86ff", b: "#ffffff" },
+  { id: "plaid", name: "Picnic Plaid", price: 8000, paint: "plaid", a: "#c8102e", b: "#1f3a6e" },
+  { id: "sunset", name: "Sunset Fade", price: 17000, paint: "fade", a: "#ff7a3a", b: "#a83279" },
+  { id: "camo", name: "Camo", price: 36000, paint: "camo", a: "#5b7a3a", b: "#3d5229" },
+  { id: "checker", name: "Checkered Flag", price: 80000, paint: "checker", a: "#111111", b: "#ffffff" },
+  { id: "chev", name: "Chevron Charge", price: 170000, paint: "chev", a: "#ffc93a", b: "#1f3a6e" },
+  { id: "waves", name: "Ocean Waves", price: 360000, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
+  { id: "target", name: "Bullseye", price: 800000, paint: "target", a: "#e8392b", b: "#ffffff" },
+  { id: "split", name: "Split Decision", price: 1700000, paint: "split", a: "#8a3ffc", b: "#ffc93a" },
+  { id: "retro", name: "Retro Rays", price: 3600000, paint: "sunburst", a: "#a83279", b: "#ff7a3a" },
+  { id: "midband", name: "Midnight Band", price: 8000000, paint: "band", a: "#0d1430", b: "#9aa4b2" },
+  { id: "tropic", name: "Tropical", price: 17000000, paint: "waves", a: "#ff2e88", b: "#ffd84a" },
+  { id: "racing", name: "Racing Checker", price: 36000000, paint: "checker", a: "#c8102e", b: "#111111" },
+  { id: "goldpro", name: "Gold Pro", price: 80000000, paint: "gold", a: "#151515", b: "#ffd84a" },
   { id: "neon", name: "Neon Nights", premium: PID("starterpack"), paint: "neon", a: "#0d0d1a", b: "#2ef2ff" },
   { id: "galaxyb", name: "Galaxy", premium: PID("set.galaxy"), paint: "galaxy", a: "#140a3a", b: "#b48cff" },
   { id: "infernob", name: "Inferno", premium: PID("set.inferno"), paint: "flames", a: "#1a0a05", b: "#ff7a1a" },
@@ -901,7 +919,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti" });
+const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -913,11 +931,17 @@ try {
     const old = typeof raw === "string" ? JSON.parse(raw) : raw;
     career = { ...fresh(), ...old };
     if (old.tutorialDone === undefined && (old.wins || old.losses)) career.tutorialDone = true; // veterans skip the coach
-    if (!old.venueId && career.venue >= 4) career.venue = VENUES.findIndex(v => v.id === "stadium"); // saves from the five-venue career
-    for (const v of VENUES) if (career.stars >= v.stars && !career.unlocked.includes(v.id)) career.unlocked.push(v.id);
+    if (!old.courtStars) { // older saves had one star count: pour it into the courts in order
+      let left = old.stars || 0;
+      for (const v of VENUES) { const n = Math.min(v.max, left); if (n > 0) career.courtStars[v.id] = n; left -= n; }
+      career.venue = 0;
+    }
+    career.courtStars = { ...career.courtStars };
+    updateUnlocks();
   }
 } catch (e) { /* storage unavailable: play without saving */ }
 function save() {
+  career.savedAt = Date.now(); // the iPhone app keeps whichever copy (device or iCloud) is newest
   const json = JSON.stringify(career);
   postNative("save", json);
   try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
@@ -925,6 +949,14 @@ function save() {
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
 const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
 const venueUnlocked = i => career.unlocked.includes(VENUES[i].id);
+function courtStars(i) { return career.courtStars[VENUES[i].id] || 0; }
+// Filling a court's star track opens the next one (and it stays open).
+function updateUnlocks() {
+  const newly = [];
+  career.stars = VENUES.reduce((t, v) => t + (career.courtStars[v.id] || 0), 0);
+  VENUES.forEach((v, i) => { if (i && !career.unlocked.includes(v.id) && courtStars(i - 1) >= VENUES[i - 1].max) { career.unlocked.push(v.id); newly.push(v); } });
+  return newly;
+}
 // Deliver a store purchase. Coin packs can be bought again; one-time items (and restores) never pay out twice.
 function grantPurchase(id, restored) {
   const item = STORE.find(x => x.id === id);
@@ -990,7 +1022,7 @@ function newWind() {
   S.wind = { mph: Math.round(rand(lo, hi)), dir: rand(0, Math.PI * 2) }; // steady for the whole inning, any direction
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
-  setAmbience({ wind: mph, surf: ["beach", "bonfire", "island"].includes(id), crowd: id === "stadium" || id === "tailgate", night: id === "brewery" || id === "bonfire", fire: id === "bonfire" || id === "lodge" });
+  setAmbience({ wind: mph, surf: ["beach", "bonfire", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: ["brewery", "bonfire", "carnival"].includes(id), fire: id === "bonfire" || id === "lodge" });
 }
 function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
@@ -1005,7 +1037,7 @@ function startMatch(kind, vi) {
     const [hi, lo] = v.cpu, skill = rand(lo, hi);
     S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
     S.names = ["You", S.opponent.name];
-    S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 3))]];
+    S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
   } else {
     S.opponent = null;
     S.names = ["Player 1", "Player 2"];
@@ -1146,17 +1178,17 @@ function finishInning() {
 function finishMatch() {
   if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
-  const v = venue(), won = S.winner === 0, before = career.stars;
-  const starDelta = won ? starsForWin(S.venue) : -starsForLoss(S.venue);
+  const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
   const coins = won ? pot(v) : 0;
-  career.stars = Math.max(0, career.stars + starDelta);
+  addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
-  const newly = VENUES.filter(x => career.stars >= x.stars && !career.unlocked.includes(x.id));
-  for (const x of newly) career.unlocked.push(x.id);
+  const newly = updateUnlocks();
   save();
-  S.result = { won, starDelta: career.stars - before, coins, newly: newly.map(x => x.name) };
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name) };
 }
+// A court's stars stay between 0 and its max.
+function addCourtStars(vi, n) { const v = VENUES[vi]; career.courtStars[v.id] = clamp(courtStars(vi) + n, 0, v.max); updateUnlocks(); }
 function nextInning() {
   S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
   newWind(); venueAmbience(); beginTurn();
@@ -1425,6 +1457,20 @@ function groundTexture(kind) {
     c.strokeStyle = "rgba(180,140,80,.25)"; c.lineWidth = 3;
     for (let y = 20; y < h; y += 46) { c.beginPath(); for (let x = 0; x <= w; x += 8) { const yy = y + Math.sin(x / 40 + y) * 6; x ? c.lineTo(x, yy) : c.moveTo(x, yy); } c.stroke(); }
   }, [1, 1]);
+  if (kind === "roof") return canvasTex(512, 512, (c, w, h) => {
+    c.fillStyle = "#7d7f86"; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 16000; i++) { const g = 90 + r() * 70; c.fillStyle = `rgba(${g},${g},${g + 6},${0.3 + r() * 0.5})`; c.fillRect(r() * w, r() * h, 2, 2); }
+    c.strokeStyle = "rgba(40,40,46,.5)"; c.lineWidth = 2; for (let x = 0; x <= w; x += 128) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); c.beginPath(); c.moveTo(0, x); c.lineTo(w, x); c.stroke(); }
+  }, [1, 1]);
+  if (kind === "desert") return canvasTex(512, 512, (c, w, h) => {
+    c.fillStyle = "#d9935a"; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 16000; i++) { const l = 45 + r() * 25; c.fillStyle = `hsla(${20 + r() * 12},55%,${l}%,${0.25 + r() * 0.4})`; c.fillRect(r() * w, r() * h, 2, 2); }
+    c.fillStyle = "rgba(120,70,40,.35)"; for (let i = 0; i < 160; i++) { c.beginPath(); c.arc(r() * w, r() * h, 1.5 + r() * 3, 0, 7); c.fill(); }
+  }, [1, 1]);
+  if (kind === "dirt") return canvasTex(512, 512, (c, w, h) => {
+    c.fillStyle = "#4f7a34"; c.fillRect(0, 0, w, h); noise(c, w, h, 7000, [85, 25], [40, 20], [24, 20], [2, 4]);
+    for (let i = 0; i < 30; i++) { const g = c.createRadialGradient(r() * w, r() * h, 0, r() * w, r() * h, 30 + r() * 50); g.addColorStop(0, "rgba(140,105,70,.6)"); g.addColorStop(1, "rgba(140,105,70,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h); }
+  }, [1, 1]);
   if (kind === "snow") return canvasTex(512, 512, (c, w, h) => {
     c.fillStyle = "#eef3f9"; c.fillRect(0, 0, w, h);
     for (let i = 0; i < 40; i++) { const g = c.createRadialGradient(r() * w, r() * h, 0, r() * w, r() * h, 40 + r() * 80); g.addColorStop(0, "rgba(190,210,235,.35)"); g.addColorStop(1, "rgba(190,210,235,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h); }
@@ -1600,8 +1646,8 @@ function jumbotron(g) {
     c.fillStyle = "#ffffff"; c.font = "bold 30px Arial, sans-serif"; c.fillText("STADIUM FINALS", w / 2, h / 2 + 52);
   });
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshBasicMaterial({ map: tex, fog: false }));
-  screen.position.set(0, 38, -118); g.add(screen);
-  add(g, box(42, 22, 2, std(0x222222)), 0, 38, -119.2, false);
+  screen.position.set(0, 42, -94); g.add(screen);
+  add(g, box(42, 22, 2, std(0x222222)), 0, 42, -95.2, false);
 }
 function ocean(g) {
   const tex = canvasTex(256, 256, (c, w, h) => {
@@ -1635,6 +1681,8 @@ function venueTick(dt, t) {
       a.o.position.y = a.y + 0.15 * f;
     } else if (a.kind === "firelight") {
       a.o.intensity = a.base * (0.8 + 0.2 * Math.sin(t * 9) + (Math.random() - 0.5) * 0.25);
+    } else if (a.kind === "wheel") {
+      a.o.rotation.z += dt * 0.12; for (const c of a.cars) c.rotation.z = -a.o.rotation.z;
     } else if (a.kind === "water") {
       a.o.offset.x = (a.o.offset.x + dt * 0.006) % 1; a.o.offset.y = Math.sin(t * 0.4) * 0.02;
     }
@@ -1752,6 +1800,84 @@ function rowboat(g, x, z, rotY) {
   b.position.set(x, 0, z); b.rotation.y = rotY; g.add(b);
 }
 
+function windowTex(seed, lit = 0.55) {
+  const r = rng(seed);
+  return canvasTex(128, 256, (c, w, h) => {
+    c.fillStyle = "#1b2233"; c.fillRect(0, 0, w, h);
+    for (let y = 6; y < h; y += 14) for (let x = 6; x < w; x += 14) { c.fillStyle = r() < lit ? `hsl(${40 + r() * 20},90%,${60 + r() * 25}%)` : "#0e1420"; c.fillRect(x, y, 8, 9); }
+  }, [1, 1]);
+}
+function skyline(g, seed) {
+  const r = rng(seed), texs = [windowTex(seed), windowTex(seed + 1, 0.4), windowTex(seed + 2, 0.7)];
+  for (let k = 0; k < 46; k++) {
+    const a = k / 46 * Math.PI * 2 + r() * 0.1, d = 90 + r() * 130, w = 14 + r() * 22, hgt = 30 + r() * 110;
+    const t = texs[k % 3].clone(); t.needsUpdate = true; t.repeat.set(Math.round(w / 10), Math.round(hgt / 20));
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, hgt, w), new THREE.MeshBasicMaterial({ map: t, fog: true }));
+    b.position.set(Math.sin(a) * d, hgt / 2 - 20, -15 + Math.cos(a) * d); b.rotation.y = r() * 3; g.add(b);
+    if (r() < 0.3) { const l = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff3030, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); l.position.set(b.position.x, hgt - 19, b.position.z); l.scale.setScalar(4); g.add(l); }
+  }
+}
+function waterTower(g, x, z) {
+  const t = new THREE.Group(), wood = std(0x7a5232), metal = std(0x555a60, { metalness: 0.5 });
+  for (const lx of [-2, 2]) for (const lz of [-2, 2]) add(t, new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 8, 6), metal), lx, 4, lz);
+  add(t, new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 6, 16), wood), 0, 11, 0);
+  add(t, new THREE.Mesh(new THREE.ConeGeometry(3.4, 2.4, 16), metal), 0, 15.2, 0);
+  t.position.set(x, 0, z); g.add(t);
+}
+function acUnit(g, x, z) { const u = new THREE.Group(); add(u, box(4, 2.6, 3, std(0xb8bcc4, { metalness: 0.3 })), 0, 1.3, 0); add(u, new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.2, 16), std(0x333333)), 0, 2.7, 0); u.position.set(x, 0, z); g.add(u); }
+function cactus(g, x, z, s) {
+  const c = new THREE.Group(), m = lam(0x3f8a3c, { flatShading: true });
+  add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, 8, 8), m), 0, 4, 0);
+  add(c, new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6), m), 0, 8, 0, false);
+  for (const [sx, y, hgt] of [[-1, 3.5, 3], [1, 5, 2.4]]) {
+    add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.6, 8), m).rotateZ(Math.PI / 2), sx * 1.1, y, 0);
+    add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, hgt, 8), m), sx * 1.8, y + hgt / 2, 0);
+  }
+  c.position.set(x, 0, z); c.scale.setScalar(s); c.rotation.y = Math.random() * 3; g.add(c);
+}
+function mesas(g, seed) {
+  const r = rng(seed), rock = [lam(0xb5562f, { flatShading: true }), lam(0xc8703a, { flatShading: true }), lam(0x9a4426, { flatShading: true })];
+  for (let k = 0; k < 18; k++) {
+    const a = k / 18 * Math.PI * 2 + r() * 0.2, d = 160 + r() * 120, rad = 18 + r() * 30, hgt = 25 + r() * 45;
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(rad * 0.85, rad, hgt, 7 + Math.floor(r() * 3)), rock[k % 3]);
+    m.position.set(Math.sin(a) * d, hgt / 2, -15 + Math.cos(a) * d); m.rotation.y = r() * 3; g.add(m);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(rad * 0.86, rad * 0.86, 2, 8), rock[(k + 1) % 3]); cap.position.set(m.position.x, hgt + 0.5, m.position.z); g.add(cap);
+  }
+  const rocks = lam(0xa0502c, { flatShading: true });
+  for (let k = 0; k < 24; k++) { const a = r() * Math.PI * 2, d = 40 + r() * 60, s = 1 + r() * 3; const b = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), rocks); b.position.set(Math.sin(a) * d, s * 0.4, -15 + Math.cos(a) * d); b.rotation.set(r() * 3, r() * 3, 0); g.add(b); }
+}
+function ferrisWheel(g, x, z) {
+  const w = new THREE.Group(), frame = std(0xe8e8f0, { metalness: 0.4 }), R = 22;
+  const wheel = new THREE.Group();
+  wheel.add(new THREE.Mesh(new THREE.TorusGeometry(R, 0.4, 8, 64), frame));
+  const bulbs = new THREE.SpriteMaterial({ map: glowTex, color: 0xffd36a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+  const cars = [];
+  for (let k = 0; k < 16; k++) {
+    const a = k / 16 * Math.PI * 2;
+    const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, R, 6), frame); sp.position.set(Math.cos(a) * R / 2, Math.sin(a) * R / 2, 0); sp.rotation.z = a - Math.PI / 2; wheel.add(sp);
+    const b = new THREE.Sprite(bulbs); b.position.set(Math.cos(a) * R, Math.sin(a) * R, 0.5); b.scale.setScalar(3); wheel.add(b);
+    const car = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2, 2), std(new THREE.Color().setHSL(k / 16, 0.8, 0.55))); car.position.set(Math.cos(a) * R, Math.sin(a) * R - 1.4, 0); wheel.add(car); cars.push(car);
+  }
+  wheel.position.y = R + 3; w.add(wheel);
+  for (const sx of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, R + 6, 8), frame); leg.position.set(sx * 6, (R + 3) / 2, 0); leg.rotation.z = sx * 0.25; w.add(leg); }
+  w.position.set(x, 0, z); w.rotation.y = Math.atan2(-x, -15 - z); // face the court g.add(w);
+  venueAnim.push({ kind: "wheel", o: wheel, cars });
+}
+function stripedTent(g, x, z, r, colors) {
+  const tex = canvasTex(256, 64, (c, w, h) => { for (let i = 0; i < 8; i++) { c.fillStyle = colors[i % 2]; c.fillRect(i * w / 8, 0, w / 8, h); } });
+  const t = new THREE.Group();
+  add(t, new THREE.Mesh(new THREE.CylinderGeometry(r, r, 5, 16, 1, true), new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide, roughness: 0.8 })), 0, 2.5, 0);
+  add(t, new THREE.Mesh(new THREE.ConeGeometry(r * 1.1, r * 0.9, 16), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.8 })), 0, 5 + r * 0.45, 0);
+  add(t, new THREE.Mesh(new THREE.ConeGeometry(0.3, 2, 6), std(colors[0])), 0, 5 + r * 0.9 + 1, 0, false);
+  t.position.set(x, 0, z); g.add(t);
+}
+function dock(g, x, z, len, rotY) {
+  const d = new THREE.Group(), wood = std(0x8a6a48);
+  add(d, box(5, 0.4, len, wood), 0, 1.4, -len / 2);
+  for (let k = 0; k <= len; k += 6) for (const sx of [-2.3, 2.3]) add(d, new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 3, 6), wood), sx, 0.5, -k);
+  d.position.set(x, 0, z); d.rotation.y = rotY; g.add(d);
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -1767,8 +1893,16 @@ const VENUE_LOOK = {
     hemi: [0xffb8a0, 0x6a4a3a, 0.75], sun: [0xff9a50, 2.4, [0, 7, -110]], exposure: 1.05, dust: 0xe0c890 },
   island: { top: [0.08, 0.42, 0.86], mid: [0.40, 0.74, 0.97], horizon: [0.85, 0.95, 1.0], sunGlow: 0.9, night: 0, fog: [0xc8ecff, 140, 460],
     hemi: [0xe6f6ff, 0x3aa8c8, 1.35], sun: [0xfff2d6, 3.3, [16, 34, -4]], exposure: 1.0, dust: 0xe8f8ff },
+  rooftop: { top: [0.06, 0.06, 0.20], mid: [0.30, 0.20, 0.42], horizon: [0.95, 0.50, 0.35], sunGlow: 0.6, night: 0.6, fog: [0x3a2a4a, 120, 380],
+    hemi: [0x8a8ac8, 0x3a3a40, 0.8], sun: [0xffb070, 2.0, [-30, 12, -40]], exposure: 1.05, dust: 0xb8b8c0 },
+  lakeside: { top: [0.30, 0.50, 0.78], mid: [0.62, 0.76, 0.90], horizon: [0.95, 0.88, 0.78], sunGlow: 0.9, night: 0, fog: [0xd8e2ea, 70, 340],
+    hemi: [0xe0eeff, 0x4a6a3a, 1.25], sun: [0xffe6c0, 2.7, [-20, 18, -30]], exposure: 1.05, dust: 0xd8e6d0 },
+  canyon: { top: [0.18, 0.40, 0.75], mid: [0.55, 0.68, 0.85], horizon: [1.0, 0.78, 0.55], sunGlow: 1.2, night: 0, fog: [0xf0c898, 120, 420],
+    hemi: [0xfff0d8, 0x9a5a30, 1.2], sun: [0xfff0d0, 3.4, [-10, 40, -8]], exposure: 1.02, dust: 0xe0a870 },
+  carnival: { top: [0.02, 0.02, 0.09], mid: [0.08, 0.06, 0.22], horizon: [0.40, 0.20, 0.38], sunGlow: 0, night: 1, fog: [0x1a1030, 90, 300],
+    hemi: [0x7a6ac8, 0x2a2a18, 0.6], sun: [0xffd8a0, 1.6, [-8, 30, -16]], exposure: 1.05, dust: 0xb89a70 },
   stadium: { top: [0.01, 0.02, 0.07], mid: [0.04, 0.07, 0.18], horizon: [0.18, 0.22, 0.38], sunGlow: 0, night: 1, fog: [0x10162a, 140, 420],
-    hemi: [0xbfd4ff, 0x1d3a1f, 0.8], sun: [0xf2f6ff, 3.4, [10, 40, -8]], exposure: 1.1, dust: 0xd8e8d0 },
+    hemi: [0xbfd4ff, 0x1d3a1f, 0.8], sun: [0xf2f6ff, 3.4, [10, 40, -8]], exposure: 1.1, dust: 0xd8e8d0, wall: [22, 32] },
 };
 function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); const m = n.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x.map) x.map.dispose(); x.dispose(); }); }); }
 function buildVenue(id) {
@@ -1865,10 +1999,55 @@ function buildVenue(id) {
     rowboat(g, 9, -15, 0.4);
     const r = rng(29);
     for (let k = 0; k < 14; k++) { const a = r() * Math.PI * 2, d = 110 + r() * 200; farIsland(g, Math.sin(a) * d, -15 + Math.cos(a) * d, 12 + r() * 22, r); }
+  } else if (id === "rooftop") {
+    const deckTex = groundTexture("roof"); deckTex.repeat.set(56 / 14, 72 / 14);
+    const deck = new THREE.Mesh(new THREE.PlaneGeometry(56, 72), new THREE.MeshStandardMaterial({ map: deckTex, roughness: 1 }));
+    deck.rotation.x = -Math.PI / 2; deck.position.z = -14; deck.receiveShadow = true; g.add(deck);
+    skyline(g, 41);
+    const ledge = std(0x5a5c64);
+    add(g, box(56, 3.2, 1.2, ledge), 0, 1.6, -50); add(g, box(56, 3.2, 1.2, ledge), 0, 1.6, 22);
+    add(g, box(1.2, 3.2, 72, ledge), -28, 1.6, -14); add(g, box(1.2, 3.2, 72, ledge), 28, 1.6, -14);
+    // beyond the ledge the street is far below
+    const below = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), new THREE.MeshBasicMaterial({ color: 0x141a28 })); below.rotation.x = -Math.PI / 2; below.position.set(0, -20, -15); g.add(below);
+    waterTower(g, -20, -42); acUnit(g, 18, -44); acUnit(g, 21, -38); acUnit(g, -20, 12);
+    stringLights(g, [[-11, -40], [11, -40], [-11, -8], [11, -8]], [[[-11, -40], [11, -40]], [[-11, -40], [-11, -8]], [[11, -40], [11, -8]], [[-11, -8], [11, -8]]], 10, 2, 0.7);
+    cooler(g, 5, -22, 0.4, 0xff2e88); chair(g, -8, -36, 0.35, 0x2f86ff); chair(g, 8, -37, -0.35, 0xffc93a);
+  } else if (id === "lakeside") {
+    setGround(g, "grass", 6);
+    const wt = waterTexture("#2a6a8a", "#4a9ab8"); wt.repeat.set(40, 20);
+    const lake = new THREE.Mesh(new THREE.PlaneGeometry(900, 400), new THREE.MeshStandardMaterial({ map: wt, roughness: 0.2, metalness: 0.15 }));
+    lake.rotation.x = -Math.PI / 2; lake.position.set(0, 0.06, -260); g.add(lake); venueAnim.push({ kind: "water", o: wt });
+    const shore = new THREE.Mesh(new THREE.PlaneGeometry(900, 5), lam(0xc8b88a)); shore.rotation.x = -Math.PI / 2; shore.position.set(0, 0.07, -58); g.add(shore);
+    dock(g, 12, -58, 40, 0); rowboat(g, 22, -80, 0.6);
+    const r = rng(23);
+    for (let k = 0; k < 50; k++) { const a = r() * Math.PI * 2, d = 50 + r() * 50, x = Math.sin(a) * d, z = -15 + Math.cos(a) * d; if (z < -55) continue; pine(g, x, z, 0.9 + r() * 0.6, false); }
+    mountains(g, 31, false, 0x5a7a6a);
+    cabin(g, -26, -40, 0.6); picnicTable(g, 14, 10, 0.2);
+    for (const [x, z] of [[-8, -34], [9, -36]]) chair(g, x, z, x < 0 ? 0.35 : -0.35, x < 0 ? 0x2fbf71 : 0xff8a1f);
+    cooler(g, 5, -22, 0.4, 0x2f86ff);
+  } else if (id === "canyon") {
+    setGround(g, "desert", 12);
+    mesas(g, 13);
+    const r = rng(7);
+    for (let k = 0; k < 26; k++) { const a = r() * Math.PI * 2, d = 30 + r() * 70; cactus(g, Math.sin(a) * d, -15 + Math.cos(a) * d, 0.7 + r() * 0.6); }
+    umbrella(g, -9, -34, 0xffc93a); cooler(g, 5, -22, 0.4, 0x0fb5a5); chair(g, 8, -37, -0.35, 0xe8392b);
+    truck(g, -18, 16, 0.4, 0xd9a05a);
+  } else if (id === "carnival") {
+    setGround(g, "dirt", 8);
+    ferrisWheel(g, -40, -80);
+    stripedTent(g, 28, -50, 8, ["#e8392b", "#ffffff"]); stripedTent(g, -30, -30, 6, ["#2f86ff", "#ffffff"]); stripedTent(g, 32, 10, 7, ["#ffc93a", "#e8392b"]); stripedTent(g, -28, 22, 6, ["#2fbf71", "#ffffff"]);
+    const poles = [[-12, -44], [12, -44], [-12, -14], [12, -14], [-12, 16], [12, 16]];
+    stringLights(g, poles, [[[-12, -44], [12, -44]], [[-12, -44], [-12, -14]], [[12, -44], [12, -14]], [[-12, -14], [12, -14]], [[-12, -14], [-12, 16]], [[12, -14], [12, 16]], [[-12, 16], [12, 16]], [[-12, -44], [12, -14]], [[12, -44], [-12, -14]]], 11, 2, 0.85);
+    for (const [x, z] of [[-6, -27], [6, -27], [0, 6]]) { const pl = new THREE.PointLight(0xffc27a, 26, 26, 1.6); pl.position.set(x, 9, z); g.add(pl); }
+    cooler(g, 5, -22, 0.4, 0xff2e88); chair(g, -8, -36, 0.35, 0xa24bff);
   } else if (id === "stadium") {
     setGround(g, "turf", 6);
-    stands(g, -95, 180, 12); stands(g, -40, 140, 10, Math.PI / 2, -70); stands(g, -40, 140, 10, -Math.PI / 2, 70); stands(g, 45, 180, 12, Math.PI);
-    for (const [x, z] of [[-60, -100], [60, -100], [-70, 10], [70, 10]]) floodlight(g, x, z);
+    // A tight arena: the crowd is right on top of the court on all four sides.
+    stands(g, -52, 64, 12); stands(g, -16, 76, 10, Math.PI / 2, -28); stands(g, -16, 76, 10, -Math.PI / 2, 28); stands(g, 24, 64, 10, Math.PI);
+    const pad = std(0x1f3a6e);
+    add(g, box(56, 3, 0.6, pad), 0, 1.5, -50); add(g, box(56, 3, 0.6, pad), 0, 1.5, 22);
+    add(g, box(0.6, 3, 72, pad), -26, 1.5, -14); add(g, box(0.6, 3, 72, pad), 26, 1.5, -14);
+    for (const [x, z] of [[-50, -80], [50, -80], [-50, 45], [50, 45]]) floodlight(g, x, z);
     jumbotron(g);
     const pl = new THREE.PointLight(0xffffff, 40, 40, 1.4); pl.position.set(0, 18, -24); g.add(pl);
   }
@@ -2072,7 +2251,7 @@ function updateBags(dt) {
     m.scale.set(1 + 0.25 * sq, 1 - 0.45 * sq, 1 + 0.25 * sq);
     if (b.state === "flying") {
       m.position.copy(W(b.x, b.y, b.z));
-      if (b.owner === 0 && career.trail !== "none") trailPuff(m.position, career.trail);
+      if (b.owner === 0 && S.kind === "career" && career.trail !== "none") trailPuff(m.position, career.trail, 0);
       m.rotation.set(0.2 * Math.sin(b.angle * 1.7), -b.angle, 0.15 * Math.cos(b.angle * 1.3));
     } else if (b.state === "inHole") {
       v.dropT += dt;
@@ -2191,14 +2370,31 @@ function dust(b, color) {
   flatOnBoard(ring, b); ring.position.y += 0.01; scene.add(ring);
   fx.push({ o: ring, life: 0.45, max: 0.45, kind: "ring" });
 }
-// Store "Bag Trails": a few glowing puffs per frame behind your bag in flight.
-function trailPuff(pos, kind) {
-  for (let k = 0; k < 2; k++) {
-    const col = kind === "fire" ? new THREE.Color().setHSL(0.02 + Math.random() * 0.09, 1, 0.55) : kind === "rainbow" ? new THREE.Color().setHSL((S.time * 0.8 + k * 0.1) % 1, 1, 0.6) : new THREE.Color(Math.random() < 0.5 ? 0xffffff : 0xffe27a);
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
-    s.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2));
-    s.scale.setScalar(kind === "sparkle" ? 0.25 : 0.4); scene.add(s);
-    fx.push({ o: s, vel: new THREE.Vector3(0, kind === "fire" ? 0.8 : 0.1, 0), life: 0.5, max: 0.5, grow: kind === "fire" ? 0.4 : 0.1, kind: "dust" });
+// Throw effects: a few particles per frame behind your bag in flight. Each trail: colour, texture, size, drift and glow.
+const TRAIL_FX = {
+  smoke: { n: 1, col: () => new THREE.Color().setHSL(0, 0, 0.75 + Math.random() * 0.2), size: 0.45, rise: 0.4, grow: 1.4, life: 0.9, add: false, op: 0.5 },
+  sparkle: { n: 2, col: () => new THREE.Color(Math.random() < 0.5 ? 0xffffff : 0xffe27a), size: 0.22, rise: 0.1, life: 0.5, add: true },
+  bubbles: { n: 1, tex: () => fxTex.bubble, col: () => new THREE.Color(0xffffff), size: 0.22, rise: 0.8, life: 1.1, add: false, jitter: 0.35 },
+  confetti: { n: 2, col: (o) => new THREE.Color([COL.p[o], COL.gold, "#ffffff", COL.pl[o]][Math.floor(Math.random() * 4)]), size: 0.12, rise: -1.2, life: 0.9, add: false, jitter: 0.3 },
+  hearts: { n: 1, tex: () => fxTex.heart, col: () => new THREE.Color().setHSL(0.93 + Math.random() * 0.06, 1, 0.6), size: 0.3, rise: 0.5, life: 0.9, add: false },
+  fire: { n: 2, col: () => new THREE.Color().setHSL(0.02 + Math.random() * 0.09, 1, 0.55), size: 0.4, rise: 0.8, grow: 0.4, life: 0.5, add: true },
+  ice: { n: 2, tex: () => (Math.random() < 0.4 ? fxTex.star : dotTex), col: () => new THREE.Color().setHSL(0.55, 0.8, 0.75 + Math.random() * 0.2), size: 0.22, rise: -0.3, life: 0.7, add: true },
+  stars: { n: 1, tex: () => fxTex.star, col: () => new THREE.Color(Math.random() < 0.5 ? 0xffe27a : 0xffffff), size: 0.3, rise: 0, life: 0.7, add: true, jitter: 0.3 },
+  lightning: { n: 2, col: () => new THREE.Color(Math.random() < 0.7 ? 0xbfe6ff : 0xffffff), size: 0.2, rise: 0, life: 0.25, add: true, jitter: 0.5, flicker: true },
+  neon: { n: 2, col: (o) => new THREE.Color(COL.pl[o]), size: 0.35, rise: 0, life: 0.6, add: true, jitter: 0.04 },
+  rainbow: { n: 2, col: (o, k) => new THREE.Color().setHSL((S.time * 0.8 + k * 0.1) % 1, 1, 0.6), size: 0.4, rise: 0.1, grow: 0.1, life: 0.5, add: true },
+  galaxy: { n: 3, tex: () => (Math.random() < 0.3 ? fxTex.star : dotTex), col: () => new THREE.Color().setHSL(0.68 + Math.random() * 0.15, 0.9, 0.55 + Math.random() * 0.3), size: 0.3, rise: 0, life: 0.8, add: true, jitter: 0.3 },
+  gold: { n: 1, tex: () => (Math.random() < 0.5 ? fxTex.coin : dotTex), col: () => new THREE.Color(Math.random() < 0.5 ? 0xffffff : 0xffd24a), size: 0.22, rise: -2.5, life: 0.9, add: false, jitter: 0.2 },
+  comet: { n: 3, col: (o, k) => new THREE.Color().setHSL(0.08 - k * 0.03, 1, 0.7 - k * 0.12), size: 0.6, rise: 0, grow: -0.6, life: 0.7, add: true, jitter: 0.08 },
+};
+function trailPuff(pos, kind, owner = 0) {
+  const t = TRAIL_FX[kind]; if (!t) return;
+  for (let k = 0; k < t.n; k++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t.tex ? t.tex() : dotTex, color: t.col(owner, k), blending: t.add ? THREE.AdditiveBlending : THREE.NormalBlending, transparent: true, depthWrite: false, opacity: t.op ?? 1 }));
+    const j = t.jitter ?? 0.1;
+    s.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * 2 * j, (Math.random() - 0.5) * 2 * j, (Math.random() - 0.5) * 2 * j));
+    s.scale.setScalar(t.size * (0.7 + Math.random() * 0.6)); scene.add(s);
+    fx.push({ o: s, vel: new THREE.Vector3((Math.random() - 0.5) * 0.3, t.rise, (Math.random() - 0.5) * 0.3), life: t.life, max: t.life, grow: t.grow ?? 0.1, s0: s.scale.x, op: t.op ?? 1, flicker: !!t.flicker, kind: "trail" });
   }
 }
 const confettiGeo = new THREE.PlaneGeometry(0.09, 0.05);
@@ -2287,6 +2483,7 @@ function updateFx(dt) {
   for (let i = fx.length - 1; i >= 0; i--) {
     const f = fx[i]; f.life -= dt; const a = Math.max(0, f.life / f.max);
     if (f.kind === "dust") { f.o.position.addScaledVector(f.vel, dt); f.vel.multiplyScalar(Math.pow(0.05, dt)); f.o.scale.setScalar(0.12 + (1 - a) * f.grow); f.o.material.opacity = 0.75 * a; }
+    else if (f.kind === "trail") { f.o.position.addScaledVector(f.vel, dt); f.o.scale.setScalar(Math.max(0.01, f.s0 * (1 + (1 - a) * f.grow))); f.o.material.opacity = f.op * a * (f.flicker && Math.random() < 0.4 ? 0.2 : 1); f.o.material.rotation += dt * 2; }
     else if (f.kind === "ring") { const s = 1 + (1 - a) * 2.6; f.o.scale.set(s, s, s); f.o.material.opacity = 0.7 * a; }
     else if (f.kind === "glow") { f.o.scale.setScalar(0.8 + (1 - a) * 3); f.o.material.opacity = a; }
     else if (f.kind === "flash") { f.o.scale.setScalar(4 + (1 - a) * 10); f.o.material.opacity = a; }
@@ -2502,29 +2699,33 @@ function fireAim() {
 // Each effect plays at the hole when your bag drops in; the 2/3/4-bagger build-up layers on top.
 const EFFECTS = [
   { id: "confetti", name: "Confetti", price: 0, icon: "🎉", blurb: "The classic burst" },
-  { id: "streamers", name: "Streamers", price: 400, icon: "🎏", blurb: "Long ribbons in your colours" },
-  { id: "bubbles", name: "Bubbles", price: 900, icon: "🫧", blurb: "Bubbles float up out of the hole" },
-  { id: "coins", name: "Gold Coins", price: 1800, icon: "🪙", blurb: "A jackpot spray that bounces on the board" },
-  { id: "stars", name: "Stars", price: 3000, icon: "⭐", blurb: "Twinkling stars burst out" },
-  { id: "lightning", name: "Lightning", price: 5500, icon: "⚡", blurb: "A bolt strikes the hole" },
-  { id: "flames", name: "Flames", price: 9000, icon: "🔥", blurb: "Fire erupts from the hole" },
-  { id: "fireworks", name: "Mini Fireworks", price: 15000, icon: "🎆", blurb: "A firework pops over the board" },
-  { id: "rainbow", name: "Rainbow Burst", price: 25000, icon: "🌈", blurb: "Shimmering rainbow sparkle" },
+  { id: "streamers", name: "Streamers", price: 500, icon: "🎏", blurb: "Long ribbons in your colours" },
+  { id: "bubbles", name: "Bubbles", price: 2000, icon: "🫧", blurb: "Bubbles float up out of the hole" },
+  { id: "hearts", name: "Hearts", price: 8000, icon: "💖", blurb: "A shower of hearts" },
+  { id: "coins", name: "Gold Coins", price: 25000, icon: "🪙", blurb: "A jackpot spray that bounces on the board" },
+  { id: "stars", name: "Stars", price: 80000, icon: "⭐", blurb: "Twinkling stars burst out" },
+  { id: "blizzard", name: "Blizzard", price: 250000, icon: "❄️", blurb: "A frosty snowburst" },
+  { id: "lightning", name: "Lightning", price: 800000, icon: "⚡", blurb: "A bolt strikes the hole" },
+  { id: "flames", name: "Flames", price: 2500000, icon: "🔥", blurb: "Fire erupts from the hole" },
+  { id: "galaxy", name: "Galaxy Swirl", price: 8000000, icon: "🌌", blurb: "A whirl of stardust" },
+  { id: "fireworks", name: "Mini Fireworks", price: 25000000, icon: "🎆", blurb: "A firework pops over the board" },
+  { id: "rainbow", name: "Rainbow Burst", price: 80000000, icon: "🌈", blurb: "Shimmering rainbow sparkle" },
 ];
 const fxTex = {
   star: canvasTex(64, 64, (c) => { c.fillStyle = "#fff"; c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 12 : 30; c.lineTo(32 + Math.cos(a) * r, 32 + Math.sin(a) * r); } c.fill(); }),
   coin: canvasTex(64, 64, (c) => { const g = c.createRadialGradient(24, 22, 4, 32, 32, 30); g.addColorStop(0, "#fff6b0"); g.addColorStop(0.5, "#ffc93a"); g.addColorStop(1, "#b07a00"); c.fillStyle = g; c.beginPath(); c.arc(32, 32, 28, 0, 7); c.fill(); c.strokeStyle = "#8a5a00"; c.lineWidth = 4; c.stroke(); c.fillStyle = "#b07a00"; c.font = "bold 30px sans-serif"; c.textAlign = "center"; c.fillText("$", 32, 43); }),
+  heart: canvasTex(64, 64, (c) => { c.fillStyle = "#fff"; c.beginPath(); c.moveTo(32, 54); c.bezierCurveTo(4, 36, 6, 10, 22, 10); c.bezierCurveTo(28, 10, 32, 16, 32, 20); c.bezierCurveTo(32, 16, 36, 10, 42, 10); c.bezierCurveTo(58, 10, 60, 36, 32, 54); c.fill(); }),
   bubble: canvasTex(64, 64, (c) => { c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 3; c.beginPath(); c.arc(32, 32, 26, 0, 7); c.stroke(); c.fillStyle = "rgba(160,220,255,.25)"; c.fill(); c.fillStyle = "rgba(255,255,255,.9)"; c.beginPath(); c.ellipse(22, 20, 7, 4, -0.6, 0, 7); c.fill(); }),
 };
 // A burst of sprite particles: n of them, launched upward in a cone, with gravity and a fade.
-function spriteBurst({ n = 40, tex = dotTex, colors = [0xffffff], speed = [3, 7], up = [5, 9], spread = 0.7, gravity = 12, life = [1, 1.6], size = [0.12, 0.22], additive = false, drag = 0.4, bounce = false, rise = 0 }) {
+function spriteBurst({ n = 40, tex = dotTex, colors = [0xffffff], speed = [3, 7], up = [5, 9], spread = 0.7, gravity = 12, life = [1, 1.6], size = [0.12, 0.22], additive = false, drag = 0.4, bounce = false, rise = 0, swirl = 0 }) {
   const base = W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.1);
   for (let i = 0; i < n; i++) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: colors[i % colors.length], transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
     const a = Math.random() * Math.PI * 2, v = rand(speed[0], speed[1]) * spread;
     s.position.copy(base); s.scale.setScalar(rand(size[0], size[1])); scene.add(s);
     const L = rand(life[0], life[1]);
-    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]), Math.sin(a) * v), gravity, drag, bounce, rise, life: L, max: L, s0: s.scale.x });
+    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]), Math.sin(a) * v), gravity, drag, bounce, rise, swirl, base, life: L, max: L, s0: s.scale.x });
   }
 }
 function lightningStrike(color = 0xbfe6ff) {
@@ -2553,6 +2754,13 @@ function celebrate(owner, forced) {
     case "bubbles": spriteBurst({ n: 34, tex: fxTex.bubble, speed: [0.5, 1.6], up: [1, 2.5], gravity: -0.6, life: [2, 3], size: [0.2, 0.45], drag: 0.7 }); break;
     case "coins": spriteBurst({ n: 36, tex: fxTex.coin, speed: [2, 5], up: [6, 10], gravity: 16, life: [1.6, 2.2], size: [0.18, 0.26], bounce: true }); sfx.tick(); break;
     case "stars": spriteBurst({ n: 40, tex: fxTex.star, colors: [0xffe27a, 0xffffff, 0xffc93a], additive: true, speed: [3, 7], up: [4, 8], gravity: 6, life: [1, 1.6], size: [0.15, 0.3] }); break;
+    case "hearts": spriteBurst({ n: 36, tex: fxTex.heart, colors: [0xff3a7a, 0xff7aa8, 0xffffff, 0xe8264f], speed: [2, 5], up: [5, 9], gravity: 7, life: [1.4, 2], size: [0.16, 0.3], drag: 0.5 }); break;
+    case "blizzard":
+      spriteBurst({ n: 60, colors: [0xffffff, 0xd8f0ff], speed: [3, 7], up: [3, 7], gravity: 3, life: [1.2, 1.8], size: [0.06, 0.14], drag: 0.4 });
+      spriteBurst({ n: 18, tex: fxTex.star, colors: [0xbfe6ff, 0xffffff], additive: true, speed: [2, 5], up: [4, 8], gravity: 4, life: [1, 1.5], size: [0.16, 0.28] }); break;
+    case "galaxy":
+      spriteBurst({ n: 50, colors: [0x7a4bff, 0x2f86ff, 0xff4bd8, 0xffffff], additive: true, speed: [1, 3], up: [3, 6], gravity: 2, life: [1.4, 2], size: [0.1, 0.22], drag: 0.6, swirl: 5 });
+      spriteBurst({ n: 20, tex: fxTex.star, colors: [0xffffff, 0xd8c8ff], additive: true, speed: [2, 5], up: [4, 7], gravity: 4, life: [1, 1.6], size: [0.14, 0.26] }); break;
     case "lightning": lightningStrike(); break;
     case "flames": // tongues of fire: a hot core plus embers thrown wide
       spriteBurst({ n: 60, colors: [0xff3a1a, 0xff6a1a, 0xff8a1f], additive: true, speed: [1, 3], up: [3, 7], gravity: -0.5, life: [0.5, 1], size: [0.14, 0.3], drag: 0.35 });
@@ -2567,6 +2775,7 @@ function celebrate(owner, forced) {
 function updateCelebrationFx(f, dt, a) {
   if (f.kind === "sprite") {
     f.vel.y -= f.gravity * dt; f.vel.multiplyScalar(Math.pow(f.drag, dt));
+    if (f.swirl) { const dx = f.o.position.x - f.base.x, dz = f.o.position.z - f.base.z; f.vel.x += -dz * f.swirl * dt; f.vel.z += dx * f.swirl * dt; }
     f.o.position.addScaledVector(f.vel, dt);
     const floor = surf({ x: f.o.position.x, y: -f.o.position.z }) + 0.05;
     if (f.o.position.y < floor) { f.o.position.y = floor; if (f.bounce && Math.abs(f.vel.y) > 1) f.vel.y *= -0.45; else f.vel.set(0, 0, 0); }
@@ -2582,10 +2791,10 @@ function updateCelebrationFx(f, dt, a) {
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);
 const tPos = new THREE.Vector3(), tLook = new THREE.Vector3();
 let tFov = 50;
-// Clubhouse preview: hubYaw is the direction the mid-court camera faces; in "look around" mode you can drag it.
-let hubYaw = 0, hubLook = false, yawDrag = null;
-function setLook(on) { hubLook = on; yawDrag = null; document.body.classList.toggle("looking", on); }
+// Clubhouse: hubYaw is where the venue orbit camera is.
+let hubYaw = 0;
 function camMode() {
+  if (S.preview) return "preview";
   if (S.phase === "hub") return "intro";
   if (S.phase === "aiming") return "aim";
   if (S.phase === "throw") return "throw";
@@ -2600,15 +2809,26 @@ function camMode() {
 function updateCamera(dt) {
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
-  if (mode === "intro") {
-    // Standing between the boards at mid-court, near the ground, turning slowly on the spot: one board, the scenery
-    // around the edge, then the other board. In the clubhouse it tilts down so the board shows above the
-    // venue card; "Look around" hides the card and levels out to show the scenery.
-    if (!yawDrag) hubYaw += dt * 0.12;
-    const cz = -FY / 2 - 1, pitch = hubLook ? -0.1 : -0.42;
-    tPos.set(0, 3.2, cz);
-    tLook.set(Math.sin(hubYaw) * -10, 3.2 + Math.tan(pitch) * 10, cz - Math.cos(hubYaw) * 10);
-    fov = narrow ? (hubLook ? 70 : 64) : 55;
+  if (mode === "preview") {
+    // Shop previews: a close look at the hole, or a side-on look at a throw.
+    if (S.preview.kind === "hole") { tPos.set(1.6, 4.2, -(FY - 5.5)); tLook.set(0, 0.6, -(HOLE.y + 0.5)); }
+    else { tPos.set(2.5, 7.5, 9); tLook.set(0, 1.2, -17); } // behind the thrower: the whole flight and its trail
+    fov = narrow ? 58 : 46; k = 4;
+  } else if (mode === "intro") {
+    // A slow orbit outside the court looking in: both boards stay in view while the scenery turns behind them. The
+    // camera stays low enough to see the surroundings, pulls back and widens over the sides (a phone is narrow and the
+    // court is 31 ft long), and aims so the court rides above the clubhouse card.
+    hubYaw += dt * 0.12;
+    const a = hubYaw, side = Math.sin(a) ** 2, cz = -FY / 2 - 1;
+    let d = narrow ? 38 + 16 * side : 30 + 6 * side;
+    const wall = VENUE_LOOK[venueId]?.wall; // stay inside the stands
+    if (wall) d = Math.min(d, wall[0] / Math.max(Math.abs(Math.sin(a)), 0.01), wall[1] / Math.max(Math.abs(Math.cos(a)), 0.01));
+    const h = Math.min(narrow ? 8 + 4 * side : 9, d * 0.2); // closer in (inside the stands) means lower, so the crowd shows
+    fov = narrow ? 50 + 20 * side : 44;
+    tPos.set(Math.sin(a) * d, h, cz + Math.cos(a) * d);
+    const below = (narrow ? (wall ? 0.3 : 0.55) : 0.2) * fov / 2 * Math.PI / 180; // put the court centre this far above the screen centre
+    const drop = d * Math.tan(Math.atan2(h, d) + below) - h;
+    tLook.set(0, -drop, cz);
     k = 1.5;
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
@@ -2841,7 +3061,7 @@ function renderInningSheet() {
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
-      <button class="swipehint" id="nextBtn">Swipe away for inning ${S.inning + 1} <span>⇡</span></button>`;
+      <button class="swipehint" id="nextBtn">Tap or swipe up for inning ${S.inning + 1} <span>⇡</span></button>`;
   }
   $("inningBody").innerHTML = body;
   const wrap = $("inningBody").querySelector(".card-wrap");
@@ -2853,7 +3073,7 @@ function renderInningSheet() {
   body0.style.transition = "none"; body0.style.transform = ""; body0.style.opacity = "";
   sheet.hidden = false;
 }
-// The between-innings scorecard stays up until it's swiped away (any direction).
+// The between-innings scorecard stays up until it is tapped or swiped away.
 function dismissScorecard(dx, dy) {
   const el = $("inningBody"), sheet = $("inningSheet");
   const len = Math.hypot(dx, dy) || 1;
@@ -2879,6 +3099,7 @@ function dismissScorecard(dx, dy) {
     if (!start) return;
     const dx = e.clientX - start.x, dy = e.clientY - start.y; start = null;
     if (Math.hypot(dx, dy) > 70) dismissScorecard(dx, dy);
+    else if (Math.hypot(dx, dy) < 12) dismissScorecard(0, -1); // a tap sends it up and away
     else { el.style.transition = "transform .2s, opacity .2s"; el.style.transform = ""; el.style.opacity = ""; }
   };
   sheet.addEventListener("pointerup", end);
@@ -2891,43 +3112,38 @@ function openHub() {
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
-  setLook(false); renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
+  renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   const today = new Date().toDateString();
   if (career.lastDaily !== today) {
-    career.lastDaily = today; career.coins += 100; save(); renderHub();
-    const t = document.createElement("div"); t.className = "toast"; t.textContent = "Daily bonus 🪙 +100";
+    // Daily bonus: one buy-in at the highest court you've opened (at least 100).
+    const top = VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]), bonus = Math.max(100, top.fee);
+    career.lastDaily = today; career.coins += bonus; save(); renderHub();
+    const t = document.createElement("div"); t.className = "toast"; t.textContent = `Daily bonus 🪙 +${short(bonus)}`;
     $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
   }
 }
+// 1,500 → 1.5K, 2,000,000 → 2M
+function short(n) { if (n >= 1e6) return +(n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M"; if (n >= 1e4) return +(n / 1e3).toFixed(n % 1e3 ? 1 : 0) + "K"; return n.toLocaleString(); }
 function renderHub() {
   $("coins").textContent = career.coins.toLocaleString();
   $("stars").textContent = career.stars;
-  const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), nextV = VENUES.find(x => x.stars > career.stars);
+  const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
   buildVenue(v.id); setBoardDesign(career.board);
   venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
-  const prog = nextV ? `<div class="muted" style="margin-top:8px">Next venue: ${esc(nextV.name)} at ${nextV.stars} ⭐</div><div class="progress"><i style="width:${Math.min(100, career.stars / nextV.stars * 100)}%"></i></div>` : "";
-  $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous venue">‹</button>
-    <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next venue">›</button>
-    <div class="lvlno">Level ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Entry", houseCovers(hubVenue) ? "On the house" : "🪙 " + v.fee.toLocaleString())}${chip("Winner takes", "🪙 " + pot(v).toLocaleString())}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]} mph`)}${chip("Boards", v.speed.replace(" boards", ""))}</div>
-    ${prog}
-    ${open ? "" : `<div class="locked">🔒 ${v.stars} ⭐ to unlock</div>`}
-    <button class="lookbtn" id="lookBtn">👀 Look around</button>`;
-  $("lookBtn").onclick = () => setLook(true);
+  const prev = hubVenue ? VENUES[hubVenue - 1] : null;
+  const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? "to open Court " + (hubVenue + 2) : "to finish the tour"}</span></div>`;
+  $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous court">‹</button>
+    <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next court">›</button>
+    <div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : "🪙 " + short(v.fee))}${chip("Payout", "🪙 " + short(pot(v)))}${chip("Win / Loss", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+    ${open ? track : ""}
+    ${open ? "" : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}`;
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
   $("vNext").onclick = () => { hubVenue = Math.min(VENUES.length - 1, hubVenue + 1); renderHub(); };
   const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   play.disabled = !open || !afford;
-  play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${v.fee.toLocaleString()}`;
+  play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
   $("passBtn").disabled = !open;
-}
-$("lookDone").onclick = () => setLook(false);
-{
-  const hub = $("hub");
-  hub.addEventListener("pointerdown", e => { if (!hubLook || e.target.closest("button")) return; yawDrag = { x: e.clientX, yaw: hubYaw }; hub.setPointerCapture(e.pointerId); });
-  hub.addEventListener("pointermove", e => { if (yawDrag) hubYaw = yawDrag.yaw - (e.clientX - yawDrag.x) * 0.008; });
-  const end = () => { yawDrag = null; };
-  hub.addEventListener("pointerup", end); hub.addEventListener("pointercancel", end);
 }
 $("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
@@ -2971,12 +3187,10 @@ function storeHTML() {
   const parts = [];
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
   parts.push(`<div class="label">Coins</div>`);
-  for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${it.coins.toLocaleString()} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
+  for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Exclusive sets</div>`);
   for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
-    const trails = it.id === PID("trails") && career.purchases.includes(it.id)
-      ? `<div class="chiprow">${TRAILS.map(t => `<button data-trail="${t.id}" class="${career.trail === t.id ? "on" : ""}">${t.name}</button>`).join("")}</div>` : "";
-    parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}${trails}</div>${btn(it)}</div>`);
+    parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
   }
   if (career.purchases.includes(starter.id)) parts.push(`<div class="storeitem"><div class="ic">⭐</div><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div></div>${btn(starter)}</div>`);
   parts.push(`<div class="storenote">No ads, ever. Coins and items stay on this device.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
@@ -2995,27 +3209,33 @@ function renderShop() {
       else { const tmp = document.createElement("canvas"); tmp.width = 80; tmp.height = 160; paintBoard(tmp.getContext("2d"), 80, 160, boardById(key)); ctx.drawImage(tmp, 20, 0, 40, 80); }
     }
     for (const b of list.querySelectorAll("[data-buy]")) b.onclick = () => buy(b.dataset.buy);
-    for (const b of list.querySelectorAll("[data-trail]")) b.onclick = () => { career.trail = b.dataset.trail; save(); renderShop(); };
     $("restoreBtn").onclick = () => { if (!canBuy()) { shopMsg = "Restore works in the iPhone app."; renderShop(); return; } shopMsg = "Restoring…"; postNative("restore", ""); renderShop(); };
     return;
   }
-  if (shopTab === "effects") {
-    for (const it of EFFECTS) {
-      const owned = career.effects.includes(it.id), equipped = career.effect === it.id;
+  if (shopTab === "throw" || shopTab === "hole") {
+    const isThrow = shopTab === "throw", all = isThrow ? TRAILS : EFFECTS, mine = isThrow ? career.trails : career.effects;
+    list.insertAdjacentHTML("beforeend", `<div class="label">${isThrow ? "Throw effects: a trail behind your bag" : "Cornhole effects: when your bag drops in"}</div>`);
+    for (const it of all) {
+      const owned = mine.includes(it.id), equipped = (isThrow ? career.trail : career.effect) === it.id;
       const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
       row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div></div>`;
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      main.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
+      main.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${short(it.price)}` : "FREE";
       main.disabled = equipped || (!owned && career.coins < it.price);
-      main.onclick = () => { if (!owned) { career.coins -= it.price; career.effects.push(it.id); } career.effect = it.id; save(); renderShop(); renderHub(); };
-      const prev = document.createElement("button"); prev.className = "btn ghost"; prev.textContent = "▶ Preview";
-      prev.onclick = () => { // play it on the board behind the shop
-        $("shop").hidden = true; $("hub").hidden = true; initAudio(); sfx.hole(); celebrate(0, it.id);
-        setTimeout(() => { $("hub").hidden = S.phase !== "hub"; $("shop").hidden = false; }, 2300);
+      main.onclick = () => {
+        if (!owned) { career.coins -= it.price; mine.push(it.id); }
+        if (isThrow) career.trail = it.id; else career.effect = it.id;
+        save(); renderShop(); renderHub();
       };
-      btns.append(main, prev); row.appendChild(btns); list.appendChild(row);
+      btns.appendChild(main);
+      if (it.id !== "none") {
+        const prev = document.createElement("button"); prev.className = "btn ghost"; prev.textContent = "▶ Preview";
+        prev.onclick = () => previewEffect(isThrow ? "throw" : "hole", it.id);
+        btns.appendChild(prev);
+      }
+      row.appendChild(btns); list.appendChild(row);
     }
     return;
   }
@@ -3044,6 +3264,35 @@ function renderShop() {
     row.appendChild(btn); list.appendChild(row);
   }
 }
+// Shop previews: hide the shop, play the effect where you can see it, then come back.
+function previewEffect(kind, id) {
+  initAudio();
+  $("shop").hidden = true; $("hub").hidden = true; clearBagMeshes();
+  S.preview = { kind, id, t: 0, mesh: null };
+  if (kind === "hole") setTimeout(() => { sfx.hole(); celebrate(0, id); }, 450);
+  else {
+    const m = new THREE.Mesh(bagGeo, bagMaterial(bagById(career.bag))); m.castShadow = true; scene.add(m);
+    S.preview.mesh = m; sfx.whoosh();
+  }
+}
+function updatePreview(dt) {
+  const P = S.preview; if (!P) return;
+  P.t += dt;
+  if (P.mesh) { // a lob from the left box into the hole, trailing the effect
+    const k = Math.min(1, Math.max(0, (P.t - 0.35) / 1.3)), o = release(0);
+    const x = lerp(o.x, HOLE.x, k), y = lerp(o.y, HOLE.y, k), z = lerp(o.z, plane(HOLE.y), k) + 7 * k * (1 - k);
+    P.mesh.position.copy(W(x, y, z + 0.1)); P.mesh.rotation.set(0.2, -k * 6, 0.1);
+    P.mesh.visible = k < 1;
+    if (k > 0 && k < 1) trailPuff(P.mesh.position, P.id, 0);
+    if (k >= 1 && !P.landed) { P.landed = true; sfx.hole(); }
+  }
+  if (P.t > (P.mesh ? 2.4 : 3)) {
+    if (P.mesh) { scene.remove(P.mesh); P.mesh.material.dispose(); }
+    S.preview = null;
+    if (S.phase === "hub") $("hub").hidden = false;
+    $("shop").hidden = false;
+  }
+}
 $("shopBtn").onclick = () => { shopMsg = ""; renderShop(); $("shop").hidden = false; };
 $("shopClose").onclick = () => { $("shop").hidden = true; renderHub(); };
 for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { shopTab = b.dataset.tab; renderShop(); };
@@ -3057,7 +3306,7 @@ $("menuBtn").onclick = () => {
 };
 $("resumeBtn").onclick = () => { $("pause").hidden = true; S.phase = pausedPhase || "aiming"; ui(); };
 $("forfeitBtn").onclick = () => {
-  if (S.kind === "career") { career.stars = Math.max(0, career.stars - starsForLoss(S.venue)); career.losses++; save(); }
+  if (S.kind === "career") { addCourtStars(S.venue, -starsForLoss(S.venue)); career.losses++; save(); }
   openHub();
 };
 function renderSoundButtons() {
@@ -3102,6 +3351,7 @@ function frame(now) {
   if (finishMarker.visible) finishMarker.scale.setScalar(1 + 0.08 * Math.sin(S.time * 4));
   updateBags(dt);
   updateAimRig(dt);
+  updatePreview(dt);
   updateFx(dt);
   venueTick(dt, S.time);
   updateCamera(dt);
@@ -3113,7 +3363,7 @@ resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { setLook, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
 </script>
 
 </body>

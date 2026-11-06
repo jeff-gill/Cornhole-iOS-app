@@ -15,49 +15,53 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 }
 
 // ───────────────────────── Career content
-// Every venue is a new location. Higher venues: stronger steady wind, faster arrow, smaller sweet spot, slicker boards, better opponents.
-// Tuned with simulated throws (realistic human timing): a good player sinks about 40% at the Backyard down to about 23% at the
-// Stadium with the starter bag. CPU skill = spread of its release errors (smaller is better): ~13-21% in the hole at the
-// Backyard up to ~36-50% at the Stadium.
+// Twelve courts, each a new location. Higher courts: stronger steady wind, faster arrow, smaller sweet spot, slicker boards,
+// better opponents. Each court has its own star track: win stars there until it's full (max) to open the next court.
+// A win pays the pot (both buy-ins). Tuned with simulated throws: a good player sinks about 40% at the Backyard and
+// about 20% on the last courts with the starter bag.
 const VENUES = [
-  { id: "backyard", name: "Backyard", sub: "Where it all starts", stars: 0, fee: 25, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", stars: 12, fee: 150, swing: 0.65, zone: 0.05, wob: 0.021, cpu: [0.16, 0.10], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", stars: 30, fee: 500, swing: 0.75, zone: 0.045, wob: 0.030, cpu: [0.12, 0.08], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", stars: 60, fee: 1400, swing: 0.85, zone: 0.039, wob: 0.037, cpu: [0.10, 0.065], mu: 0.30, wind: [6, 12], speed: "Slick boards" },
-  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", stars: 100, fee: 2200, swing: 0.9, zone: 0.037, wob: 0.041, cpu: [0.09, 0.058], mu: 0.26, wind: [6, 14], speed: "Icy boards" },
-  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", stars: 150, fee: 3400, swing: 0.95, zone: 0.035, wob: 0.044, cpu: [0.082, 0.05], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
-  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", stars: 210, fee: 5000, swing: 1.0, zone: 0.033, wob: 0.048, cpu: [0.075, 0.045], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
-  { id: "stadium", name: "Stadium Finals", sub: "The big show", stars: 280, fee: 7500, swing: 1.05, zone: 0.032, wob: 0.051, cpu: [0.068, 0.038], mu: 0.28, wind: [8, 16], speed: "Fast pro boards" },
+  { id: "backyard", name: "Backyard", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.62, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
+  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
+  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.83, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [6, 13], speed: "Icy boards" },
+  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.88, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
+  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.92, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
+  { id: "rooftop", name: "City Rooftop", sub: "Skyline lights and swirling wind", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.96, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [9, 17], speed: "Slick boards" },
+  { id: "lakeside", name: "Lakeside Dock", sub: "Morning mist on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 1.0, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [8, 15], speed: "Dewy boards" },
+  { id: "canyon", name: "Desert Canyon", sub: "Red rock, hot gusts", max: 900, fee: 3000000, win: 30, loss: 32, swing: 1.03, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [10, 19], speed: "Dusty boards" },
+  { id: "carnival", name: "County Fair", sub: "Ferris wheel and midway lights", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 1.06, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [9, 17], speed: "Fast boards" },
+  { id: "stadium", name: "Stadium Finals", sub: "The big show", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 1.09, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [10, 18], speed: "Fast pro boards" },
 ];
-// Stakes: both players put in the entry and the winner takes the whole pot. Stars: a win is +2 at the first venue and
-// one more per level; a loss is -1 at the first venue and one more per level. Quitting counts as a loss.
 const pot = v => v.fee * 2;
-const starsForWin = vi => 2 + vi, starsForLoss = vi => 1 + vi;
-// The house covers your Backyard entry if you're short, so you can never get stuck.
+const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
+// Stars needed in total (all courts so far) to open court vi: the "Total to advance" column.
+const starsToReach = vi => VENUES.slice(0, vi).reduce((t, v) => t + v.max, 0);
+// The house covers your Backyard buy-in if you're short, so you can never get stuck.
 const houseCovers = vi => vi === 0 && career.coins < VENUES[0].fee;
-// Twenty coin bags. Prices climb with widening gaps (each about 35-40% more than the last), so maxing out takes a career:
-// the Gold Standard is roughly 15 Stadium wins. Stats rise gradually; a few mid-price bags are specialists.
+// Twenty coin bags. Prices about double each step (100 coins to 100 million), so each court's winnings buy the next tier
+// or two; the Gold Standard takes a few wins at the last court. Stats rise gradually; a few mid-price bags are specialists.
 const BAGS = [
   { id: "starter", name: "Duck Cloth", price: 0, acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#ff4b3a", pattern: "plain" },
-  { id: "backyard", name: "Backyard Pro", price: 150, acc: 2, ctrl: 1, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
+  { id: "backyard", name: "Backyard Pro", price: 100, acc: 2, ctrl: 1, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
   { id: "picnic", name: "Picnic Plaid", price: 220, acc: 1, ctrl: 2, spin: 2, feel: "sticky", c: "#d62828", pattern: "plaid" },
-  { id: "lemonade", name: "Lemonade", price: 320, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#f2c230", pattern: "dots" },
-  { id: "camo", name: "Camo Crew", price: 450, acc: 2, ctrl: 2, spin: 2, feel: "sticky", c: "#5b7a3a", pattern: "camo" },
-  { id: "skychev", name: "Sky Chevron", price: 650, acc: 2, ctrl: 3, spin: 2, feel: "neutral", c: "#2f86ff", pattern: "chevron" },
-  { id: "zigzag", name: "Zigzag", price: 900, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#0fb5a5", pattern: "zigzag" },
-  { id: "twotone", name: "Two-Tone", price: 1300, acc: 3, ctrl: 3, spin: 2, feel: "neutral", c: "#8a3ffc", pattern: "split" },
-  { id: "bullseye", name: "Bullseye", price: 1800, acc: 3, ctrl: 2, spin: 3, feel: "neutral", c: "#e8392b", pattern: "target" },
-  { id: "slick", name: "Slick Rick", price: 2600, acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#a24bff", pattern: "chevron" },
-  { id: "sticky", name: "Sticky Fingers", price: 3600, acc: 3, ctrl: 4, spin: 3, feel: "sticky", c: "#2fbf71", pattern: "dots" },
-  { id: "diamond", name: "Diamond Back", price: 5000, acc: 4, ctrl: 3, spin: 3, feel: "neutral", c: "#1f3a6e", pattern: "diamond" },
-  { id: "twister", name: "Twister", price: 7000, acc: 3, ctrl: 3, spin: 5, feel: "neutral", c: "#00b8c8", pattern: "swirl" },
-  { id: "thunder", name: "Thunder", price: 9500, acc: 4, ctrl: 4, spin: 3, feel: "fast", c: "#f2b705", pattern: "bolt" },
-  { id: "royal", name: "Royal", price: 13000, acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#6a2c91", pattern: "diamond" },
-  { id: "laser", name: "Laser", price: 18000, acc: 5, ctrl: 4, spin: 3, feel: "fast", c: "#ff2e88", pattern: "bolt" },
-  { id: "midnight", name: "Midnight", price: 25000, acc: 4, ctrl: 5, spin: 4, feel: "sticky", c: "#14214a", pattern: "star" },
-  { id: "champion", name: "Champion", price: 34000, acc: 5, ctrl: 4, spin: 5, feel: "neutral", c: "#c8102e", pattern: "star" },
-  { id: "platinum", name: "Platinum", price: 46000, acc: 5, ctrl: 5, spin: 4, feel: "neutral", c: "#9aa4b2", pattern: "diamond" },
-  { id: "gold", name: "Gold Standard", price: 62000, acc: 5, ctrl: 5, spin: 5, feel: "neutral", c: "#f2b705", pattern: "star" },
+  { id: "lemonade", name: "Lemonade", price: 460, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#f2c230", pattern: "dots" },
+  { id: "camo", name: "Camo Crew", price: 1000, acc: 2, ctrl: 2, spin: 2, feel: "sticky", c: "#5b7a3a", pattern: "camo" },
+  { id: "skychev", name: "Sky Chevron", price: 2200, acc: 2, ctrl: 3, spin: 2, feel: "neutral", c: "#2f86ff", pattern: "chevron" },
+  { id: "zigzag", name: "Zigzag", price: 4600, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#0fb5a5", pattern: "zigzag" },
+  { id: "twotone", name: "Two-Tone", price: 10000, acc: 3, ctrl: 3, spin: 2, feel: "neutral", c: "#8a3ffc", pattern: "split" },
+  { id: "bullseye", name: "Bullseye", price: 22000, acc: 3, ctrl: 2, spin: 3, feel: "neutral", c: "#e8392b", pattern: "target" },
+  { id: "slick", name: "Slick Rick", price: 46000, acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#a24bff", pattern: "chevron" },
+  { id: "sticky", name: "Sticky Fingers", price: 100000, acc: 3, ctrl: 4, spin: 3, feel: "sticky", c: "#2fbf71", pattern: "dots" },
+  { id: "diamond", name: "Diamond Back", price: 220000, acc: 4, ctrl: 3, spin: 3, feel: "neutral", c: "#1f3a6e", pattern: "diamond" },
+  { id: "twister", name: "Twister", price: 460000, acc: 3, ctrl: 3, spin: 5, feel: "neutral", c: "#00b8c8", pattern: "swirl" },
+  { id: "thunder", name: "Thunder", price: 1000000, acc: 4, ctrl: 4, spin: 3, feel: "fast", c: "#f2b705", pattern: "bolt" },
+  { id: "royal", name: "Royal", price: 2200000, acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#6a2c91", pattern: "diamond" },
+  { id: "laser", name: "Laser", price: 4600000, acc: 5, ctrl: 4, spin: 3, feel: "fast", c: "#ff2e88", pattern: "bolt" },
+  { id: "midnight", name: "Midnight", price: 10000000, acc: 4, ctrl: 5, spin: 4, feel: "sticky", c: "#14214a", pattern: "star" },
+  { id: "champion", name: "Champion", price: 22000000, acc: 5, ctrl: 4, spin: 5, feel: "neutral", c: "#c8102e", pattern: "star" },
+  { id: "platinum", name: "Platinum", price: 46000000, acc: 5, ctrl: 5, spin: 4, feel: "neutral", c: "#9aa4b2", pattern: "diamond" },
+  { id: "gold", name: "Gold Standard", price: 100000000, acc: 5, ctrl: 5, spin: 5, feel: "neutral", c: "#f2b705", pattern: "star" },
 ];
 // Premium items come only from the Store (real money). Exclusive looks; stats are good but never better than the
 // best coin bag, so nobody can buy wins.
@@ -69,16 +73,33 @@ BAGS.push(
 );
 // Store products (prices are placeholders until the App Store reports the real, local ones).
 const STORE = [
-  { id: PID("coins.1000"), kind: "coins", coins: 1000, price: "$0.99", title: "Handful of Coins", icon: "🪙" },
-  { id: PID("coins.6000"), kind: "coins", coins: 6000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
-  { id: PID("coins.15000"), kind: "coins", coins: 15000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
-  { id: PID("coins.40000"), kind: "coins", coins: 40000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
-  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 5000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "5,000 coins + Firecracker bags + Neon Nights board" },
-  { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb"], blurb: "Exclusive Galaxy bags and board" },
-  { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob"], blurb: "Exclusive Inferno bags and board" },
-  { id: PID("trails"), kind: "once", price: "$1.99", title: "Bag Trails", grants: ["trail:sparkle", "trail:fire", "trail:rainbow"], blurb: "Sparkle, fire and rainbow trails behind your bag" },
+  { id: PID("coins.small"), kind: "coins", coins: 20000, price: "$0.99", title: "Handful of Coins", icon: "🪙" },
+  { id: PID("coins.medium"), kind: "coins", coins: 150000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
+  { id: PID("coins.large"), kind: "coins", coins: 500000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
+  { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
+  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 25000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "25,000 coins + Firecracker bags + Neon Nights board" },
+  { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
+  { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
+  { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
 ];
-const TRAILS = [{ id: "none", name: "None" }, { id: "sparkle", name: "Sparkle" }, { id: "fire", name: "Fire" }, { id: "rainbow", name: "Rainbow" }];
+// Throw effects: a trail behind your bag in flight (shop "Throw" tab).
+const TRAILS = [
+  { id: "none", name: "No Trail", price: 0, icon: "➖", blurb: "Just the bag" },
+  { id: "smoke", name: "Smoke", price: 250, icon: "💨", blurb: "A puff of smoke behind the bag" },
+  { id: "sparkle", name: "Sparkle", price: 800, icon: "✨", blurb: "Glittering sparks" },
+  { id: "bubbles", name: "Bubbles", price: 2500, icon: "🫧", blurb: "A stream of bubbles" },
+  { id: "confetti", name: "Confetti", price: 6000, icon: "🎊", blurb: "Party bits in your colours" },
+  { id: "hearts", name: "Hearts", price: 15000, icon: "💖", blurb: "Love every throw" },
+  { id: "fire", name: "Fire", price: 40000, icon: "🔥", blurb: "A flaming tail" },
+  { id: "ice", name: "Ice", price: 100000, icon: "❄️", blurb: "Frosty crystals" },
+  { id: "stars", name: "Stars", price: 250000, icon: "⭐", blurb: "Shooting stars" },
+  { id: "lightning", name: "Lightning", price: 600000, icon: "⚡", blurb: "Crackling electricity" },
+  { id: "neon", name: "Neon", price: 1500000, icon: "💡", blurb: "A glowing ribbon in your colour" },
+  { id: "rainbow", name: "Rainbow", price: 4000000, icon: "🌈", blurb: "Every colour, all the way" },
+  { id: "galaxy", name: "Galaxy", price: 10000000, icon: "🌌", blurb: "Stardust and nebula" },
+  { id: "gold", name: "Gold Rush", price: 25000000, icon: "🪙", blurb: "Spills gold coins" },
+  { id: "comet", name: "Comet", price: 60000000, icon: "☄️", blurb: "A blazing comet tail" },
+];
 // Opponents and the second local player use these.
 const RIVAL_BAGS = [
   { id: "rival", name: "Blue Duck", acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#2f86ff", pattern: "plain" },
@@ -88,25 +109,25 @@ const RIVAL_BAGS = [
 // Twenty coin boards (looks only), on a similar but gentler climb, plus the exclusive Store boards.
 const BOARDS = [
   { id: "classic", name: "Classic Navy", price: 0, paint: "band", a: "#1f3a6e", b: "#ffc93a" },
-  { id: "redband", name: "Red Band", price: 100, paint: "band", a: "#c8102e", b: "#ffffff" },
+  { id: "redband", name: "Red Band", price: 80, paint: "band", a: "#c8102e", b: "#ffffff" },
   { id: "lake", name: "Lake Blue", price: 180, paint: "fade", a: "#2f86ff", b: "#0fb5a5" },
-  { id: "polka", name: "Polka Party", price: 280, paint: "polka", a: "#ff2e88", b: "#ffffff" },
-  { id: "sunburst", name: "Sunburst", price: 400, paint: "sunburst", a: "#ff8a1f", b: "#ffd84a" },
-  { id: "stripes", name: "Stars & Stripes", price: 600, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
-  { id: "diag", name: "Diagonal Rush", price: 850, paint: "diag", a: "#2f86ff", b: "#ffffff" },
-  { id: "plaid", name: "Picnic Plaid", price: 1200, paint: "plaid", a: "#c8102e", b: "#1f3a6e" },
-  { id: "sunset", name: "Sunset Fade", price: 1700, paint: "fade", a: "#ff7a3a", b: "#a83279" },
-  { id: "camo", name: "Camo", price: 2400, paint: "camo", a: "#5b7a3a", b: "#3d5229" },
-  { id: "checker", name: "Checkered Flag", price: 3300, paint: "checker", a: "#111111", b: "#ffffff" },
-  { id: "chev", name: "Chevron Charge", price: 4500, paint: "chev", a: "#ffc93a", b: "#1f3a6e" },
-  { id: "waves", name: "Ocean Waves", price: 6000, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
-  { id: "target", name: "Bullseye", price: 8000, paint: "target", a: "#e8392b", b: "#ffffff" },
-  { id: "split", name: "Split Decision", price: 11000, paint: "split", a: "#8a3ffc", b: "#ffc93a" },
-  { id: "retro", name: "Retro Rays", price: 15000, paint: "sunburst", a: "#a83279", b: "#ff7a3a" },
-  { id: "midband", name: "Midnight Band", price: 20000, paint: "band", a: "#0d1430", b: "#9aa4b2" },
-  { id: "tropic", name: "Tropical", price: 27000, paint: "waves", a: "#ff2e88", b: "#ffd84a" },
-  { id: "racing", name: "Racing Checker", price: 36000, paint: "checker", a: "#c8102e", b: "#111111" },
-  { id: "goldpro", name: "Gold Pro", price: 50000, paint: "gold", a: "#151515", b: "#ffd84a" },
+  { id: "polka", name: "Polka Party", price: 380, paint: "polka", a: "#ff2e88", b: "#ffffff" },
+  { id: "sunburst", name: "Sunburst", price: 800, paint: "sunburst", a: "#ff8a1f", b: "#ffd84a" },
+  { id: "stripes", name: "Stars & Stripes", price: 1700, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
+  { id: "diag", name: "Diagonal Rush", price: 3600, paint: "diag", a: "#2f86ff", b: "#ffffff" },
+  { id: "plaid", name: "Picnic Plaid", price: 8000, paint: "plaid", a: "#c8102e", b: "#1f3a6e" },
+  { id: "sunset", name: "Sunset Fade", price: 17000, paint: "fade", a: "#ff7a3a", b: "#a83279" },
+  { id: "camo", name: "Camo", price: 36000, paint: "camo", a: "#5b7a3a", b: "#3d5229" },
+  { id: "checker", name: "Checkered Flag", price: 80000, paint: "checker", a: "#111111", b: "#ffffff" },
+  { id: "chev", name: "Chevron Charge", price: 170000, paint: "chev", a: "#ffc93a", b: "#1f3a6e" },
+  { id: "waves", name: "Ocean Waves", price: 360000, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
+  { id: "target", name: "Bullseye", price: 800000, paint: "target", a: "#e8392b", b: "#ffffff" },
+  { id: "split", name: "Split Decision", price: 1700000, paint: "split", a: "#8a3ffc", b: "#ffc93a" },
+  { id: "retro", name: "Retro Rays", price: 3600000, paint: "sunburst", a: "#a83279", b: "#ff7a3a" },
+  { id: "midband", name: "Midnight Band", price: 8000000, paint: "band", a: "#0d1430", b: "#9aa4b2" },
+  { id: "tropic", name: "Tropical", price: 17000000, paint: "waves", a: "#ff2e88", b: "#ffd84a" },
+  { id: "racing", name: "Racing Checker", price: 36000000, paint: "checker", a: "#c8102e", b: "#111111" },
+  { id: "goldpro", name: "Gold Pro", price: 80000000, paint: "gold", a: "#151515", b: "#ffd84a" },
   { id: "neon", name: "Neon Nights", premium: PID("starterpack"), paint: "neon", a: "#0d0d1a", b: "#2ef2ff" },
   { id: "galaxyb", name: "Galaxy", premium: PID("set.galaxy"), paint: "galaxy", a: "#140a3a", b: "#b48cff" },
   { id: "infernob", name: "Inferno", premium: PID("set.inferno"), paint: "flames", a: "#1a0a05", b: "#ff7a1a" },
@@ -117,7 +138,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti" });
+const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -129,11 +150,17 @@ try {
     const old = typeof raw === "string" ? JSON.parse(raw) : raw;
     career = { ...fresh(), ...old };
     if (old.tutorialDone === undefined && (old.wins || old.losses)) career.tutorialDone = true; // veterans skip the coach
-    if (!old.venueId && career.venue >= 4) career.venue = VENUES.findIndex(v => v.id === "stadium"); // saves from the five-venue career
-    for (const v of VENUES) if (career.stars >= v.stars && !career.unlocked.includes(v.id)) career.unlocked.push(v.id);
+    if (!old.courtStars) { // older saves had one star count: pour it into the courts in order
+      let left = old.stars || 0;
+      for (const v of VENUES) { const n = Math.min(v.max, left); if (n > 0) career.courtStars[v.id] = n; left -= n; }
+      career.venue = 0;
+    }
+    career.courtStars = { ...career.courtStars };
+    updateUnlocks();
   }
 } catch (e) { /* storage unavailable: play without saving */ }
 function save() {
+  career.savedAt = Date.now(); // the iPhone app keeps whichever copy (device or iCloud) is newest
   const json = JSON.stringify(career);
   postNative("save", json);
   try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
@@ -141,6 +168,14 @@ function save() {
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
 const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
 const venueUnlocked = i => career.unlocked.includes(VENUES[i].id);
+function courtStars(i) { return career.courtStars[VENUES[i].id] || 0; }
+// Filling a court's star track opens the next one (and it stays open).
+function updateUnlocks() {
+  const newly = [];
+  career.stars = VENUES.reduce((t, v) => t + (career.courtStars[v.id] || 0), 0);
+  VENUES.forEach((v, i) => { if (i && !career.unlocked.includes(v.id) && courtStars(i - 1) >= VENUES[i - 1].max) { career.unlocked.push(v.id); newly.push(v); } });
+  return newly;
+}
 // Deliver a store purchase. Coin packs can be bought again; one-time items (and restores) never pay out twice.
 function grantPurchase(id, restored) {
   const item = STORE.find(x => x.id === id);
@@ -206,7 +241,7 @@ function newWind() {
   S.wind = { mph: Math.round(rand(lo, hi)), dir: rand(0, Math.PI * 2) }; // steady for the whole inning, any direction
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
-  setAmbience({ wind: mph, surf: ["beach", "bonfire", "island"].includes(id), crowd: id === "stadium" || id === "tailgate", night: id === "brewery" || id === "bonfire", fire: id === "bonfire" || id === "lodge" });
+  setAmbience({ wind: mph, surf: ["beach", "bonfire", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: ["brewery", "bonfire", "carnival"].includes(id), fire: id === "bonfire" || id === "lodge" });
 }
 function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
@@ -221,7 +256,7 @@ function startMatch(kind, vi) {
     const [hi, lo] = v.cpu, skill = rand(lo, hi);
     S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
     S.names = ["You", S.opponent.name];
-    S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 3))]];
+    S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
   } else {
     S.opponent = null;
     S.names = ["Player 1", "Player 2"];
@@ -362,17 +397,17 @@ function finishInning() {
 function finishMatch() {
   if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
-  const v = venue(), won = S.winner === 0, before = career.stars;
-  const starDelta = won ? starsForWin(S.venue) : -starsForLoss(S.venue);
+  const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
   const coins = won ? pot(v) : 0;
-  career.stars = Math.max(0, career.stars + starDelta);
+  addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
-  const newly = VENUES.filter(x => career.stars >= x.stars && !career.unlocked.includes(x.id));
-  for (const x of newly) career.unlocked.push(x.id);
+  const newly = updateUnlocks();
   save();
-  S.result = { won, starDelta: career.stars - before, coins, newly: newly.map(x => x.name) };
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name) };
 }
+// A court's stars stay between 0 and its max.
+function addCourtStars(vi, n) { const v = VENUES[vi]; career.courtStars[v.id] = clamp(courtStars(vi) + n, 0, v.max); updateUnlocks(); }
 function nextInning() {
   S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
   newWind(); venueAmbience(); beginTurn();

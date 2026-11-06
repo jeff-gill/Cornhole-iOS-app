@@ -3,29 +3,33 @@
 // Each effect plays at the hole when your bag drops in; the 2/3/4-bagger build-up layers on top.
 const EFFECTS = [
   { id: "confetti", name: "Confetti", price: 0, icon: "🎉", blurb: "The classic burst" },
-  { id: "streamers", name: "Streamers", price: 400, icon: "🎏", blurb: "Long ribbons in your colours" },
-  { id: "bubbles", name: "Bubbles", price: 900, icon: "🫧", blurb: "Bubbles float up out of the hole" },
-  { id: "coins", name: "Gold Coins", price: 1800, icon: "🪙", blurb: "A jackpot spray that bounces on the board" },
-  { id: "stars", name: "Stars", price: 3000, icon: "⭐", blurb: "Twinkling stars burst out" },
-  { id: "lightning", name: "Lightning", price: 5500, icon: "⚡", blurb: "A bolt strikes the hole" },
-  { id: "flames", name: "Flames", price: 9000, icon: "🔥", blurb: "Fire erupts from the hole" },
-  { id: "fireworks", name: "Mini Fireworks", price: 15000, icon: "🎆", blurb: "A firework pops over the board" },
-  { id: "rainbow", name: "Rainbow Burst", price: 25000, icon: "🌈", blurb: "Shimmering rainbow sparkle" },
+  { id: "streamers", name: "Streamers", price: 500, icon: "🎏", blurb: "Long ribbons in your colours" },
+  { id: "bubbles", name: "Bubbles", price: 2000, icon: "🫧", blurb: "Bubbles float up out of the hole" },
+  { id: "hearts", name: "Hearts", price: 8000, icon: "💖", blurb: "A shower of hearts" },
+  { id: "coins", name: "Gold Coins", price: 25000, icon: "🪙", blurb: "A jackpot spray that bounces on the board" },
+  { id: "stars", name: "Stars", price: 80000, icon: "⭐", blurb: "Twinkling stars burst out" },
+  { id: "blizzard", name: "Blizzard", price: 250000, icon: "❄️", blurb: "A frosty snowburst" },
+  { id: "lightning", name: "Lightning", price: 800000, icon: "⚡", blurb: "A bolt strikes the hole" },
+  { id: "flames", name: "Flames", price: 2500000, icon: "🔥", blurb: "Fire erupts from the hole" },
+  { id: "galaxy", name: "Galaxy Swirl", price: 8000000, icon: "🌌", blurb: "A whirl of stardust" },
+  { id: "fireworks", name: "Mini Fireworks", price: 25000000, icon: "🎆", blurb: "A firework pops over the board" },
+  { id: "rainbow", name: "Rainbow Burst", price: 80000000, icon: "🌈", blurb: "Shimmering rainbow sparkle" },
 ];
 const fxTex = {
   star: canvasTex(64, 64, (c) => { c.fillStyle = "#fff"; c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 12 : 30; c.lineTo(32 + Math.cos(a) * r, 32 + Math.sin(a) * r); } c.fill(); }),
   coin: canvasTex(64, 64, (c) => { const g = c.createRadialGradient(24, 22, 4, 32, 32, 30); g.addColorStop(0, "#fff6b0"); g.addColorStop(0.5, "#ffc93a"); g.addColorStop(1, "#b07a00"); c.fillStyle = g; c.beginPath(); c.arc(32, 32, 28, 0, 7); c.fill(); c.strokeStyle = "#8a5a00"; c.lineWidth = 4; c.stroke(); c.fillStyle = "#b07a00"; c.font = "bold 30px sans-serif"; c.textAlign = "center"; c.fillText("$", 32, 43); }),
+  heart: canvasTex(64, 64, (c) => { c.fillStyle = "#fff"; c.beginPath(); c.moveTo(32, 54); c.bezierCurveTo(4, 36, 6, 10, 22, 10); c.bezierCurveTo(28, 10, 32, 16, 32, 20); c.bezierCurveTo(32, 16, 36, 10, 42, 10); c.bezierCurveTo(58, 10, 60, 36, 32, 54); c.fill(); }),
   bubble: canvasTex(64, 64, (c) => { c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 3; c.beginPath(); c.arc(32, 32, 26, 0, 7); c.stroke(); c.fillStyle = "rgba(160,220,255,.25)"; c.fill(); c.fillStyle = "rgba(255,255,255,.9)"; c.beginPath(); c.ellipse(22, 20, 7, 4, -0.6, 0, 7); c.fill(); }),
 };
 // A burst of sprite particles: n of them, launched upward in a cone, with gravity and a fade.
-function spriteBurst({ n = 40, tex = dotTex, colors = [0xffffff], speed = [3, 7], up = [5, 9], spread = 0.7, gravity = 12, life = [1, 1.6], size = [0.12, 0.22], additive = false, drag = 0.4, bounce = false, rise = 0 }) {
+function spriteBurst({ n = 40, tex = dotTex, colors = [0xffffff], speed = [3, 7], up = [5, 9], spread = 0.7, gravity = 12, life = [1, 1.6], size = [0.12, 0.22], additive = false, drag = 0.4, bounce = false, rise = 0, swirl = 0 }) {
   const base = W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.1);
   for (let i = 0; i < n; i++) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: colors[i % colors.length], transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
     const a = Math.random() * Math.PI * 2, v = rand(speed[0], speed[1]) * spread;
     s.position.copy(base); s.scale.setScalar(rand(size[0], size[1])); scene.add(s);
     const L = rand(life[0], life[1]);
-    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]), Math.sin(a) * v), gravity, drag, bounce, rise, life: L, max: L, s0: s.scale.x });
+    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]), Math.sin(a) * v), gravity, drag, bounce, rise, swirl, base, life: L, max: L, s0: s.scale.x });
   }
 }
 function lightningStrike(color = 0xbfe6ff) {
@@ -54,6 +58,13 @@ function celebrate(owner, forced) {
     case "bubbles": spriteBurst({ n: 34, tex: fxTex.bubble, speed: [0.5, 1.6], up: [1, 2.5], gravity: -0.6, life: [2, 3], size: [0.2, 0.45], drag: 0.7 }); break;
     case "coins": spriteBurst({ n: 36, tex: fxTex.coin, speed: [2, 5], up: [6, 10], gravity: 16, life: [1.6, 2.2], size: [0.18, 0.26], bounce: true }); sfx.tick(); break;
     case "stars": spriteBurst({ n: 40, tex: fxTex.star, colors: [0xffe27a, 0xffffff, 0xffc93a], additive: true, speed: [3, 7], up: [4, 8], gravity: 6, life: [1, 1.6], size: [0.15, 0.3] }); break;
+    case "hearts": spriteBurst({ n: 36, tex: fxTex.heart, colors: [0xff3a7a, 0xff7aa8, 0xffffff, 0xe8264f], speed: [2, 5], up: [5, 9], gravity: 7, life: [1.4, 2], size: [0.16, 0.3], drag: 0.5 }); break;
+    case "blizzard":
+      spriteBurst({ n: 60, colors: [0xffffff, 0xd8f0ff], speed: [3, 7], up: [3, 7], gravity: 3, life: [1.2, 1.8], size: [0.06, 0.14], drag: 0.4 });
+      spriteBurst({ n: 18, tex: fxTex.star, colors: [0xbfe6ff, 0xffffff], additive: true, speed: [2, 5], up: [4, 8], gravity: 4, life: [1, 1.5], size: [0.16, 0.28] }); break;
+    case "galaxy":
+      spriteBurst({ n: 50, colors: [0x7a4bff, 0x2f86ff, 0xff4bd8, 0xffffff], additive: true, speed: [1, 3], up: [3, 6], gravity: 2, life: [1.4, 2], size: [0.1, 0.22], drag: 0.6, swirl: 5 });
+      spriteBurst({ n: 20, tex: fxTex.star, colors: [0xffffff, 0xd8c8ff], additive: true, speed: [2, 5], up: [4, 7], gravity: 4, life: [1, 1.6], size: [0.14, 0.26] }); break;
     case "lightning": lightningStrike(); break;
     case "flames": // tongues of fire: a hot core plus embers thrown wide
       spriteBurst({ n: 60, colors: [0xff3a1a, 0xff6a1a, 0xff8a1f], additive: true, speed: [1, 3], up: [3, 7], gravity: -0.5, life: [0.5, 1], size: [0.14, 0.3], drag: 0.35 });
@@ -68,6 +79,7 @@ function celebrate(owner, forced) {
 function updateCelebrationFx(f, dt, a) {
   if (f.kind === "sprite") {
     f.vel.y -= f.gravity * dt; f.vel.multiplyScalar(Math.pow(f.drag, dt));
+    if (f.swirl) { const dx = f.o.position.x - f.base.x, dz = f.o.position.z - f.base.z; f.vel.x += -dz * f.swirl * dt; f.vel.z += dx * f.swirl * dt; }
     f.o.position.addScaledVector(f.vel, dt);
     const floor = surf({ x: f.o.position.x, y: -f.o.position.z }) + 0.05;
     if (f.o.position.y < floor) { f.o.position.y = floor; if (f.bounce && Math.abs(f.vel.y) > 1) f.vel.y *= -0.45; else f.vel.set(0, 0, 0); }
