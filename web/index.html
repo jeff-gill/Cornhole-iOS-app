@@ -713,12 +713,15 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 
 // ───────────────────────── Career content
 // Every venue is a new location. Higher venues: stronger steady wind, faster arrow, smaller sweet spot, slicker boards, better opponents.
+// Tuned with simulated throws (realistic human timing): a good player sinks about 40% at the Backyard down to about 23% at the
+// Stadium with the starter bag. CPU skill = spread of its release errors (smaller is better): ~13-21% in the hole at the
+// Backyard up to ~36-50% at the Stadium.
 const VENUES = [
-  { id: "backyard", name: "Backyard", sub: "Where it all starts", stars: 0, fee: 0, prize: 60, swing: 0.35, zone: 0.14, cpu: [0.42, 0.30], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", stars: 12, fee: 150, prize: 350, swing: 0.45, zone: 0.115, cpu: [0.32, 0.21], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", stars: 30, fee: 500, prize: 1100, swing: 0.55, zone: 0.095, cpu: [0.23, 0.15], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", stars: 60, fee: 1400, prize: 3000, swing: 0.66, zone: 0.078, cpu: [0.16, 0.10], mu: 0.30, wind: [6, 13], speed: "Slick boards" },
-  { id: "stadium", name: "Stadium Finals", sub: "The big show", stars: 100, fee: 4000, prize: 9000, swing: 0.8, zone: 0.062, cpu: [0.11, 0.06], mu: 0.28, wind: [8, 16], speed: "Fast pro boards" },
+  { id: "backyard", name: "Backyard", sub: "Where it all starts", stars: 0, fee: 0, prize: 60, swing: 0.55, zone: 0.06, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", stars: 12, fee: 150, prize: 350, swing: 0.65, zone: 0.05, cpu: [0.16, 0.10], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
+  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", stars: 30, fee: 500, prize: 1100, swing: 0.75, zone: 0.045, cpu: [0.12, 0.08], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", stars: 60, fee: 1400, prize: 3000, swing: 0.9, zone: 0.037, cpu: [0.09, 0.06], mu: 0.30, wind: [6, 13], speed: "Slick boards" },
+  { id: "stadium", name: "Stadium Finals", sub: "The big show", stars: 100, fee: 4000, prize: 9000, swing: 1.0, zone: 0.033, cpu: [0.07, 0.04], mu: 0.28, wind: [8, 16], speed: "Fast pro boards" },
 ];
 const BAGS = [
   { id: "starter", name: "Duck Cloth", price: 0, acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#ff4b3a", pattern: "plain" },
@@ -803,7 +806,7 @@ function lv() {
   return {
     freq: v.swing * (1 - 0.06 * (g.acc - 1)),
     zone: v.zone * (1 + 0.15 * (g.acc - 1)),
-    powZone: v.zone * 2 * (1 + 0.15 * (g.ctrl - 1)),
+    powZone: v.zone * (1 + 0.15 * (g.ctrl - 1)),
     wobble: (0.012 + 0.009 * S.venue) * (1 - 0.15 * (g.ctrl - 1)),
     cpu: S.opponent ? S.opponent.skill : 0.25,
     preview: true,
