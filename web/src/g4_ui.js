@@ -191,29 +191,45 @@ function renderCoach() {
   if (text && el.innerHTML !== text) el.innerHTML = text;
   if (text) $("hint").hidden = true;
 }
-// Between innings: a scorecard of every inning so far. Names on the outside, each player's bags in / on / inning
-// score beside their name, and the points that actually counted (after cancellation) in the middle.
+// Between innings: a highlight card for the inning just played (inning scores, On | In, the points that counted and the
+// game totals counting up), then the innings played so far with each player's running total.
 const ROW_COLORS = ["#ffc93a", "#3ee07a", "#ff8a1f", "#a24bff", "#00c2d1", "#ff2e88", "#7ab4ff", "#c7f03a"];
 function scorecardHTML() {
-  const L = COL.pl[0], R = COL.pl[1];
-  const rows = S.history.map((h, k) => {
-    const last = k === S.history.length - 1, c = ROW_COLORS[k % ROW_COLORS.length];
-    const mid = h.winner === null ? `<span class="pts wash" style="--c:${c}">·</span>`
-      : `<span class="pts" style="--c:${c}">${h.winner === 0 ? "◀ " : ""}+${h.awarded}${h.winner === 1 ? " ▶" : ""}</span>`;
-    const io = (p, col) => `<td class="io" style="color:${col}"><span class="in">${h.hole[p]}</span><span class="on">${h.on[p]}</span></td>`;
-    return `<tr class="${last ? "last" : ""}">
-      ${io(0, L)}<td class="sc" style="color:${L}">${h.raw[0]}</td>
-      <td class="mid"><small>${h.inning}</small>${mid}</td>
-      <td class="sc" style="color:${R}">${h.raw[1]}</td>${io(1, R)}</tr>`;
-  }).join("");
-  return `<div class="card-wrap"><table class="scorecard">
-    <thead>
-      <tr class="names"><th colspan="2" style="color:${L}">${esc(S.names[0])}</th><th></th><th colspan="2" style="color:${R}">${esc(S.names[1])}</th></tr>
-      <tr><th>In/On</th><th>Inn.</th><th>Points</th><th>Inn.</th><th>In/On</th></tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table></div>
-  <div class="totals"><b style="color:${L}">${S.scores[0]}</b><small>GAME<br>to 21</small><b style="color:${R}">${S.scores[1]}</b></div>`;
+  const h = S.history[S.history.length - 1];
+  if (!h) return "";
+  const k = S.history.length - 1, c = ROW_COLORS[k % ROW_COLORS.length];
+  const before = [h.totals[0] - (h.winner === 0 ? h.awarded : 0), h.totals[1] - (h.winner === 1 ? h.awarded : 0)];
+  const side = p => `<div class="hp ${h.winner === p ? "won" : ""}" style="--pc:${COL.p[p]};--pl:${COL.pl[p]};--pd:${COL.pd[p]}">
+      <div class="hn">${esc(S.names[p])}</div>
+      <div class="hs">${h.raw[p]}</div>
+      <div class="oi"><span>On <b>${h.on[p]}</b></span><i></i><span>In <b>${h.hole[p]}</b></span></div>
+      <div class="ht" data-from="${before[p]}" data-to="${h.totals[p]}">${before[p]}</div>
+    </div>`;
+  const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
+    : `<div class="vs" style="--c:${c}"><span class="flipin">${h.winner === 0 ? "◀ " : ""}+${h.awarded}${h.winner === 1 ? " ▶" : ""}</span></div>`;
+  const rows = S.history.slice(0, -1).map((r, n) => {
+    const rc = ROW_COLORS[n % ROW_COLORS.length];
+    const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
+    const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:${rc}">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
+    return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}<td class="tt"><span style="color:${COL.pl[0]}">${r.totals[0]}</span>–<span style="color:${COL.pl[1]}">${r.totals[1]}</span></td></tr>`;
+  }).reverse().join("");
+  return `<div class="hero">${side(0)}${badge}${side(1)}</div>
+    ${rows ? `<div class="hist"><div class="histh"><span>Earlier innings</span><span>On | In under each score</span></div>
+      <table class="mini"><tbody>${rows}</tbody></table></div>` : ""}`;
+}
+// Totals count up for whoever scored.
+function animateTotals() {
+  for (const el of document.querySelectorAll("#inningBody .ht")) {
+    const from = +el.dataset.from, to = +el.dataset.to;
+    if (from === to) continue;
+    const t0 = performance.now() + 450;
+    const step = now => {
+      const k = clamp((now - t0) / 700, 0, 1);
+      el.textContent = Math.round(lerp(from, to, k));
+      if (k < 1) requestAnimationFrame(step); else el.classList.add("bump");
+    };
+    requestAnimationFrame(step);
+  }
 }
 function renderInningSheet() {
   const sheet = $("inningSheet");
@@ -235,12 +251,13 @@ function renderInningSheet() {
       <button class="btn go green" id="againBtn" ${canAgain ? "" : "disabled"}>${canAgain ? "PLAY AGAIN" + (fee ? ` · 🪙 ${fee.toLocaleString()}` : "") : "NOT ENOUGH COINS"}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
-    body = `<h2>After inning ${S.inning}</h2>${scorecardHTML()}<div class="center" style="font-size:16px">${line}</div>
+    body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
       <button class="swipehint" id="nextBtn">Swipe away for inning ${S.inning + 1} <span>⇡</span></button>`;
   }
   $("inningBody").innerHTML = body;
   const wrap = $("inningBody").querySelector(".card-wrap");
-  if (wrap) wrap.scrollTop = wrap.scrollHeight; // newest inning in view
+  if (wrap) wrap.scrollTop = wrap.scrollHeight;
+  animateTotals();
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => { sheet.hidden = true; const k = S.kind, v = S.venue; openHub(); startMatch(k, v); };
   const body0 = $("inningBody");

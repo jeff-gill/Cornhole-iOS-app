@@ -215,32 +215,46 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .item .btn { font-size: 15px; padding: 9px 12px; min-width: 86px; }
 .big3 { font-family: var(--font-display); font-size: 46px; font-weight: 400; text-align: center; line-height: 1; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
 .rewards { display: flex; justify-content: center; gap: 10px; }
-/* Between-innings scorecard */
+/* Between-innings highlight card */
 #inningSheet { touch-action: none; }
-.card-wrap { max-height: 46vh; overflow-y: auto; border-radius: 16px; background: rgba(0,0,0,.25); border: 2px solid rgba(255,255,255,.15); }
-.scorecard { width: 100%; border-collapse: collapse; text-align: center; font-variant-numeric: tabular-nums; }
-.scorecard th { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); padding: 6px 2px 4px; position: sticky; top: 0; background: #16284a; }
-.scorecard thead tr:first-child th { top: 0; }
-.scorecard thead tr:nth-child(2) th { top: 30px; }
-.scorecard tr.names th { font-family: var(--font-display); font-size: 17px; font-weight: 400; letter-spacing: .01em; text-transform: none; padding-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-.scorecard td { padding: 5px 2px; font-size: 16px; font-weight: 900; border-top: 1px solid rgba(255,255,255,.08); }
-.scorecard td.io { position: relative; width: 52px; height: 46px; padding: 0; }
-.scorecard td.io::before { content: ""; position: absolute; inset: 6px 10px; pointer-events: none;
-  background: linear-gradient(to bottom right, transparent calc(50% - 1px), rgba(255,255,255,.4) calc(50% - 1px), rgba(255,255,255,.4) calc(50% + 1px), transparent calc(50% + 1px)); }
-.scorecard td.io .in { position: absolute; left: 9px; top: 4px; font-size: 17px; }
-.scorecard td.io .on { position: absolute; right: 9px; bottom: 4px; font-size: 17px; opacity: .85; }
-.scorecard td.sc { font-family: var(--font-display); font-size: 20px; font-weight: 400; }
-.scorecard td.mid { width: 34%; }
-.scorecard td.mid small { display: block; font-size: 9px; letter-spacing: .1em; color: var(--ink-dim); }
-.scorecard .pts { display: inline-block; min-width: 54px; padding: 2px 10px; border-radius: 999px; font-family: var(--font-display); font-size: 18px; font-weight: 400;
-  color: #12203a; background: var(--c); box-shadow: 0 3px 0 rgba(0,0,0,.3); }
-.scorecard .pts.wash { background: rgba(255,255,255,.15); color: var(--ink-dim); box-shadow: none; }
-.scorecard tr.last td { background: rgba(255,255,255,.08); }
-.scorecard tr.last .pts { animation: ptspop .5s cubic-bezier(.3,1.8,.5,1); }
-@keyframes ptspop { from { transform: scale(.4); } to { transform: scale(1); } }
-.totals { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; background: rgba(0,0,0,.3); border: 2px solid rgba(255,255,255,.2); border-radius: 16px; padding: 4px 14px; }
-.totals b { font-family: var(--font-display); font-size: 40px; font-weight: 400; text-align: center; text-shadow: 0 3px 0 rgba(0,0,0,.3); font-variant-numeric: tabular-nums; }
-.totals small { font-size: 10px; letter-spacing: .1em; color: var(--ink-dim); text-align: center; line-height: 1.3; }
+#inningBody { animation: sheetin .45s cubic-bezier(.2,1.4,.4,1); }
+@keyframes sheetin { from { transform: translateY(40px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+.ribbon { align-self: center; font-family: var(--font-display); font-size: 26px; padding: 4px 26px 6px; color: #3a2600; background: linear-gradient(#ffe27a, #ffc93a);
+  border: 3px solid #fff; border-radius: 12px; box-shadow: 0 5px 0 rgba(0,0,0,.3); transform: rotate(-2deg); letter-spacing: .04em; }
+.hero { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.hp { border-radius: 20px; padding: 10px 6px 8px; text-align: center; border: 3px solid rgba(255,255,255,.55); box-shadow: 0 5px 0 rgba(0,0,0,.3);
+  background: linear-gradient(var(--pl), var(--pc) 55%, var(--pd)); position: relative; overflow: hidden; animation: cardin .5s cubic-bezier(.2,1.5,.4,1) backwards; }
+.hp:last-child { animation-delay: .08s; }
+@keyframes cardin { from { transform: rotateY(80deg) scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+.hp.won { border-color: #fff; box-shadow: 0 0 0 3px var(--gold), 0 6px 0 rgba(0,0,0,.3), 0 0 24px rgba(255,201,58,.6); }
+.hp.won::after { content: ""; position: absolute; inset: -40%; background: conic-gradient(from 0deg, transparent 0 20%, rgba(255,255,255,.35) 25%, transparent 30% 70%, rgba(255,255,255,.35) 75%, transparent 80%);
+  animation: spin 3s linear infinite; pointer-events: none; mix-blend-mode: overlay; }
+@keyframes spin { to { transform: rotate(1turn); } }
+.hn { font-family: var(--font-display); font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 0 rgba(0,0,0,.3); position: relative; }
+.hs { font-family: var(--font-display); font-size: 52px; line-height: 1; text-shadow: 0 4px 0 rgba(0,0,0,.3); position: relative; }
+.oi { display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 6px; padding: 3px 10px; border-radius: 999px; background: rgba(0,0,0,.28); font-size: 12px; position: relative; }
+.oi b { font-family: var(--font-display); font-size: 16px; font-weight: 400; }
+.oi i { width: 2px; height: 16px; background: rgba(255,255,255,.6); border-radius: 1px; }
+.ht { font-family: var(--font-display); font-size: 30px; line-height: 1; padding: 4px 0 2px; border-top: 2px solid rgba(255,255,255,.35); position: relative; }
+.ht::before { content: "TOTAL"; display: block; font-family: var(--font-body); font-size: 9px; letter-spacing: .12em; opacity: .8; margin-bottom: 2px; }
+.ht.bump { animation: bump .45s cubic-bezier(.3,2,.5,1); color: #fff6c0; text-shadow: 0 0 14px rgba(255,230,120,.9), 0 3px 0 rgba(0,0,0,.3); }
+@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.vs { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-size: 21px; color: #12203a;
+  background: var(--c, #fff); border: 4px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.3); animation: vspop .6s .25s cubic-bezier(.2,2,.4,1) backwards; }
+.vs.wash { background: rgba(255,255,255,.18); color: #fff; font-size: 14px; }
+@keyframes vspop { from { transform: scale(0) rotate(-120deg); } to { transform: none; } }
+.vs .flipin { white-space: nowrap; }
+.hist { background: rgba(0,0,0,.25); border: 2px solid rgba(255,255,255,.12); border-radius: 16px; padding: 6px 8px; max-height: 30vh; overflow-y: auto; }
+.histh { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); padding: 0 4px 4px; }
+.mini { width: 100%; border-collapse: collapse; text-align: center; font-variant-numeric: tabular-nums; }
+.mini td { padding: 4px 2px; border-top: 1px solid rgba(255,255,255,.07); }
+.mini td.no { color: var(--ink-dim); font-size: 12px; width: 22px; }
+.mini td.rs b { display: block; font-family: var(--font-display); font-size: 20px; font-weight: 400; line-height: 1; }
+.mini td.rs small { font-size: 11px; opacity: .85; }
+.mini td.tt { font-family: var(--font-display); font-size: 17px; white-space: nowrap; }
+.mini .pts { display: inline-block; min-width: 44px; padding: 1px 8px; border-radius: 999px; font-family: var(--font-display); font-size: 15px; color: #12203a; background: var(--c); }
+.mini .pts.wash { background: rgba(255,255,255,.12); color: var(--ink-dim); }
+@media (prefers-reduced-motion: reduce) { #inningBody, .hp, .vs { animation: none; } .hp.won::after { animation: none; } }
 .swipehint { border: 0; background: none; color: var(--ink-dim); font-weight: 900; font-size: 14px; letter-spacing: .04em; padding: 6px; }
 .swipehint span { display: inline-block; animation: bob 1.2s ease-in-out infinite; color: var(--gold); font-size: 18px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
@@ -2151,29 +2165,45 @@ function renderCoach() {
   if (text && el.innerHTML !== text) el.innerHTML = text;
   if (text) $("hint").hidden = true;
 }
-// Between innings: a scorecard of every inning so far. Names on the outside, each player's bags in / on / inning
-// score beside their name, and the points that actually counted (after cancellation) in the middle.
+// Between innings: a highlight card for the inning just played (inning scores, On | In, the points that counted and the
+// game totals counting up), then the innings played so far with each player's running total.
 const ROW_COLORS = ["#ffc93a", "#3ee07a", "#ff8a1f", "#a24bff", "#00c2d1", "#ff2e88", "#7ab4ff", "#c7f03a"];
 function scorecardHTML() {
-  const L = COL.pl[0], R = COL.pl[1];
-  const rows = S.history.map((h, k) => {
-    const last = k === S.history.length - 1, c = ROW_COLORS[k % ROW_COLORS.length];
-    const mid = h.winner === null ? `<span class="pts wash" style="--c:${c}">·</span>`
-      : `<span class="pts" style="--c:${c}">${h.winner === 0 ? "◀ " : ""}+${h.awarded}${h.winner === 1 ? " ▶" : ""}</span>`;
-    const io = (p, col) => `<td class="io" style="color:${col}"><span class="in">${h.hole[p]}</span><span class="on">${h.on[p]}</span></td>`;
-    return `<tr class="${last ? "last" : ""}">
-      ${io(0, L)}<td class="sc" style="color:${L}">${h.raw[0]}</td>
-      <td class="mid"><small>${h.inning}</small>${mid}</td>
-      <td class="sc" style="color:${R}">${h.raw[1]}</td>${io(1, R)}</tr>`;
-  }).join("");
-  return `<div class="card-wrap"><table class="scorecard">
-    <thead>
-      <tr class="names"><th colspan="2" style="color:${L}">${esc(S.names[0])}</th><th></th><th colspan="2" style="color:${R}">${esc(S.names[1])}</th></tr>
-      <tr><th>In/On</th><th>Inn.</th><th>Points</th><th>Inn.</th><th>In/On</th></tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table></div>
-  <div class="totals"><b style="color:${L}">${S.scores[0]}</b><small>GAME<br>to 21</small><b style="color:${R}">${S.scores[1]}</b></div>`;
+  const h = S.history[S.history.length - 1];
+  if (!h) return "";
+  const k = S.history.length - 1, c = ROW_COLORS[k % ROW_COLORS.length];
+  const before = [h.totals[0] - (h.winner === 0 ? h.awarded : 0), h.totals[1] - (h.winner === 1 ? h.awarded : 0)];
+  const side = p => `<div class="hp ${h.winner === p ? "won" : ""}" style="--pc:${COL.p[p]};--pl:${COL.pl[p]};--pd:${COL.pd[p]}">
+      <div class="hn">${esc(S.names[p])}</div>
+      <div class="hs">${h.raw[p]}</div>
+      <div class="oi"><span>On <b>${h.on[p]}</b></span><i></i><span>In <b>${h.hole[p]}</b></span></div>
+      <div class="ht" data-from="${before[p]}" data-to="${h.totals[p]}">${before[p]}</div>
+    </div>`;
+  const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
+    : `<div class="vs" style="--c:${c}"><span class="flipin">${h.winner === 0 ? "◀ " : ""}+${h.awarded}${h.winner === 1 ? " ▶" : ""}</span></div>`;
+  const rows = S.history.slice(0, -1).map((r, n) => {
+    const rc = ROW_COLORS[n % ROW_COLORS.length];
+    const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
+    const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:${rc}">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
+    return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}<td class="tt"><span style="color:${COL.pl[0]}">${r.totals[0]}</span>–<span style="color:${COL.pl[1]}">${r.totals[1]}</span></td></tr>`;
+  }).reverse().join("");
+  return `<div class="hero">${side(0)}${badge}${side(1)}</div>
+    ${rows ? `<div class="hist"><div class="histh"><span>Earlier innings</span><span>On | In under each score</span></div>
+      <table class="mini"><tbody>${rows}</tbody></table></div>` : ""}`;
+}
+// Totals count up for whoever scored.
+function animateTotals() {
+  for (const el of document.querySelectorAll("#inningBody .ht")) {
+    const from = +el.dataset.from, to = +el.dataset.to;
+    if (from === to) continue;
+    const t0 = performance.now() + 450;
+    const step = now => {
+      const k = clamp((now - t0) / 700, 0, 1);
+      el.textContent = Math.round(lerp(from, to, k));
+      if (k < 1) requestAnimationFrame(step); else el.classList.add("bump");
+    };
+    requestAnimationFrame(step);
+  }
 }
 function renderInningSheet() {
   const sheet = $("inningSheet");
@@ -2195,12 +2225,13 @@ function renderInningSheet() {
       <button class="btn go green" id="againBtn" ${canAgain ? "" : "disabled"}>${canAgain ? "PLAY AGAIN" + (fee ? ` · 🪙 ${fee.toLocaleString()}` : "") : "NOT ENOUGH COINS"}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
-    body = `<h2>After inning ${S.inning}</h2>${scorecardHTML()}<div class="center" style="font-size:16px">${line}</div>
+    body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
       <button class="swipehint" id="nextBtn">Swipe away for inning ${S.inning + 1} <span>⇡</span></button>`;
   }
   $("inningBody").innerHTML = body;
   const wrap = $("inningBody").querySelector(".card-wrap");
-  if (wrap) wrap.scrollTop = wrap.scrollHeight; // newest inning in view
+  if (wrap) wrap.scrollTop = wrap.scrollHeight;
+  animateTotals();
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => { sheet.hidden = true; const k = S.kind, v = S.venue; openHub(); startMatch(k, v); };
   const body0 = $("inningBody");
