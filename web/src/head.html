@@ -300,23 +300,31 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .bcap.big { width: 64px; height: 64px; }
 .cappill { color: #fff; font: inherit; }
 .vcarousel { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
-.vcarousel .venue { width: 72%; margin: 0 auto; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
+.vcarousel .venue { box-sizing: border-box; width: 72%; margin: 0 auto; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
 .vcarousel .venue.side { position: absolute; top: 0; bottom: 0; opacity: .5; overflow: hidden; padding: 14px 16px; cursor: pointer; }
 .vcarousel .venue.side h3 { font-size: 22px; }
 .vcarousel .venue .go { margin-top: 10px; width: 100%; font-size: 22px; }
-.vcarousel .venue.side.prev { left: calc(-58% - 18px); text-align: right; }
-.vcarousel .venue.side.next { left: calc(86% + 18px); }
+.vcarousel .venue.side.prev { left: calc(-58% - 28px); text-align: right; }
+.vcarousel .venue.side.next { left: calc(86% + 28px); }
 .vcarousel .venue.side .lvlno, .vcarousel .venue.side h3 { white-space: nowrap; }
 .vcarousel.dragging .venue { transition: none; }
 .vdots { display: flex; justify-content: center; gap: 5px; margin-top: 8px; }
 .vdots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); transition: width .2s; }
 .vdots i.on { width: 16px; background: var(--gold); }
 #hub { overflow-x: hidden; }
+.seasonbadge { display: block; margin: 6px auto 0; padding: 4px 12px; border-radius: 999px; border: 2px solid rgba(255,255,255,.7); background: rgba(10,20,38,.7); color: #fff; font: 900 13px/1.2 Nunito, system-ui, sans-serif; }
+.seasonbadge b { font-family: var(--font-display); font-weight: 400; font-size: 15px; color: var(--gold); }
+.ladder { display: grid; gap: 5px; text-align: left; }
+.ladder div { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,.06); font-weight: 900; }
+.ladder div.me { background: linear-gradient(90deg, rgba(255,201,58,.35), rgba(255,201,58,.1)); border: 2px solid var(--gold); }
+.ladder div span:first-child { font-size: 20px; text-align: center; }
+.ladder div small { color: var(--ink-dim); font-size: 11px; }
+.ladder div.locked2 { opacity: .55; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
 .venue .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
-.venue .facts .chip { padding: 4px 6px; min-width: 0; } .venue .facts .chip b { font-size: 14px; white-space: nowrap; }
+.venue .facts .chip { padding: 4px 5px; min-width: 0; } .venue .facts .chip small { white-space: nowrap; font-size: 9px; letter-spacing: .04em; } .venue .facts .chip b { font-size: 14px; white-space: nowrap; }
 .venue .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); font-family: var(--font-display); font-size: 20px; box-shadow: 0 3px 0 rgba(0,0,0,.35); z-index: 2; }
 .venue .nav:disabled { opacity: .3; }
 .venue .prev { left: -14px; } .venue .next { right: -14px; }
@@ -492,6 +500,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     </div>
     <div class="hubtitle" id="hubTitle">__GAME_TITLE_HTML__</div>
     <div class="gcname" id="gcName" hidden></div>
+    <button class="seasonbadge" id="seasonBtn"></button>
   </div>
   <div class="hubbottom">
     <div class="cooler" id="cooler"></div>

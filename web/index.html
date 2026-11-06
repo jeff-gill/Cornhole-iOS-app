@@ -308,23 +308,31 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .bcap.big { width: 64px; height: 64px; }
 .cappill { color: #fff; font: inherit; }
 .vcarousel { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
-.vcarousel .venue { width: 72%; margin: 0 auto; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
+.vcarousel .venue { box-sizing: border-box; width: 72%; margin: 0 auto; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
 .vcarousel .venue.side { position: absolute; top: 0; bottom: 0; opacity: .5; overflow: hidden; padding: 14px 16px; cursor: pointer; }
 .vcarousel .venue.side h3 { font-size: 22px; }
 .vcarousel .venue .go { margin-top: 10px; width: 100%; font-size: 22px; }
-.vcarousel .venue.side.prev { left: calc(-58% - 18px); text-align: right; }
-.vcarousel .venue.side.next { left: calc(86% + 18px); }
+.vcarousel .venue.side.prev { left: calc(-58% - 28px); text-align: right; }
+.vcarousel .venue.side.next { left: calc(86% + 28px); }
 .vcarousel .venue.side .lvlno, .vcarousel .venue.side h3 { white-space: nowrap; }
 .vcarousel.dragging .venue { transition: none; }
 .vdots { display: flex; justify-content: center; gap: 5px; margin-top: 8px; }
 .vdots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); transition: width .2s; }
 .vdots i.on { width: 16px; background: var(--gold); }
 #hub { overflow-x: hidden; }
+.seasonbadge { display: block; margin: 6px auto 0; padding: 4px 12px; border-radius: 999px; border: 2px solid rgba(255,255,255,.7); background: rgba(10,20,38,.7); color: #fff; font: 900 13px/1.2 Nunito, system-ui, sans-serif; }
+.seasonbadge b { font-family: var(--font-display); font-weight: 400; font-size: 15px; color: var(--gold); }
+.ladder { display: grid; gap: 5px; text-align: left; }
+.ladder div { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,.06); font-weight: 900; }
+.ladder div.me { background: linear-gradient(90deg, rgba(255,201,58,.35), rgba(255,201,58,.1)); border: 2px solid var(--gold); }
+.ladder div span:first-child { font-size: 20px; text-align: center; }
+.ladder div small { color: var(--ink-dim); font-size: 11px; }
+.ladder div.locked2 { opacity: .55; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
 .venue .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
-.venue .facts .chip { padding: 4px 6px; min-width: 0; } .venue .facts .chip b { font-size: 14px; white-space: nowrap; }
+.venue .facts .chip { padding: 4px 5px; min-width: 0; } .venue .facts .chip small { white-space: nowrap; font-size: 9px; letter-spacing: .04em; } .venue .facts .chip b { font-size: 14px; white-space: nowrap; }
 .venue .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); font-family: var(--font-display); font-size: 20px; box-shadow: 0 3px 0 rgba(0,0,0,.35); z-index: 2; }
 .venue .nav:disabled { opacity: .3; }
 .venue .prev { left: -14px; } .venue .next { right: -14px; }
@@ -500,6 +508,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     </div>
     <div class="hubtitle" id="hubTitle">Cornhole <span>Throwdown</span></div>
     <div class="gcname" id="gcName" hidden></div>
+    <button class="seasonbadge" id="seasonBtn"></button>
   </div>
   <div class="hubbottom">
     <div class="cooler" id="cooler"></div>
@@ -1425,7 +1434,8 @@ function finishMatch() {
   if (won) career.wins++; else career.losses++;
   const newly = updateUnlocks();
   save();
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won };
+  addSeasonPoints(won ? starsForWin(S.venue) : 1);
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? starsForWin(S.venue) : 1 };
   postScores();
 }
 // A court's stars stay between 0 and its max.
@@ -1970,6 +1980,71 @@ const AVATARS = [
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 const avatarOpen = a => venueUnlocked(a.court);
 const avatarHTML = (id, cls = "") => { const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}">${a.e}</span>`; };
+
+// ── Seasons: a calendar month (UTC). Each title is a worldwide league (a Game Center leaderboard per title), split
+// into groups of 100 or fewer. Win a match for that court's win stars in season points, or 1 point just for playing.
+// When the month ends, the top 20% of your group move up a title and the bottom 20% (and anyone who didn't play) move
+// down. The groups need no server: every phone loads the whole league and shuffles it into groups the same way,
+// using a hash of each player's ID and the season, so everyone agrees on who is in which group.
+const TITLES = ["Rookie", "Weekend Warrior", "Backyard Hero", "Local Legend", "Semi-Pro", "Pro", "All-Star", "Champion", "Hall of Famer"];
+const TITLE_ICONS = ["🥉", "🎒", "🏡", "📣", "🎯", "🔥", "⭐", "🏆", "👑"];
+const PROMOTE_TOP = 0.2, DEMOTE_BOTTOM = 0.2;
+const seasonId = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+const seasonEnds = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
+// Without Game Center (the browser preview), a season is judged against fixed point lines for your title instead.
+const offlinePromoteAt = t => 40 + t * 35, offlineDemoteBelow = t => 5 + t * 6;
+function seasonState() {
+  career.season ||= { id: seasonId(), title: 0, points: 0, played: 0, last: null };
+  return career.season;
+}
+function addSeasonPoints(n) {
+  const s = seasonState(); rollSeason();
+  s.points += n; s.played++; save();
+  postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points }));
+}
+// Called on launch and in the clubhouse: if the month has turned, settle last season. The iPhone app asks Game Center
+// where you finished in your group in last month's league (window.__seasonEntries); otherwise the offline lines decide.
+function rollSeason() {
+  const s = seasonState(), now = seasonId();
+  if (s.id === now || s.pending) return;
+  s.pending = { id: s.id, title: s.title, points: s.points, played: s.played };
+  if (nativeBridge && nativeBridge.season) { postNative("season", JSON.stringify({ op: "result", title: s.title })); setTimeout(() => settleSeason(null), 20000); }
+  else settleSeason(null);
+}
+const GROUP_MAX = 100;
+// FNV-1a hash of player + season: decides each player's group the same way on every phone.
+function hashStr(t) { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; }
+// entries: [[playerId, score, name], ...] for a whole league. Players are ordered by a hash of their ID and the season,
+// then cut into even groups of at most 100, so every phone gets exactly the same groups whatever order the list
+// arrived in. Returns your group (best first, ties broken by ID) and your place in it.
+function myGroup(entries, me, season) {
+  const n = entries.length, groups = Math.max(1, Math.ceil(n / GROUP_MAX)), per = Math.ceil(n / groups) || 1;
+  const key = e => hashStr(String(e[0]) + "|" + season);
+  const order = [...entries].sort((a, b) => key(a) - key(b) || (String(a[0]) < String(b[0]) ? -1 : 1));
+  const at = order.findIndex(e => e[0] === me), g = at < 0 ? 0 : Math.floor(at / per);
+  const list = order.slice(g * per, g * per + per).sort((a, b) => b[1] - a[1] || (String(a[0]) < String(b[0]) ? -1 : 1));
+  return { list, rank: list.findIndex(e => e[0] === me) + 1, size: list.length };
+}
+window.__seasonEntries = msg => {
+  if (!msg || !Array.isArray(msg.entries)) return;
+  const s = seasonState();
+  if (msg.op === "result") {
+    if (!s.pending) return;
+    const G = myGroup(msg.entries, msg.me, s.pending.id);
+    settleSeason(G.rank > 0 && G.size > 0 ? G.rank / G.size : null);
+  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(msg.entries, msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("livesSheet").hidden) openSeason(); }
+};
+function settleSeason(frac) {
+  const s = seasonState(), p = s.pending; if (!p) return;
+  let move = 0;
+  if (!p.played) move = -1;
+  else if (frac != null) move = frac <= PROMOTE_TOP ? 1 : frac > 1 - DEMOTE_BOTTOM ? -1 : 0;
+  else move = p.points >= offlinePromoteAt(p.title) ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
+  const title = clamp(p.title + move, 0, TITLES.length - 1);
+  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, frac } });
+  save();
+  if (typeof showSeasonResult === "function") showSeasonResult();
+}
 
 // ───────────────────────── Renderer, sky, lights
 const canvas = $("gl"), stage = $("stage");
@@ -3684,6 +3759,12 @@ $("canDone").onclick = () => { $("canSheet").hidden = true; canRun = null; rende
 
 // Browser preview only (never in the iPhone app): fill the cooler with cans that are ready to open, for testing.
 if (!nativeBridge) {
+  // An empty cooler in the preview gets a demo set: one opening, one ready (Express) and two waiting to start.
+  if (!career.cans.length) {
+    const c = topCourt();
+    career.cans = [{ id: "gold", court: c, start: Date.now() - 3600000 }, { id: "express", court: c }, { id: "silver", court: c }, { id: "purple", court: c }];
+    save();
+  }
   $("testCans").hidden = false;
   $("testCans").onclick = () => {
     const pick = ["silver", "gold", "purple", "platinum", "diamond", "express"].sort(() => Math.random() - 0.5).slice(0, COOLER_SIZE);
@@ -3691,6 +3772,32 @@ if (!nativeBridge) {
     save(); renderHub();
   };
 }
+
+// ── Season badge and ladder
+function renderSeasonBadge() {
+  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
+  $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
+}
+function openSeason() {
+  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
+  const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : ""}</small></div>`).reverse().join("");
+  const G = S.groupStandings;
+  if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
+  const group = G && G.size ? `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => `<div class="${e[0] === G.me ? "me" : ""}"><span>${i + 1}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`).join("")}${G.rank > 10 ? `<div class="me"><span>${G.rank}</span><span>You</span><small>${s.points} pts</small></div>` : ""}</div>` : "";
+  showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month. Every title is a league split into groups of up to 100 players. Finish in the top 20% of your group to move up a title; the bottom 20% (and anyone who doesn't play) move down.</div>${group}
+    <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
+    <div class="ladder">${rows}</div>`);
+}
+function showSeasonResult() {
+  const L = seasonState().last; if (!L || L.shown) return;
+  L.shown = true; save(); renderSeasonBadge();
+  const up = L.to > L.from, down = L.to < L.from;
+  showInfo(`<div class="lifebig">${TITLE_ICONS[L.to]}</div><h2>${up ? "Promoted!" : down ? "Moved down" : "Season over"}</h2>
+    <div class="big">${up ? `You're now a ${TITLES[L.to]}` : down ? `You're back to ${TITLES[L.to]}` : `You stay a ${TITLES[L.to]}`}</div>
+    <div class="muted">Last season you scored ${L.points} points${L.frac != null ? `, finishing in the top ${Math.max(1, Math.round(L.frac * 100))}% of your league` : ""}. A new season has started.</div>`);
+  if (up) { sfx.win(); haptic("success"); }
+}
+$("seasonBtn").onclick = openSeason;
 
 // ───────────────────────── Cameras
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);
@@ -3967,6 +4074,7 @@ function renderInningSheet() {
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
+        <div class="pill"><span class="ico" style="background:#ffc93a">🏅</span><b>+${res.season}</b></div>
         ${res.lifeLost ? `<div class="pill"><i class="tkt"></i><b>−1</b></div>` : ""}</div>
         ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
@@ -4080,7 +4188,7 @@ function renderHub() {
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
   $("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
-  renderHubExtras();
+  renderHubExtras(); rollSeason(); renderSeasonBadge();
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
   play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;

@@ -56,6 +56,52 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
         gameCenterViewController.dismiss(animated: true)
     }
 
+    // MARK: Seasons
+
+    /// Season leagues: one recurring (monthly) leaderboard per title, e.g. com.jeffgill.cornhole.season.t0 for Rookie.
+    /// {"op":"submit","title":2,"points":57} posts this month's points.
+    /// {"op":"result","title":2} / {"op":"standings","title":2} load every score in last month's / this month's league
+    /// and hand them to the game (window.__seasonEntries), which splits the league into groups of 100 or fewer the
+    /// same way on every phone and ranks you within your group.
+    func season(_ body: String) {
+        guard let data = body.data(using: .utf8),
+              let msg = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let op = msg["op"] as? String,
+              let title = (msg["title"] as? NSNumber)?.intValue, (0...20).contains(title) else { return }
+        let id = "com.jeffgill.cornhole.season.t\(title)"
+        guard GKLocalPlayer.local.isAuthenticated else { if op != "submit" { sendEntries(op, [], me: "") }; return }
+        if op == "submit", let points = (msg["points"] as? NSNumber)?.intValue {
+            GKLeaderboard.submitScore(points, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [id]) { _ in }
+            return
+        }
+        GKLeaderboard.loadLeaderboards(IDs: [id]) { [weak self] boards, _ in
+            guard let self, let board = boards?.first else { self?.sendEntries(op, [], me: ""); return }
+            if op == "result" {
+                board.loadPreviousOccurrence { previous, _ in
+                    guard let previous else { self.sendEntries(op, [], me: ""); return }
+                    self.loadAll(previous) { self.sendEntries(op, $0, me: GKLocalPlayer.local.gamePlayerID) }
+                }
+            } else {
+                self.loadAll(board) { self.sendEntries(op, $0, me: GKLocalPlayer.local.gamePlayerID) }
+            }
+        }
+    }
+
+    /// Every entry on a leaderboard, 100 at a time (capped at 20,000 players).
+    private func loadAll(_ board: GKLeaderboard, from start: Int = 1, into list: [[Any]] = [], done: @escaping ([[Any]]) -> Void) {
+        board.loadEntries(for: .global, timeScope: .allTime, range: NSRange(location: start, length: 100)) { [weak self] _, entries, total, _ in
+            let more = list + (entries ?? []).map { [$0.player.gamePlayerID, $0.score, $0.player.displayName] }
+            if let entries, !entries.isEmpty, more.count < total, more.count < 20_000 { self?.loadAll(board, from: start + 100, into: more, done: done) }
+            else { done(more) }
+        }
+    }
+
+    private func sendEntries(_ op: String, _ entries: [[Any]], me: String) {
+        guard let data = try? JSONSerialization.data(withJSONObject: ["op": op, "me": me, "entries": entries]),
+              let json = String(data: data, encoding: .utf8) else { return }
+        callJS("window.__seasonEntries && window.__seasonEntries(\(json))")
+    }
+
     // MARK: Live matches
 
     /// Body is JSON from the game: {"op":"find","group":3}, {"op":"cancel"}, {"op":"send","data":"..."} or {"op":"leave"}.

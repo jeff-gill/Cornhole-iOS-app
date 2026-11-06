@@ -175,3 +175,68 @@ const AVATARS = [
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 const avatarOpen = a => venueUnlocked(a.court);
 const avatarHTML = (id, cls = "") => { const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}">${a.e}</span>`; };
+
+// ── Seasons: a calendar month (UTC). Each title is a worldwide league (a Game Center leaderboard per title), split
+// into groups of 100 or fewer. Win a match for that court's win stars in season points, or 1 point just for playing.
+// When the month ends, the top 20% of your group move up a title and the bottom 20% (and anyone who didn't play) move
+// down. The groups need no server: every phone loads the whole league and shuffles it into groups the same way,
+// using a hash of each player's ID and the season, so everyone agrees on who is in which group.
+const TITLES = ["Rookie", "Weekend Warrior", "Backyard Hero", "Local Legend", "Semi-Pro", "Pro", "All-Star", "Champion", "Hall of Famer"];
+const TITLE_ICONS = ["🥉", "🎒", "🏡", "📣", "🎯", "🔥", "⭐", "🏆", "👑"];
+const PROMOTE_TOP = 0.2, DEMOTE_BOTTOM = 0.2;
+const seasonId = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+const seasonEnds = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
+// Without Game Center (the browser preview), a season is judged against fixed point lines for your title instead.
+const offlinePromoteAt = t => 40 + t * 35, offlineDemoteBelow = t => 5 + t * 6;
+function seasonState() {
+  career.season ||= { id: seasonId(), title: 0, points: 0, played: 0, last: null };
+  return career.season;
+}
+function addSeasonPoints(n) {
+  const s = seasonState(); rollSeason();
+  s.points += n; s.played++; save();
+  postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points }));
+}
+// Called on launch and in the clubhouse: if the month has turned, settle last season. The iPhone app asks Game Center
+// where you finished in your group in last month's league (window.__seasonEntries); otherwise the offline lines decide.
+function rollSeason() {
+  const s = seasonState(), now = seasonId();
+  if (s.id === now || s.pending) return;
+  s.pending = { id: s.id, title: s.title, points: s.points, played: s.played };
+  if (nativeBridge && nativeBridge.season) { postNative("season", JSON.stringify({ op: "result", title: s.title })); setTimeout(() => settleSeason(null), 20000); }
+  else settleSeason(null);
+}
+const GROUP_MAX = 100;
+// FNV-1a hash of player + season: decides each player's group the same way on every phone.
+function hashStr(t) { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; }
+// entries: [[playerId, score, name], ...] for a whole league. Players are ordered by a hash of their ID and the season,
+// then cut into even groups of at most 100, so every phone gets exactly the same groups whatever order the list
+// arrived in. Returns your group (best first, ties broken by ID) and your place in it.
+function myGroup(entries, me, season) {
+  const n = entries.length, groups = Math.max(1, Math.ceil(n / GROUP_MAX)), per = Math.ceil(n / groups) || 1;
+  const key = e => hashStr(String(e[0]) + "|" + season);
+  const order = [...entries].sort((a, b) => key(a) - key(b) || (String(a[0]) < String(b[0]) ? -1 : 1));
+  const at = order.findIndex(e => e[0] === me), g = at < 0 ? 0 : Math.floor(at / per);
+  const list = order.slice(g * per, g * per + per).sort((a, b) => b[1] - a[1] || (String(a[0]) < String(b[0]) ? -1 : 1));
+  return { list, rank: list.findIndex(e => e[0] === me) + 1, size: list.length };
+}
+window.__seasonEntries = msg => {
+  if (!msg || !Array.isArray(msg.entries)) return;
+  const s = seasonState();
+  if (msg.op === "result") {
+    if (!s.pending) return;
+    const G = myGroup(msg.entries, msg.me, s.pending.id);
+    settleSeason(G.rank > 0 && G.size > 0 ? G.rank / G.size : null);
+  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(msg.entries, msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("livesSheet").hidden) openSeason(); }
+};
+function settleSeason(frac) {
+  const s = seasonState(), p = s.pending; if (!p) return;
+  let move = 0;
+  if (!p.played) move = -1;
+  else if (frac != null) move = frac <= PROMOTE_TOP ? 1 : frac > 1 - DEMOTE_BOTTOM ? -1 : 0;
+  else move = p.points >= offlinePromoteAt(p.title) ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
+  const title = clamp(p.title + move, 0, TITLES.length - 1);
+  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, frac } });
+  save();
+  if (typeof showSeasonResult === "function") showSeasonResult();
+}

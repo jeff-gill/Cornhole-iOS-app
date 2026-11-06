@@ -469,7 +469,8 @@ function finishMatch() {
   if (won) career.wins++; else career.losses++;
   const newly = updateUnlocks();
   save();
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won };
+  addSeasonPoints(won ? starsForWin(S.venue) : 1);
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? starsForWin(S.venue) : 1 };
   postScores();
 }
 // A court's stars stay between 0 and its max.

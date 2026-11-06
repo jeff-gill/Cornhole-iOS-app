@@ -180,6 +180,12 @@ $("canDone").onclick = () => { $("canSheet").hidden = true; canRun = null; rende
 
 // Browser preview only (never in the iPhone app): fill the cooler with cans that are ready to open, for testing.
 if (!nativeBridge) {
+  // An empty cooler in the preview gets a demo set: one opening, one ready (Express) and two waiting to start.
+  if (!career.cans.length) {
+    const c = topCourt();
+    career.cans = [{ id: "gold", court: c, start: Date.now() - 3600000 }, { id: "express", court: c }, { id: "silver", court: c }, { id: "purple", court: c }];
+    save();
+  }
   $("testCans").hidden = false;
   $("testCans").onclick = () => {
     const pick = ["silver", "gold", "purple", "platinum", "diamond", "express"].sort(() => Math.random() - 0.5).slice(0, COOLER_SIZE);
@@ -187,3 +193,29 @@ if (!nativeBridge) {
     save(); renderHub();
   };
 }
+
+// ── Season badge and ladder
+function renderSeasonBadge() {
+  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
+  $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
+}
+function openSeason() {
+  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
+  const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : ""}</small></div>`).reverse().join("");
+  const G = S.groupStandings;
+  if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
+  const group = G && G.size ? `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => `<div class="${e[0] === G.me ? "me" : ""}"><span>${i + 1}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`).join("")}${G.rank > 10 ? `<div class="me"><span>${G.rank}</span><span>You</span><small>${s.points} pts</small></div>` : ""}</div>` : "";
+  showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month. Every title is a league split into groups of up to 100 players. Finish in the top 20% of your group to move up a title; the bottom 20% (and anyone who doesn't play) move down.</div>${group}
+    <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
+    <div class="ladder">${rows}</div>`);
+}
+function showSeasonResult() {
+  const L = seasonState().last; if (!L || L.shown) return;
+  L.shown = true; save(); renderSeasonBadge();
+  const up = L.to > L.from, down = L.to < L.from;
+  showInfo(`<div class="lifebig">${TITLE_ICONS[L.to]}</div><h2>${up ? "Promoted!" : down ? "Moved down" : "Season over"}</h2>
+    <div class="big">${up ? `You're now a ${TITLES[L.to]}` : down ? `You're back to ${TITLES[L.to]}` : `You stay a ${TITLES[L.to]}`}</div>
+    <div class="muted">Last season you scored ${L.points} points${L.frac != null ? `, finishing in the top ${Math.max(1, Math.round(L.frac * 100))}% of your league` : ""}. A new season has started.</div>`);
+  if (up) { sfx.win(); haptic("success"); }
+}
+$("seasonBtn").onclick = openSeason;
