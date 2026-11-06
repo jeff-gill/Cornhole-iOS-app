@@ -99,9 +99,14 @@ function addCards(cat, it, n) {
   if (owned) { const c = dupCoins(it) * n; career.coins += c; return { owned: true, coins: c }; }
   const k = cardKey(cat, it), need = cardsNeeded(cat, it);
   career.cards[k] = (career.cards[k] || 0) + n;
-  if (career.cards[k] >= need) { delete career.cards[k]; cat.owned().push(it.id); return { unlocked: true, have: need, need }; }
+  // Badges: remember which items got new cards (or were unlocked) until you've seen them in the shop.
+  career.newCards ||= {};
+  const nb = career.newCards[k] ||= { n: 0, unlocked: false }; nb.n += n;
+  if (career.cards[k] >= need) { delete career.cards[k]; cat.owned().push(it.id); nb.unlocked = true; return { unlocked: true, have: need, need }; }
   return { have: career.cards[k], need };
 }
+// Badge counts: items with news, overall or for one card category (bag, board, trail, fx).
+const newCount = catKey => Object.keys(career.newCards || {}).filter(k => !catKey || k.startsWith(catKey + ":")).length;
 
 // ── Opening a can: decide every prize up front, then the reveal plays them one by one.
 function openCan(index) {
@@ -243,6 +248,11 @@ function myGroup(entries, me, season) {
 const BOT_FILL = [100, 50];
 const BOT_FIRST = ["Sam", "Jess", "Rico", "Maya", "Dale", "Tess", "Bo", "Lena", "Gus", "Ivy", "Hank", "Kit", "Moe", "Nia", "Ray", "Pip", "Cal", "Dot", "Jax", "Flo"];
 const BOT_LAST = ["Slider", "Airmail", "Blocker", "Woody", "Swish", "Kernel", "Duck", "Drop", "Hooks", "Push"];
+// A player-style handle, the same on every phone for the same hash: e.g. "IvyDrop42", "rico_push", "CalHooks7".
+function botHandle(h) {
+  const a = BOT_FIRST[h % 20], b = BOT_LAST[(h >>> 8) % 10], n = (h >>> 12) % 100, style = (h >>> 20) % 3;
+  return style === 0 ? `${a}${b}${n}` : style === 1 ? `${a.toLowerCase()}_${b.toLowerCase()}` : `${b}${a}${n % 10}`;
+}
 function withBots(entries, title, season) {
   const want = (BOT_FILL[title] || 0) - entries.length;
   if (want <= 0) return entries;
@@ -252,7 +262,7 @@ function withBots(entries, title, season) {
   for (let i = 0; i < want; i++) {
     const h = hashStr(`bot|${season}|${title}|${i}`), u = (h % 100000) / 100000;
     const final = Math.round(-Math.log(1 - u * 0.995) * mean);
-    bots.push([`cpu:${i}`, Math.round(final * progress), `${BOT_FIRST[h % 20]} ${BOT_LAST[(h >>> 8) % 10]}`, true]);
+    bots.push([`cpu:${i}`, Math.round(final * progress), botHandle(h)]);
   }
   return entries.concat(bots);
 }

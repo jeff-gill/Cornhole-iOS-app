@@ -325,6 +325,29 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .ladder div.down { box-shadow: inset 4px 0 0 #e8392b; background: rgba(232,57,43,.16); }
 .exacttip { position: fixed; z-index: 60; transform: translate(-50%, 8px); padding: 6px 12px; border-radius: 12px; border: 2px solid #fff; background: #12203a; color: #fff; font: 900 15px/1.2 Nunito, system-ui, sans-serif; white-space: nowrap; box-shadow: 0 4px 0 rgba(0,0,0,.35); pointer-events: none; animation: tipin .15s ease-out; }
 @keyframes tipin { from { opacity: 0; transform: translate(-50%, 0); } }
+.nbadge { position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px; background: #e8392b; border: 2px solid #fff; color: #fff; font: 900 12px/18px Nunito, system-ui, sans-serif; font-style: normal; text-align: center; box-shadow: 0 2px 0 rgba(0,0,0,.35); animation: badgepop .35s cubic-bezier(.3,2,.5,1); pointer-events: none; }
+@keyframes badgepop { from { transform: scale(0); } }
+#shopBtn, .tabs button { position: relative; }
+.tabs button .nbadge { top: -6px; right: -4px; min-width: 18px; height: 18px; font-size: 10px; line-height: 14px; padding: 0 4px; }
+.item { position: relative; }
+.item .nbadge.item-badge { top: -8px; right: 8px; height: 22px; line-height: 18px; font-size: 11px; }
+.ptabs { grid-template-columns: repeat(3, 1fr); }
+.handlebox { display: grid; gap: 8px; }
+.handlebox input { font: 900 20px Nunito, system-ui, sans-serif; padding: 10px 12px; border-radius: 14px; border: 3px solid rgba(255,255,255,.5); background: rgba(0,0,0,.3); color: #fff; width: 100%; box-sizing: border-box; }
+.handlebox input:focus { outline: none; border-color: var(--gold); }
+.handlebox .err { color: #ff8a7a; font-size: 13px; font-weight: 900; min-height: 16px; }
+.pstats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pstats div { background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); border-radius: 14px; padding: 8px 4px; text-align: center; }
+.pstats b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.pstats small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+.setrow { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 10px 4px; border-top: 1px solid rgba(255,255,255,.1); font-weight: 900; }
+.setrow input[type=range] { width: 150px; accent-color: var(--gold); }
+.profilehead { display: flex; align-items: center; gap: 12px; }
+.profilehead .avatar { width: 64px; height: 64px; font-size: 38px; flex: none; }
+#shop .row .pill { padding: 2px 8px 2px 3px; border-width: 2px; gap: 4px; }
+#shop .row .pill b { font-size: 15px; }
+#shop .row .pill > .coin, #shop .row .pill > .bcap { width: 24px; height: 24px; }
+#shop .row .pill > .coin::after { font-size: 15px; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -511,7 +534,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <div class="cooler" id="cooler"></div>
     <div class="vcarousel" id="venueCard"></div>
     <div class="hubrow">
-      <button class="btn small" id="shopBtn">SHOP</button>
+      <button class="btn small" id="shopBtn">SHOP<i class="nbadge" id="shopBadge" hidden></i></button>
       <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
@@ -520,7 +543,13 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 </div>
 
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
-<div class="overlay" id="avatarSheet" hidden><div class="sheet"><h2>Choose your avatar</h2><div class="avgrid" id="avatarGrid"></div><button class="btn" id="avatarClose">DONE</button></div></div>
+<div class="overlay" id="avatarSheet" hidden><div class="sheet">
+  <div class="tabs ptabs"><button data-ptab="avatar" class="on">AVATAR</button><button data-ptab="profile">PROFILE</button><button data-ptab="settings">SETTINGS</button></div>
+  <div id="ptabAvatar"><h2>Choose your avatar</h2><div class="avgrid" id="avatarGrid"></div></div>
+  <div id="ptabProfile" hidden></div>
+  <div id="ptabSettings" hidden></div>
+  <button class="btn" id="avatarClose">DONE</button>
+</div></div>
 <div class="overlay" id="canSheet" hidden>
   <div class="canstage" id="canStage">
     <canvas id="mist"></canvas>
@@ -571,6 +600,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
       <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
+      <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
       <p><b>Career.</b> Both players put in the entry and the <b>winner takes the pot</b>. A win at the Backyard is <b>+2 stars</b> and a loss is <b>−1</b>; each venue up adds one to both. Quitting a match counts as a loss. Stars unlock new venues with bigger pots, slicker boards, more wind and tougher opponents. Spend coins on bags with better accuracy, control and spin, and on board designs. Short on coins? The Backyard entry is on the house.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>

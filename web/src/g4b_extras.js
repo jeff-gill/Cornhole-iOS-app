@@ -98,20 +98,54 @@ function cansInfoHTML() {
 
 
 
-// ── Avatar picker
-function openAvatars() {
-  const grid = $("avatarGrid"); grid.innerHTML = "";
-  for (const a of AVATARS) {
-    const open = avatarOpen(a), b = document.createElement("button");
-    b.className = "avpick" + (career.avatar === a.id ? " on" : "") + (open ? "" : " avlock");
-    b.innerHTML = avatarHTML(a.id) + (open ? "" : `<small>🔒 Court ${a.court + 1}</small>`);
-    b.onclick = () => { if (!open) return; career.avatar = a.id; save(); openAvatars(); renderHubExtras(); };
-    grid.appendChild(b);
+// ── Your profile (tap your avatar): Avatar, Profile (handle and stats) and Settings (volume, haptics, alerts).
+let ptab = "avatar";
+function openAvatars(tab) { if (tab) ptab = tab; renderProfile(); $("avatarSheet").hidden = false; }
+function renderProfile() {
+  for (const b of document.querySelectorAll(".ptabs button")) b.classList.toggle("on", b.dataset.ptab === ptab);
+  $("ptabAvatar").hidden = ptab !== "avatar"; $("ptabProfile").hidden = ptab !== "profile"; $("ptabSettings").hidden = ptab !== "settings";
+  if (ptab === "avatar") {
+    const grid = $("avatarGrid"); grid.innerHTML = "";
+    for (const a of AVATARS) {
+      const open = avatarOpen(a), b = document.createElement("button");
+      b.className = "avpick" + (career.avatar === a.id ? " on" : "") + (open ? "" : " avlock");
+      b.innerHTML = avatarHTML(a.id) + (open ? "" : `<small>🔒 Court ${a.court + 1}</small>`);
+      b.onclick = () => { if (!open) return; career.avatar = a.id; save(); renderProfile(); renderHubExtras(); };
+      grid.appendChild(b);
+    }
+  } else if (ptab === "profile") {
+    const s = seasonState(), opened = VENUES.filter((_, i) => venueUnlocked(i)).length;
+    $("ptabProfile").innerHTML = `<div class="profilehead">${avatarHTML(career.avatar)}<div><h2 style="margin:0;text-align:left;font-size:24px;overflow-wrap:anywhere">${esc(myHandle())}</h2><div class="muted">${TITLE_ICONS[s.title]} ${TITLES[s.title]}</div></div></div>
+      <div class="handlebox"><div class="label">Your handle</div><input id="handleIn" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(myHandle())}">
+        <div class="err" id="handleErr"></div><button class="btn green" id="handleSave">SAVE HANDLE</button>
+        <div class="muted">3 to 16 letters, numbers, dots, dashes or underscores. Other players see this in Throwdowns.</div></div>
+      <div class="pstats"><div><b>${career.wins}</b><small>Wins</small></div><div><b>${career.losses}</b><small>Losses</small></div><div><b>${career.stars}</b><small>Stars</small></div>
+        <div><b>${opened}/${VENUES.length}</b><small>Courts</small></div><div><b>${career.fourBaggers || 0}</b><small>4-baggers</small></div><div><b>${career.wins + career.losses ? Math.round(career.wins / (career.wins + career.losses) * 100) : 0}%</b><small>Win rate</small></div></div>`;
+    $("handleSave").onclick = () => {
+      const v = $("handleIn").value.trim();
+      if (!setHandle(v)) { $("handleErr").textContent = "Use 3–16 letters, numbers, dots, dashes or underscores."; return; }
+      $("handleErr").textContent = ""; sfx.tick(); renderProfile();
+    };
+  } else {
+    $("ptabSettings").innerHTML = `<h2>Settings</h2>
+      <div class="setrow"><span>🎵 Music</span><button class="btn small" id="setMusic">${musicOn ? "ON" : "OFF"}</button></div>
+      <div class="setrow"><span>Music volume</span><input type="range" id="musicVolIn" min="0" max="100" value="${Math.round(musicVol * 100)}"></div>
+      <div class="setrow"><span>🔊 Sound effects</span><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
+      <div class="setrow"><span>Effects volume</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}"></div>
+      <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
+      <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>`;
+    $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
+    $("setSfx").onclick = () => { toggleSfx(); renderProfile(); };
+    $("musicVolIn").oninput = e => { initAudio(); setVolume("music", e.target.value / 100); };
+    $("sfxVolIn").oninput = e => { initAudio(); setVolume("sfx", e.target.value / 100); };
+    $("sfxVolIn").onchange = () => sfx.tick();
+    $("setHaptics").onclick = () => { career.haptics = career.haptics === false; save(); haptic("tap"); renderProfile(); };
+    $("setAlerts").onclick = () => { career.alerts = !career.alerts; save(); if (career.alerts) postNative("notify", JSON.stringify({ op: "permission" })); scheduleLivesAlert(); renderProfile(); };
   }
-  $("avatarSheet").hidden = false;
 }
-$("avatarBtn").onclick = openAvatars;
-$("avatarClose").onclick = () => { $("avatarSheet").hidden = true; };
+for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
+$("avatarBtn").onclick = () => openAvatars();
+$("avatarClose").onclick = () => { $("avatarSheet").hidden = true; renderHub(); };
 
 // ── Opening a can: tap, it shakes, the tab pops, a mist sprays out and the prizes come out one at a time.
 let canRun = null;
@@ -232,16 +266,16 @@ function openSeason() {
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
   const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
-  if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, "You"]], s.title, s.id), "me", s.id), me: "me" };
+  if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, myHandle()]], s.title, s.id), "me", s.id), me: "me" };
   const G = S.groupStandings;
   if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
   let group = "";
   if (G && G.size) {
     const up = promoteCount(s.title, G.size), down = demoteCount(s.title, G.size);
     const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
-    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}${e[3] ? ' <span class="cpu">CPU</span>' : ""}</span><small>${e[1]} pts</small></div>`;
+    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
     const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
-    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => row(e, i + 1)).join("")}${G.rank > 10 ? row([G.me, s.points, "You"], G.rank) : ""}</div>
+    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => row(e, i + 1)).join("")}${G.rank > 10 ? row([G.me, s.points, myHandle()], G.rank) : ""}</div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
   showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}

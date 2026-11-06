@@ -333,6 +333,29 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .ladder div.down { box-shadow: inset 4px 0 0 #e8392b; background: rgba(232,57,43,.16); }
 .exacttip { position: fixed; z-index: 60; transform: translate(-50%, 8px); padding: 6px 12px; border-radius: 12px; border: 2px solid #fff; background: #12203a; color: #fff; font: 900 15px/1.2 Nunito, system-ui, sans-serif; white-space: nowrap; box-shadow: 0 4px 0 rgba(0,0,0,.35); pointer-events: none; animation: tipin .15s ease-out; }
 @keyframes tipin { from { opacity: 0; transform: translate(-50%, 0); } }
+.nbadge { position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px; background: #e8392b; border: 2px solid #fff; color: #fff; font: 900 12px/18px Nunito, system-ui, sans-serif; font-style: normal; text-align: center; box-shadow: 0 2px 0 rgba(0,0,0,.35); animation: badgepop .35s cubic-bezier(.3,2,.5,1); pointer-events: none; }
+@keyframes badgepop { from { transform: scale(0); } }
+#shopBtn, .tabs button { position: relative; }
+.tabs button .nbadge { top: -6px; right: -4px; min-width: 18px; height: 18px; font-size: 10px; line-height: 14px; padding: 0 4px; }
+.item { position: relative; }
+.item .nbadge.item-badge { top: -8px; right: 8px; height: 22px; line-height: 18px; font-size: 11px; }
+.ptabs { grid-template-columns: repeat(3, 1fr); }
+.handlebox { display: grid; gap: 8px; }
+.handlebox input { font: 900 20px Nunito, system-ui, sans-serif; padding: 10px 12px; border-radius: 14px; border: 3px solid rgba(255,255,255,.5); background: rgba(0,0,0,.3); color: #fff; width: 100%; box-sizing: border-box; }
+.handlebox input:focus { outline: none; border-color: var(--gold); }
+.handlebox .err { color: #ff8a7a; font-size: 13px; font-weight: 900; min-height: 16px; }
+.pstats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pstats div { background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); border-radius: 14px; padding: 8px 4px; text-align: center; }
+.pstats b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.pstats small { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+.setrow { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; padding: 10px 4px; border-top: 1px solid rgba(255,255,255,.1); font-weight: 900; }
+.setrow input[type=range] { width: 150px; accent-color: var(--gold); }
+.profilehead { display: flex; align-items: center; gap: 12px; }
+.profilehead .avatar { width: 64px; height: 64px; font-size: 38px; flex: none; }
+#shop .row .pill { padding: 2px 8px 2px 3px; border-width: 2px; gap: 4px; }
+#shop .row .pill b { font-size: 15px; }
+#shop .row .pill > .coin, #shop .row .pill > .bcap { width: 24px; height: 24px; }
+#shop .row .pill > .coin::after { font-size: 15px; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -519,7 +542,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <div class="cooler" id="cooler"></div>
     <div class="vcarousel" id="venueCard"></div>
     <div class="hubrow">
-      <button class="btn small" id="shopBtn">SHOP</button>
+      <button class="btn small" id="shopBtn">SHOP<i class="nbadge" id="shopBadge" hidden></i></button>
       <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
@@ -528,7 +551,13 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 </div>
 
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
-<div class="overlay" id="avatarSheet" hidden><div class="sheet"><h2>Choose your avatar</h2><div class="avgrid" id="avatarGrid"></div><button class="btn" id="avatarClose">DONE</button></div></div>
+<div class="overlay" id="avatarSheet" hidden><div class="sheet">
+  <div class="tabs ptabs"><button data-ptab="avatar" class="on">AVATAR</button><button data-ptab="profile">PROFILE</button><button data-ptab="settings">SETTINGS</button></div>
+  <div id="ptabAvatar"><h2>Choose your avatar</h2><div class="avgrid" id="avatarGrid"></div></div>
+  <div id="ptabProfile" hidden></div>
+  <div id="ptabSettings" hidden></div>
+  <button class="btn" id="avatarClose">DONE</button>
+</div></div>
 <div class="overlay" id="canSheet" hidden>
   <div class="canstage" id="canStage">
     <canvas id="mist"></canvas>
@@ -579,6 +608,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
       <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
+      <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
       <p><b>Career.</b> Both players put in the entry and the <b>winner takes the pot</b>. A win at the Backyard is <b>+2 stars</b> and a loss is <b>−1</b>; each venue up adds one to both. Quitting a match counts as a loss. Stars unlock new venues with bigger pots, slicker boards, more wind and tougher opponents. Spend coins on bags with better accuracy, control and spin, and on board designs. Short on coins? The Backyard entry is on the house.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>
@@ -1115,8 +1145,11 @@ const BOARDS = [
   { id: "galaxyb", name: "Galaxy", premium: PID("set.galaxy"), paint: "galaxy", a: "#140a3a", b: "#b48cff" },
   { id: "infernob", name: "Inferno", premium: PID("set.inferno"), paint: "flames", a: "#1a0a05", b: "#ff7a1a" },
 ];
-const OPPONENTS = ["Backyard Bob", "Dirt Bag Dave", "Tailgate Tina", "Sandy Shores", "Big Earl", "Hoops Hannah", "Slider Sam", "Airmail Annie",
-  "The Professor", "Lefty Lou", "Swish Rodriguez", "Cornelius", "Four-Bag Fran", "Kernel Sanders", "Woody", "Blocker Betty"];
+// Computer opponents go by player-style handles.
+const OPPONENTS = ["SliderSam22", "airmail_annie", "BagBoss_Bob", "TailgateTina", "SandyShores7", "BigEarl88", "HoopsHannah", "the_professor",
+  "LeftyLou", "SwishRod", "Cornelius_9", "FourBagFran", "KernelKing", "WoodyBoards", "BlockerBetty", "dirtbag_dave", "CornStar21",
+  "PushShotPete", "AceHoleAmy", "Sir_Slides", "DropZoneDan", "Bagzilla", "HoleyMoly", "CornDog_77", "TossBoss", "ringer_rae",
+  "BackyardBeast", "Kernel_Kate", "SlideRule", "LuckyLobs", "CornFlake_5", "ThrowdownTom"];
 const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neutral", slide: 1 }, fast: { label: "Fast", slide: 1.14 } };
 
 // ───────────────────────── Saved career (this device only)
@@ -1125,7 +1158,7 @@ const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyar
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
-const haptic = kind => postNative("haptic", kind);
+const haptic = kind => { if (career.haptics !== false) postNative("haptic", kind); };
 let career = fresh();
 try {
   const raw = window.__nativeCareer || localStorage.getItem(SAVE_KEY);
@@ -1144,6 +1177,13 @@ try {
 } catch (e) { /* storage unavailable: play without saving */ }
 // Game Center leaderboards (in the iPhone app): total stars, wins and 4-baggers.
 const postScores = () => postNative("score", JSON.stringify({ stars: career.stars, wins: career.wins, fourBaggers: career.fourBaggers || 0 }));
+// Your handle: your own choice, else your Game Center name, else "guest-" and ten digits.
+function myHandle() {
+  if (!career.handle) { career.handle = "guest-" + String(Math.floor(Math.random() * 1e10)).padStart(10, "0"); save(); }
+  return career.handle;
+}
+const HANDLE_RE = /^[A-Za-z0-9_.-]{3,16}$/;
+function setHandle(h) { if (!HANDLE_RE.test(h)) return false; career.handle = h; career.handleSet = true; save(); return true; }
 function save() {
   career.savedAt = Date.now(); // the iPhone app keeps whichever copy (device or iCloud) is newest
   const json = JSON.stringify(career);
@@ -1262,7 +1302,7 @@ function startMatch(kind, vi, online = null, pick = null) {
       S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
     }
-    S.names = ["You", S.opponent.name];
+    S.names = [myHandle(), S.opponent.name];
   } else {
     S.opponent = null;
     S.names = ["Player 1", "Player 2"];
@@ -1278,7 +1318,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
-  showBanner(`${S.names[S.leader] === "You" ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
+  showBanner(`${S.kind === "career" && S.leader === 0 ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
   S.introT = 0;
   beginTurn();
   const side = SIDES[0] < 0 ? "LEFT" : "RIGHT";
@@ -1496,12 +1536,21 @@ function cpuTurn() {
 let audio = null, master = null, musicBus = null, noiseBuf = null, amb = null, wantAmb = null;
 const pref = (k, d) => { try { const v = localStorage.getItem("backyard-cornhole." + k); return v === null ? d : v === "1"; } catch (e) { return d; } };
 let sfxOn = pref("sfx", !pref("muted", false)), musicOn = pref("music", true);
+// Volumes (0–1) from the Settings tab, on top of the on/off switches.
+const vol = (k, d) => { try { const v = parseFloat(localStorage.getItem("backyard-cornhole." + k)); return isNaN(v) ? d : clamp(v, 0, 1); } catch (e) { return d; } };
+let sfxVol = vol("sfxVol", 1), musicVol = vol("musicVol", 1);
+function setVolume(kind, v) {
+  v = clamp(v, 0, 1);
+  if (kind === "music") musicVol = v; else sfxVol = v;
+  try { localStorage.setItem("backyard-cornhole." + (kind === "music" ? "musicVol" : "sfxVol"), String(v)); } catch (e) { /* ignore */ }
+  if (audio) { master.gain.setTargetAtTime(sfxOn ? 0.9 * sfxVol : 0, audio.currentTime, 0.05); musicBus.gain.setTargetAtTime(musicOn ? 0.55 * musicVol : 0, audio.currentTime, 0.05); }
+}
 function initAudio() {
   try {
     if (!audio) {
       audio = new (window.AudioContext || window.webkitAudioContext)();
-      master = audio.createGain(); master.gain.value = sfxOn ? 0.9 : 0; master.connect(audio.destination);
-      musicBus = audio.createGain(); musicBus.gain.value = musicOn ? 0.55 : 0; musicBus.connect(audio.destination);
+      master = audio.createGain(); master.gain.value = sfxOn ? 0.9 * sfxVol : 0; master.connect(audio.destination);
+      musicBus = audio.createGain(); musicBus.gain.value = musicOn ? 0.55 * musicVol : 0; musicBus.connect(audio.destination);
     }
     audio.resume();
     if (wantAmb && !amb) startAmbience(wantAmb);
@@ -1511,13 +1560,13 @@ function initAudio() {
 function setSfx(on) {
   sfxOn = on;
   try { localStorage.setItem("backyard-cornhole.sfx", on ? "1" : "0"); } catch (e) { /* ignore */ }
-  if (master) master.gain.setTargetAtTime(on ? 0.9 : 0, audio.currentTime, 0.05);
+  if (master) master.gain.setTargetAtTime(on ? 0.9 * sfxVol : 0, audio.currentTime, 0.05);
 }
 function setMusic(on) {
   musicOn = on;
   try { localStorage.setItem("backyard-cornhole.music", on ? "1" : "0"); } catch (e) { /* ignore */ }
   if (!musicBus) return;
-  musicBus.gain.setTargetAtTime(on ? 0.55 : 0, audio.currentTime, 0.1);
+  musicBus.gain.setTargetAtTime(on ? 0.55 * musicVol : 0, audio.currentTime, 0.1);
   if (on) startMusic(); else setTimeout(() => { if (!musicOn) stopMusic(); }, 400);
 }
 // ── Music: a light, sunny backyard loop (C, G, Am, F) scheduled a little ahead of time.
@@ -1694,7 +1743,7 @@ window.__net = m => {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
     settleReel({ name: search.name, avatar: "a0" }, () => { if (search) { search.landed = true; tryStartOnline(); } });
-    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar });
+    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar, handle: myHandle() });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
       netSend({ t: "setup", ...search.setup });
@@ -1720,8 +1769,9 @@ function tryStartOnline() {
   const s = search, h = s.hello; search = null;
   $("searching").hidden = true;
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
+  const handle = typeof h.handle === "string" && /^[A-Za-z0-9_.-]{3,24}$/.test(h.handle) ? h.handle : s.name; // their chosen handle
   startMatch("career", s.vi, {
-    ...s.setup, name: s.name, host: s.host,
+    ...s.setup, name: handle, host: s.host,
     bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"), avatar: known(AVATARS, h.avatar, "a0"),
   });
 }
@@ -1909,9 +1959,14 @@ function addCards(cat, it, n) {
   if (owned) { const c = dupCoins(it) * n; career.coins += c; return { owned: true, coins: c }; }
   const k = cardKey(cat, it), need = cardsNeeded(cat, it);
   career.cards[k] = (career.cards[k] || 0) + n;
-  if (career.cards[k] >= need) { delete career.cards[k]; cat.owned().push(it.id); return { unlocked: true, have: need, need }; }
+  // Badges: remember which items got new cards (or were unlocked) until you've seen them in the shop.
+  career.newCards ||= {};
+  const nb = career.newCards[k] ||= { n: 0, unlocked: false }; nb.n += n;
+  if (career.cards[k] >= need) { delete career.cards[k]; cat.owned().push(it.id); nb.unlocked = true; return { unlocked: true, have: need, need }; }
   return { have: career.cards[k], need };
 }
+// Badge counts: items with news, overall or for one card category (bag, board, trail, fx).
+const newCount = catKey => Object.keys(career.newCards || {}).filter(k => !catKey || k.startsWith(catKey + ":")).length;
 
 // ── Opening a can: decide every prize up front, then the reveal plays them one by one.
 function openCan(index) {
@@ -2053,6 +2108,11 @@ function myGroup(entries, me, season) {
 const BOT_FILL = [100, 50];
 const BOT_FIRST = ["Sam", "Jess", "Rico", "Maya", "Dale", "Tess", "Bo", "Lena", "Gus", "Ivy", "Hank", "Kit", "Moe", "Nia", "Ray", "Pip", "Cal", "Dot", "Jax", "Flo"];
 const BOT_LAST = ["Slider", "Airmail", "Blocker", "Woody", "Swish", "Kernel", "Duck", "Drop", "Hooks", "Push"];
+// A player-style handle, the same on every phone for the same hash: e.g. "IvyDrop42", "rico_push", "CalHooks7".
+function botHandle(h) {
+  const a = BOT_FIRST[h % 20], b = BOT_LAST[(h >>> 8) % 10], n = (h >>> 12) % 100, style = (h >>> 20) % 3;
+  return style === 0 ? `${a}${b}${n}` : style === 1 ? `${a.toLowerCase()}_${b.toLowerCase()}` : `${b}${a}${n % 10}`;
+}
 function withBots(entries, title, season) {
   const want = (BOT_FILL[title] || 0) - entries.length;
   if (want <= 0) return entries;
@@ -2062,7 +2122,7 @@ function withBots(entries, title, season) {
   for (let i = 0; i < want; i++) {
     const h = hashStr(`bot|${season}|${title}|${i}`), u = (h % 100000) / 100000;
     const final = Math.round(-Math.log(1 - u * 0.995) * mean);
-    bots.push([`cpu:${i}`, Math.round(final * progress), `${BOT_FIRST[h % 20]} ${BOT_LAST[(h >>> 8) % 10]}`, true]);
+    bots.push([`cpu:${i}`, Math.round(final * progress), botHandle(h)]);
   }
   return entries.concat(bots);
 }
@@ -3724,20 +3784,54 @@ function cansInfoHTML() {
 
 
 
-// ── Avatar picker
-function openAvatars() {
-  const grid = $("avatarGrid"); grid.innerHTML = "";
-  for (const a of AVATARS) {
-    const open = avatarOpen(a), b = document.createElement("button");
-    b.className = "avpick" + (career.avatar === a.id ? " on" : "") + (open ? "" : " avlock");
-    b.innerHTML = avatarHTML(a.id) + (open ? "" : `<small>🔒 Court ${a.court + 1}</small>`);
-    b.onclick = () => { if (!open) return; career.avatar = a.id; save(); openAvatars(); renderHubExtras(); };
-    grid.appendChild(b);
+// ── Your profile (tap your avatar): Avatar, Profile (handle and stats) and Settings (volume, haptics, alerts).
+let ptab = "avatar";
+function openAvatars(tab) { if (tab) ptab = tab; renderProfile(); $("avatarSheet").hidden = false; }
+function renderProfile() {
+  for (const b of document.querySelectorAll(".ptabs button")) b.classList.toggle("on", b.dataset.ptab === ptab);
+  $("ptabAvatar").hidden = ptab !== "avatar"; $("ptabProfile").hidden = ptab !== "profile"; $("ptabSettings").hidden = ptab !== "settings";
+  if (ptab === "avatar") {
+    const grid = $("avatarGrid"); grid.innerHTML = "";
+    for (const a of AVATARS) {
+      const open = avatarOpen(a), b = document.createElement("button");
+      b.className = "avpick" + (career.avatar === a.id ? " on" : "") + (open ? "" : " avlock");
+      b.innerHTML = avatarHTML(a.id) + (open ? "" : `<small>🔒 Court ${a.court + 1}</small>`);
+      b.onclick = () => { if (!open) return; career.avatar = a.id; save(); renderProfile(); renderHubExtras(); };
+      grid.appendChild(b);
+    }
+  } else if (ptab === "profile") {
+    const s = seasonState(), opened = VENUES.filter((_, i) => venueUnlocked(i)).length;
+    $("ptabProfile").innerHTML = `<div class="profilehead">${avatarHTML(career.avatar)}<div><h2 style="margin:0;text-align:left;font-size:24px;overflow-wrap:anywhere">${esc(myHandle())}</h2><div class="muted">${TITLE_ICONS[s.title]} ${TITLES[s.title]}</div></div></div>
+      <div class="handlebox"><div class="label">Your handle</div><input id="handleIn" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(myHandle())}">
+        <div class="err" id="handleErr"></div><button class="btn green" id="handleSave">SAVE HANDLE</button>
+        <div class="muted">3 to 16 letters, numbers, dots, dashes or underscores. Other players see this in Throwdowns.</div></div>
+      <div class="pstats"><div><b>${career.wins}</b><small>Wins</small></div><div><b>${career.losses}</b><small>Losses</small></div><div><b>${career.stars}</b><small>Stars</small></div>
+        <div><b>${opened}/${VENUES.length}</b><small>Courts</small></div><div><b>${career.fourBaggers || 0}</b><small>4-baggers</small></div><div><b>${career.wins + career.losses ? Math.round(career.wins / (career.wins + career.losses) * 100) : 0}%</b><small>Win rate</small></div></div>`;
+    $("handleSave").onclick = () => {
+      const v = $("handleIn").value.trim();
+      if (!setHandle(v)) { $("handleErr").textContent = "Use 3–16 letters, numbers, dots, dashes or underscores."; return; }
+      $("handleErr").textContent = ""; sfx.tick(); renderProfile();
+    };
+  } else {
+    $("ptabSettings").innerHTML = `<h2>Settings</h2>
+      <div class="setrow"><span>🎵 Music</span><button class="btn small" id="setMusic">${musicOn ? "ON" : "OFF"}</button></div>
+      <div class="setrow"><span>Music volume</span><input type="range" id="musicVolIn" min="0" max="100" value="${Math.round(musicVol * 100)}"></div>
+      <div class="setrow"><span>🔊 Sound effects</span><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
+      <div class="setrow"><span>Effects volume</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}"></div>
+      <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
+      <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>`;
+    $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
+    $("setSfx").onclick = () => { toggleSfx(); renderProfile(); };
+    $("musicVolIn").oninput = e => { initAudio(); setVolume("music", e.target.value / 100); };
+    $("sfxVolIn").oninput = e => { initAudio(); setVolume("sfx", e.target.value / 100); };
+    $("sfxVolIn").onchange = () => sfx.tick();
+    $("setHaptics").onclick = () => { career.haptics = career.haptics === false; save(); haptic("tap"); renderProfile(); };
+    $("setAlerts").onclick = () => { career.alerts = !career.alerts; save(); if (career.alerts) postNative("notify", JSON.stringify({ op: "permission" })); scheduleLivesAlert(); renderProfile(); };
   }
-  $("avatarSheet").hidden = false;
 }
-$("avatarBtn").onclick = openAvatars;
-$("avatarClose").onclick = () => { $("avatarSheet").hidden = true; };
+for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
+$("avatarBtn").onclick = () => openAvatars();
+$("avatarClose").onclick = () => { $("avatarSheet").hidden = true; renderHub(); };
 
 // ── Opening a can: tap, it shakes, the tab pops, a mist sprays out and the prizes come out one at a time.
 let canRun = null;
@@ -3858,16 +3952,16 @@ function openSeason() {
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
   const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
-  if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, "You"]], s.title, s.id), "me", s.id), me: "me" };
+  if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, myHandle()]], s.title, s.id), "me", s.id), me: "me" };
   const G = S.groupStandings;
   if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
   let group = "";
   if (G && G.size) {
     const up = promoteCount(s.title, G.size), down = demoteCount(s.title, G.size);
     const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
-    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}${e[3] ? ' <span class="cpu">CPU</span>' : ""}</span><small>${e[1]} pts</small></div>`;
+    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
     const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
-    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => row(e, i + 1)).join("")}${G.rank > 10 ? row([G.me, s.points, "You"], G.rank) : ""}</div>
+    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => row(e, i + 1)).join("")}${G.rank > 10 ? row([G.me, s.points, myHandle()], G.rank) : ""}</div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
   showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
@@ -4022,7 +4116,7 @@ function renderScore() {
   $("inningNum").textContent = S.inning;
   if (S.opponent) $("opp").innerHTML = S.opponent.live
     ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>Live · ${esc(venue().name)}`
-    : `<b>${esc(S.opponent.name)}<span class="cpu">CPU</span></b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
+    : `<b>${esc(S.opponent.name)}</b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
 }
 function renderBanner() {
   const el = $("banner");
@@ -4039,7 +4133,7 @@ function outcomeText(p) {
   return "Off the board";
 }
 const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${label}</small><b>${value}</b></div>`;
-const whoName = p => S.names[p] === "You" ? "Your" : esc(S.names[p]) + "'s";
+const whoName = p => S.kind === "career" && p === 0 ? "Your" : esc(S.names[p]) + "'s";
 function ui() {
   renderScore();
   const hint = $("hint");
@@ -4276,13 +4370,18 @@ function renderHub() {
   $("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras(); rollSeason(); renderSeasonBadge();
+  const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
   play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
-window.__gcPlayer = p => { const el = $("gcName"); el.hidden = !p; if (p) el.textContent = "👤 " + p.name; if (p) postScores(); };
+// Game Center: your handle defaults to your Game Center name until you choose your own.
+window.__gcPlayer = p => {
+  if (p && p.name && !career.handleSet) { career.handle = String(p.name).slice(0, 24); save(); }
+  if (p) postScores();
+};
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 // Swiping the court card left or right moves to the next or previous court.
@@ -4382,7 +4481,15 @@ function storeHTML() {
 function renderShop() {
   testerTopUp();
   $("shopCoins").textContent = bigNum(career.coins); $("shopCaps").textContent = bigNum(career.caps);
-  for (const b of document.querySelectorAll("#shop .tabs button")) b.classList.toggle("on", b.dataset.tab === shopTab);
+  const TAB_CAT = { bags: "bag", boards: "board", throw: "trail", hole: "fx" };
+  for (const b of document.querySelectorAll("#shop .tabs button")) {
+    b.classList.toggle("on", b.dataset.tab === shopTab);
+    const n = TAB_CAT[b.dataset.tab] ? newCount(TAB_CAT[b.dataset.tab]) : 0;
+    b.querySelector(".nbadge")?.remove();
+    if (n) b.insertAdjacentHTML("beforeend", `<i class="nbadge">${n}</i>`);
+  }
+  // An item's badge: new cards since you last looked, or NEW! if those cards unlocked it.
+  const itemBadge = (catKey, id) => { const nb = (career.newCards || {})[`${catKey}:${id}`]; return nb ? `<i class="nbadge item-badge">${nb.unlocked ? "NEW!" : `+${nb.n} 🃏`}</i>` : ""; };
   const list = $("shopItems"); list.innerHTML = "";
   if (shopTab === "store") {
     list.innerHTML = storeHTML();
@@ -4402,7 +4509,7 @@ function renderShop() {
     for (const it of all) {
       const owned = mine.includes(it.id), equipped = (isThrow ? career.trail : career.effect) === it.id;
       const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
-      row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div>${owned ? "" : cardProgress(catByKey(isThrow ? "trail" : "fx"), it)}</div>`;
+      row.innerHTML = `${itemBadge(isThrow ? "trail" : "fx", it.id)}<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div>${owned ? "" : cardProgress(catByKey(isThrow ? "trail" : "fx"), it)}</div>`;
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
@@ -4427,6 +4534,7 @@ function renderShop() {
   for (const it of items) {
     const owned = (shopTab === "bags" ? career.bags : career.boards).includes(it.id), equipped = (shopTab === "bags" ? career.bag : career.board) === it.id;
     const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
+    row.insertAdjacentHTML("beforeend", itemBadge(shopTab === "bags" ? "bag" : "board", it.id));
     row.appendChild(swatch(it, shopTab));
     const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<div class="muted">Board design</div>`;
     const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}${owned ? "" : cardProgress(catByKey(shopTab === "bags" ? "bag" : "board"), it)}`;
@@ -4477,9 +4585,20 @@ function updatePreview(dt) {
     $("shop").hidden = false;
   }
 }
-$("shopBtn").onclick = () => { shopMsg = ""; renderShop(); $("shop").hidden = false; };
-$("shopClose").onclick = () => { $("shop").hidden = true; renderHub(); };
-for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { shopTab = b.dataset.tab; renderShop(); };
+$("shopBtn").onclick = () => {
+  shopMsg = "";
+  const withNews = [["bags", "bag"], ["boards", "board"], ["throw", "trail"], ["hole", "fx"]].find(([, c]) => newCount(c));
+  if (withNews) shopTab = withNews[0]; // open where the new cards are
+  renderShop(); $("shop").hidden = false;
+};
+// Leaving a tab (or closing the shop) marks its new cards as seen.
+function seenTab(tab) {
+  const cat = { bags: "bag", boards: "board", throw: "trail", hole: "fx" }[tab]; if (!cat || !career.newCards) return;
+  for (const k of Object.keys(career.newCards)) if (k.startsWith(cat + ":")) delete career.newCards[k];
+  save();
+}
+$("shopClose").onclick = () => { seenTab(shopTab); $("shop").hidden = true; renderHub(); };
+for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { if (b.dataset.tab !== shopTab) seenTab(shopTab); shopTab = b.dataset.tab; renderShop(); };
 let pausedPhase = null;
 $("menuBtn").onclick = () => {
   if (S.phase === "hub") return;

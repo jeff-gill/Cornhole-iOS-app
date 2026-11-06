@@ -13,7 +13,12 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 - **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Dazzle, plus rare Express Pop cans. Rarer cans hold more prizes (coins, item cards, now and then a life) and take longer to open: 15 minutes for Black up to 24 hours for Diamond. Only one can opens at a time, and Express cans open right away. Each of your cornholes in a match improves the odds of a better can. Opening one sprays mist and the prizes pop out one at a time.
 - **Lives (🎟️ raffle tickets):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra tickets come from the Store, from coins (at a steep price), from 15 bottle caps, or rarely from a can. The iPhone app can notify you when they're full.
 - **Bottle caps:** the premium currency (a red cap with a star). Use them to open a can now (1 cap for every 10 minutes left) or to buy a ticket. You start with 20, get some from cans (more often from rare ones) and 3 per 4-bagger, and can buy packs in the Store.
-- **Avatars:** 4 to start, and 2 more with each court you open.
+- **Profile (tap your avatar):** three tabs.
+  - **Avatar:** 4 to start, and 2 more with each court you open.
+  - **Profile:** your handle and stats. New players are "guest-" plus 10 digits, or their Game Center name, until they choose a handle (3–16 letters, numbers, dots, dashes or underscores). Live opponents see your handle.
+  - **Settings:** music and sound effects on/off and volume, haptics, and alerts.
+- **Computer opponents** and the CPU players in season groups use player-style handles (for example SliderSam22) and aren't labeled; How to play mentions that you play a computer opponent when no one is available.
+- **New-card badges:** red number badges lead from the SHOP button to the tab to the item when cans add cards (+N 🃏) or unlock an item (NEW!). Viewing a tab clears its badges.
 - **Aiming:** tap where the bag should finish, then drag the landing ring around the gold zone. Near the finish it sticks, farther back it slides, and off to the side it adds spin.
 - **Throwing:** one move. Pull back for power, and the arrow swings faster the harder you pull. Let go in the gold band with the arrow straight. Pulling into overdrive makes the throw wild.
 - **Wind:** steady for each inning, from any direction, and stronger at higher venues. The aiming guide ignores it.

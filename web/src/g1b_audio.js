@@ -4,12 +4,21 @@
 let audio = null, master = null, musicBus = null, noiseBuf = null, amb = null, wantAmb = null;
 const pref = (k, d) => { try { const v = localStorage.getItem("backyard-cornhole." + k); return v === null ? d : v === "1"; } catch (e) { return d; } };
 let sfxOn = pref("sfx", !pref("muted", false)), musicOn = pref("music", true);
+// Volumes (0–1) from the Settings tab, on top of the on/off switches.
+const vol = (k, d) => { try { const v = parseFloat(localStorage.getItem("backyard-cornhole." + k)); return isNaN(v) ? d : clamp(v, 0, 1); } catch (e) { return d; } };
+let sfxVol = vol("sfxVol", 1), musicVol = vol("musicVol", 1);
+function setVolume(kind, v) {
+  v = clamp(v, 0, 1);
+  if (kind === "music") musicVol = v; else sfxVol = v;
+  try { localStorage.setItem("backyard-cornhole." + (kind === "music" ? "musicVol" : "sfxVol"), String(v)); } catch (e) { /* ignore */ }
+  if (audio) { master.gain.setTargetAtTime(sfxOn ? 0.9 * sfxVol : 0, audio.currentTime, 0.05); musicBus.gain.setTargetAtTime(musicOn ? 0.55 * musicVol : 0, audio.currentTime, 0.05); }
+}
 function initAudio() {
   try {
     if (!audio) {
       audio = new (window.AudioContext || window.webkitAudioContext)();
-      master = audio.createGain(); master.gain.value = sfxOn ? 0.9 : 0; master.connect(audio.destination);
-      musicBus = audio.createGain(); musicBus.gain.value = musicOn ? 0.55 : 0; musicBus.connect(audio.destination);
+      master = audio.createGain(); master.gain.value = sfxOn ? 0.9 * sfxVol : 0; master.connect(audio.destination);
+      musicBus = audio.createGain(); musicBus.gain.value = musicOn ? 0.55 * musicVol : 0; musicBus.connect(audio.destination);
     }
     audio.resume();
     if (wantAmb && !amb) startAmbience(wantAmb);
@@ -19,13 +28,13 @@ function initAudio() {
 function setSfx(on) {
   sfxOn = on;
   try { localStorage.setItem("backyard-cornhole.sfx", on ? "1" : "0"); } catch (e) { /* ignore */ }
-  if (master) master.gain.setTargetAtTime(on ? 0.9 : 0, audio.currentTime, 0.05);
+  if (master) master.gain.setTargetAtTime(on ? 0.9 * sfxVol : 0, audio.currentTime, 0.05);
 }
 function setMusic(on) {
   musicOn = on;
   try { localStorage.setItem("backyard-cornhole.music", on ? "1" : "0"); } catch (e) { /* ignore */ }
   if (!musicBus) return;
-  musicBus.gain.setTargetAtTime(on ? 0.55 : 0, audio.currentTime, 0.1);
+  musicBus.gain.setTargetAtTime(on ? 0.55 * musicVol : 0, audio.currentTime, 0.1);
   if (on) startMusic(); else setTimeout(() => { if (!musicOn) stopMusic(); }, 400);
 }
 // ── Music: a light, sunny backyard loop (C, G, Am, F) scheduled a little ahead of time.

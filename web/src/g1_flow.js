@@ -145,8 +145,11 @@ const BOARDS = [
   { id: "galaxyb", name: "Galaxy", premium: PID("set.galaxy"), paint: "galaxy", a: "#140a3a", b: "#b48cff" },
   { id: "infernob", name: "Inferno", premium: PID("set.inferno"), paint: "flames", a: "#1a0a05", b: "#ff7a1a" },
 ];
-const OPPONENTS = ["Backyard Bob", "Dirt Bag Dave", "Tailgate Tina", "Sandy Shores", "Big Earl", "Hoops Hannah", "Slider Sam", "Airmail Annie",
-  "The Professor", "Lefty Lou", "Swish Rodriguez", "Cornelius", "Four-Bag Fran", "Kernel Sanders", "Woody", "Blocker Betty"];
+// Computer opponents go by player-style handles.
+const OPPONENTS = ["SliderSam22", "airmail_annie", "BagBoss_Bob", "TailgateTina", "SandyShores7", "BigEarl88", "HoopsHannah", "the_professor",
+  "LeftyLou", "SwishRod", "Cornelius_9", "FourBagFran", "KernelKing", "WoodyBoards", "BlockerBetty", "dirtbag_dave", "CornStar21",
+  "PushShotPete", "AceHoleAmy", "Sir_Slides", "DropZoneDan", "Bagzilla", "HoleyMoly", "CornDog_77", "TossBoss", "ringer_rae",
+  "BackyardBeast", "Kernel_Kate", "SlideRule", "LuckyLobs", "CornFlake_5", "ThrowdownTom"];
 const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neutral", slide: 1 }, fast: { label: "Fast", slide: 1.14 } };
 
 // ───────────────────────── Saved career (this device only)
@@ -155,7 +158,7 @@ const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyar
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
-const haptic = kind => postNative("haptic", kind);
+const haptic = kind => { if (career.haptics !== false) postNative("haptic", kind); };
 let career = fresh();
 try {
   const raw = window.__nativeCareer || localStorage.getItem(SAVE_KEY);
@@ -174,6 +177,13 @@ try {
 } catch (e) { /* storage unavailable: play without saving */ }
 // Game Center leaderboards (in the iPhone app): total stars, wins and 4-baggers.
 const postScores = () => postNative("score", JSON.stringify({ stars: career.stars, wins: career.wins, fourBaggers: career.fourBaggers || 0 }));
+// Your handle: your own choice, else your Game Center name, else "guest-" and ten digits.
+function myHandle() {
+  if (!career.handle) { career.handle = "guest-" + String(Math.floor(Math.random() * 1e10)).padStart(10, "0"); save(); }
+  return career.handle;
+}
+const HANDLE_RE = /^[A-Za-z0-9_.-]{3,16}$/;
+function setHandle(h) { if (!HANDLE_RE.test(h)) return false; career.handle = h; career.handleSet = true; save(); return true; }
 function save() {
   career.savedAt = Date.now(); // the iPhone app keeps whichever copy (device or iCloud) is newest
   const json = JSON.stringify(career);
@@ -292,7 +302,7 @@ function startMatch(kind, vi, online = null, pick = null) {
       S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
     }
-    S.names = ["You", S.opponent.name];
+    S.names = [myHandle(), S.opponent.name];
   } else {
     S.opponent = null;
     S.names = ["Player 1", "Player 2"];
@@ -308,7 +318,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
-  showBanner(`${S.names[S.leader] === "You" ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
+  showBanner(`${S.kind === "career" && S.leader === 0 ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
   S.introT = 0;
   beginTurn();
   const side = SIDES[0] < 0 ? "LEFT" : "RIGHT";

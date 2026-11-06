@@ -135,7 +135,7 @@ function renderScore() {
   $("inningNum").textContent = S.inning;
   if (S.opponent) $("opp").innerHTML = S.opponent.live
     ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>Live · ${esc(venue().name)}`
-    : `<b>${esc(S.opponent.name)}<span class="cpu">CPU</span></b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
+    : `<b>${esc(S.opponent.name)}</b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
 }
 function renderBanner() {
   const el = $("banner");
@@ -152,7 +152,7 @@ function outcomeText(p) {
   return "Off the board";
 }
 const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${label}</small><b>${value}</b></div>`;
-const whoName = p => S.names[p] === "You" ? "Your" : esc(S.names[p]) + "'s";
+const whoName = p => S.kind === "career" && p === 0 ? "Your" : esc(S.names[p]) + "'s";
 function ui() {
   renderScore();
   const hint = $("hint");
@@ -389,13 +389,18 @@ function renderHub() {
   $("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras(); rollSeason(); renderSeasonBadge();
+  const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
   play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
-window.__gcPlayer = p => { const el = $("gcName"); el.hidden = !p; if (p) el.textContent = "👤 " + p.name; if (p) postScores(); };
+// Game Center: your handle defaults to your Game Center name until you choose your own.
+window.__gcPlayer = p => {
+  if (p && p.name && !career.handleSet) { career.handle = String(p.name).slice(0, 24); save(); }
+  if (p) postScores();
+};
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 // Swiping the court card left or right moves to the next or previous court.
@@ -495,7 +500,15 @@ function storeHTML() {
 function renderShop() {
   testerTopUp();
   $("shopCoins").textContent = bigNum(career.coins); $("shopCaps").textContent = bigNum(career.caps);
-  for (const b of document.querySelectorAll("#shop .tabs button")) b.classList.toggle("on", b.dataset.tab === shopTab);
+  const TAB_CAT = { bags: "bag", boards: "board", throw: "trail", hole: "fx" };
+  for (const b of document.querySelectorAll("#shop .tabs button")) {
+    b.classList.toggle("on", b.dataset.tab === shopTab);
+    const n = TAB_CAT[b.dataset.tab] ? newCount(TAB_CAT[b.dataset.tab]) : 0;
+    b.querySelector(".nbadge")?.remove();
+    if (n) b.insertAdjacentHTML("beforeend", `<i class="nbadge">${n}</i>`);
+  }
+  // An item's badge: new cards since you last looked, or NEW! if those cards unlocked it.
+  const itemBadge = (catKey, id) => { const nb = (career.newCards || {})[`${catKey}:${id}`]; return nb ? `<i class="nbadge item-badge">${nb.unlocked ? "NEW!" : `+${nb.n} 🃏`}</i>` : ""; };
   const list = $("shopItems"); list.innerHTML = "";
   if (shopTab === "store") {
     list.innerHTML = storeHTML();
@@ -515,7 +528,7 @@ function renderShop() {
     for (const it of all) {
       const owned = mine.includes(it.id), equipped = (isThrow ? career.trail : career.effect) === it.id;
       const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
-      row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div>${owned ? "" : cardProgress(catByKey(isThrow ? "trail" : "fx"), it)}</div>`;
+      row.innerHTML = `${itemBadge(isThrow ? "trail" : "fx", it.id)}<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div>${owned ? "" : cardProgress(catByKey(isThrow ? "trail" : "fx"), it)}</div>`;
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
@@ -540,6 +553,7 @@ function renderShop() {
   for (const it of items) {
     const owned = (shopTab === "bags" ? career.bags : career.boards).includes(it.id), equipped = (shopTab === "bags" ? career.bag : career.board) === it.id;
     const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
+    row.insertAdjacentHTML("beforeend", itemBadge(shopTab === "bags" ? "bag" : "board", it.id));
     row.appendChild(swatch(it, shopTab));
     const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<div class="muted">Board design</div>`;
     const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}${owned ? "" : cardProgress(catByKey(shopTab === "bags" ? "bag" : "board"), it)}`;
@@ -590,9 +604,20 @@ function updatePreview(dt) {
     $("shop").hidden = false;
   }
 }
-$("shopBtn").onclick = () => { shopMsg = ""; renderShop(); $("shop").hidden = false; };
-$("shopClose").onclick = () => { $("shop").hidden = true; renderHub(); };
-for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { shopTab = b.dataset.tab; renderShop(); };
+$("shopBtn").onclick = () => {
+  shopMsg = "";
+  const withNews = [["bags", "bag"], ["boards", "board"], ["throw", "trail"], ["hole", "fx"]].find(([, c]) => newCount(c));
+  if (withNews) shopTab = withNews[0]; // open where the new cards are
+  renderShop(); $("shop").hidden = false;
+};
+// Leaving a tab (or closing the shop) marks its new cards as seen.
+function seenTab(tab) {
+  const cat = { bags: "bag", boards: "board", throw: "trail", hole: "fx" }[tab]; if (!cat || !career.newCards) return;
+  for (const k of Object.keys(career.newCards)) if (k.startsWith(cat + ":")) delete career.newCards[k];
+  save();
+}
+$("shopClose").onclick = () => { seenTab(shopTab); $("shop").hidden = true; renderHub(); };
+for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { if (b.dataset.tab !== shopTab) seenTab(shopTab); shopTab = b.dataset.tab; renderShop(); };
 let pausedPhase = null;
 $("menuBtn").onclick = () => {
   if (S.phase === "hub") return;
