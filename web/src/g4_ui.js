@@ -273,8 +273,15 @@ function renderInningSheet() {
         <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${res.coins}</b></div></div>
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
+    const O = S.online, R = O && O.rematch, who = esc(S.names[1]);
+    const again = !canAgain ? "NOT ENOUGH COINS"
+      : !O ? "PLAY AGAIN" + (fee ? ` · 🪙 ${short(fee)}` : "")
+      : O.gone ? `${who} left`
+      : R.me ? `WAITING FOR ${who}…`
+      : R.them ? `${who} WANTS A REMATCH! · 🪙 ${short(fee)}`
+      : `REMATCH · 🪙 ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go green" id="againBtn" ${canAgain ? "" : "disabled"}>${canAgain ? "PLAY AGAIN" + (fee ? ` · 🪙 ${fee.toLocaleString()}` : "") : "NOT ENOUGH COINS"}</button>
+      <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
@@ -285,7 +292,11 @@ function renderInningSheet() {
   if (wrap) wrap.scrollTop = wrap.scrollHeight;
   animateTotals();
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
-  if ($("againBtn")) $("againBtn").onclick = () => { sheet.hidden = true; const k = S.kind, v = S.venue; openHub(); startMatch(k, v); };
+  if ($("againBtn")) $("againBtn").onclick = () => {
+    if (S.online) { wantRematch(); return; }
+    sheet.hidden = true; const k = S.kind, v = S.venue; openHub();
+    if (k === "career") playCourt(v); else startMatch(k, v);
+  };
   const body0 = $("inningBody");
   body0.style.transition = "none"; body0.style.transform = ""; body0.style.opacity = "";
   sheet.hidden = false;

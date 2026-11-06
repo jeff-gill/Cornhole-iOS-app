@@ -51,6 +51,11 @@ window.__net = m => {
   }
   else if (m.t === "nomatch") { if (search && !search.name) cancelSearch(true); }
   else if (m.t === "left" || m.t === "quit") opponentLeft();
+  else if (m.t === "rematch" && S.online) { S.online.rematch.them = true; tryRematch(); }
+  else if (m.t === "resetup" && S.online && !S.online.host) {
+    S.online.rematch.setup = { seed: m.seed | 0, flip: m.flip === 1 ? -1 : 1, lead: m.lead === 0 ? 1 : 0 };
+    tryRematch();
+  }
   else if (S.online) S.online.queue.push(m);
 };
 function tryStartOnline() {
@@ -59,17 +64,38 @@ function tryStartOnline() {
   $("searching").hidden = true;
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
   startMatch("career", s.vi, {
-    ...s.setup, name: s.name,
+    ...s.setup, name: s.name, host: s.host,
     bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"),
   });
 }
 function opponentLeft() {
   if (search) { cancelSearch(true); return; }
+  if (S.online && S.phase === "over") { S.online.gone = true; renderInningSheet(); return; } // no rematch now
   if (!S.online || S.phase === "over" || S.phase === "hub") return;
   S.online.gone = true;
   S.winner = 0; S.phase = "over"; finishMatch();
   showBanner(`${S.names[1]} left. You win!`, 0);
   ui();
+}
+// Rematch: both players tap REMATCH, the host deals a fresh coin flip and seed, and a new match starts at the same
+// court with the same buy-in.
+function wantRematch() {
+  const O = S.online; if (!O || O.gone || O.rematch.me) return;
+  if (career.coins < venue().fee && !houseCovers(S.venue)) return;
+  O.rematch.me = true; netSend({ t: "rematch" }); renderInningSheet(); tryRematch();
+}
+function tryRematch() {
+  const O = S.online; if (!O || S.phase !== "over") return;
+  const R = O.rematch;
+  if (!R.me || !R.them) { renderInningSheet(); return; }
+  if (O.host && !R.setup) {
+    R.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
+    netSend({ t: "resetup", ...R.setup });
+  }
+  if (!R.setup) return;
+  const { name, bag, trail, effect, host } = O;
+  $("inningSheet").hidden = true;
+  startMatch("career", S.venue, { ...R.setup, name, bag, trail, effect, host });
 }
 function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net", JSON.stringify({ op: "leave" })); } }
 

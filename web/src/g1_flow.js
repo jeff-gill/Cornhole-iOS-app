@@ -264,7 +264,7 @@ function startMatch(kind, vi, online = null) {
     if (!houseCovers(vi)) career.coins -= v.fee;
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
-      S.online = { ...online, queue: [], waitT: 0 };
+      S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
       S.opponent = { name: online.name, live: true, skill: 0, rating: 0 };
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {

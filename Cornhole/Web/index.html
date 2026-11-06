@@ -1070,7 +1070,7 @@ function startMatch(kind, vi, online = null) {
     if (!houseCovers(vi)) career.coins -= v.fee;
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
-      S.online = { ...online, queue: [], waitT: 0 };
+      S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
       S.opponent = { name: online.name, live: true, skill: 0, rating: 0 };
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
@@ -1481,6 +1481,11 @@ window.__net = m => {
   }
   else if (m.t === "nomatch") { if (search && !search.name) cancelSearch(true); }
   else if (m.t === "left" || m.t === "quit") opponentLeft();
+  else if (m.t === "rematch" && S.online) { S.online.rematch.them = true; tryRematch(); }
+  else if (m.t === "resetup" && S.online && !S.online.host) {
+    S.online.rematch.setup = { seed: m.seed | 0, flip: m.flip === 1 ? -1 : 1, lead: m.lead === 0 ? 1 : 0 };
+    tryRematch();
+  }
   else if (S.online) S.online.queue.push(m);
 };
 function tryStartOnline() {
@@ -1489,17 +1494,38 @@ function tryStartOnline() {
   $("searching").hidden = true;
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
   startMatch("career", s.vi, {
-    ...s.setup, name: s.name,
+    ...s.setup, name: s.name, host: s.host,
     bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"),
   });
 }
 function opponentLeft() {
   if (search) { cancelSearch(true); return; }
+  if (S.online && S.phase === "over") { S.online.gone = true; renderInningSheet(); return; } // no rematch now
   if (!S.online || S.phase === "over" || S.phase === "hub") return;
   S.online.gone = true;
   S.winner = 0; S.phase = "over"; finishMatch();
   showBanner(`${S.names[1]} left. You win!`, 0);
   ui();
+}
+// Rematch: both players tap REMATCH, the host deals a fresh coin flip and seed, and a new match starts at the same
+// court with the same buy-in.
+function wantRematch() {
+  const O = S.online; if (!O || O.gone || O.rematch.me) return;
+  if (career.coins < venue().fee && !houseCovers(S.venue)) return;
+  O.rematch.me = true; netSend({ t: "rematch" }); renderInningSheet(); tryRematch();
+}
+function tryRematch() {
+  const O = S.online; if (!O || S.phase !== "over") return;
+  const R = O.rematch;
+  if (!R.me || !R.them) { renderInningSheet(); return; }
+  if (O.host && !R.setup) {
+    R.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
+    netSend({ t: "resetup", ...R.setup });
+  }
+  if (!R.setup) return;
+  const { name, bag, trail, effect, host } = O;
+  $("inningSheet").hidden = true;
+  startMatch("career", S.venue, { ...R.setup, name, bag, trail, effect, host });
 }
 function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net", JSON.stringify({ op: "leave" })); } }
 
@@ -3251,8 +3277,15 @@ function renderInningSheet() {
         <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${res.coins}</b></div></div>
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
+    const O = S.online, R = O && O.rematch, who = esc(S.names[1]);
+    const again = !canAgain ? "NOT ENOUGH COINS"
+      : !O ? "PLAY AGAIN" + (fee ? ` · 🪙 ${short(fee)}` : "")
+      : O.gone ? `${who} left`
+      : R.me ? `WAITING FOR ${who}…`
+      : R.them ? `${who} WANTS A REMATCH! · 🪙 ${short(fee)}`
+      : `REMATCH · 🪙 ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go green" id="againBtn" ${canAgain ? "" : "disabled"}>${canAgain ? "PLAY AGAIN" + (fee ? ` · 🪙 ${fee.toLocaleString()}` : "") : "NOT ENOUGH COINS"}</button>
+      <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
@@ -3263,7 +3296,11 @@ function renderInningSheet() {
   if (wrap) wrap.scrollTop = wrap.scrollHeight;
   animateTotals();
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
-  if ($("againBtn")) $("againBtn").onclick = () => { sheet.hidden = true; const k = S.kind, v = S.venue; openHub(); startMatch(k, v); };
+  if ($("againBtn")) $("againBtn").onclick = () => {
+    if (S.online) { wantRematch(); return; }
+    sheet.hidden = true; const k = S.kind, v = S.venue; openHub();
+    if (k === "career") playCourt(v); else startMatch(k, v);
+  };
   const body0 = $("inningBody");
   body0.style.transition = "none"; body0.style.transform = ""; body0.style.opacity = "";
   sheet.hidden = false;
