@@ -246,7 +246,7 @@ function renderInningSheet() {
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${res.coins}</b></div></div>
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
-    const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee;
+    const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
     body = `${head}${scorecardHTML()}${rewards}
       <button class="btn go green" id="againBtn" ${canAgain ? "" : "disabled"}>${canAgain ? "PLAY AGAIN" + (fee ? ` · 🪙 ${fee.toLocaleString()}` : "") : "NOT ENOUGH COINS"}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
@@ -320,14 +320,14 @@ function renderHub() {
   $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous venue">‹</button>
     <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next venue">›</button>
     <div class="lvlno">Level ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Entry", v.fee ? "🪙 " + v.fee.toLocaleString() : "Free")}${chip("Win", "🪙 " + v.prize.toLocaleString())}${chip("Wind", `${v.wind[0]}–${v.wind[1]} mph`)}${chip("Boards", v.speed.replace(" boards", ""))}</div>
+    <div class="facts">${chip("Entry", houseCovers(hubVenue) ? "On the house" : "🪙 " + v.fee.toLocaleString())}${chip("Winner takes", "🪙 " + pot(v).toLocaleString())}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]} mph`)}${chip("Boards", v.speed.replace(" boards", ""))}</div>
     ${prog}
     ${open ? "" : `<div class="locked">🔒 ${v.stars} ⭐ to unlock</div>`}`;
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
   $("vNext").onclick = () => { hubVenue = Math.min(VENUES.length - 1, hubVenue + 1); renderHub(); };
-  const play = $("playBtn"), afford = career.coins >= v.fee;
+  const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   play.disabled = !open || !afford;
-  play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : v.fee ? `PLAY · 🪙 ${v.fee.toLocaleString()}` : "PLAY";
+  play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${v.fee.toLocaleString()}`;
   $("passBtn").disabled = !open;
 }
 $("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
@@ -370,17 +370,23 @@ let pausedPhase = null;
 $("menuBtn").onclick = () => {
   if (S.phase === "hub") return;
   pausedPhase = S.phase; S.phase = "paused";
-  $("forfeitNote").textContent = S.kind === "career" ? "Quitting counts as a loss and keeps the entry fee." : "";
+  renderSoundButtons();
+  $("forfeitNote").textContent = S.kind === "career" ? `Quitting counts as a loss: −${starsForLoss(S.venue)} ⭐ and your opponent keeps the pot.` : "";
   $("pause").hidden = false;
 };
 $("resumeBtn").onclick = () => { $("pause").hidden = true; S.phase = pausedPhase || "aiming"; ui(); };
 $("forfeitBtn").onclick = () => {
-  if (S.kind === "career") { career.stars = Math.max(0, career.stars - (1 + S.venue)); career.losses++; save(); }
+  if (S.kind === "career") { career.stars = Math.max(0, career.stars - starsForLoss(S.venue)); career.losses++; save(); }
   openHub();
 };
-function renderSoundButtons() { $("soundBtn").textContent = `Sound: ${muted ? "off" : "on"}`; $("pauseSound").textContent = `SOUND: ${muted ? "OFF" : "ON"}`; }
-$("soundBtn").onclick = () => { initAudio(); setMuted(!muted); renderSoundButtons(); };
-$("pauseSound").onclick = () => { initAudio(); setMuted(!muted); renderSoundButtons(); };
+function renderSoundButtons() {
+  $("musicBtn").textContent = `Music: ${musicOn ? "on" : "off"}`; $("soundBtn").textContent = `Effects: ${sfxOn ? "on" : "off"}`;
+  $("pauseMusic").classList.toggle("on", musicOn); $("pauseSound").classList.toggle("on", sfxOn);
+}
+const toggleMusic = () => { initAudio(); setMusic(!musicOn); renderSoundButtons(); };
+const toggleSfx = () => { initAudio(); setSfx(!sfxOn); renderSoundButtons(); };
+$("musicBtn").onclick = toggleMusic; $("pauseMusic").onclick = toggleMusic;
+$("soundBtn").onclick = toggleSfx; $("pauseSound").onclick = toggleSfx;
 $("replayTut").onclick = () => { career.tutorialDone = false; save(); $("replayTut").textContent = "Tutorial will show in your next match"; };
 renderSoundButtons();
 $("helpBtn").onclick = () => { $("helpSheet").hidden = false; };

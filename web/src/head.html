@@ -250,6 +250,14 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .swipehint { border: 0; background: none; color: var(--ink-dim); font-weight: 900; font-size: 14px; letter-spacing: .04em; padding: 6px; }
 .swipehint span { display: inline-block; animation: bob 1.2s ease-in-out infinite; color: var(--gold); font-size: 18px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+/* Pause toggles */
+.toggles { display: flex; flex-direction: column; gap: 8px; }
+.toggle { display: flex; justify-content: space-between; align-items: center; border: 3px solid rgba(255,255,255,.18); background: rgba(255,255,255,.07); border-radius: 16px; padding: 10px 14px;
+  font-family: var(--font-display); font-size: 19px; font-weight: 400; }
+.toggle i { width: 54px; height: 30px; border-radius: 999px; background: rgba(0,0,0,.4); position: relative; transition: background .2s; box-shadow: inset 0 2px 0 rgba(0,0,0,.3); }
+.toggle i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 0 rgba(0,0,0,.3); transition: transform .2s; }
+.toggle.on i { background: var(--go); }
+.toggle.on i::after { transform: translateX(24px); }
 /* First-match coach */
 #coach { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(92%, 420px); pointer-events: none; text-align: center;
   font-size: 16px; font-weight: 900; line-height: 1.3; padding: 10px 14px; border-radius: 18px; background: rgba(10,20,38,.88); border: 3px solid var(--gold);
@@ -280,7 +288,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 
 <div id="app">
   <header class="score">
-    <button class="roundbtn" id="menuBtn" aria-label="Menu">☰</button>
+    <button class="roundbtn" id="menuBtn" aria-label="Pause">⏸</button>
     <div class="card p0" id="card0"><div class="name" id="name0">You</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div></div>
     <div class="inning"><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
     <div class="card p1" id="card1"><div class="name" id="name1">CPU</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div></div>
@@ -316,7 +324,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
       <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
       <button class="btn small" id="onlineBtn" disabled>ONLINE<br><span style="font-size:11px">coming soon</span></button>
     </div>
-    <div class="row" style="justify-content:center;gap:22px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="soundBtn">Sound: on</button></div>
+    <div class="row" style="justify-content:center;gap:22px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button></div>
   </div>
 </div>
 
@@ -332,9 +340,12 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 <div class="overlay" id="pause" hidden>
   <div class="sheet">
     <h2>Paused</h2>
+    <div class="toggles">
+      <button class="toggle" id="pauseMusic"><span>🎵 Music</span><i></i></button>
+      <button class="toggle" id="pauseSound"><span>🔊 Sound effects</span><i></i></button>
+    </div>
     <button class="btn green go" id="resumeBtn">RESUME</button>
-    <button class="btn" id="pauseSound">SOUND: ON</button>
-    <button class="btn" id="forfeitBtn">QUIT MATCH</button>
+    <button class="btn red" id="forfeitBtn">QUIT MATCH</button>
     <div class="muted center" id="forfeitNote"></div>
   </div>
 </div>
@@ -347,7 +358,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
       <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
-      <p><b>Career.</b> Win matches for stars and coins. Stars unlock new venues with bigger prizes, slicker boards and tougher opponents. Spend coins on bags with better accuracy, control and spin, and on new board designs.</p>
+      <p><b>Career.</b> Both players put in the entry and the <b>winner takes the pot</b>. A win at the Backyard is <b>+2 stars</b> and a loss is <b>−1</b>; each venue up adds one to both. Quitting a match counts as a loss. Stars unlock new venues with bigger pots, slicker boards, more wind and tougher opponents. Spend coins on bags with better accuracy, control and spin, and on board designs. Short on coins? The Backyard entry is on the house.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>
     </div>

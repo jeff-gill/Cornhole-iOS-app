@@ -20,12 +20,18 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 // Stadium with the starter bag. CPU skill = spread of its release errors (smaller is better): ~13-21% in the hole at the
 // Backyard up to ~36-50% at the Stadium.
 const VENUES = [
-  { id: "backyard", name: "Backyard", sub: "Where it all starts", stars: 0, fee: 0, prize: 60, swing: 0.55, zone: 0.06, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", stars: 12, fee: 150, prize: 350, swing: 0.65, zone: 0.05, cpu: [0.16, 0.10], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", stars: 30, fee: 500, prize: 1100, swing: 0.75, zone: 0.045, cpu: [0.12, 0.08], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", stars: 60, fee: 1400, prize: 3000, swing: 0.9, zone: 0.037, cpu: [0.09, 0.06], mu: 0.30, wind: [6, 13], speed: "Slick boards" },
-  { id: "stadium", name: "Stadium Finals", sub: "The big show", stars: 100, fee: 4000, prize: 9000, swing: 1.0, zone: 0.033, cpu: [0.07, 0.04], mu: 0.28, wind: [8, 16], speed: "Fast pro boards" },
+  { id: "backyard", name: "Backyard", sub: "Where it all starts", stars: 0, fee: 25, swing: 0.55, zone: 0.06, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", stars: 12, fee: 150, swing: 0.65, zone: 0.05, cpu: [0.16, 0.10], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
+  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", stars: 30, fee: 500, swing: 0.75, zone: 0.045, cpu: [0.12, 0.08], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", stars: 60, fee: 1400, swing: 0.9, zone: 0.037, cpu: [0.09, 0.06], mu: 0.30, wind: [6, 13], speed: "Slick boards" },
+  { id: "stadium", name: "Stadium Finals", sub: "The big show", stars: 100, fee: 4000, swing: 1.0, zone: 0.033, cpu: [0.07, 0.04], mu: 0.28, wind: [8, 16], speed: "Fast pro boards" },
 ];
+// Stakes: both players put in the entry and the winner takes the whole pot. Stars: a win is +2 at the first venue and
+// one more per level; a loss is -1 at the first venue and one more per level. Quitting counts as a loss.
+const pot = v => v.fee * 2;
+const starsForWin = vi => 2 + vi, starsForLoss = vi => 1 + vi;
+// The house covers your Backyard entry if you're short, so you can never get stuck.
+const houseCovers = vi => vi === 0 && career.coins < VENUES[0].fee;
 const BAGS = [
   { id: "starter", name: "Duck Cloth", price: 0, acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#ff4b3a", pattern: "plain" },
   { id: "backyard", name: "Backyard Pro", price: 300, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
@@ -136,8 +142,9 @@ function windAccel() {
 function startMatch(kind, vi) {
   const v = VENUES[vi];
   if (kind === "career") {
-    if (career.coins < v.fee) return;
-    career.coins -= v.fee; career.venue = vi; save();
+    if (career.coins < v.fee && !houseCovers(vi)) return;
+    if (!houseCovers(vi)) career.coins -= v.fee;
+    career.venue = vi; save();
     const [hi, lo] = v.cpu, skill = rand(lo, hi);
     S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
     S.names = ["You", S.opponent.name];
@@ -283,8 +290,8 @@ function finishMatch() {
   if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
   const v = venue(), won = S.winner === 0, before = career.stars;
-  const starDelta = won ? 3 + S.venue : -(1 + S.venue);
-  const coins = won ? v.prize : 0;
+  const starDelta = won ? starsForWin(S.venue) : -starsForLoss(S.venue);
+  const coins = won ? pot(v) : 0;
   career.stars = Math.max(0, career.stars + starDelta);
   career.coins += coins;
   if (won) career.wins++; else career.losses++;

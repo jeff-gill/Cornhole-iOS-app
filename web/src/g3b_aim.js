@@ -13,32 +13,55 @@ const arrowMat = new THREE.ShaderMaterial({
   transparent: true, depthWrite: false,
   uniforms: { uTime: { value: 0 }, uA: { value: new THREE.Color("#3ee07a") }, uB: { value: new THREE.Color("#ffffff") }, uAlpha: { value: 1 } },
   vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-  fragmentShader: `varying vec2 vUv; uniform float uTime, uAlpha; uniform vec3 uA, uB;
+  fragmentShader: `varying vec2 vUv; uniform float uTime, uAlpha; uniform vec3 uA;
     void main(){
-      vec3 col = mix(uA, uB, smoothstep(0.0, 1.0, vUv.y) * 0.55);
-      float chev = fract(vUv.y * 5.0 - abs(vUv.x - 0.5) * 1.8 - uTime * 1.7);   // chevrons flowing toward the tip
-      float stripe = smoothstep(0.0, 0.1, chev) * (1.0 - smoothstep(0.3, 0.42, chev));
-      col = mix(col, vec3(1.0), stripe * 0.5);
-      float edge = min(vUv.x, 1.0 - vUv.x);
-      col = mix(vec3(1.0), col, smoothstep(0.0, 0.14, edge));                 // bright rim
-      gl_FragColor = vec4(col, uAlpha * (0.78 + 0.22 * vUv.y));
+      vec3 col = uA;
+      col *= 0.82 + 0.18 * smoothstep(0.0, 0.35, vUv.x) * (1.0 - 0.35 * smoothstep(0.6, 1.0, vUv.x));   // rounded, slightly darker right edge
+      float shine = smoothstep(0.18, 0.3, vUv.x) * (1.0 - smoothstep(0.38, 0.5, vUv.x));               // glossy streak like the score cards
+      col = mix(col, vec3(1.0), shine * 0.45);
+      float chev = fract(vUv.y * 4.0 - abs(vUv.x - 0.5) * 1.6 - uTime * 1.5);
+      col = mix(col, vec3(1.0), (smoothstep(0.0, 0.1, chev) * (1.0 - smoothstep(0.22, 0.32, chev))) * 0.22);
+      gl_FragColor = vec4(col, uAlpha);
     }`,
 });
 arrowMat.toneMapped = false;
-const outlineMat = new THREE.MeshBasicMaterial({ color: 0x0a1426, transparent: true, opacity: 0.55, depthWrite: false });
-// Shaft: unit length along +Y, stretched each frame. Head: fixed size, sits at the tip.
-const shaftGeo = new THREE.PlaneGeometry(0.62, 1).translate(0, 0.5, 0);
-const headGeo = (() => {
-  const s = new THREE.Shape(); s.moveTo(-0.95, 0); s.lineTo(0.95, 0); s.lineTo(0, 1.35); s.closePath();
-  const g = new THREE.ShapeGeometry(s), p = g.attributes.position, uv = g.attributes.uv;
-  for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + 0.95) / 1.9, 0.86 + p.getY(i) / 1.35 * 0.14);
-  return g;
-})();
-const shaft = new THREE.Mesh(shaftGeo, arrowMat), head = new THREE.Mesh(headGeo, arrowMat);
-const shaftLine = new THREE.Mesh(shaftGeo, outlineMat), headLine = new THREE.Mesh(headGeo, outlineMat);
-shaftLine.scale.x = 1.35; headLine.scale.set(1.18, 1.18, 1);
-shaftLine.position.z = headLine.position.z = -0.01;
-for (const m of [shaftLine, headLine, shaft, head]) { m.renderOrder = 8; aimFlat.add(m); }
+const outlineMat = new THREE.MeshBasicMaterial({ color: 0x0a1426, transparent: true, opacity: 0.6, depthWrite: false });
+const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false });
+const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.28, depthWrite: false });
+whiteMat.toneMapped = false;
+// A rounded, bubbly arrow: base at y = y0, shaft half-width w, head half-width hw and length hl, corner radius r.
+function arrowShape(len, w, hw, hl, r, y0 = 0) {
+  const sh = new THREE.Shape(), top = len, tipY = len + hl;
+  sh.moveTo(-w + r, y0);
+  sh.lineTo(w - r, y0); sh.quadraticCurveTo(w, y0, w, y0 + r);
+  sh.lineTo(w, top - r * 0.4); sh.quadraticCurveTo(w, top, w + r * 0.6, top);
+  sh.lineTo(hw - r, top); sh.quadraticCurveTo(hw + r * 0.5, top, hw - r * 0.3, top + r * 0.75);
+  sh.lineTo(r * 0.55, tipY - r * 0.75); sh.quadraticCurveTo(0, tipY + r * 0.1, -r * 0.55, tipY - r * 0.75);
+  sh.lineTo(-hw + r * 0.3, top + r * 0.75); sh.quadraticCurveTo(-hw - r * 0.5, top, -hw + r, top);
+  sh.lineTo(-w - r * 0.6, top); sh.quadraticCurveTo(-w, top, -w, top - r * 0.4);
+  sh.lineTo(-w, y0 + r); sh.quadraticCurveTo(-w, y0, -w + r, y0);
+  return sh;
+}
+const ARROW = { w: 0.36, hw: 0.95, hl: 1.35, r: 0.22 };
+const arrowLayers = [ // drawn back to front
+  { mat: shadowMat, pad: 0.2, dx: 0.22, dy: -0.12, order: 7 },
+  { mat: outlineMat, pad: 0.24, dx: 0, dy: 0, order: 8 },
+  { mat: whiteMat, pad: 0.14, dx: 0, dy: 0, order: 8.1 },
+  { mat: arrowMat, pad: 0, dx: 0, dy: 0, order: 8.2 },
+].map(l => { const m = new THREE.Mesh(new THREE.BufferGeometry(), l.mat); m.position.set(l.dx, l.dy, 0); m.renderOrder = l.order; aimFlat.add(m); return { ...l, mesh: m }; });
+let arrowLen = -1;
+function setArrowLength(len) {
+  if (Math.abs(len - arrowLen) < 0.03) return;
+  arrowLen = len;
+  for (const l of arrowLayers) {
+    const p = l.pad, g = new THREE.ShapeGeometry(arrowShape(len, ARROW.w + p, ARROW.hw + p * 1.6, ARROW.hl + p * 1.3, ARROW.r + p * 0.5, -p), 6);
+    if (l.mat === arrowMat) { // UVs across (x) and along (y) the arrow for the gloss and chevrons
+      const pos = g.attributes.position, uv = g.attributes.uv;
+      for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + ARROW.hw) / (2 * ARROW.hw), pos.getY(i) / (len + ARROW.hl));
+    }
+    l.mesh.geometry.dispose(); l.mesh.geometry = g;
+  }
+}
 const tipGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0x3ee07a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
 tipGlow.renderOrder = 9; aimSwing.add(tipGlow);
 // Perfect-direction wedge (doesn't swing).
@@ -72,14 +95,19 @@ const ringMat = new THREE.ShaderMaterial({
       col = mix(col, vec3(1.0), line); alpha = max(alpha, line);
       float tick = 1.0 - smoothstep(px * 1.2, px * 2.6, abs(a - uFill));    // where the pull is right now
       col = mix(col, vec3(1.0), tick * step(0.001, uFill)); alpha = max(alpha, tick * step(0.001, uFill));
-      float edge = smoothstep(${(1.02).toFixed(2)}, ${(1.07).toFixed(2)}, r) * (1.0 - smoothstep(${(1.43).toFixed(2)}, ${(1.48).toFixed(2)}, r));
-      gl_FragColor = vec4(col, alpha * uAlpha * edge + (1.0 - edge) * 0.55 * uAlpha);
-      if (edge < 0.5) gl_FragColor = vec4(0.04, 0.08, 0.15, 0.6 * uAlpha);   // dark rim inside and out
+      float t = clamp((r - 1.08) / 0.34, 0.0, 1.0);
+      col = mix(col, vec3(1.0), 0.32 * smoothstep(0.55, 0.95, t) * (lit ? 1.0 : 0.4));  // glossy outer half, like the cards
+      col *= 0.88 + 0.12 * t;
+      gl_FragColor = vec4(col, alpha * uAlpha);
+      if ((r > 1.0 && r < 1.08) || (r > 1.42 && r < 1.5)) gl_FragColor = vec4(1.0, 1.0, 1.0, uAlpha);   // white rims
+      if (r <= 1.0 || r >= 1.5) gl_FragColor = vec4(0.04, 0.08, 0.15, 0.6 * uAlpha);              // dark edge
     }`,
 });
 ringMat.toneMapped = false;
-const ringMesh = new THREE.Mesh(new THREE.RingGeometry(RING_IN - 0.1, RING_OUT + 0.1, 128, 1), ringMat);
+const ringMesh = new THREE.Mesh(new THREE.RingGeometry(0.93, 1.57, 128, 2), ringMat);
 ringMesh.renderOrder = 7; ringFlat.add(ringMesh);
+const ringShadow = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.6, 96, 1), shadowMat);
+ringShadow.position.set(0.18, -0.12, -0.005); ringShadow.renderOrder = 6; ringFlat.add(ringShadow);
 // Fill -> fraction of the circle. The sweet spot (target ± band) ends exactly at 6 o'clock (0.5).
 function ringFrac(f, band) {
   const top = POWER_TARGET + band;
@@ -125,11 +153,10 @@ function updateAimRig(dt) {
     len *= 1 + k * 1.6; alpha = 1 - k;
     aimFireT -= dt;
   }
-  arrowMat.uniforms.uAlpha.value = alpha; outlineMat.opacity = 0.55 * alpha;
+  arrowMat.uniforms.uAlpha.value = alpha; outlineMat.opacity = 0.6 * alpha; whiteMat.opacity = alpha; shadowMat.opacity = 0.28 * alpha;
   aimSwing.rotation.y = -clamp(p.swing, -1.3, 1.3) * AIM_VIS;
-  shaft.scale.y = shaftLine.scale.y = len;
-  head.position.y = headLine.position.y = len - 0.05;
-  const tip = len + 1.2;
+  setArrowLength(len);
+  const tip = len + ARROW.hl;
   tipGlow.position.set(0, 0.25, -tip);
   const perfect = p.active && Math.abs(fill - POWER_TARGET) <= band && Math.abs(p.swing) <= L.zone;
   tipGlow.scale.setScalar((perfect ? 3.6 : 2.4) + Math.sin(S.time * 14) * (perfect ? 0.8 : 0.2));
