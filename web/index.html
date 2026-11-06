@@ -329,6 +329,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .ladder .cpu { font-size: 10px; padding: 1px 5px; margin-left: 4px; }
 .ladder div small { color: var(--ink-dim); font-size: 11px; }
 .ladder div.locked2 { opacity: .55; }
+.ladder div.up { box-shadow: inset 4px 0 0 #2fbf71; background: rgba(47,191,113,.16); }
+.ladder div.down { box-shadow: inset 4px 0 0 #e8392b; background: rgba(232,57,43,.16); }
 .exacttip { position: fixed; z-index: 60; transform: translate(-50%, 8px); padding: 6px 12px; border-radius: 12px; border: 2px solid #fff; background: #12203a; color: #fff; font: 900 15px/1.2 Nunito, system-ui, sans-serif; white-space: nowrap; box-shadow: 0 4px 0 rgba(0,0,0,.35); pointer-events: none; animation: tipin .15s ease-out; }
 @keyframes tipin { from { opacity: 0; transform: translate(-50%, 0); } }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
@@ -996,8 +998,8 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 const VENUES = [
   { id: "backyard", name: "Backyard", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
   { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.62, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
+  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Pizza Patio", sub: "League night under the lights", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
   { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.83, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [6, 13], speed: "Icy boards" },
   { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.88, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.92, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
@@ -1057,10 +1059,10 @@ const STORE = [
   { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
   { id: PID("caps.450"), kind: "caps", caps: 450, price: "$4.99", title: "Bucket of Caps", tag: "BEST VALUE" },
   { id: PID("caps.1000"), kind: "caps", caps: 1000, price: "$9.99", title: "Crate of Caps" },
-  { id: PID("caps.2200"), kind: "caps", caps: 2200, price: "$19.99", title: "Bar's Worth of Caps" },
+  { id: PID("caps.2200"), kind: "caps", caps: 2200, price: "$19.99", title: "Mountain of Caps" },
   { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Book of Tickets", icon: "🎟️", blurb: "+5 lives, even past the usual 5" },
-  { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Ale can", icon: "🥫", blurb: "5 prizes: coins and cards" },
-  { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Pils can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
+  { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Pop can", icon: "🥫", blurb: "5 prizes: coins and cards" },
+  { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Sparkle can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
   { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
 ];
 // Throw effects: a trail behind your bag in flight (shop "Throw" tab).
@@ -1113,7 +1115,7 @@ const BOARDS = [
   { id: "galaxyb", name: "Galaxy", premium: PID("set.galaxy"), paint: "galaxy", a: "#140a3a", b: "#b48cff" },
   { id: "infernob", name: "Inferno", premium: PID("set.inferno"), paint: "flames", a: "#1a0a05", b: "#ff7a1a" },
 ];
-const OPPONENTS = ["Backyard Bob", "Dirt Bag Dave", "Tailgate Tina", "Sandy Shores", "Big Earl", "Hops Hannah", "Slider Sam", "Airmail Annie",
+const OPPONENTS = ["Backyard Bob", "Dirt Bag Dave", "Tailgate Tina", "Sandy Shores", "Big Earl", "Hoops Hannah", "Slider Sam", "Airmail Annie",
   "The Professor", "Lefty Lou", "Swish Rodriguez", "Cornelius", "Four-Bag Fran", "Kernel Sanders", "Woody", "Blocker Betty"];
 const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neutral", slide: 1 }, fast: { label: "Fast", slide: 1.14 } };
 
@@ -1818,14 +1820,14 @@ $("searchCancel").onclick = () => { if (!search) return; if (search.online) post
 const CANS = [
   { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.2, 0.5], cards: [2, 4], bias: 5, life: 0.01 },
   { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.3, 0.8], cards: [4, 7], bias: 4.5, life: 0.015 },
-  { id: "bronze", name: "Bronze Lager", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.5, 1.2], cards: [6, 10], bias: 4, life: 0.02 },
-  { id: "silver", name: "Silver Stout", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.8, 2], cards: [10, 16], bias: 3.4, life: 0.03 },
-  { id: "gold", name: "Golden Ale", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [1.5, 3.5], cards: [16, 26], bias: 2.8, life: 0.04 },
+  { id: "bronze", name: "Bronze Fizz", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.5, 1.2], cards: [6, 10], bias: 4, life: 0.02 },
+  { id: "silver", name: "Silver Splash", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.8, 2], cards: [10, 16], bias: 3.4, life: 0.03 },
+  { id: "gold", name: "Golden Pop", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [1.5, 3.5], cards: [16, 26], bias: 2.8, life: 0.04 },
   { id: "purple", name: "Royal Purple", color: "#7a3ad6", rim: "#d8b8ff", odds: 2.4, pulls: 6, coins: [2.5, 5], cards: [26, 40], bias: 2.3, life: 0.05 },
-  { id: "platinum", name: "Platinum Pils", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [4, 8], cards: [40, 60], bias: 1.8, life: 0.06 },
-  { id: "diamond", name: "Diamond Reserve", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [6, 12], cards: [60, 90], bias: 1.3, life: 0.08 },
+  { id: "platinum", name: "Platinum Sparkle", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [4, 8], cards: [40, 60], bias: 1.8, life: 0.06 },
+  { id: "diamond", name: "Diamond Dazzle", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [6, 12], cards: [60, 90], bias: 1.3, life: 0.08 },
   // Express: rare, middling contents, but it opens right away.
-  { id: "express", name: "Express Shot", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.5, 1.5], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
+  { id: "express", name: "Express Pop", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.5, 1.5], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
 ];
 // How long a can takes to open once you start it (one at a time). The better the can, the longer the wait.
 const OPEN_MIN = { black: 15, white: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
@@ -1925,7 +1927,7 @@ function openCan(index) {
   const rank = Math.max(0, CANS.indexOf(can));
   if (!can.express && Math.random() < 0.08 + rank * 0.07) { const n = 1 + rank * 2 + Math.floor(Math.random() * (rank * 2 + 1)); career.caps += n; prizes.push({ kind: "caps", n }); }
   // Cards: the can's total split into stacks over its remaining prizes.
-  let cards = Math.round(can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5);
+  let cards = Math.round((can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5) * titleCardBonus());
   const stacks = can.pulls - 1;
   for (let k = 0; k < stacks; k++) {
     if (Math.random() < can.life) { career.lives += 1; prizes.push({ kind: "life", n: 1 }); continue; }
@@ -1986,12 +1988,29 @@ const avatarHTML = (id, cls = "") => { const a = avatarById(id); return `<span c
 
 // ── Seasons: a calendar month (UTC). Each title is a worldwide league (a Game Center leaderboard per title), split
 // into groups of 100 or fewer. Win a match for that court's win stars in season points, or 1 point just for playing.
-// When the month ends, the top 20% of your group move up a title and the bottom 20% (and anyone who didn't play) move
-// down. The groups need no server: every phone loads the whole league and shuffles it into groups the same way,
+// When the month ends you move by where you finished in your group, and it gets harder the higher you go: promotion
+// shrinks from the top 20% (Rookie) to the top 2% (Champion), demotion grows from 20% to 30%. Promotion needs at least
+// 10 matches that month. Not playing only costs you a title in the top three titles. Every finisher in the top 20
+// gets a can (better at higher titles), and each title adds 5% more cards to every can you open. The groups need no server: every phone loads the whole league and shuffles it into groups the same way,
 // using a hash of each player's ID and the season, so everyone agrees on who is in which group.
 const TITLES = ["Rookie", "Weekend Warrior", "Backyard Hero", "Local Legend", "Semi-Pro", "Pro", "All-Star", "Champion", "Hall of Famer"];
 const TITLE_ICONS = ["🥉", "🎒", "🏡", "📣", "🎯", "🔥", "⭐", "🏆", "👑"];
-const PROMOTE_TOP = 0.2, DEMOTE_BOTTOM = 0.2;
+//                Rookie WkndW BkydH LocalL SemiP  Pro  AllSt Champ HallF
+const PROMOTE =  [0.20, 0.20, 0.15, 0.15, 0.10, 0.10, 0.05, 0.02, 0];
+const DEMOTE  =  [0,    0.20, 0.20, 0.20, 0.20, 0.25, 0.25, 0.30, 0.30];
+const MIN_MATCHES_TO_PROMOTE = 10, INACTIVE_FROM = 6; // All-Star and up: not playing costs a title
+const promoteCount = (t, size) => (PROMOTE[t] ? Math.max(1, Math.round(size * PROMOTE[t])) : 0);
+const demoteCount = (t, size) => (DEMOTE[t] ? Math.max(1, Math.round(size * DEMOTE[t])) : 0);
+// End-of-season can by place in your group: 1st Platinum, 2nd Gold, 3rd Silver, the rest of the top 20 Backyard Black.
+// Each title above Rookie moves every reward up one can (up to Diamond).
+const SEASON_CANS = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
+function seasonRewardCan(title, rank, size) {
+  if (!rank || rank > Math.min(20, size)) return null;
+  const base = rank === 1 ? 6 : rank === 2 ? 4 : rank === 3 ? 3 : 0; // platinum, gold, silver, black
+  return SEASON_CANS[Math.min(SEASON_CANS.length - 1, base + title)];
+}
+// Title perk: +5% cards in every can for each title above Rookie.
+const titleCardBonus = () => 1 + 0.05 * (career.season ? career.season.title : 0);
 const seasonId = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 const seasonEnds = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
 // Without Game Center (the browser preview), a season is judged against fixed point lines for your title instead.
@@ -2011,8 +2030,8 @@ function rollSeason() {
   const s = seasonState(), now = seasonId();
   if (s.id === now || s.pending) return;
   s.pending = { id: s.id, title: s.title, points: s.points, played: s.played };
-  if (nativeBridge && nativeBridge.season) { postNative("season", JSON.stringify({ op: "result", title: s.title })); setTimeout(() => settleSeason(null), 20000); }
-  else settleSeason(null);
+  if (nativeBridge && nativeBridge.season) { postNative("season", JSON.stringify({ op: "result", title: s.title })); setTimeout(() => settleSeason(0, 0), 20000); }
+  else settleSeason(0, 0);
 }
 const GROUP_MAX = 100;
 // FNV-1a hash of player + season: decides each player's group the same way on every phone.
@@ -2053,18 +2072,23 @@ window.__seasonEntries = msg => {
   if (msg.op === "result") {
     if (!s.pending) return;
     const G = myGroup(withBots(msg.entries, s.pending.title, s.pending.id), msg.me, s.pending.id);
-    settleSeason(G.rank > 0 && G.size > 0 ? G.rank / G.size : null);
+    settleSeason(G.rank, G.size);
   } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(withBots(msg.entries, s.title, s.id), msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("livesSheet").hidden) openSeason(); }
 };
-function settleSeason(frac) {
+// rank/size: your place in your group last season (0 if unknown: no Game Center and no CPU group to compare with).
+function settleSeason(rank, size) {
   const s = seasonState(), p = s.pending; if (!p) return;
+  if (!rank && BOT_FILL[p.title]) { const G = myGroup(withBots([["me", p.points, "You"]], p.title, p.id), "me", p.id); rank = G.rank; size = G.size; }
   let move = 0;
-  if (!p.played) move = -1;
-  else if (frac != null) move = frac <= PROMOTE_TOP ? 1 : frac > 1 - DEMOTE_BOTTOM ? -1 : 0;
-  else if (BOT_FILL[p.title]) { const G = myGroup(withBots([["me", p.points, "You"]], p.title, p.id), "me", p.id); const f = G.rank / G.size; move = f <= PROMOTE_TOP ? 1 : f > 1 - DEMOTE_BOTTOM ? -1 : 0; }
-  else move = p.points >= offlinePromoteAt(p.title) ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
+  if (!p.played) move = p.title >= INACTIVE_FROM ? -1 : 0;                      // only the top three titles punish sitting out
+  else if (rank && size) {
+    if (rank <= promoteCount(p.title, size) && p.played >= MIN_MATCHES_TO_PROMOTE) move = 1;
+    else if (rank > size - demoteCount(p.title, size)) move = -1;
+  } else move = p.points >= offlinePromoteAt(p.title) && p.played >= MIN_MATCHES_TO_PROMOTE ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
   const title = clamp(p.title + move, 0, TITLES.length - 1);
-  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, frac } });
+  const reward = p.played && rank && size ? seasonRewardCan(p.title, rank, size) : null;
+  if (reward) career.cans.push({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // skips the cooler limit
+  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
   save();
   if (typeof showSeasonResult === "function") showSeasonResult();
 }
@@ -2745,7 +2769,7 @@ function buildVenue(id) {
     const bricks = wallTexture("brick"); bricks.repeat.set(4, 1);
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(60, 16), new THREE.MeshLambertMaterial({ map: bricks })); wall.position.set(0, 8, -48); g.add(wall);
     for (const x of [-24, 24]) { const sw = new THREE.Mesh(new THREE.PlaneGeometry(60, 16), new THREE.MeshLambertMaterial({ map: bricks })); sw.position.set(x, 8, -18); sw.rotation.y = x < 0 ? Math.PI / 2 : -Math.PI / 2; g.add(sw); }
-    const signTex = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#1a0f08"; c.fillRect(0, 0, w, h); c.fillStyle = "#ffb347"; c.font = "bold 58px Georgia, serif"; c.textAlign = "center"; c.fillText("TAPROOM", w / 2, h / 2 + 20); });
+    const signTex = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#1a0f08"; c.fillRect(0, 0, w, h); c.fillStyle = "#ffb347"; c.font = "bold 58px Georgia, serif"; c.textAlign = "center"; c.fillText("PIZZERIA", w / 2, h / 2 + 20); });
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(16, 4), new THREE.MeshBasicMaterial({ map: signTex })); sign.position.set(0, 12, -47.8); g.add(sign);
     const front = new THREE.Mesh(new THREE.PlaneGeometry(70, 16), new THREE.MeshLambertMaterial({ map: bricks })); front.position.set(0, 8, 32); front.rotation.y = Math.PI; g.add(front); // the brewhouse behind you
     for (const wx of [-16, 16]) add(g, box(7, 4, 0.2, new THREE.MeshBasicMaterial({ color: 0xffc27a })), wx, 6, 31.8, false);
@@ -3832,13 +3856,21 @@ function renderSeasonBadge() {
 }
 function openSeason() {
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
-  const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : ""}</small></div>`).reverse().join("");
+  const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
   if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, "You"]], s.title, s.id), "me", s.id), me: "me" };
   const G = S.groupStandings;
   if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
-  const group = G && G.size ? `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => `<div class="${e[0] === G.me ? "me" : ""}"><span>${i + 1}</span><span>${esc(String(e[2] || "Player"))}${e[3] ? ' <span class="cpu">CPU</span>' : ""}</span><small>${e[1]} pts</small></div>`).join("")}${G.rank > 10 ? `<div class="me"><span>${G.rank}</span><span>You</span><small>${s.points} pts</small></div>` : ""}</div><div class="muted">Top ${Math.max(1, Math.round(G.size * PROMOTE_TOP))} move up · bottom ${Math.max(1, Math.round(G.size * DEMOTE_BOTTOM))} move down</div>` : "";
-  showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month. Every title is a league split into groups of up to 100 players. Finish in the top 20% of your group to move up a title; the bottom 20% (and anyone who doesn't play) move down.</div>${group}
+  let group = "";
+  if (G && G.size) {
+    const up = promoteCount(s.title, G.size), down = demoteCount(s.title, G.size);
+    const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
+    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}${e[3] ? ' <span class="cpu">CPU</span>' : ""}</span><small>${e[1]} pts</small></div>`;
+    const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
+    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => row(e, i + 1)).join("")}${G.rank > 10 ? row([G.me, s.points, "You"], G.rank) : ""}</div>
+      <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
+  }
+  showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
     <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
     <div class="ladder">${rows}</div>`);
 }
@@ -3848,7 +3880,8 @@ function showSeasonResult() {
   const up = L.to > L.from, down = L.to < L.from;
   showInfo(`<div class="lifebig">${TITLE_ICONS[L.to]}</div><h2>${up ? "Promoted!" : down ? "Moved down" : "Season over"}</h2>
     <div class="big">${up ? `You're now a ${TITLES[L.to]}` : down ? `You're back to ${TITLES[L.to]}` : `You stay a ${TITLES[L.to]}`}</div>
-    <div class="muted">Last season you scored ${L.points} points${L.frac != null ? `, finishing in the top ${Math.max(1, Math.round(L.frac * 100))}% of your league` : ""}. A new season has started.</div>`);
+    <div class="muted">Last season you scored ${L.points} points${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}. A new season has started.</div>
+    ${L.reward ? `<div class="big" style="color:${COL.gold}">🥫 Season prize: ${canById(L.reward).name} can (in your cooler)</div>` : ""}`);
   if (up) { sfx.win(); haptic("success"); }
 }
 $("seasonBtn").onclick = openSeason;

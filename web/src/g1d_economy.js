@@ -10,14 +10,14 @@
 const CANS = [
   { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.2, 0.5], cards: [2, 4], bias: 5, life: 0.01 },
   { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.3, 0.8], cards: [4, 7], bias: 4.5, life: 0.015 },
-  { id: "bronze", name: "Bronze Lager", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.5, 1.2], cards: [6, 10], bias: 4, life: 0.02 },
-  { id: "silver", name: "Silver Stout", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.8, 2], cards: [10, 16], bias: 3.4, life: 0.03 },
-  { id: "gold", name: "Golden Ale", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [1.5, 3.5], cards: [16, 26], bias: 2.8, life: 0.04 },
+  { id: "bronze", name: "Bronze Fizz", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.5, 1.2], cards: [6, 10], bias: 4, life: 0.02 },
+  { id: "silver", name: "Silver Splash", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.8, 2], cards: [10, 16], bias: 3.4, life: 0.03 },
+  { id: "gold", name: "Golden Pop", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [1.5, 3.5], cards: [16, 26], bias: 2.8, life: 0.04 },
   { id: "purple", name: "Royal Purple", color: "#7a3ad6", rim: "#d8b8ff", odds: 2.4, pulls: 6, coins: [2.5, 5], cards: [26, 40], bias: 2.3, life: 0.05 },
-  { id: "platinum", name: "Platinum Pils", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [4, 8], cards: [40, 60], bias: 1.8, life: 0.06 },
-  { id: "diamond", name: "Diamond Reserve", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [6, 12], cards: [60, 90], bias: 1.3, life: 0.08 },
+  { id: "platinum", name: "Platinum Sparkle", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [4, 8], cards: [40, 60], bias: 1.8, life: 0.06 },
+  { id: "diamond", name: "Diamond Dazzle", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [6, 12], cards: [60, 90], bias: 1.3, life: 0.08 },
   // Express: rare, middling contents, but it opens right away.
-  { id: "express", name: "Express Shot", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.5, 1.5], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
+  { id: "express", name: "Express Pop", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.5, 1.5], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
 ];
 // How long a can takes to open once you start it (one at a time). The better the can, the longer the wait.
 const OPEN_MIN = { black: 15, white: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
@@ -117,7 +117,7 @@ function openCan(index) {
   const rank = Math.max(0, CANS.indexOf(can));
   if (!can.express && Math.random() < 0.08 + rank * 0.07) { const n = 1 + rank * 2 + Math.floor(Math.random() * (rank * 2 + 1)); career.caps += n; prizes.push({ kind: "caps", n }); }
   // Cards: the can's total split into stacks over its remaining prizes.
-  let cards = Math.round(can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5);
+  let cards = Math.round((can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5) * titleCardBonus());
   const stacks = can.pulls - 1;
   for (let k = 0; k < stacks; k++) {
     if (Math.random() < can.life) { career.lives += 1; prizes.push({ kind: "life", n: 1 }); continue; }
@@ -178,12 +178,29 @@ const avatarHTML = (id, cls = "") => { const a = avatarById(id); return `<span c
 
 // ── Seasons: a calendar month (UTC). Each title is a worldwide league (a Game Center leaderboard per title), split
 // into groups of 100 or fewer. Win a match for that court's win stars in season points, or 1 point just for playing.
-// When the month ends, the top 20% of your group move up a title and the bottom 20% (and anyone who didn't play) move
-// down. The groups need no server: every phone loads the whole league and shuffles it into groups the same way,
+// When the month ends you move by where you finished in your group, and it gets harder the higher you go: promotion
+// shrinks from the top 20% (Rookie) to the top 2% (Champion), demotion grows from 20% to 30%. Promotion needs at least
+// 10 matches that month. Not playing only costs you a title in the top three titles. Every finisher in the top 20
+// gets a can (better at higher titles), and each title adds 5% more cards to every can you open. The groups need no server: every phone loads the whole league and shuffles it into groups the same way,
 // using a hash of each player's ID and the season, so everyone agrees on who is in which group.
 const TITLES = ["Rookie", "Weekend Warrior", "Backyard Hero", "Local Legend", "Semi-Pro", "Pro", "All-Star", "Champion", "Hall of Famer"];
 const TITLE_ICONS = ["🥉", "🎒", "🏡", "📣", "🎯", "🔥", "⭐", "🏆", "👑"];
-const PROMOTE_TOP = 0.2, DEMOTE_BOTTOM = 0.2;
+//                Rookie WkndW BkydH LocalL SemiP  Pro  AllSt Champ HallF
+const PROMOTE =  [0.20, 0.20, 0.15, 0.15, 0.10, 0.10, 0.05, 0.02, 0];
+const DEMOTE  =  [0,    0.20, 0.20, 0.20, 0.20, 0.25, 0.25, 0.30, 0.30];
+const MIN_MATCHES_TO_PROMOTE = 10, INACTIVE_FROM = 6; // All-Star and up: not playing costs a title
+const promoteCount = (t, size) => (PROMOTE[t] ? Math.max(1, Math.round(size * PROMOTE[t])) : 0);
+const demoteCount = (t, size) => (DEMOTE[t] ? Math.max(1, Math.round(size * DEMOTE[t])) : 0);
+// End-of-season can by place in your group: 1st Platinum, 2nd Gold, 3rd Silver, the rest of the top 20 Backyard Black.
+// Each title above Rookie moves every reward up one can (up to Diamond).
+const SEASON_CANS = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
+function seasonRewardCan(title, rank, size) {
+  if (!rank || rank > Math.min(20, size)) return null;
+  const base = rank === 1 ? 6 : rank === 2 ? 4 : rank === 3 ? 3 : 0; // platinum, gold, silver, black
+  return SEASON_CANS[Math.min(SEASON_CANS.length - 1, base + title)];
+}
+// Title perk: +5% cards in every can for each title above Rookie.
+const titleCardBonus = () => 1 + 0.05 * (career.season ? career.season.title : 0);
 const seasonId = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 const seasonEnds = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
 // Without Game Center (the browser preview), a season is judged against fixed point lines for your title instead.
@@ -203,8 +220,8 @@ function rollSeason() {
   const s = seasonState(), now = seasonId();
   if (s.id === now || s.pending) return;
   s.pending = { id: s.id, title: s.title, points: s.points, played: s.played };
-  if (nativeBridge && nativeBridge.season) { postNative("season", JSON.stringify({ op: "result", title: s.title })); setTimeout(() => settleSeason(null), 20000); }
-  else settleSeason(null);
+  if (nativeBridge && nativeBridge.season) { postNative("season", JSON.stringify({ op: "result", title: s.title })); setTimeout(() => settleSeason(0, 0), 20000); }
+  else settleSeason(0, 0);
 }
 const GROUP_MAX = 100;
 // FNV-1a hash of player + season: decides each player's group the same way on every phone.
@@ -245,18 +262,23 @@ window.__seasonEntries = msg => {
   if (msg.op === "result") {
     if (!s.pending) return;
     const G = myGroup(withBots(msg.entries, s.pending.title, s.pending.id), msg.me, s.pending.id);
-    settleSeason(G.rank > 0 && G.size > 0 ? G.rank / G.size : null);
+    settleSeason(G.rank, G.size);
   } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(withBots(msg.entries, s.title, s.id), msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("livesSheet").hidden) openSeason(); }
 };
-function settleSeason(frac) {
+// rank/size: your place in your group last season (0 if unknown: no Game Center and no CPU group to compare with).
+function settleSeason(rank, size) {
   const s = seasonState(), p = s.pending; if (!p) return;
+  if (!rank && BOT_FILL[p.title]) { const G = myGroup(withBots([["me", p.points, "You"]], p.title, p.id), "me", p.id); rank = G.rank; size = G.size; }
   let move = 0;
-  if (!p.played) move = -1;
-  else if (frac != null) move = frac <= PROMOTE_TOP ? 1 : frac > 1 - DEMOTE_BOTTOM ? -1 : 0;
-  else if (BOT_FILL[p.title]) { const G = myGroup(withBots([["me", p.points, "You"]], p.title, p.id), "me", p.id); const f = G.rank / G.size; move = f <= PROMOTE_TOP ? 1 : f > 1 - DEMOTE_BOTTOM ? -1 : 0; }
-  else move = p.points >= offlinePromoteAt(p.title) ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
+  if (!p.played) move = p.title >= INACTIVE_FROM ? -1 : 0;                      // only the top three titles punish sitting out
+  else if (rank && size) {
+    if (rank <= promoteCount(p.title, size) && p.played >= MIN_MATCHES_TO_PROMOTE) move = 1;
+    else if (rank > size - demoteCount(p.title, size)) move = -1;
+  } else move = p.points >= offlinePromoteAt(p.title) && p.played >= MIN_MATCHES_TO_PROMOTE ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
   const title = clamp(p.title + move, 0, TITLES.length - 1);
-  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, frac } });
+  const reward = p.played && rank && size ? seasonRewardCan(p.title, rank, size) : null;
+  if (reward) career.cans.push({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // skips the cooler limit
+  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
   save();
   if (typeof showSeasonResult === "function") showSeasonResult();
 }

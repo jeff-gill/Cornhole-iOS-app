@@ -675,7 +675,7 @@ function buildVenue(id) {
     const bricks = wallTexture("brick"); bricks.repeat.set(4, 1);
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(60, 16), new THREE.MeshLambertMaterial({ map: bricks })); wall.position.set(0, 8, -48); g.add(wall);
     for (const x of [-24, 24]) { const sw = new THREE.Mesh(new THREE.PlaneGeometry(60, 16), new THREE.MeshLambertMaterial({ map: bricks })); sw.position.set(x, 8, -18); sw.rotation.y = x < 0 ? Math.PI / 2 : -Math.PI / 2; g.add(sw); }
-    const signTex = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#1a0f08"; c.fillRect(0, 0, w, h); c.fillStyle = "#ffb347"; c.font = "bold 58px Georgia, serif"; c.textAlign = "center"; c.fillText("TAPROOM", w / 2, h / 2 + 20); });
+    const signTex = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#1a0f08"; c.fillRect(0, 0, w, h); c.fillStyle = "#ffb347"; c.font = "bold 58px Georgia, serif"; c.textAlign = "center"; c.fillText("PIZZERIA", w / 2, h / 2 + 20); });
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(16, 4), new THREE.MeshBasicMaterial({ map: signTex })); sign.position.set(0, 12, -47.8); g.add(sign);
     const front = new THREE.Mesh(new THREE.PlaneGeometry(70, 16), new THREE.MeshLambertMaterial({ map: bricks })); front.position.set(0, 8, 32); front.rotation.y = Math.PI; g.add(front); // the brewhouse behind you
     for (const wx of [-16, 16]) add(g, box(7, 4, 0.2, new THREE.MeshBasicMaterial({ color: 0xffc27a })), wx, 6, 31.8, false);

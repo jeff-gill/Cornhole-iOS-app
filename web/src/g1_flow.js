@@ -28,8 +28,8 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 const VENUES = [
   { id: "backyard", name: "Backyard", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
   { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.62, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
+  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Pizza Patio", sub: "League night under the lights", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
   { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.83, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [6, 13], speed: "Icy boards" },
   { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.88, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.92, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
@@ -89,10 +89,10 @@ const STORE = [
   { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
   { id: PID("caps.450"), kind: "caps", caps: 450, price: "$4.99", title: "Bucket of Caps", tag: "BEST VALUE" },
   { id: PID("caps.1000"), kind: "caps", caps: 1000, price: "$9.99", title: "Crate of Caps" },
-  { id: PID("caps.2200"), kind: "caps", caps: 2200, price: "$19.99", title: "Bar's Worth of Caps" },
+  { id: PID("caps.2200"), kind: "caps", caps: 2200, price: "$19.99", title: "Mountain of Caps" },
   { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Book of Tickets", icon: "🎟️", blurb: "+5 lives, even past the usual 5" },
-  { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Ale can", icon: "🥫", blurb: "5 prizes: coins and cards" },
-  { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Pils can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
+  { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Pop can", icon: "🥫", blurb: "5 prizes: coins and cards" },
+  { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Sparkle can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
   { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
 ];
 // Throw effects: a trail behind your bag in flight (shop "Throw" tab).
@@ -145,7 +145,7 @@ const BOARDS = [
   { id: "galaxyb", name: "Galaxy", premium: PID("set.galaxy"), paint: "galaxy", a: "#140a3a", b: "#b48cff" },
   { id: "infernob", name: "Inferno", premium: PID("set.inferno"), paint: "flames", a: "#1a0a05", b: "#ff7a1a" },
 ];
-const OPPONENTS = ["Backyard Bob", "Dirt Bag Dave", "Tailgate Tina", "Sandy Shores", "Big Earl", "Hops Hannah", "Slider Sam", "Airmail Annie",
+const OPPONENTS = ["Backyard Bob", "Dirt Bag Dave", "Tailgate Tina", "Sandy Shores", "Big Earl", "Hoops Hannah", "Slider Sam", "Airmail Annie",
   "The Professor", "Lefty Lou", "Swish Rodriguez", "Cornelius", "Four-Bag Fran", "Kernel Sanders", "Woody", "Blocker Betty"];
 const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neutral", slide: 1 }, fast: { label: "Fast", slide: 1.14 } };
 

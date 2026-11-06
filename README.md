@@ -8,9 +8,9 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 
 ## How it plays
 
-- **Career:** eight venues (Backyard, Tailgate Lot, Beach Bar, Brewery Patio, Mountain Lodge, Bonfire Beach, Island Hop, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with stronger wind, a faster aim arrow, a smaller sweet spot, slicker boards and better opponents. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
+- **Career:** twelve courts (Backyard, Tailgate Lot, Beach Shack, Pizza Patio, Mountain Lodge, Bonfire Beach, Island Hop, City Rooftop, Lakeside Dock, Desert Canyon, County Fair, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with stronger wind, a faster aim arrow, a smaller sweet spot, slicker boards and better opponents. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
 - **Pro Shop:** spend coins on bags (Accuracy, Control and Spin stats, plus a sticky, neutral or fast slide), board designs, throw effects and cornhole effects. Every coin item can also be unlocked by collecting its cards from cans.
-- **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Reserve, plus rare Express Shot cans. Rarer cans hold more prizes (coins, item cards, now and then a life) and take longer to open: 15 minutes for Black up to 24 hours for Diamond. Only one can opens at a time, and Express cans open right away. Each of your cornholes in a match improves the odds of a better can. Opening one sprays mist and the prizes pop out one at a time.
+- **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Dazzle, plus rare Express Pop cans. Rarer cans hold more prizes (coins, item cards, now and then a life) and take longer to open: 15 minutes for Black up to 24 hours for Diamond. Only one can opens at a time, and Express cans open right away. Each of your cornholes in a match improves the odds of a better can. Opening one sprays mist and the prizes pop out one at a time.
 - **Lives (🎟️ raffle tickets):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra tickets come from the Store, from coins (at a steep price), from 15 bottle caps, or rarely from a can. The iPhone app can notify you when they're full.
 - **Bottle caps:** the premium currency (a red cap with a star). Use them to open a can now (1 cap for every 10 minutes left) or to buy a ticket. You start with 20, get some from cans (more often from rare ones) and 3 per 4-bagger, and can buy packs in the Store.
 - **Avatars:** 4 to start, and 2 more with each court you open.
@@ -24,7 +24,27 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
   - Sinking all four bags in one inning is a 4-BAGGER.
 - **Pass & Play** for two people on one phone.
 - **Throwdowns (live matches):** PLAY looks for a real player at the same court through Game Center for 15 seconds. If nobody is found, you play a computer opponent (tagged CPU). Online, the thrower's phone sends each throw with a luck seed, so both phones play it the same way, and then sends the final bag positions. Leaving a match forfeits it. After a Throwdown both players can tap THROWDOWN REMATCH to play again at the same court.
-- **Seasons:** each calendar month (UTC) is a season. There are nine titles, from Rookie up to Hall of Famer, and each title is a worldwide league (a Game Center leaderboard, so it's free with no server) split into groups of 100 or fewer. A win earns the court's win stars in season points, and a loss earns 1 point for playing. At the end of the month, the top 20% of each group move up a title, and the bottom 20% (and anyone who didn't play) move down. Every phone loads the league and shuffles it into the same groups using a hash of each player's ID and the season, so no server is needed. While leagues are small, CPU players fill the first two titles: Rookie groups up to 100 and Weekend Warrior groups up to 50. There are none above that, and none once a league has that many real players. Every phone generates the same CPUs from the season and title, their points build up over the month, and they're tagged CPU in the standings. Without Game Center (the browser preview), Rookie and Weekend Warrior are judged against the CPU group and higher titles against fixed point lines.
+- **Seasons:** each calendar month (UTC) is a season. There are nine titles, from Rookie up to Hall of Famer, and each title is a worldwide league (a Game Center leaderboard, free with no server) split into groups of 100 or fewer. A win earns the court's win stars in season points, and a loss earns 1 point for playing. Moving up gets harder the higher you go:
+
+  | Title | Moves up | Moves down |
+  |---|---|---|
+  | Rookie | Top 20% | (lowest title) |
+  | Weekend Warrior | Top 20% | Bottom 20% |
+  | Backyard Hero | Top 15% | Bottom 20% |
+  | Local Legend | Top 15% | Bottom 20% |
+  | Semi-Pro | Top 10% | Bottom 20% |
+  | Pro | Top 10% | Bottom 25% |
+  | All-Star | Top 5% | Bottom 25% |
+  | Champion | Top 2% | Bottom 30% |
+  | Hall of Famer | (top title) | Bottom 30% |
+
+  - Promotion also needs at least 10 matches in the season.
+  - Not playing only costs a title in the top three titles (All-Star, Champion, Hall of Famer). Lower down, sitting out leaves you where you are.
+  - The group standings shade the promotion zone green and the demotion zone red.
+  - **Season prizes:** the top 20 in each group win a can: Platinum Sparkle for 1st, Golden Pop for 2nd, Silver Splash for 3rd and Backyard Black for 4th–20th. Each title above Rookie moves every prize up one can (up to Diamond Dazzle). Prize cans skip the cooler limit.
+  - **Title perk:** each title above Rookie adds 5% more cards to every can you open (+40% at Hall of Famer).
+  - While leagues are small, CPU players fill the first two titles: Rookie groups up to 100 and Weekend Warrior groups up to 50, none above that, and none once a league has that many real players. Every phone generates the same CPUs from the season and title, and they're tagged CPU in the standings.
+  - Every phone loads the league and shuffles it into the same groups using a hash of each player's ID and the season. Without Game Center (the browser preview), Rookie and Weekend Warrior are judged against the CPU group and higher titles against fixed point lines.
 - **Throw clock:** 25 seconds a throw in career and live matches (not Pass & Play or the tutorial). If it runs out, the bag is lost.
 - **Game Center:** players are signed in automatically. Their stars, wins and 4-baggers go to the leaderboards (the 🏆 RANKINGS button).
 
@@ -93,13 +113,13 @@ At an even win rate, coins barely grow, and a court's winnings buy the shop tier
 |---|---|---|---|---|---|---|
 | Backyard Black | 40% | 2 | 0.2–0.5 | 2–4 | 1% | 15 min |
 | Picnic White | 25% | 3 | 0.3–0.8 | 4–7 | 1.5% | 1 h |
-| Bronze Lager | 15% | 3 | 0.5–1.2 | 6–10 | 2% | 2 h |
-| Silver Stout | 10.5% | 4 | 0.8–2 | 10–16 | 3% | 3 h |
-| Golden Ale | 6% | 5 | 1.5–3.5 | 16–26 | 4% | 5 h |
+| Bronze Fizz | 15% | 3 | 0.5–1.2 | 6–10 | 2% | 2 h |
+| Silver Splash | 10.5% | 4 | 0.8–2 | 10–16 | 3% | 3 h |
+| Golden Pop | 6% | 5 | 1.5–3.5 | 16–26 | 4% | 5 h |
 | Royal Purple | 2.4% | 6 | 2.5–5 | 26–40 | 5% | 8 h |
-| Platinum Pils | 0.9% | 7 | 4–8 | 40–60 | 6% | 12 h |
-| Diamond Reserve | 0.2% | 8 | 6–12 | 60–90 | 8% | 24 h |
-| Express Shot | 3% | 3 | 0.5–1.5 | 6–12 | 3% | Instant |
+| Platinum Sparkle | 0.9% | 7 | 4–8 | 40–60 | 6% | 12 h |
+| Diamond Dazzle | 0.2% | 8 | 6–12 | 60–90 | 8% | 24 h |
+| Express Pop | 3% | 3 | 0.5–1.5 | 6–12 | 3% | Instant |
 
 Rolls are skewed toward the low end of each range, so a rare can is usually good but not always. Each of your cornholes in the match (up to 30) multiplies a tier's chance by 1.012 per rank above Black: 20 cornholes make a Diamond about 4.5 times as likely.
 

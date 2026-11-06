@@ -230,13 +230,21 @@ function renderSeasonBadge() {
 }
 function openSeason() {
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
-  const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : ""}</small></div>`).reverse().join("");
+  const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
   if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, "You"]], s.title, s.id), "me", s.id), me: "me" };
   const G = S.groupStandings;
   if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
-  const group = G && G.size ? `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => `<div class="${e[0] === G.me ? "me" : ""}"><span>${i + 1}</span><span>${esc(String(e[2] || "Player"))}${e[3] ? ' <span class="cpu">CPU</span>' : ""}</span><small>${e[1]} pts</small></div>`).join("")}${G.rank > 10 ? `<div class="me"><span>${G.rank}</span><span>You</span><small>${s.points} pts</small></div>` : ""}</div><div class="muted">Top ${Math.max(1, Math.round(G.size * PROMOTE_TOP))} move up · bottom ${Math.max(1, Math.round(G.size * DEMOTE_BOTTOM))} move down</div>` : "";
-  showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month. Every title is a league split into groups of up to 100 players. Finish in the top 20% of your group to move up a title; the bottom 20% (and anyone who doesn't play) move down.</div>${group}
+  let group = "";
+  if (G && G.size) {
+    const up = promoteCount(s.title, G.size), down = demoteCount(s.title, G.size);
+    const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
+    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}${e[3] ? ' <span class="cpu">CPU</span>' : ""}</span><small>${e[1]} pts</small></div>`;
+    const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
+    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => row(e, i + 1)).join("")}${G.rank > 10 ? row([G.me, s.points, "You"], G.rank) : ""}</div>
+      <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
+  }
+  showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
     <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
     <div class="ladder">${rows}</div>`);
 }
@@ -246,7 +254,8 @@ function showSeasonResult() {
   const up = L.to > L.from, down = L.to < L.from;
   showInfo(`<div class="lifebig">${TITLE_ICONS[L.to]}</div><h2>${up ? "Promoted!" : down ? "Moved down" : "Season over"}</h2>
     <div class="big">${up ? `You're now a ${TITLES[L.to]}` : down ? `You're back to ${TITLES[L.to]}` : `You stay a ${TITLES[L.to]}`}</div>
-    <div class="muted">Last season you scored ${L.points} points${L.frac != null ? `, finishing in the top ${Math.max(1, Math.round(L.frac * 100))}% of your league` : ""}. A new season has started.</div>`);
+    <div class="muted">Last season you scored ${L.points} points${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}. A new season has started.</div>
+    ${L.reward ? `<div class="big" style="color:${COL.gold}">🥫 Season prize: ${canById(L.reward).name} can (in your cooler)</div>` : ""}`);
   if (up) { sfx.win(); haptic("success"); }
 }
 $("seasonBtn").onclick = openSeason;
