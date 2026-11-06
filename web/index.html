@@ -463,7 +463,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
       <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:22px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button></div>
+    <div class="row" style="justify-content:center;gap:14px;white-space:nowrap;font-size:14px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button></div>
   </div>
 </div>
 
@@ -3447,6 +3447,16 @@ function nextPrize() {
   $("canHint").hidden = false; $("canHint").textContent = R.shown < R.prizes.length ? `Tap for the next prize (${R.prizes.length - R.shown} left)` : "Tap to finish";
 }
 $("canDone").onclick = () => { $("canSheet").hidden = true; canRun = null; renderHub(); };
+
+// Browser preview only (never in the iPhone app): fill the cooler with cans that are ready to open, for testing.
+if (!nativeBridge) {
+  $("testCans").hidden = false;
+  $("testCans").onclick = () => {
+    const pick = ["silver", "gold", "purple", "platinum", "diamond", "express"].sort(() => Math.random() - 0.5).slice(0, COOLER_SIZE);
+    career.cans = pick.map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
+    save(); renderHub();
+  };
+}
 
 // ───────────────────────── Cameras
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);

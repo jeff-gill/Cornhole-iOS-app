@@ -159,3 +159,13 @@ function nextPrize() {
   $("canHint").hidden = false; $("canHint").textContent = R.shown < R.prizes.length ? `Tap for the next prize (${R.prizes.length - R.shown} left)` : "Tap to finish";
 }
 $("canDone").onclick = () => { $("canSheet").hidden = true; canRun = null; renderHub(); };
+
+// Browser preview only (never in the iPhone app): fill the cooler with cans that are ready to open, for testing.
+if (!nativeBridge) {
+  $("testCans").hidden = false;
+  $("testCans").onclick = () => {
+    const pick = ["silver", "gold", "purple", "platinum", "diamond", "express"].sort(() => Math.random() - 0.5).slice(0, COOLER_SIZE);
+    career.cans = pick.map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
+    save(); renderHub();
+  };
+}
