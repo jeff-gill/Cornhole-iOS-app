@@ -131,3 +131,16 @@ Rolls are skewed toward the low end of each range, so a rare can is usually good
 **Cards needed** to unlock an item go from 3 (the cheapest item in its tab) to 90 (the most expensive), and the steps get bigger near the top. Cards for cheap items are common; rarer cans reach further up the list.
 
 The odds are not shown in the game. The App Store requires the odds for paid loot boxes to be shown before purchase. Before submitting, either show the odds next to the paid cans in the Store, or remove the paid cans.
+
+## Blender pipeline
+
+Custom 3D art is made with Blender scripts in `web/tools/blender/`, so it can be regenerated or tweaked at any time. Each script builds models, bakes soft shading (ambient occlusion) into their vertex colors with Cycles, and exports them to `web/assets/blender/` as single `.json` glTF files.
+
+- `trees.py`: the stylized oak, maple and pine trees used in the Backyard.
+
+Run from the repo root (needs Blender 4 with numpy for the glTF exporter), then rebuild:
+
+```
+blender -b --python web/tools/blender/trees.py
+web/build.sh
+```

@@ -2305,6 +2305,28 @@ function setGround(g, kind, tile) {
   ground.rotation.x = -Math.PI / 2; ground.position.z = -30; ground.receiveShadow = true;
   g.add(ground);
 }
+// Trees made in Blender (web/tools/blender/trees.py): low-poly with baked soft shading. `kinds` picks the mix.
+const BLENDER = "assets/blender/";
+const blenderCache = new Map();
+function loadBlender(name) {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json`).then(g => {
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return g.scene;
+  }).catch(() => null));
+  return blenderCache.get(name);
+}
+function blenderTrees(g, seed, kinds, opts = {}) {
+  const r = rng(seed), spots = [];
+  const place = (x, z, s) => spots.push([x, z, s, kinds[Math.floor(r() * kinds.length)], r() * 6.28]);
+  const back = opts.back ?? -60;
+  for (let x = -75; x <= 75; x += 7 + r() * 6) place(x, back - r() * 22, 0.9 + r() * 0.6);
+  if (opts.front) for (let x = -75; x <= 75; x += 7 + r() * 6) place(x, opts.front + r() * 22, 0.9 + r() * 0.6);
+  if (opts.sides !== false) for (let z = -52; z <= 20; z += 8 + r() * 6) { place(-50 - r() * 14, z, 0.8 + r() * 0.5); place(50 + r() * 14, z, 0.8 + r() * 0.5); }
+  for (const [x, z, sc, kind, rot] of spots) loadBlender(kind).then(src => {
+    if (!src || venueGroup !== g) return;
+    const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t);
+  });
+}
 function trees(g, seed, palette, opts = {}) {
   const r = rng(seed);
   const trunkGeo = new THREE.CylinderGeometry(0.5, 0.8, 6, 7), trunkMat = lam(0x7a5232), blobGeo = new THREE.IcosahedronGeometry(1, 1);
@@ -2794,7 +2816,7 @@ function buildVenue(id) {
     // Photo-real backyard: real sky light, a photo lawn and plank fence, and scanned chairs, table and shrubs.
     const lawn = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), photoMat("sparse_grass", 520 / 9, 520 / 9, { tint: 0xb4ff6a, bump: 0.8, fallback: 0x5fae3e }));
     lawn.rotation.x = -Math.PI / 2; lawn.position.z = -30; lawn.receiveShadow = true; g.add(lawn);
-    trees(g, 21, [0x3f9a3c, 0x2f8a46, 0x58b043, 0x2b7a3a, 0x6cbf4a], { front: 62 });
+    blenderTrees(g, 21, ["tree_oak", "tree_maple", "tree_oak", "tree_pine"], { front: 62 });
     house(g, 4, 40, Math.PI, 0xf2e6d0, 0x4a5a6a); // the house behind you
     plankFence(g);
     stringLights(g, [[-9, -38], [9, -38], [-9, -14], [9, -14]], [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]], [[-9, -14], [9, -26]], [[9, -14], [-9, -26]]]);
