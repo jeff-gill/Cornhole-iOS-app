@@ -25,8 +25,8 @@ function updateCamera(dt) {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
-    tPos.set(rel.x * 1.25, 5.0, 2.8); tLook.set(rel.x * 0.1, 2.6, -FY - 1);
-    fov = narrow ? 38 : 32;
+    tPos.set(rel.x * 1.1, 6.2, 5.2); tLook.set(rel.x * 0.15, 0, -14); // arrow and ring near the bottom, board up the lane
+    fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
     tPos.set(lerp(rel.x, b.x, 0.6), Math.max(3.2, b.z * 0.7 + 2.6), -b.y + 7.5); tLook.set(b.x * 0.5, b.z * 0.4, -b.y - 6);
@@ -86,9 +86,9 @@ panelEl.addEventListener("pointerup", () => { if (S.phase === "throw" && S.pull.
 
 // ───────────────────────── HUD: pull gauge, swinging arrow, wind, opponent
 function updateHUD() {
-  const throwing = S.phase === "throw", L = lv();
-  $("gauge").hidden = !throwing; $("aim").hidden = !throwing;
-  const inMatch = !["hub"].includes(S.phase);
+  // The pull-back arrow and power ring live in the 3D scene (updateAimRig); the old flat overlays stay hidden.
+  $("gauge").hidden = true; $("aim").hidden = true;
+  const inMatch = S.phase !== "hub";
   $("wind").hidden = !inMatch;
   $("opp").hidden = !(inMatch && S.opponent);
   if (inMatch) {
@@ -96,24 +96,6 @@ function updateHUD() {
     // Screen up is down-range, so the arrow points the way the wind blows across the lane.
     $("windArrow").setAttribute("transform", `rotate(${(S.wind.dir * 180 / Math.PI).toFixed(1)})`);
   }
-  if (!throwing) return;
-  const p = S.pull, f = p.fill, scale = 1.25;
-  $("gaugeFill").style.height = (Math.min(f, scale) / scale * 100) + "%";
-  const band = L.powZone * 0.5;
-  const tgt = $("gaugeTarget");
-  tgt.style.bottom = `calc(${(POWER_TARGET - band) / scale * 100}% - 4px)`;
-  tgt.style.height = `calc(${band * 2 / scale * 100}% + 8px)`;
-  const over = f > 1, inBand = Math.abs(f - POWER_TARGET) <= band;
-  const len = 60 + Math.min(f, 1.25) * 230, ang = p.swing * 38, zoneAng = L.zone * 38;
-  const col = over ? "#ff3a2a" : inBand ? "#3ee07a" : p.active ? "#ffc93a" : "#ffffff";
-  $("aim").innerHTML = `<svg viewBox="-120 -330 240 340" preserveAspectRatio="xMidYMax meet">
-    <path d="M0,0 L${-Math.sin(zoneAng * Math.PI / 180) * 300},${-Math.cos(zoneAng * Math.PI / 180) * 300} L${Math.sin(zoneAng * Math.PI / 180) * 300},${-Math.cos(zoneAng * Math.PI / 180) * 300} Z" fill="#3ee07a" fill-opacity=".16"/>
-    <line x1="0" y1="0" x2="0" y2="-300" stroke="#fff" stroke-opacity=".35" stroke-width="2" stroke-dasharray="6 8"/>
-    <g transform="rotate(${ang.toFixed(2)})">
-      <path d="M-11,0 L-11,${-len + 34} L-26,${-len + 34} L0,${-len} L26,${-len + 34} L11,${-len + 34} L11,0 Z" fill="${col}" stroke="#0a1426" stroke-width="6" stroke-linejoin="round" paint-order="stroke"/>
-    </g>
-    <circle r="18" fill="${COL.p[S.player]}" stroke="#fff" stroke-width="5"/>
-  </svg>`;
 }
 
 // ───────────────────────── Panel and scoreboard
@@ -180,7 +162,7 @@ function ui() {
   } else if (S.phase === "throw") {
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><button class="linkbtn" id="backBtn">Back to aiming</button></div>
       <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
-      <div><div class="big">Pull back and let go</div><div class="muted">More pull = more power and a faster arrow. Past the gold band into the red is OVERDRIVE.</div></div></div>`;
+      <div><div class="big">Pull back and let go</div><div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div></div></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
   } else if (S.phase === "cpu") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[S.player])} is ${S.cpuPlan ? "going for: " + esc(S.cpuPlan.label) : "lining up…"}</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
@@ -197,8 +179,8 @@ function coachText() {
   if (S.phase === "aiming" && !S.end) return "👆 <b>Tap the board</b> where you want your bag to finish.";
   if (S.phase === "aiming" && !S.tut.dragged) return "👉 <b>Drag the yellow ring</b> to pick where it lands first. Close to the green spot sticks, farther back slides.";
   if (S.phase === "aiming") return "👇 Happy with it? <b>Tap THROW.</b>";
-  if (S.phase === "throw" && !S.pull.active) return "⬇️ <b>Pull down anywhere</b> and watch the power bar fill.";
-  if (S.phase === "throw") return "Let go in the <b>gold band</b> with the <b>arrow pointing straight</b>. Too far is OVERDRIVE!";
+  if (S.phase === "throw" && !S.pull.active) return "⬇️ <b>Pull down anywhere</b> and watch the ring fill.";
+  if (S.phase === "throw") return "Let go when the ring is in the <b>gold</b> and the <b>arrow points straight</b>. Red is OVERDRIVE!";
   if (S.phase === "flight" && S.tut.thrown) return "🌬️ The <b>wind</b> (top left) pushes your bag. Aim a little into it next time.";
   return "";
 }
@@ -415,6 +397,7 @@ function frame(now) {
   if (S.planVersion !== shownPlan || S.phase !== shownPhase) rebuildGuides();
   if (finishMarker.visible) finishMarker.scale.setScalar(1 + 0.08 * Math.sin(S.time * 4));
   updateBags(dt);
+  updateAimRig(dt);
   updateFx(dt);
   updateCamera(dt);
   if (!window.__skipRender) renderer.render(scene, camera);

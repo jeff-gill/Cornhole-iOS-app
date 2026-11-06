@@ -237,6 +237,7 @@ function releasePull() {
     ht: over ? rand(-0.9, 0.9) : 0,
   };
   S.overdrive = over;
+  fireAim();
   releaseBag(S.errors);
 }
 function releaseBag(e) {
