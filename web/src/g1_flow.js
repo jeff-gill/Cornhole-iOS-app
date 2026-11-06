@@ -20,11 +20,14 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 // Stadium with the starter bag. CPU skill = spread of its release errors (smaller is better): ~13-21% in the hole at the
 // Backyard up to ~36-50% at the Stadium.
 const VENUES = [
-  { id: "backyard", name: "Backyard", sub: "Where it all starts", stars: 0, fee: 25, swing: 0.55, zone: 0.06, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", stars: 12, fee: 150, swing: 0.65, zone: 0.05, cpu: [0.16, 0.10], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", stars: 30, fee: 500, swing: 0.75, zone: 0.045, cpu: [0.12, 0.08], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", stars: 60, fee: 1400, swing: 0.9, zone: 0.037, cpu: [0.09, 0.06], mu: 0.30, wind: [6, 13], speed: "Slick boards" },
-  { id: "stadium", name: "Stadium Finals", sub: "The big show", stars: 100, fee: 4000, swing: 1.0, zone: 0.033, cpu: [0.07, 0.04], mu: 0.28, wind: [8, 16], speed: "Fast pro boards" },
+  { id: "backyard", name: "Backyard", sub: "Where it all starts", stars: 0, fee: 25, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", stars: 12, fee: 150, swing: 0.65, zone: 0.05, wob: 0.021, cpu: [0.16, 0.10], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
+  { id: "beach", name: "Beach Bar", sub: "Sea breeze and sandy boards", stars: 30, fee: 500, swing: 0.75, zone: 0.045, wob: 0.030, cpu: [0.12, 0.08], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Brewery Patio", sub: "League night under the lights", stars: 60, fee: 1400, swing: 0.85, zone: 0.039, wob: 0.037, cpu: [0.10, 0.065], mu: 0.30, wind: [6, 12], speed: "Slick boards" },
+  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", stars: 100, fee: 2200, swing: 0.9, zone: 0.037, wob: 0.041, cpu: [0.09, 0.058], mu: 0.26, wind: [6, 14], speed: "Icy boards" },
+  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", stars: 150, fee: 3400, swing: 0.95, zone: 0.035, wob: 0.044, cpu: [0.082, 0.05], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
+  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", stars: 210, fee: 5000, swing: 1.0, zone: 0.033, wob: 0.048, cpu: [0.075, 0.045], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
+  { id: "stadium", name: "Stadium Finals", sub: "The big show", stars: 280, fee: 7500, swing: 1.05, zone: 0.032, wob: 0.051, cpu: [0.068, 0.038], mu: 0.28, wind: [8, 16], speed: "Fast pro boards" },
 ];
 // Stakes: both players put in the entry and the winner takes the whole pot. Stars: a win is +2 at the first venue and
 // one more per level; a loss is -1 at the first venue and one more per level. Quitting counts as a loss.
@@ -126,6 +129,8 @@ try {
     const old = typeof raw === "string" ? JSON.parse(raw) : raw;
     career = { ...fresh(), ...old };
     if (old.tutorialDone === undefined && (old.wins || old.losses)) career.tutorialDone = true; // veterans skip the coach
+    if (!old.venueId && career.venue >= 4) career.venue = VENUES.findIndex(v => v.id === "stadium"); // saves from the five-venue career
+    for (const v of VENUES) if (career.stars >= v.stars && !career.unlocked.includes(v.id)) career.unlocked.push(v.id);
   }
 } catch (e) { /* storage unavailable: play without saving */ }
 function save() {
@@ -184,7 +189,7 @@ function lv() {
     freq: v.swing * (1 - 0.06 * (g.acc - 1)),
     zone: v.zone * (1 + 0.15 * (g.acc - 1)),
     powZone: v.zone * (1 + 0.15 * (g.ctrl - 1)),
-    wobble: (0.012 + 0.009 * S.venue) * (1 - 0.15 * (g.ctrl - 1)),
+    wobble: v.wob * (1 - 0.15 * (g.ctrl - 1)),
     cpu: S.opponent ? S.opponent.skill : 0.25,
     preview: true,
   };
@@ -201,7 +206,7 @@ function newWind() {
   S.wind = { mph: Math.round(rand(lo, hi)), dir: rand(0, Math.PI * 2) }; // steady for the whole inning, any direction
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
-  setAmbience({ wind: mph, surf: id === "beach", crowd: id === "stadium" || id === "tailgate", night: id === "brewery" });
+  setAmbience({ wind: mph, surf: ["beach", "bonfire", "island"].includes(id), crowd: id === "stadium" || id === "tailgate", night: id === "brewery" || id === "bonfire", fire: id === "bonfire" || id === "lodge" });
 }
 function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
@@ -212,11 +217,11 @@ function startMatch(kind, vi) {
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!houseCovers(vi)) career.coins -= v.fee;
-    career.venue = vi; save();
+    career.venue = vi; career.venueId = v.id; save();
     const [hi, lo] = v.cpu, skill = rand(lo, hi);
     S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
     S.names = ["You", S.opponent.name];
-    S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 2))]];
+    S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 3))]];
   } else {
     S.opponent = null;
     S.names = ["Player 1", "Player 2"];
@@ -236,7 +241,7 @@ function startMatch(kind, vi) {
   S.introT = 0;
   beginTurn();
   const side = SIDES[0] < 0 ? "LEFT" : "RIGHT";
-  setTimeout(() => { if (S.phase !== "hub") showBanner(`${S.kind === "career" ? "You're" : "Player 1 is"} in the ${side} box`, 0); }, 1700);
+  setTimeout(() => { if (S.phase !== "hub") showBanner(S.kind === "career" ? `You're in the ${side} box` : `Player 1: ${side} box`, 0); }, 1700);
 }
 const DEFAULT_SLIDE = 1.5;
 function refreshPlan() {

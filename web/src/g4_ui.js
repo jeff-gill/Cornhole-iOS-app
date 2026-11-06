@@ -2,6 +2,7 @@
 // ───────────────────────── Cameras
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);
 const tPos = new THREE.Vector3(), tLook = new THREE.Vector3();
+let tFov = 50;
 function camMode() {
   if (S.phase === "hub") return "intro";
   if (S.phase === "aiming") return "aim";
@@ -18,9 +19,15 @@ function updateCamera(dt) {
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   if (mode === "intro") {
-    // Slow orbit; looking a little below the board keeps it in the top half, above the clubhouse card.
-    const a = S.time * 0.1;
-    tPos.set(Math.sin(a) * 9.5, 5.2, -FY - 2 + Math.cos(a) * 9.5); tLook.set(0, -2.6, -FY - 2);
+    // A slow 360 around the whole court, both boards in view. It swings wider at the sides, where the court is longest
+    // across the screen, and aims so the court sits in the top half, above the clubhouse card.
+    const a = S.time * 0.16, side = Math.sin(a) ** 2, reach = VENUE_LOOK[venueId]?.orbit ?? 1;
+    const d = (narrow ? 34 + 10 * side : 26 + 6 * side) * reach, h = narrow ? 6 + 8 * side : 10 + 8 * side, cz = -FY / 2 - 1;
+    tPos.set(Math.sin(a) * d, h, cz + Math.cos(a) * d);
+    fov = narrow ? 52 + 30 * side : 44; // wide-angle over the sides so both boards stay on a narrow phone
+    const drop = d * Math.tan(Math.atan2(h, d) + (narrow ? 0.62 * fov / 2 * Math.PI / 180 : 0.16)) - h; // look below the court so it rides high
+    tLook.set(0, -drop, cz);
+    k = 1.5;
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
   } else if (mode === "throw") {
@@ -34,7 +41,7 @@ function updateCamera(dt) {
   } else {
     tPos.set(rel.x * 0.4, narrow ? 6.3 : 5.6, -(FY - (narrow ? 3.8 : 4.4))); tLook.set(0, 0.3, -(FY + 2.0));
   }
-  const t = 1 - Math.exp(-dt * k);
+  const t = 1 - Math.exp(-dt * k); tFov = fov;
   if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = lerp(camera.fov, fov, t); camera.updateProjectionMatrix(); }
   camPos.lerp(tPos, t); camLook.lerp(tLook, t);
   camera.position.copy(camPos);
@@ -504,6 +511,7 @@ function frame(now) {
   updateBags(dt);
   updateAimRig(dt);
   updateFx(dt);
+  venueTick(dt, S.time);
   updateCamera(dt);
   if (!window.__skipRender) renderer.render(scene, camera);
   requestAnimationFrame(frame);
@@ -513,4 +521,4 @@ resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };

@@ -182,10 +182,10 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
 .venue .facts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-.venue .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); font-family: var(--font-display); font-size: 20px; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.venue .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); font-family: var(--font-display); font-size: 20px; box-shadow: 0 3px 0 rgba(0,0,0,.35); z-index: 2; }
 .venue .nav:disabled { opacity: .3; }
 .venue .prev { left: -14px; } .venue .next { right: -14px; }
-.locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 22px; }
+.locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 22px; pointer-events: none; }
 .hubrow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 .btn.small { font-size: 15px; padding: 10px 4px; }
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }

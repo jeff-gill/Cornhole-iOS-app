@@ -106,7 +106,7 @@ function setAmbience(opts) {
   if (amb) { const old = amb; amb = null; try { old.gain.gain.setTargetAtTime(0.0001, audio.currentTime, 0.3); setTimeout(() => old.nodes.forEach(n => { try { n.stop ? n.stop() : 0; n.disconnect(); } catch (e) { /* ignore */ } }), 1500); } catch (e) { /* ignore */ } }
   if (audio && opts) startAmbience(opts);
 }
-function startAmbience({ wind = 0, surf = false, crowd = false, night = false }) {
+function startAmbience({ wind = 0, surf = false, crowd = false, night = false, fire = false }) {
   const out = audio.createGain(); out.gain.value = 0.0001; out.connect(master);
   const nodes = [out];
   const layer = (type, freq, q, vol, lfoRate, lfoDepth) => {
@@ -120,6 +120,7 @@ function startAmbience({ wind = 0, surf = false, crowd = false, night = false })
   if (surf) layer("lowpass", 700, 0.5, 0.12, 0.11, 0.1);
   if (crowd) { layer("bandpass", 900, 0.6, 0.07, 0.07, 0.025); layer("bandpass", 2200, 0.8, 0.025, 0.05, 0.01); }
   if (night) layer("highpass", 5200, 3, 0.012, 3.2, 0.01); // crickets-ish shimmer
+  if (fire) { layer("lowpass", 240, 0.7, 0.05, 0.4, 0.02); layer("bandpass", 3200, 1.5, 0.018, 7.3, 0.016); } // crackling fire
   out.gain.setTargetAtTime(1, audio.currentTime, 0.8);
   amb = { gain: out, nodes };
 }
