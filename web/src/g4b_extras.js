@@ -128,10 +128,8 @@ function renderProfile() {
     };
   } else {
     $("ptabSettings").innerHTML = `<h2>Settings</h2>
-      <div class="setrow"><span>🎵 Music</span><button class="btn small" id="setMusic">${musicOn ? "ON" : "OFF"}</button></div>
-      <div class="setrow"><span>Music volume</span><input type="range" id="musicVolIn" min="0" max="100" value="${Math.round(musicVol * 100)}"></div>
-      <div class="setrow"><span>🔊 Sound effects</span><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
-      <div class="setrow"><span>Effects volume</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}"></div>
+      <div class="setrow vol"><span>🎵 Music</span><input type="range" id="musicVolIn" min="0" max="100" value="${Math.round(musicVol * 100)}" aria-label="Music volume"><button class="btn small" id="setMusic">${musicOn ? "ON" : "OFF"}</button></div>
+      <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>`;
     $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
@@ -293,3 +291,21 @@ function showSeasonResult() {
   if (up) { sfx.win(); haptic("success"); }
 }
 $("seasonBtn").onclick = openSeason;
+
+// ── Daily reward: a bubble in the clubhouse, claimable once per calendar day (it resets at midnight, not 24 hours
+// after your last claim). It pays 100 coins plus a free can that opens right away (mostly the low cans).
+const DAILY_COINS = 100;
+const dailyReady = () => career.lastDaily !== new Date().toDateString();
+function renderDaily() { $("dailyBtn").hidden = !dailyReady(); }
+$("dailyBtn").onclick = () => {
+  if (!dailyReady()) return;
+  initAudio();
+  career.lastDaily = new Date().toDateString(); career.coins += DAILY_COINS;
+  // The free can skips the cooler limit and opens on the spot.
+  const id = rollCan(DAILY_ODDS);
+  career.cans.push({ id, court: topCourt(), instant: true });
+  save(); renderHub(); sfx.win(); haptic("success");
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${DAILY_COINS} coins and a free can!`;
+  $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
+  setTimeout(() => openCanSheet(career.cans.length - 1), 900);
+};

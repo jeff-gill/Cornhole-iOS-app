@@ -359,14 +359,7 @@ function openHub() {
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
-  const today = new Date().toDateString();
-  if (career.lastDaily !== today) {
-    // Daily: a free can (mostly the low tiers), if there's room in the cooler.
-    const id = rollCan(DAILY_ODDS), t = document.createElement("div"); t.className = "toast";
-    if (giveCan(id, topCourt())) { career.lastDaily = today; save(); renderHub(); t.textContent = `Free daily can: ${canById(id).name} 🥫`; }
-    else t.textContent = "Cooler full! Open a can for today's free one";
-    $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
-  }
+
 }
 // 1,500 → 1.5K, 2,000,000 → 2M
 function short(n) { if (n >= 1e6) return +(n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M"; if (n >= 1e4) return +(n / 1e3).toFixed(n % 1e3 ? 1 : 0) + "K"; return n.toLocaleString(); }
@@ -388,7 +381,7 @@ function renderHub() {
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
   $("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
-  renderHubExtras(); rollSeason(); renderSeasonBadge();
+  renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily();
   const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);

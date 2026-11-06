@@ -26,7 +26,7 @@ const durText = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Ma
 const timeText = ms => { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`; };
 // A can's state: "ready" to open, "ticking" while it opens, or "idle" (waiting for you to start it).
 function canState(slot) {
-  if (canById(slot.id).express) return "ready";
+  if (canById(slot.id).express || slot.instant) return "ready";
   if (!slot.start) return "idle";
   return Date.now() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
 }
@@ -50,7 +50,7 @@ function startCan(i) {
 const COOLER_SIZE = 4;
 const canById = id => CANS.find(c => c.id === id) || CANS[0];
 // Daily free can: mostly the low tiers.
-const DAILY_ODDS = { black: 58, white: 30, bronze: 9, silver: 1, express: 2 };
+const DAILY_ODDS = { black: 70, white: 24, bronze: 5, silver: 1 }; // the daily can opens instantly and leans low
 // boost: your cornholes in the match. Each one tilts the odds toward the rarer cans (capped at 30).
 function rollCan(odds, boost = 0) {
   const k = 1 + Math.min(30, boost) * 0.012, rank = c => CANS.indexOf(c);
@@ -60,9 +60,9 @@ function rollCan(odds, boost = 0) {
   return list[0].id;
 }
 // Put a can in the cooler; returns false if the cooler is full.
-function giveCan(id, court) {
+function giveCan(id, court, instant = false) {
   if (career.cans.length >= COOLER_SIZE) return false;
-  career.cans.push({ id, court }); save();
+  career.cans.push(instant ? { id, court, instant: true } : { id, court }); save();
   return true;
 }
 
