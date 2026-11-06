@@ -76,12 +76,14 @@ function slideStep(b, dt) {
 
 // ───────────────────────── World
 class World {
-  constructor(random = true) { this.bags = []; this.events = []; this.nextId = 0; this.random = random; }
+  constructor(random = true) { this.bags = []; this.events = []; this.nextId = 0; this.random = random; this.rand = Math.random; }
+  // Online play: both phones seed the same throw so they get exactly the same luck.
+  seed(n) { let a = n >>> 0; this.rand = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   clear() { this.bags = []; this.events = []; }
   get settled() { return this.bags.every(b => b.state !== "flying" && b.state !== "sliding"); }
   launch(t, owner) {
     const b = { id: this.nextId++, owner, state: "flying", x: t.o.x, y: t.o.y, z: t.o.z, vx: 0, vy: 0,
-      angle: t.az, spin: (t.spin || 0) * 7 + (this.random ? (Math.random() * 2 - 1) : 0), curve: 0, t, ft: 0, c: contact(t), trail: [{ ...t.o }] };
+      angle: t.az, spin: (t.spin || 0) * 7 + (this.random ? (this.rand() * 2 - 1) : 0), curve: 0, t, ft: 0, c: contact(t), trail: [{ ...t.o }] };
     this.bags.push(b); return b.id;
   }
   step(dt) {
@@ -113,8 +115,8 @@ class World {
       const sm = b.t.spinMul || 1;
       let lv = rot(landingVel(c.v, b.t.slideMul || 1), (b.t.spin || 0) * SPIN_KICK * sm);
       if (this.random) { // real bags: a little luck in every landing, and now and then one grabs the wood
-        const k = Math.max(0.2, 1 + gaussRand() * T.luckSpeed) * (Math.random() < T.grab ? 0.35 : 1);
-        lv = rot({ x: lv.x * k, y: lv.y * k }, gaussRand() * T.luckDir);
+        const k = Math.max(0.2, 1 + gaussRand(this.rand) * T.luckSpeed) * (this.rand() < T.grab ? 0.35 : 1);
+        lv = rot({ x: lv.x * k, y: lv.y * k }, gaussRand(this.rand) * T.luckDir);
       }
       b.state = "sliding"; b.vx = lv.x; b.vy = lv.y;
       b.curve = (b.t.spin || 0) * SPIN_CURVE * sm; b.spin *= 0.6;
@@ -156,7 +158,7 @@ class World {
         const imp = -(1 + T.rest) * closing / 2;
         p.vx -= ex * imp; p.vy -= ey * imp; q.vx += ex * imp; q.vy += ey * imp; p.curve = q.curve = 0;
         if (closing < -0.5) {
-          const tw = this.random ? Math.random() * 6 - 3 : 1.5; p.spin += tw; q.spin -= tw;
+          const tw = this.random ? this.rand() * 6 - 3 : 1.5; p.spin += tw; q.spin -= tw;
           this.events.push({ type: "hit", a: p, b: q });
         }
       }
@@ -167,7 +169,7 @@ class World {
     }
   }
 }
-function gaussRand() { const u = Math.max(1e-9, Math.random()), v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function gaussRand(r = Math.random) { const u = Math.max(1e-9, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 function onSurface(b) { return b.state === "sliding" || b.state === "resting"; }
 function bagPoints(b) {
   if (b.state === "inHole") return 3;

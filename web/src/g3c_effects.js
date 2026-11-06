@@ -51,7 +51,7 @@ function lightningStrike(color = 0xbfe6ff) {
   shake = Math.max(shake, 0.35);
 }
 function celebrate(owner, forced) {
-  const id = forced || (owner === 0 ? career.effect : "confetti");
+  const id = forced || (owner === 0 ? career.effect : (S.online && S.online.effect) || "confetti");
   const team = [COL.p[owner], COL.pl[owner], "#ffffff"];
   switch (id) {
     case "streamers": confetti(owner); spriteBurst({ n: 30, colors: team, speed: [2, 4], up: [7, 11], gravity: 5, life: [1.6, 2.2], size: [0.1, 0.18], drag: 0.6 }); break;

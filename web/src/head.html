@@ -97,6 +97,15 @@ body.inhub .score, body.inhub #panel { display: none; }
 #wind small { display: block; font-size: 9px; letter-spacing: .1em; color: var(--ink-dim); }
 #opp { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; pointer-events: none; background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8);
   border-radius: 14px; padding: 4px 10px; font-size: 12px; box-shadow: 0 4px 0 rgba(0,0,0,.25); text-align: right; }
+#clock { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); pointer-events: none; background: rgba(10,20,38,.75); border: 3px solid #fff; border-radius: 999px; padding: 3px 14px; font-family: var(--font-display); font-size: 17px; }
+#clock b { font-weight: 400; font-size: 20px; font-variant-numeric: tabular-nums; }
+#clock.hurry { background: linear-gradient(#ff6a5a, #c8102e); animation: pulse .5s ease-in-out infinite alternate; }
+@keyframes pulse { to { transform: translateX(-50%) scale(1.12); } }
+.searchsheet { display: grid; gap: 12px; justify-items: center; padding: 26px 20px; }
+.spinner { width: 54px; height: 54px; border-radius: 50%; border: 6px solid rgba(255,255,255,.2); border-top-color: var(--gold); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.cpu { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: #4b5a78; font-size: 11px; vertical-align: middle; }
+.live { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: #2fbf71; font-size: 11px; vertical-align: middle; }
 #opp b { font-family: var(--font-display); font-size: 15px; font-weight: 400; display: block; }
 
 /* Control deck */
@@ -329,6 +338,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
+    <div id="clock" hidden>⏱ <b>25</b></div>
     <div id="aim" hidden></div>
     <div id="gauge" hidden><div class="tube"><div class="od"></div><div class="fill" id="gaugeFill"></div></div><div class="target" id="gaugeTarget"></div><div class="label" style="top:-22px">OVERDRIVE</div></div>
   </div>
@@ -364,6 +374,14 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
   </div>
 </div>
 
+<div class="overlay" id="searching" hidden>
+  <div class="sheet center searchsheet">
+    <div class="spinner"></div>
+    <h2 id="searchText">Looking for a player…</h2>
+    <div class="muted" id="searchSub"></div>
+    <button class="btn ghost" id="searchCancel">CANCEL</button>
+  </div>
+</div>
 <div class="overlay" id="pause" hidden>
   <div class="sheet">
     <h2>Paused</h2>

@@ -105,6 +105,15 @@ body.inhub .score, body.inhub #panel { display: none; }
 #wind small { display: block; font-size: 9px; letter-spacing: .1em; color: var(--ink-dim); }
 #opp { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; pointer-events: none; background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8);
   border-radius: 14px; padding: 4px 10px; font-size: 12px; box-shadow: 0 4px 0 rgba(0,0,0,.25); text-align: right; }
+#clock { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); pointer-events: none; background: rgba(10,20,38,.75); border: 3px solid #fff; border-radius: 999px; padding: 3px 14px; font-family: var(--font-display); font-size: 17px; }
+#clock b { font-weight: 400; font-size: 20px; font-variant-numeric: tabular-nums; }
+#clock.hurry { background: linear-gradient(#ff6a5a, #c8102e); animation: pulse .5s ease-in-out infinite alternate; }
+@keyframes pulse { to { transform: translateX(-50%) scale(1.12); } }
+.searchsheet { display: grid; gap: 12px; justify-items: center; padding: 26px 20px; }
+.spinner { width: 54px; height: 54px; border-radius: 50%; border: 6px solid rgba(255,255,255,.2); border-top-color: var(--gold); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.cpu { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: #4b5a78; font-size: 11px; vertical-align: middle; }
+.live { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: #2fbf71; font-size: 11px; vertical-align: middle; }
 #opp b { font-family: var(--font-display); font-size: 15px; font-weight: 400; display: block; }
 
 /* Control deck */
@@ -337,6 +346,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
+    <div id="clock" hidden>⏱ <b>25</b></div>
     <div id="aim" hidden></div>
     <div id="gauge" hidden><div class="tube"><div class="od"></div><div class="fill" id="gaugeFill"></div></div><div class="target" id="gaugeTarget"></div><div class="label" style="top:-22px">OVERDRIVE</div></div>
   </div>
@@ -372,6 +382,14 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
   </div>
 </div>
 
+<div class="overlay" id="searching" hidden>
+  <div class="sheet center searchsheet">
+    <div class="spinner"></div>
+    <h2 id="searchText">Looking for a player…</h2>
+    <div class="muted" id="searchSub"></div>
+    <button class="btn ghost" id="searchCancel">CANCEL</button>
+  </div>
+</div>
 <div class="overlay" id="pause" hidden>
   <div class="sheet">
     <h2>Paused</h2>
@@ -486,12 +504,14 @@ function slideStep(b, dt) {
 
 // ───────────────────────── World
 class World {
-  constructor(random = true) { this.bags = []; this.events = []; this.nextId = 0; this.random = random; }
+  constructor(random = true) { this.bags = []; this.events = []; this.nextId = 0; this.random = random; this.rand = Math.random; }
+  // Online play: both phones seed the same throw so they get exactly the same luck.
+  seed(n) { let a = n >>> 0; this.rand = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
   clear() { this.bags = []; this.events = []; }
   get settled() { return this.bags.every(b => b.state !== "flying" && b.state !== "sliding"); }
   launch(t, owner) {
     const b = { id: this.nextId++, owner, state: "flying", x: t.o.x, y: t.o.y, z: t.o.z, vx: 0, vy: 0,
-      angle: t.az, spin: (t.spin || 0) * 7 + (this.random ? (Math.random() * 2 - 1) : 0), curve: 0, t, ft: 0, c: contact(t), trail: [{ ...t.o }] };
+      angle: t.az, spin: (t.spin || 0) * 7 + (this.random ? (this.rand() * 2 - 1) : 0), curve: 0, t, ft: 0, c: contact(t), trail: [{ ...t.o }] };
     this.bags.push(b); return b.id;
   }
   step(dt) {
@@ -523,8 +543,8 @@ class World {
       const sm = b.t.spinMul || 1;
       let lv = rot(landingVel(c.v, b.t.slideMul || 1), (b.t.spin || 0) * SPIN_KICK * sm);
       if (this.random) { // real bags: a little luck in every landing, and now and then one grabs the wood
-        const k = Math.max(0.2, 1 + gaussRand() * T.luckSpeed) * (Math.random() < T.grab ? 0.35 : 1);
-        lv = rot({ x: lv.x * k, y: lv.y * k }, gaussRand() * T.luckDir);
+        const k = Math.max(0.2, 1 + gaussRand(this.rand) * T.luckSpeed) * (this.rand() < T.grab ? 0.35 : 1);
+        lv = rot({ x: lv.x * k, y: lv.y * k }, gaussRand(this.rand) * T.luckDir);
       }
       b.state = "sliding"; b.vx = lv.x; b.vy = lv.y;
       b.curve = (b.t.spin || 0) * SPIN_CURVE * sm; b.spin *= 0.6;
@@ -566,7 +586,7 @@ class World {
         const imp = -(1 + T.rest) * closing / 2;
         p.vx -= ex * imp; p.vy -= ey * imp; q.vx += ex * imp; q.vy += ey * imp; p.curve = q.curve = 0;
         if (closing < -0.5) {
-          const tw = this.random ? Math.random() * 6 - 3 : 1.5; p.spin += tw; q.spin -= tw;
+          const tw = this.random ? this.rand() * 6 - 3 : 1.5; p.spin += tw; q.spin -= tw;
           this.events.push({ type: "hit", a: p, b: q });
         }
       }
@@ -577,7 +597,7 @@ class World {
     }
   }
 }
-function gaussRand() { const u = Math.max(1e-9, Math.random()), v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function gaussRand(r = Math.random) { const u = Math.max(1e-9, r()), v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 function onSurface(b) { return b.state === "sliding" || b.state === "resting"; }
 function bagPoints(b) {
   if (b.state === "inHole") return 3;
@@ -987,8 +1007,12 @@ const S = {
   result: null, introT: 0, tut: { dragged: false, thrown: false },
 };
 globalThis.S = S; // the engine's what-if simulation reads the board from here
-const isCPU = p => S.kind === "career" && p === 1;
-const canEdit = () => S.phase === "aiming" && !isCPU(S.player);
+const isCPU = p => S.kind === "career" && p === 1 && !S.online;
+const isRemote = p => !!S.online && p === 1; // the live opponent's throws arrive over the network
+const canEdit = () => S.phase === "aiming" && !isCPU(S.player) && !isRemote(S.player);
+// Throw clock: career and online turns (not Pass & Play, not the tutorial match) must throw within this many seconds.
+const THROW_TIME = 25;
+const timedTurn = () => S.kind === "career" && career.tutorialDone && !isCPU(S.player) && !isRemote(S.player);
 const venue = () => VENUES[S.venue];
 const POWER_TARGET = 0.75;
 const COL = { p: ["#ff4b3a", "#2f86ff"], pd: [], pl: [], gold: "#ffc93a", go: "#3ee07a" };
@@ -1022,7 +1046,8 @@ function setGear(pl) {
 // ───────────────────────── Match flow
 function newWind() {
   const [lo, hi] = venue().wind;
-  S.wind = { mph: Math.round(rand(lo, hi)), dir: rand(0, Math.PI * 2) }; // steady for the whole inning, any direction
+  const r = S.online ? rng(S.online.seed + S.inning * 7919) : Math.random; // online: both phones get the same wind
+  S.wind = { mph: Math.round(lo + r() * (hi - lo)), dir: r() * Math.PI * 2 }; // steady for the whole inning, any direction
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
   setAmbience({ wind: mph, surf: ["beach", "bonfire", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: ["brewery", "bonfire", "carnival"].includes(id), fire: id === "bonfire" || id === "lodge" });
@@ -1031,16 +1056,25 @@ function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
   return { x: Math.sin(S.wind.dir) * a, y: Math.cos(S.wind.dir) * a };
 }
-function startMatch(kind, vi) {
+// online (optional): { seed, flip, lead, name, bag, trail, effect } agreed with the live opponent; flip and lead are
+// already from this phone's point of view (you are always player 0 on your own phone).
+function startMatch(kind, vi, online = null) {
   const v = VENUES[vi];
+  S.online = null;
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!houseCovers(vi)) career.coins -= v.fee;
     career.venue = vi; career.venueId = v.id; save();
-    const [hi, lo] = v.cpu, skill = rand(lo, hi);
-    S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+    if (online) {
+      S.online = { ...online, queue: [], waitT: 0 };
+      S.opponent = { name: online.name, live: true, skill: 0, rating: 0 };
+      S.gear = [bagById(career.bag), bagById(online.bag)];
+    } else {
+      const [hi, lo] = v.cpu, skill = rand(lo, hi);
+      S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
+    }
     S.names = ["You", S.opponent.name];
-    S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
   } else {
     S.opponent = null;
     S.names = ["Player 1", "Player 2"];
@@ -1048,10 +1082,10 @@ function startMatch(kind, vi) {
   }
   S.kind = kind; S.venue = vi;
   // Coin flip for pitcher's boxes: who throws from the left and who from the right.
-  const flip = Math.random() < 0.5 ? 1 : -1;
+  const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
-  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
+  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
@@ -1098,7 +1132,9 @@ function grabsLanding(p) {
 function beginTurn() {
   S.cpuPlan = null;
   setGear(S.player);
+  S.clock = timedTurn() ? THROW_TIME : null;
   if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.phase = "cpu"; }
+  else if (isRemote(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.online.waitT = 0; S.phase = "remote"; }
   else {
     const s = S.saved[S.player]; S.end = s ? s[0] : null; S.landD = s ? s[1] : null; S.landPhi = s ? s[2] : 0;
     S.phase = "aiming"; refreshPlan();
@@ -1151,10 +1187,34 @@ function releaseBag(e) {
   ];
   if (S.overdrive) S.feedback.push({ title: "Overdrive", text: "Wild!" });
   S.perfect = !S.overdrive && S.feedback.every(f => f.text === "Perfect");
+  if (S.online) { // send the throw; both phones play it with the same luck
+    const seed = Math.floor(Math.random() * 2 ** 31);
+    S.world.seed(seed);
+    netSend({ t: "throw", actual, seed, feedback: S.feedback, overdrive: !!S.overdrive, perfect: S.perfect });
+  }
+  launchBag(actual);
+}
+// The live opponent's throw, exactly as their phone threw it.
+function remoteThrow(m) {
+  setGear(1); S.player = 1; S.online.waitT = 0;
+  S.world.seed(m.seed);
+  S.feedback = m.feedback || []; S.overdrive = !!m.overdrive; S.perfect = !!m.perfect;
+  launchBag(m.actual);
+}
+function launchBag(actual) {
+  S.clock = null;
   S.lastId = S.world.launch(actual, S.player);
   S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh(); haptic("release");
-  if (!isCPU(S.player)) S.tut.thrown = true;
+  if (S.player === 0) S.tut.thrown = true;
   if (S.overdrive) showBanner("OVERDRIVE!", S.player); else if (S.perfect) showBanner("PERFECT!", S.player);
+  ui();
+}
+// Out of time: that bag is lost.
+function timeUp() {
+  S.clock = null; S.pull.active = false; S.feedback = [];
+  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.phase = "flight"; S.lastId = null;
+  showBanner("Time's up! Bag lost", S.player); sfx.thud(); haptic("thud");
+  if (S.online && S.player === 0) netSend({ t: "timeout" });
   ui();
 }
 function endTurn() {
@@ -1364,6 +1424,127 @@ function startAmbience({ wind = 0, surf = false, crowd = false, night = false, f
   out.gain.setTargetAtTime(1, audio.currentTime, 0.8);
   amb = { gain: out, nodes };
 }
+
+// ───────────────────────── Online play (Game Center live matches)
+// PLAY looks for a live player at the same court for a few seconds; if nobody turns up you play a computer opponent
+// instead (labelled CPU). In a live match each phone is "player 0" to itself. The thrower's phone sends the throw and a
+// luck seed, both phones play it the same way, and the thrower then sends where every bag ended up so they never drift.
+const SEARCH_TIME = 15;
+const netSend = obj => postNative("net", JSON.stringify({ op: "send", data: JSON.stringify(obj) }));
+let search = null; // { vi, t, host, name, hello, setup }
+const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutorialDone;
+
+function playCourt(vi) {
+  if (!canGoOnline()) { startMatch("career", vi); return; }
+  const v = VENUES[vi];
+  if (career.coins < v.fee && !houseCovers(vi)) return;
+  search = { vi, t: 0 };
+  postNative("net", JSON.stringify({ op: "find", group: vi + 1 }));
+  renderSearch();
+}
+function cancelSearch(playCPU) {
+  if (!search) return;
+  const vi = search.vi; search = null;
+  postNative("net", JSON.stringify({ op: "cancel" }));
+  $("searching").hidden = true;
+  if (playCPU) startMatch("career", vi);
+}
+function renderSearch() {
+  const el = $("searching");
+  el.hidden = !search;
+  if (!search) return;
+  const v = VENUES[search.vi];
+  $("searchText").textContent = search.name ? `Matched with ${search.name}!` : `Looking for a player at ${v.name}…`;
+  $("searchSub").textContent = search.name ? "Getting the boards ready" : `${Math.max(0, Math.ceil(SEARCH_TIME - search.t))}s, then you'll play a CPU opponent`;
+}
+// Messages from the iPhone app: matched / left, and the opponent's own messages (already parsed JSON objects).
+window.__net = m => {
+  if (!m || typeof m !== "object" || typeof m.t !== "string") return;
+  if (m.t === "matched") {
+    if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
+    search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
+    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect });
+    if (search.host) {
+      search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
+      netSend({ t: "setup", ...search.setup });
+    }
+    renderSearch(); tryStartOnline();
+  } else if (m.t === "hello" && search) { search.hello = m; tryStartOnline(); }
+  else if (m.t === "setup" && search && !search.host) {
+    // The host's view, flipped to ours: their box is our opponent's, and their "player 0" is our player 1.
+    search.setup = { seed: m.seed | 0, flip: m.flip === 1 ? -1 : 1, lead: m.lead === 0 ? 1 : 0 };
+    tryStartOnline();
+  }
+  else if (m.t === "nomatch") { if (search && !search.name) cancelSearch(true); }
+  else if (m.t === "left" || m.t === "quit") opponentLeft();
+  else if (S.online) S.online.queue.push(m);
+};
+function tryStartOnline() {
+  if (!search || !search.name || !search.hello || !search.setup) return; // messages can arrive in any order
+  const s = search, h = s.hello; search = null;
+  $("searching").hidden = true;
+  const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
+  startMatch("career", s.vi, {
+    ...s.setup, name: s.name,
+    bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"),
+  });
+}
+function opponentLeft() {
+  if (search) { cancelSearch(true); return; }
+  if (!S.online || S.phase === "over" || S.phase === "hub") return;
+  S.online.gone = true;
+  S.winner = 0; S.phase = "over"; finishMatch();
+  showBanner(`${S.names[1]} left. You win!`, 0);
+  ui();
+}
+function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net", JSON.stringify({ op: "leave" })); } }
+
+// Per frame: the search countdown, the throw clock, and the opponent's queued messages.
+function updateOnline(dt) {
+  if (search && !search.name) { search.t += dt; if (search.t >= SEARCH_TIME) cancelSearch(true); else renderSearch(); }
+  if (S.clock != null && (S.phase === "aiming" || S.phase === "throw")) {
+    const before = Math.ceil(S.clock);
+    S.clock -= dt;
+    if (Math.ceil(S.clock) !== before) { renderClock(); if (S.clock <= 5 && S.clock > 0) sfx.tick(); }
+    if (S.clock <= 0) timeUp();
+  }
+  const O = S.online; if (!O) return;
+  // Live matches don't wait forever on the between-innings card.
+  if (S.phase === "inning") { O.innT = (O.innT || 0) + dt; if (O.innT > 10) { O.innT = 0; dismissScorecard(0, -1); } } else O.innT = 0;
+  if (S.phase === "remote") {
+    O.waitT += dt;
+    const i = O.queue.findIndex(m => m.t === "throw" || m.t === "timeout");
+    if (i >= 0) {
+      const m = O.queue.splice(i, 1)[0];
+      if (m.t === "throw" && m.actual && m.actual.o) remoteThrow(m);
+      else { S.player = 1; timeUp(); }
+    } else if (O.waitT > THROW_TIME + 20) opponentLeft(); // they've stopped answering
+  }
+}
+// When the bags stop: the thrower shares the final spots; the other phone waits for them before moving on.
+function flightSettled() {
+  const O = S.online;
+  if (!O) return true;
+  if (S.player === 0) {
+    netSend({ t: "snap", bags: S.world.bags.map(b => ({ id: b.id, owner: 1 - b.owner, state: b.state, x: b.x, y: b.y, z: b.z, angle: b.angle })) });
+    return true;
+  }
+  const i = O.queue.findIndex(m => m.t === "snap");
+  if (i < 0) { O.waitT += 1 / 60; if (O.waitT > 45) opponentLeft(); return false; }
+  const m = O.queue.splice(i, 1)[0];
+  for (const q of m.bags || []) {
+    const b = S.world.bags.find(x => x.id === q.id);
+    if (b && typeof q.x === "number") Object.assign(b, { owner: q.owner, state: q.state, x: q.x, y: q.y, z: q.z, angle: q.angle, vx: 0, vy: 0 });
+  }
+  renderScore();
+  return true;
+}
+function renderClock() {
+  const el = $("clock"), on = S.clock != null && (S.phase === "aiming" || S.phase === "throw");
+  el.hidden = !on;
+  if (on) { el.querySelector("b").textContent = Math.max(0, Math.ceil(S.clock)); el.classList.toggle("hurry", S.clock <= 5); }
+}
+$("searchCancel").onclick = () => { if (!search) return; const vi = search.vi; search = null; postNative("net", JSON.stringify({ op: "cancel" })); $("searching").hidden = true; renderHub(); void vi; };
 
 // ───────────────────────── Renderer, sky, lights
 const canvas = $("gl"), stage = $("stage");
@@ -2256,6 +2437,7 @@ function updateBags(dt) {
     if (b.state === "flying") {
       m.position.copy(W(b.x, b.y, b.z));
       if (b.owner === 0 && S.kind === "career" && career.trail !== "none") trailPuff(m.position, career.trail, 0);
+      else if (b.owner === 1 && S.online && S.online.trail !== "none") trailPuff(m.position, S.online.trail, 1);
       m.rotation.set(0.2 * Math.sin(b.angle * 1.7), -b.angle, 0.15 * Math.cos(b.angle * 1.3));
     } else if (b.state === "inHole") {
       v.dropT += dt;
@@ -2751,7 +2933,7 @@ function lightningStrike(color = 0xbfe6ff) {
   shake = Math.max(shake, 0.35);
 }
 function celebrate(owner, forced) {
-  const id = forced || (owner === 0 ? career.effect : "confetti");
+  const id = forced || (owner === 0 ? career.effect : (S.online && S.online.effect) || "confetti");
   const team = [COL.p[owner], COL.pl[owner], "#ffffff"];
   switch (id) {
     case "streamers": confetti(owner); spriteBurst({ n: 30, colors: team, speed: [2, 4], up: [7, 11], gravity: 5, life: [1.6, 2.2], size: [0.1, 0.18], drag: 0.6 }); break;
@@ -2803,6 +2985,7 @@ function camMode() {
   if (S.phase === "aiming") return "aim";
   if (S.phase === "throw") return "throw";
   if (S.phase === "cpu") return S.cpuT < 0.6 ? "aim" : "throw";
+  if (S.phase === "remote") return "aim";
   if (S.phase === "flight") {
     const b = S.world.bags.find(x => x.id === S.lastId);
     if (b && b.state === "flying" && b.y < FY - 7) return "follow";
@@ -2923,7 +3106,9 @@ function renderScore() {
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
   $("inningNum").textContent = S.inning;
-  if (S.opponent) $("opp").innerHTML = `<b>${esc(S.opponent.name)}</b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
+  if (S.opponent) $("opp").innerHTML = S.opponent.live
+    ? `<b>${esc(S.opponent.name)}<span class="live">LIVE</span></b>${esc(venue().name)}`
+    : `<b>${esc(S.opponent.name)}<span class="cpu">CPU</span></b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
 }
 function renderBanner() {
   const el = $("banner");
@@ -2977,13 +3162,15 @@ function ui() {
       <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
       <div><div class="big">Pull back and let go</div><div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div></div></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
+  } else if (S.phase === "remote") {
+    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[1])} is lining up…</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (S.phase === "cpu") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[S.player])} is ${S.cpuPlan ? "going for: " + esc(S.cpuPlan.label) : "lining up…"}</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (["flight", "inning", "over"].includes(S.phase)) {
     panel.innerHTML = S.feedback.length ? `<div class="center big" style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "inherit"}">${S.perfect ? "Perfect throw!" : S.overdrive ? "Overdrive!" : "Release"}</div>
       <div class="feedback" style="grid-template-columns:repeat(${S.feedback.length},1fr)">${S.feedback.map(f => `<div class="fb"><small>${f.title}</small><b class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</b></div>`).join("")}</div>` : "";
   } else panel.innerHTML = "";
-  updateHUD();
+  updateHUD(); renderClock();
   renderInningSheet();
 }
 // First career match only: one step at a time, following what the player is doing.
@@ -3113,6 +3300,7 @@ function dismissScorecard(dx, dy) {
 // ───────────────────────── Clubhouse (career hub) and shop
 let hubVenue = career.venue || 0;
 function openHub() {
+  leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
@@ -3153,7 +3341,7 @@ function renderHub() {
 window.__gcPlayer = p => { const el = $("gcName"); el.hidden = !p; if (p) el.textContent = "👤 " + p.name; if (p) postScores(); };
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
-$("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
+$("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
 let shopTab = "bags";
 function swatch(item, kind) {
@@ -3353,12 +3541,13 @@ function frame(now) {
     while (S.acc >= T.dt) { S.world.step(T.dt); S.acc -= T.dt; }
     const ev = S.world.events; S.world.events = []; handleEvents(ev);
     if (ev.length) renderScore();
-    if (S.world.settled) { S.settleT += dt; if (S.settleT > 1.3) endTurn(); }
+    if (S.world.settled) { S.settleT += dt; if (S.settleT > 1.3 && flightSettled()) endTurn(); }
   }
   if (S.planVersion !== shownPlan || S.phase !== shownPhase) rebuildGuides();
   if (finishMarker.visible) finishMarker.scale.setScalar(1 + 0.08 * Math.sin(S.time * 4));
   updateBags(dt);
   updateAimRig(dt);
+  updateOnline(dt);
   updatePreview(dt);
   updateFx(dt);
   venueTick(dt, S.time);

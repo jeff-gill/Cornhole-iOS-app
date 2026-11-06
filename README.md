@@ -14,7 +14,9 @@ A 3D cornhole game for iPhone (and the web) with a career mode. It's built with 
   - If one of your own bags is in the way, a push shot shoves it along your line.
   - Scoring uses cancellation scoring to 21.
   - Sinking all four bags in one inning is a 4-BAGGER.
-- **Pass & Play** for two people on one phone. Online play is planned.
+- **Pass & Play** for two people on one phone.
+- **Live matches:** PLAY looks for a real player at the same court through Game Center for 15 seconds. If nobody is found, you play a computer opponent (tagged CPU). Online, the thrower's phone sends each throw with a luck seed, so both phones play it the same way, and then sends the final bag positions. Leaving a match forfeits it.
+- **Throw clock:** 25 seconds a throw in career and live matches (not Pass & Play or the tutorial). If it runs out, the bag is lost.
 - **Game Center:** players are signed in automatically. Their stars, wins and 4-baggers go to the leaderboards (the 🏆 RANKINGS button).
 
 ## Project layout

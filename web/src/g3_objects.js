@@ -197,6 +197,7 @@ function updateBags(dt) {
     if (b.state === "flying") {
       m.position.copy(W(b.x, b.y, b.z));
       if (b.owner === 0 && S.kind === "career" && career.trail !== "none") trailPuff(m.position, career.trail, 0);
+      else if (b.owner === 1 && S.online && S.online.trail !== "none") trailPuff(m.position, S.online.trail, 1);
       m.rotation.set(0.2 * Math.sin(b.angle * 1.7), -b.angle, 0.15 * Math.cos(b.angle * 1.3));
     } else if (b.state === "inHole") {
       v.dropT += dt;

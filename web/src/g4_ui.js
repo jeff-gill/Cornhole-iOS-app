@@ -11,6 +11,7 @@ function camMode() {
   if (S.phase === "aiming") return "aim";
   if (S.phase === "throw") return "throw";
   if (S.phase === "cpu") return S.cpuT < 0.6 ? "aim" : "throw";
+  if (S.phase === "remote") return "aim";
   if (S.phase === "flight") {
     const b = S.world.bags.find(x => x.id === S.lastId);
     if (b && b.state === "flying" && b.y < FY - 7) return "follow";
@@ -131,7 +132,9 @@ function renderScore() {
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
   $("inningNum").textContent = S.inning;
-  if (S.opponent) $("opp").innerHTML = `<b>${esc(S.opponent.name)}</b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
+  if (S.opponent) $("opp").innerHTML = S.opponent.live
+    ? `<b>${esc(S.opponent.name)}<span class="live">LIVE</span></b>${esc(venue().name)}`
+    : `<b>${esc(S.opponent.name)}<span class="cpu">CPU</span></b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
 }
 function renderBanner() {
   const el = $("banner");
@@ -185,13 +188,15 @@ function ui() {
       <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
       <div><div class="big">Pull back and let go</div><div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div></div></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
+  } else if (S.phase === "remote") {
+    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[1])} is lining up…</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (S.phase === "cpu") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[S.player])} is ${S.cpuPlan ? "going for: " + esc(S.cpuPlan.label) : "lining up…"}</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (["flight", "inning", "over"].includes(S.phase)) {
     panel.innerHTML = S.feedback.length ? `<div class="center big" style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "inherit"}">${S.perfect ? "Perfect throw!" : S.overdrive ? "Overdrive!" : "Release"}</div>
       <div class="feedback" style="grid-template-columns:repeat(${S.feedback.length},1fr)">${S.feedback.map(f => `<div class="fb"><small>${f.title}</small><b class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</b></div>`).join("")}</div>` : "";
   } else panel.innerHTML = "";
-  updateHUD();
+  updateHUD(); renderClock();
   renderInningSheet();
 }
 // First career match only: one step at a time, following what the player is doing.
@@ -321,6 +326,7 @@ function dismissScorecard(dx, dy) {
 // ───────────────────────── Clubhouse (career hub) and shop
 let hubVenue = career.venue || 0;
 function openHub() {
+  leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
@@ -361,7 +367,7 @@ function renderHub() {
 window.__gcPlayer = p => { const el = $("gcName"); el.hidden = !p; if (p) el.textContent = "👤 " + p.name; if (p) postScores(); };
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
-$("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
+$("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
 let shopTab = "bags";
 function swatch(item, kind) {
@@ -561,12 +567,13 @@ function frame(now) {
     while (S.acc >= T.dt) { S.world.step(T.dt); S.acc -= T.dt; }
     const ev = S.world.events; S.world.events = []; handleEvents(ev);
     if (ev.length) renderScore();
-    if (S.world.settled) { S.settleT += dt; if (S.settleT > 1.3) endTurn(); }
+    if (S.world.settled) { S.settleT += dt; if (S.settleT > 1.3 && flightSettled()) endTurn(); }
   }
   if (S.planVersion !== shownPlan || S.phase !== shownPhase) rebuildGuides();
   if (finishMarker.visible) finishMarker.scale.setScalar(1 + 0.08 * Math.sin(S.time * 4));
   updateBags(dt);
   updateAimRig(dt);
+  updateOnline(dt);
   updatePreview(dt);
   updateFx(dt);
   venueTick(dt, S.time);

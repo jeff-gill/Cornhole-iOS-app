@@ -205,8 +205,12 @@ const S = {
   result: null, introT: 0, tut: { dragged: false, thrown: false },
 };
 globalThis.S = S; // the engine's what-if simulation reads the board from here
-const isCPU = p => S.kind === "career" && p === 1;
-const canEdit = () => S.phase === "aiming" && !isCPU(S.player);
+const isCPU = p => S.kind === "career" && p === 1 && !S.online;
+const isRemote = p => !!S.online && p === 1; // the live opponent's throws arrive over the network
+const canEdit = () => S.phase === "aiming" && !isCPU(S.player) && !isRemote(S.player);
+// Throw clock: career and online turns (not Pass & Play, not the tutorial match) must throw within this many seconds.
+const THROW_TIME = 25;
+const timedTurn = () => S.kind === "career" && career.tutorialDone && !isCPU(S.player) && !isRemote(S.player);
 const venue = () => VENUES[S.venue];
 const POWER_TARGET = 0.75;
 const COL = { p: ["#ff4b3a", "#2f86ff"], pd: [], pl: [], gold: "#ffc93a", go: "#3ee07a" };
@@ -240,7 +244,8 @@ function setGear(pl) {
 // ───────────────────────── Match flow
 function newWind() {
   const [lo, hi] = venue().wind;
-  S.wind = { mph: Math.round(rand(lo, hi)), dir: rand(0, Math.PI * 2) }; // steady for the whole inning, any direction
+  const r = S.online ? rng(S.online.seed + S.inning * 7919) : Math.random; // online: both phones get the same wind
+  S.wind = { mph: Math.round(lo + r() * (hi - lo)), dir: r() * Math.PI * 2 }; // steady for the whole inning, any direction
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
   setAmbience({ wind: mph, surf: ["beach", "bonfire", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: ["brewery", "bonfire", "carnival"].includes(id), fire: id === "bonfire" || id === "lodge" });
@@ -249,16 +254,25 @@ function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
   return { x: Math.sin(S.wind.dir) * a, y: Math.cos(S.wind.dir) * a };
 }
-function startMatch(kind, vi) {
+// online (optional): { seed, flip, lead, name, bag, trail, effect } agreed with the live opponent; flip and lead are
+// already from this phone's point of view (you are always player 0 on your own phone).
+function startMatch(kind, vi, online = null) {
   const v = VENUES[vi];
+  S.online = null;
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!houseCovers(vi)) career.coins -= v.fee;
     career.venue = vi; career.venueId = v.id; save();
-    const [hi, lo] = v.cpu, skill = rand(lo, hi);
-    S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+    if (online) {
+      S.online = { ...online, queue: [], waitT: 0 };
+      S.opponent = { name: online.name, live: true, skill: 0, rating: 0 };
+      S.gear = [bagById(career.bag), bagById(online.bag)];
+    } else {
+      const [hi, lo] = v.cpu, skill = rand(lo, hi);
+      S.opponent = { name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
+    }
     S.names = ["You", S.opponent.name];
-    S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
   } else {
     S.opponent = null;
     S.names = ["Player 1", "Player 2"];
@@ -266,10 +280,10 @@ function startMatch(kind, vi) {
   }
   S.kind = kind; S.venue = vi;
   // Coin flip for pitcher's boxes: who throws from the left and who from the right.
-  const flip = Math.random() < 0.5 ? 1 : -1;
+  const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
-  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
+  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
@@ -316,7 +330,9 @@ function grabsLanding(p) {
 function beginTurn() {
   S.cpuPlan = null;
   setGear(S.player);
+  S.clock = timedTurn() ? THROW_TIME : null;
   if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.phase = "cpu"; }
+  else if (isRemote(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.online.waitT = 0; S.phase = "remote"; }
   else {
     const s = S.saved[S.player]; S.end = s ? s[0] : null; S.landD = s ? s[1] : null; S.landPhi = s ? s[2] : 0;
     S.phase = "aiming"; refreshPlan();
@@ -369,10 +385,34 @@ function releaseBag(e) {
   ];
   if (S.overdrive) S.feedback.push({ title: "Overdrive", text: "Wild!" });
   S.perfect = !S.overdrive && S.feedback.every(f => f.text === "Perfect");
+  if (S.online) { // send the throw; both phones play it with the same luck
+    const seed = Math.floor(Math.random() * 2 ** 31);
+    S.world.seed(seed);
+    netSend({ t: "throw", actual, seed, feedback: S.feedback, overdrive: !!S.overdrive, perfect: S.perfect });
+  }
+  launchBag(actual);
+}
+// The live opponent's throw, exactly as their phone threw it.
+function remoteThrow(m) {
+  setGear(1); S.player = 1; S.online.waitT = 0;
+  S.world.seed(m.seed);
+  S.feedback = m.feedback || []; S.overdrive = !!m.overdrive; S.perfect = !!m.perfect;
+  launchBag(m.actual);
+}
+function launchBag(actual) {
+  S.clock = null;
   S.lastId = S.world.launch(actual, S.player);
   S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh(); haptic("release");
-  if (!isCPU(S.player)) S.tut.thrown = true;
+  if (S.player === 0) S.tut.thrown = true;
   if (S.overdrive) showBanner("OVERDRIVE!", S.player); else if (S.perfect) showBanner("PERFECT!", S.player);
+  ui();
+}
+// Out of time: that bag is lost.
+function timeUp() {
+  S.clock = null; S.pull.active = false; S.feedback = [];
+  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.phase = "flight"; S.lastId = null;
+  showBanner("Time's up! Bag lost", S.player); sfx.thud(); haptic("thud");
+  if (S.online && S.player === 0) netSend({ t: "timeout" });
   ui();
 }
 function endTurn() {
