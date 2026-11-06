@@ -391,6 +391,18 @@ s.was { opacity: .6; font-size: .8em; }
 .pnames input { font: 900 17px Nunito, system-ui, sans-serif; padding: 8px 10px; border-radius: 12px; border: 2px solid rgba(255,255,255,.4); background: rgba(0,0,0,.3); color: #fff; min-width: 0; }
 .windset { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; font-weight: 900; }
 .windset input[type=range] { width: 100%; accent-color: var(--gold); }
+.prizegrid { position: absolute; top: 18%; left: 16px; right: 16px; bottom: 20%; z-index: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); align-content: center; gap: 10px; overflow-y: auto; }
+.prizegrid .ptile { border-radius: 16px; border: 3px solid #fff; background: linear-gradient(135deg, #1b2f52, #12203a); box-shadow: 0 5px 0 rgba(0,0,0,.35); padding: 8px 6px; text-align: center; animation: tilein .4s cubic-bezier(.2,1.6,.4,1) backwards; }
+.prizegrid .ptile.new { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,201,58,.45), 0 5px 0 rgba(0,0,0,.35); }
+.prizegrid .ptile .pic { font-size: 34px; line-height: 1.1; }
+.prizegrid .ptile .pic .coin.big, .prizegrid .ptile .pic .bcap.big { width: 40px; height: 40px; } .prizegrid .ptile .pic .coin.big::after { font-size: 26px; }
+.prizegrid .ptile .pic .tkt.big { width: 50px; height: 38px; }
+.prizegrid .ptile canvas { width: 46px; height: 46px; }
+.prizegrid .ptile b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 15px; line-height: 1.1; margin-top: 4px; }
+.prizegrid .ptile small { display: block; font-size: 11px; font-weight: 900; color: var(--ink-dim); }
+.prizegrid .ptile small.new { color: var(--gold); }
+@keyframes tilein { from { transform: scale(.3); opacity: 0; } }
+#canSkip { position: absolute; bottom: 7%; z-index: 3; min-width: 200px; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -605,6 +617,8 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="prize" id="prize"></div>
     <div class="prizes" id="prizeList"></div>
     <div class="canhint" id="canHint">Tap to open</div>
+    <div class="prizegrid" id="prizeGrid" hidden></div>
+    <button class="btn ghost" id="canSkip" hidden>COLLECT ALL</button>
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>
@@ -3951,7 +3965,7 @@ function openCanSheet(i) {
   $("canTitle").textContent = can.name;
   $("prize").className = "prize"; $("prizeList").innerHTML = "";
   $("canHint").hidden = false; $("canHint").textContent = "Tap to open";
-  $("canDone").hidden = true;
+  $("canDone").hidden = true; $("canSkip").hidden = true; $("prizeGrid").hidden = true; $("prizeGrid").innerHTML = "";
   $("canSheet").hidden = false;
   can3dBuild(can);
   renderHub();
@@ -3993,10 +4007,33 @@ function prizeHTML(p) {
   const status = p.unlocked ? `<small class="new">UNLOCKED!</small>` : p.owned ? `<small>Already yours: +${p.coins.toLocaleString()} coins</small>` : `<small>${p.have} / ${p.need} cards</small>`;
   return { pic: icon ? `<div class="pic">${icon}</div>` : `<canvas data-cat="${p.cat}" data-id="${p.id}" width="96" height="96"></canvas>`, line: `<b>${p.n} × ${esc(p.name)}</b><small>${kind} cards</small>${status}`, chip: `${icon || "🃏"} ${p.n}× ${esc(p.name)}${p.unlocked ? " ✨" : ""}` };
 }
+// Every prize as a tile on one screen: after the last prize, or straight away with COLLECT ALL.
+function showPrizeSummary() {
+  const R = canRun; if (!R || R.step === "done") return;
+  R.step = "done"; R.shown = R.prizes.length;
+  $("prize").className = "prize"; $("canHint").hidden = true; $("canSkip").hidden = true; $("prizeList").innerHTML = "";
+  const grid = $("prizeGrid"); grid.innerHTML = "";
+  R.prizes.forEach((p, i) => {
+    const t = document.createElement("div"); t.className = "ptile" + (p.unlocked ? " new" : ""); t.style.animationDelay = `${i * 0.06}s`;
+    if (p.kind === "coins") t.innerHTML = `<div class="pic"><i class="coin big"></i></div><b>+${short(p.n)}</b><small>coins</small>`;
+    else if (p.kind === "caps") t.innerHTML = `<div class="pic"><i class="bcap big"></i></div><b>+${p.n}</b><small>bottle caps</small>`;
+    else if (p.kind === "life") t.innerHTML = `<div class="pic"><i class="tkt big"></i></div><b>+1</b><small>ticket</small>`;
+    else {
+      const h = prizeHTML(p);
+      t.innerHTML = `${h.pic}<b>${p.n} × ${esc(p.name)}</b><small class="${p.unlocked ? "new" : ""}">${p.unlocked ? "UNLOCKED!" : p.owned ? `+${short(p.coins)} coins` : `${p.have}/${p.need} cards`}</small>`;
+      const cv = t.querySelector("canvas");
+      if (cv) { const ctx = cv.getContext("2d"); if (cv.dataset.cat === "bag") paintBag(ctx, 96, 96, bagById(cv.dataset.id)); else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(cv.dataset.id)); ctx.drawImage(tmp, 24, 0, 48, 96); } }
+    }
+    grid.appendChild(t);
+  });
+  grid.hidden = false; $("canDone").hidden = false; $("canTitle").textContent = `${R.prizes.length} prizes!`;
+  sfx.win(); haptic("success");
+}
+$("canSkip").onclick = e => { e.stopPropagation(); showPrizeSummary(); };
 function nextPrize() {
   const R = canRun; if (!R) return;
-  if (R.shown > 0) { const prev = R.prizes[R.shown - 1]; $("prizeList").insertAdjacentHTML("beforeend", `<span>${prizeHTML(prev).chip}</span>`); }
-  if (R.shown >= R.prizes.length) { $("prize").className = "prize"; $("canDone").hidden = false; R.step = "done"; return; }
+  if (R.shown >= R.prizes.length) { showPrizeSummary(); return; }
+  $("canSkip").hidden = R.shown >= R.prizes.length - 1;
   const p = R.prizes[R.shown++], h = prizeHTML(p), el = $("prize");
   el.className = "prize"; void el.offsetWidth;
   el.innerHTML = h.pic + h.line; el.className = "prize show";
@@ -4009,7 +4046,7 @@ function nextPrize() {
   if (p.unlocked || p.kind === "life") { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
   $("canHint").hidden = false; $("canHint").textContent = R.shown < R.prizes.length ? `Tap for the next prize (${R.prizes.length - R.shown} left)` : "Tap to finish";
 }
-$("canDone").onclick = () => { $("canSheet").hidden = true; canRun = null; renderHub(); };
+$("canDone").onclick = () => { $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub(); };
 
 // ── Testing tools: the browser preview and Xcode debug builds (the app sets window.__debugBuild), never the App Store.
 // Tester mode keeps coins and bottle caps topped up so everything can be tried; it's on until switched off.
@@ -4032,7 +4069,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1793998988";
+const BUILD_ID = "1794008011";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));

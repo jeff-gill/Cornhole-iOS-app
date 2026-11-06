@@ -159,7 +159,7 @@ function openCanSheet(i) {
   $("canTitle").textContent = can.name;
   $("prize").className = "prize"; $("prizeList").innerHTML = "";
   $("canHint").hidden = false; $("canHint").textContent = "Tap to open";
-  $("canDone").hidden = true;
+  $("canDone").hidden = true; $("canSkip").hidden = true; $("prizeGrid").hidden = true; $("prizeGrid").innerHTML = "";
   $("canSheet").hidden = false;
   can3dBuild(can);
   renderHub();
@@ -201,10 +201,33 @@ function prizeHTML(p) {
   const status = p.unlocked ? `<small class="new">UNLOCKED!</small>` : p.owned ? `<small>Already yours: +${p.coins.toLocaleString()} coins</small>` : `<small>${p.have} / ${p.need} cards</small>`;
   return { pic: icon ? `<div class="pic">${icon}</div>` : `<canvas data-cat="${p.cat}" data-id="${p.id}" width="96" height="96"></canvas>`, line: `<b>${p.n} × ${esc(p.name)}</b><small>${kind} cards</small>${status}`, chip: `${icon || "🃏"} ${p.n}× ${esc(p.name)}${p.unlocked ? " ✨" : ""}` };
 }
+// Every prize as a tile on one screen: after the last prize, or straight away with COLLECT ALL.
+function showPrizeSummary() {
+  const R = canRun; if (!R || R.step === "done") return;
+  R.step = "done"; R.shown = R.prizes.length;
+  $("prize").className = "prize"; $("canHint").hidden = true; $("canSkip").hidden = true; $("prizeList").innerHTML = "";
+  const grid = $("prizeGrid"); grid.innerHTML = "";
+  R.prizes.forEach((p, i) => {
+    const t = document.createElement("div"); t.className = "ptile" + (p.unlocked ? " new" : ""); t.style.animationDelay = `${i * 0.06}s`;
+    if (p.kind === "coins") t.innerHTML = `<div class="pic"><i class="coin big"></i></div><b>+${short(p.n)}</b><small>coins</small>`;
+    else if (p.kind === "caps") t.innerHTML = `<div class="pic"><i class="bcap big"></i></div><b>+${p.n}</b><small>bottle caps</small>`;
+    else if (p.kind === "life") t.innerHTML = `<div class="pic"><i class="tkt big"></i></div><b>+1</b><small>ticket</small>`;
+    else {
+      const h = prizeHTML(p);
+      t.innerHTML = `${h.pic}<b>${p.n} × ${esc(p.name)}</b><small class="${p.unlocked ? "new" : ""}">${p.unlocked ? "UNLOCKED!" : p.owned ? `+${short(p.coins)} coins` : `${p.have}/${p.need} cards`}</small>`;
+      const cv = t.querySelector("canvas");
+      if (cv) { const ctx = cv.getContext("2d"); if (cv.dataset.cat === "bag") paintBag(ctx, 96, 96, bagById(cv.dataset.id)); else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(cv.dataset.id)); ctx.drawImage(tmp, 24, 0, 48, 96); } }
+    }
+    grid.appendChild(t);
+  });
+  grid.hidden = false; $("canDone").hidden = false; $("canTitle").textContent = `${R.prizes.length} prizes!`;
+  sfx.win(); haptic("success");
+}
+$("canSkip").onclick = e => { e.stopPropagation(); showPrizeSummary(); };
 function nextPrize() {
   const R = canRun; if (!R) return;
-  if (R.shown > 0) { const prev = R.prizes[R.shown - 1]; $("prizeList").insertAdjacentHTML("beforeend", `<span>${prizeHTML(prev).chip}</span>`); }
-  if (R.shown >= R.prizes.length) { $("prize").className = "prize"; $("canDone").hidden = false; R.step = "done"; return; }
+  if (R.shown >= R.prizes.length) { showPrizeSummary(); return; }
+  $("canSkip").hidden = R.shown >= R.prizes.length - 1;
   const p = R.prizes[R.shown++], h = prizeHTML(p), el = $("prize");
   el.className = "prize"; void el.offsetWidth;
   el.innerHTML = h.pic + h.line; el.className = "prize show";
@@ -217,7 +240,7 @@ function nextPrize() {
   if (p.unlocked || p.kind === "life") { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
   $("canHint").hidden = false; $("canHint").textContent = R.shown < R.prizes.length ? `Tap for the next prize (${R.prizes.length - R.shown} left)` : "Tap to finish";
 }
-$("canDone").onclick = () => { $("canSheet").hidden = true; canRun = null; renderHub(); };
+$("canDone").onclick = () => { $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub(); };
 
 // ── Testing tools: the browser preview and Xcode debug builds (the app sets window.__debugBuild), never the App Store.
 // Tester mode keeps coins and bottle caps topped up so everything can be tried; it's on until switched off.
