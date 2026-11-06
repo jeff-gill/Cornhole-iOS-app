@@ -105,7 +105,7 @@ function renderScore() {
   for (const p of [0, 1]) {
     $("name" + p).textContent = S.names[p];
     $("pts" + p).textContent = S.scores[p];
-    $("live" + p).textContent = ir.winner === p ? `Inning +${ir.awarded}` : "";
+    $("live" + p).innerHTML = S.phase === "hub" ? "" : `Inning <b>${ir.raw[p]}</b>`;
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
