@@ -347,7 +347,7 @@ function renderHub() {
   $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous court">‹</button>
     <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next court">›</button>
     <div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : "🪙 " + short(v.fee))}${chip("Payout", "🪙 " + short(pot(v)))}${chip("Win / Loss", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : "🪙 " + short(v.fee))}${chip("Payout", "🪙 " + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}`;
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
@@ -357,6 +357,10 @@ function renderHub() {
   play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
+// Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
+window.__gcPlayer = p => { const el = $("gcName"); el.hidden = !p; if (p) el.textContent = "👤 " + p.name; if (p) postScores(); };
+window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
+$("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 $("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
 let shopTab = "bags";
@@ -573,6 +577,7 @@ function frame(now) {
 
 resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
+postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 $("loading").hidden = true;
 requestAnimationFrame(frame);
 window.__cornhole = { setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };

@@ -194,6 +194,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .courtstars .progress { margin: 0; }
 .courtstars .muted { font-family: var(--font-body, inherit); font-size: 12px; }
 .pausebars { display: inline-flex; gap: 4px; align-items: center; justify-content: center; } .pausebars i { width: 5px; height: 16px; border-radius: 2px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.gcname { margin-top: 4px; font-family: var(--font-body, inherit); font-size: 12px; font-weight: 900; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.5); letter-spacing: 0; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -303,8 +304,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 #coach b { color: var(--gold); }
 #coach.top { bottom: auto; top: 64px; width: min(70%, 360px); font-size: 14px; }
 @keyframes coachbob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
-.toast { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); background: linear-gradient(#ffe27a, #ffc93a); color: #3a2600; font-family: var(--font-display);
-  font-size: 20px; padding: 8px 18px; border-radius: 999px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.3); white-space: nowrap; animation: toastin 3.2s ease forwards; pointer-events: none; }
+.toast { position: absolute; left: 50%; top: 92px; transform: translateX(-50%); background: linear-gradient(#ffe27a, #ffc93a); color: #3a2600; font-family: var(--font-display);
+  font-size: 20px; padding: 8px 18px; border-radius: 999px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.3); white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; animation: toastin 3.2s ease forwards; pointer-events: none; }
 @keyframes toastin { 0% { opacity: 0; transform: translateX(-50%) scale(.6); } 10% { opacity: 1; transform: translateX(-50%) scale(1.06); } 16% { transform: translateX(-50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
 /* 4-BAGGER title */
 #fourbag { position: fixed; left: 0; right: 0; top: 34%; z-index: 30; text-align: center; pointer-events: none; opacity: 0;
@@ -351,7 +352,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 <div class="overlay" id="hub">
   <div class="hubtop">
     <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="coins">0</b></div>
-    <div class="logo" style="font-size:22px;line-height:1">BACKYARD<span style="font-size:24px">CORNHOLE</span></div>
+    <div class="logo" style="font-size:22px;line-height:1">BACKYARD<span style="font-size:24px">CORNHOLE</span><div class="gcname" id="gcName" hidden></div></div>
     <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div>
   </div>
   <div class="hubbottom">
@@ -360,7 +361,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <div class="hubrow">
       <button class="btn small" id="shopBtn">SHOP</button>
       <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
-      <button class="btn small" id="onlineBtn" disabled>ONLINE<br><span style="font-size:11px">coming soon</span></button>
+      <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
     <div class="row" style="justify-content:center;gap:22px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button></div>
   </div>
@@ -944,6 +945,8 @@ try {
     updateUnlocks();
   }
 } catch (e) { /* storage unavailable: play without saving */ }
+// Game Center leaderboards (in the iPhone app): total stars, wins and 4-baggers.
+const postScores = () => postNative("score", JSON.stringify({ stars: career.stars, wins: career.wins, fourBaggers: career.fourBaggers || 0 }));
 function save() {
   career.savedAt = Date.now(); // the iPhone app keeps whichever copy (device or iCloud) is newest
   const json = JSON.stringify(career);
@@ -1190,6 +1193,7 @@ function finishMatch() {
   const newly = updateUnlocks();
   save();
   S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name) };
+  postScores();
 }
 // A court's stars stay between 0 and its max.
 function addCourtStars(vi, n) { const v = VENUES[vi]; career.courtStars[v.id] = clamp(courtStars(vi) + n, 0, v.max); updateUnlocks(); }
@@ -1205,7 +1209,7 @@ function checkFourBagger() {
     if (inHole >= 4) {
       S.fourBagger[p] = true;
       fourBagger(p);
-      if (S.kind === "career" && p === 0) { career.coins += 100; save(); }
+      if (S.kind === "career" && p === 0) { career.coins += Math.max(100, venue().fee); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
     }
   }
 }
@@ -3139,7 +3143,7 @@ function renderHub() {
   $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous court">‹</button>
     <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next court">›</button>
     <div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : "🪙 " + short(v.fee))}${chip("Payout", "🪙 " + short(pot(v)))}${chip("Win / Loss", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : "🪙 " + short(v.fee))}${chip("Payout", "🪙 " + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}`;
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
@@ -3149,6 +3153,10 @@ function renderHub() {
   play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
+// Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
+window.__gcPlayer = p => { const el = $("gcName"); el.hidden = !p; if (p) el.textContent = "👤 " + p.name; if (p) postScores(); };
+window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
+$("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 $("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
 let shopTab = "bags";
@@ -3365,6 +3373,7 @@ function frame(now) {
 
 resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
+postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 $("loading").hidden = true;
 requestAnimationFrame(frame);
 window.__cornhole = { setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };

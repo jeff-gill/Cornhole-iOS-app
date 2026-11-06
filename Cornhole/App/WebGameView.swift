@@ -13,7 +13,7 @@ struct WebGameView: UIViewRepresentable {
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
 
-        // Messages from the game: career saves and haptic taps.
+        // Messages from the game: career saves, haptic taps, purchases and Game Center.
         let controller = WKUserContentController()
         let handler = WeakMessageHandler(context.coordinator)
         controller.add(handler, name: "save")
@@ -21,6 +21,9 @@ struct WebGameView: UIViewRepresentable {
         controller.add(handler, name: "store")
         controller.add(handler, name: "purchase")
         controller.add(handler, name: "restore")
+        controller.add(handler, name: "gamecenter")
+        controller.add(handler, name: "score")
+        controller.add(handler, name: "leaderboards")
         if let saved = CareerStore.load() {
             controller.addUserScript(WKUserScript(source: "window.__nativeCareer = \(saved);",
                                                   injectionTime: .atDocumentStart, forMainFrameOnly: true))
@@ -39,6 +42,7 @@ struct WebGameView: UIViewRepresentable {
         if #available(iOS 16.4, *) { webView.isInspectable = true } // Safari > Develop can inspect the game
         #endif
         context.coordinator.store.webView = webView
+        context.coordinator.gameCenter.webView = webView
         if let url = URL(string: "\(BundleSchemeHandler.scheme)://game/index.html") {
             webView.load(URLRequest(url: url))
         }
@@ -50,6 +54,7 @@ struct WebGameView: UIViewRepresentable {
     final class Coordinator: NSObject, WKScriptMessageHandler {
         private let haptics = Haptics()
         let store = StoreManager()
+        let gameCenter = GameCenter()
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             switch message.name {
@@ -68,6 +73,12 @@ struct WebGameView: UIViewRepresentable {
             case "restore":
                 let store = self.store
                 Task { await store.restore() }
+            case "gamecenter":
+                gameCenter.authenticate()
+            case "score":
+                if let json = message.body as? String { gameCenter.submit(json) }
+            case "leaderboards":
+                gameCenter.showLeaderboards()
             default:
                 break
             }

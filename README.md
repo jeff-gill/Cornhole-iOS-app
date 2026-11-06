@@ -15,6 +15,7 @@ A 3D cornhole game for iPhone (and the web) with a career mode. It's built with 
   - Scoring uses cancellation scoring to 21.
   - Sinking all four bags in one inning is a 4-BAGGER.
 - **Pass & Play** for two people on one phone. Online play is planned.
+- **Game Center:** players are signed in automatically. Their stars, wins and 4-baggers go to the leaderboards (the 🏆 RANKINGS button).
 
 ## Project layout
 
@@ -37,3 +38,19 @@ Edit files in `web/src`, then run `web/build.sh` before building the app or publ
 2. Pick an iPhone simulator, or your iPhone after you set a Team under Signing & Capabilities, and press Run.
 
 Your career is saved on the device. In debug builds you can inspect the game from Safari on a Mac: open the Develop menu, then choose the simulator or your phone.
+
+## Before publishing
+
+In Xcode, open the Cornhole target, then Signing & Capabilities, and add:
+
+- **Game Center**, for sign-in and leaderboards.
+- **iCloud** with **Key-value storage** ticked, so a player's career follows their Apple ID to a new phone.
+- **In-App Purchase**.
+
+In App Store Connect:
+
+- Under Features > Game Center, create three leaderboards (classic, high score, best score kept):
+  - `com.jeffgill.cornhole.stars`
+  - `com.jeffgill.cornhole.wins`
+  - `com.jeffgill.cornhole.fourbaggers`
+- Create the in-app purchases listed in `Cornhole/App/StoreManager.swift`.

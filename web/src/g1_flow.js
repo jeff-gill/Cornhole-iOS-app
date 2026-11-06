@@ -159,6 +159,8 @@ try {
     updateUnlocks();
   }
 } catch (e) { /* storage unavailable: play without saving */ }
+// Game Center leaderboards (in the iPhone app): total stars, wins and 4-baggers.
+const postScores = () => postNative("score", JSON.stringify({ stars: career.stars, wins: career.wins, fourBaggers: career.fourBaggers || 0 }));
 function save() {
   career.savedAt = Date.now(); // the iPhone app keeps whichever copy (device or iCloud) is newest
   const json = JSON.stringify(career);
@@ -405,6 +407,7 @@ function finishMatch() {
   const newly = updateUnlocks();
   save();
   S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name) };
+  postScores();
 }
 // A court's stars stay between 0 and its max.
 function addCourtStars(vi, n) { const v = VENUES[vi]; career.courtStars[v.id] = clamp(courtStars(vi) + n, 0, v.max); updateUnlocks(); }
@@ -420,7 +423,7 @@ function checkFourBagger() {
     if (inHole >= 4) {
       S.fourBagger[p] = true;
       fourBagger(p);
-      if (S.kind === "career" && p === 0) { career.coins += 100; save(); }
+      if (S.kind === "career" && p === 0) { career.coins += Math.max(100, venue().fee); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
     }
   }
 }
