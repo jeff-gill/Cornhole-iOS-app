@@ -330,7 +330,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 @keyframes sheetin { from { transform: translateY(40px) scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
 .ribbon { align-self: center; font-family: var(--font-display); font-size: 26px; padding: 4px 26px 6px; color: #3a2600; background: linear-gradient(#ffe27a, #ffc93a);
   border: 3px solid #fff; border-radius: 12px; box-shadow: 0 5px 0 rgba(0,0,0,.3); transform: rotate(-2deg); letter-spacing: .04em; }
-.hero { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.hero { position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: 10px; padding-bottom: 14px; }
+.hn { font-size: 20px; }
 .hp { border-radius: 20px; padding: 10px 6px 8px; text-align: center; border: 3px solid rgba(255,255,255,.55); box-shadow: 0 5px 0 rgba(0,0,0,.3);
   background: linear-gradient(var(--pl), var(--pc) 55%, var(--pd)); position: relative; overflow: hidden; animation: cardin .5s cubic-bezier(.2,1.5,.4,1) backwards; }
 .hp:last-child { animation-delay: .08s; }
@@ -363,7 +364,17 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .mini td.tt { font-family: var(--font-display); font-size: 17px; white-space: nowrap; }
 .mini .pts { display: inline-block; min-width: 44px; padding: 1px 8px; border-radius: 999px; font-family: var(--font-display); font-size: 15px; color: #12203a; background: var(--c); }
 .mini .pts.wash { background: rgba(255,255,255,.12); color: var(--ink-dim); }
-@media (prefers-reduced-motion: reduce) { #inningBody, .hp, .vs { animation: none; } .hp.won::after { animation: none; } }
+.hero .vs { position: absolute; bottom: 0; z-index: 2; width: 60px; height: 60px; font-size: 20px; }
+/* The points bubble lands on the bottom inside corner of the winning tile, falling in at an angle from the opposite top corner. */
+.hero .vs.left { left: calc(50% - 5px - 44px); animation: dropL .55s .35s cubic-bezier(.55,0,.9,.6) backwards, thudsq .3s .9s ease-out; }
+.hero .vs.right { left: calc(50% + 5px - 16px); animation: dropR .55s .35s cubic-bezier(.55,0,.9,.6) backwards, thudsq .3s .9s ease-out; }
+.hero .vs.wash { left: calc(50% - 30px); animation: vspop .6s .25s cubic-bezier(.2,2,.4,1) backwards; }
+@keyframes dropL { from { transform: translate(-150px, -190px) rotate(-200deg) scale(.7); opacity: 0; } 20% { opacity: 1; } to { transform: none; } }
+@keyframes dropR { from { transform: translate(150px, -190px) rotate(200deg) scale(.7); opacity: 0; } 20% { opacity: 1; } to { transform: none; } }
+@keyframes thudsq { 0% { transform: scale(1.25, .7); } 45% { transform: scale(.9, 1.12); } 100% { transform: none; } }
+.hero.landed { animation: heroshake .3s ease-out; }
+@keyframes heroshake { 0%,100% { transform: none; } 30% { transform: translateY(5px); } 60% { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { #inningBody, .hp, .vs, .hero { animation: none !important; } .hp.won::after { animation: none; } }
 .swipehint { border: 0; background: none; color: var(--ink-dim); font-weight: 900; font-size: 14px; letter-spacing: .04em; padding: 6px; }
 .swipehint span { display: inline-block; animation: bob 1.2s ease-in-out infinite; color: var(--gold); font-size: 18px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
@@ -3756,15 +3767,16 @@ function scorecardHTML() {
       <div class="oi"><span>On <b>${h.on[p]}</b></span><i></i><span>In <b>${h.hole[p]}</b></span></div>
       <div class="ht" data-from="${before[p]}" data-to="${h.totals[p]}">${before[p]}</div>
     </div>`;
+  // The points bubble sits on the bottom inside corner of the winner's tile (it drops in; see head.html).
   const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
-    : `<div class="vs" style="--c:${c}"><span class="flipin">${h.winner === 0 ? "◀ " : ""}+${h.awarded}${h.winner === 1 ? " ▶" : ""}</span></div>`;
+    : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${c}"><span class="flipin">+${h.awarded}</span></div>`;
   const rows = S.history.slice(0, -1).map((r, n) => {
     const rc = ROW_COLORS[n % ROW_COLORS.length];
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
     const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:${rc}">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
     return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}<td class="tt"><span style="color:${COL.pl[0]}">${r.totals[0]}</span>–<span style="color:${COL.pl[1]}">${r.totals[1]}</span></td></tr>`;
   }).reverse().join("");
-  return `<div class="hero">${side(0)}${badge}${side(1)}</div>
+  return `<div class="hero">${side(0)}${side(1)}${badge}</div>
     ${rows ? `<div class="hist"><div class="histh"><span>Earlier innings</span><span>On | In under each score</span></div>
       <table class="mini"><tbody>${rows}</tbody></table></div>` : ""}`;
 }
@@ -3822,6 +3834,9 @@ function renderInningSheet() {
   const wrap = $("inningBody").querySelector(".card-wrap");
   if (wrap) wrap.scrollTop = wrap.scrollHeight;
   animateTotals();
+  // The bubble's landing: a thud, a little shake.
+  const hero = $("inningBody").querySelector(".hero");
+  if (hero && hero.querySelector(".vs.left, .vs.right")) setTimeout(() => { if (!sheet.hidden) { sfx.thud(); haptic("thud"); hero.classList.add("landed"); } }, 900);
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => {
     if (S.online) { wantRematch(); return; }

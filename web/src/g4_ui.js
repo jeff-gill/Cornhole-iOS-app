@@ -232,15 +232,16 @@ function scorecardHTML() {
       <div class="oi"><span>On <b>${h.on[p]}</b></span><i></i><span>In <b>${h.hole[p]}</b></span></div>
       <div class="ht" data-from="${before[p]}" data-to="${h.totals[p]}">${before[p]}</div>
     </div>`;
+  // The points bubble sits on the bottom inside corner of the winner's tile (it drops in; see head.html).
   const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
-    : `<div class="vs" style="--c:${c}"><span class="flipin">${h.winner === 0 ? "◀ " : ""}+${h.awarded}${h.winner === 1 ? " ▶" : ""}</span></div>`;
+    : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${c}"><span class="flipin">+${h.awarded}</span></div>`;
   const rows = S.history.slice(0, -1).map((r, n) => {
     const rc = ROW_COLORS[n % ROW_COLORS.length];
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
     const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:${rc}">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
     return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}<td class="tt"><span style="color:${COL.pl[0]}">${r.totals[0]}</span>–<span style="color:${COL.pl[1]}">${r.totals[1]}</span></td></tr>`;
   }).reverse().join("");
-  return `<div class="hero">${side(0)}${badge}${side(1)}</div>
+  return `<div class="hero">${side(0)}${side(1)}${badge}</div>
     ${rows ? `<div class="hist"><div class="histh"><span>Earlier innings</span><span>On | In under each score</span></div>
       <table class="mini"><tbody>${rows}</tbody></table></div>` : ""}`;
 }
@@ -298,6 +299,9 @@ function renderInningSheet() {
   const wrap = $("inningBody").querySelector(".card-wrap");
   if (wrap) wrap.scrollTop = wrap.scrollHeight;
   animateTotals();
+  // The bubble's landing: a thud, a little shake.
+  const hero = $("inningBody").querySelector(".hero");
+  if (hero && hero.querySelector(".vs.left, .vs.right")) setTimeout(() => { if (!sheet.hidden) { sfx.thud(); haptic("thud"); hero.classList.add("landed"); } }, 900);
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => {
     if (S.online) { wantRematch(); return; }
