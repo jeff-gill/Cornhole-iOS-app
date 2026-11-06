@@ -366,6 +366,18 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 @keyframes dailybob { 50% { transform: translateY(-3px) rotate(-2deg); } }
 .coolerhead { font-family: var(--font-display); font-size: 15px; letter-spacing: .08em; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.45); margin: 0 0 4px 4px; }
 s.was { opacity: .6; font-size: .8em; }
+.canrays { position: absolute; left: 50%; top: 40%; width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax; border-radius: 50%; opacity: .5; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, var(--ray, #fff) 0deg 7deg, transparent 7deg 22deg);
+  -webkit-mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 18%, transparent 55%); mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 18%, transparent 55%);
+  animation: rays 18s linear infinite; }
+@keyframes rays { to { transform: rotate(1turn); } }
+#can3d { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#canBody { display: none; }
+.cantitle { z-index: 2; } .prize { z-index: 3; } .prizes, .canhint, #canDone { z-index: 3; }
+.prize.show { animation: cardflip .55s cubic-bezier(.2,1.4,.4,1); overflow: hidden; }
+.prize.show::after { content: ""; position: absolute; inset: -50% auto -50% -60%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: rotate(20deg); animation: shine .9s .35s ease-out both; pointer-events: none; }
+@keyframes cardflip { from { transform: perspective(700px) rotateY(100deg) scale(.6); } to { transform: perspective(700px) rotateY(0) scale(1); } }
+@keyframes shine { from { left: -60%; } to { left: 130%; } }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -572,6 +584,8 @@ s.was { opacity: .6; font-size: .8em; }
 </div></div>
 <div class="overlay" id="canSheet" hidden>
   <div class="canstage" id="canStage">
+    <div class="canrays" id="canRays"></div>
+    <canvas id="can3d"></canvas>
     <canvas id="mist"></canvas>
     <div class="cantitle" id="canTitle"></div>
     <div class="can" id="canBody"><div class="cantop"><i class="tab"></i></div><div class="canlabel" id="canLabel"></div></div>
@@ -1018,6 +1032,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 // ───────────────────────── Helpers
 const $ = id => document.getElementById(id);
@@ -1038,18 +1053,18 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 // A win pays the pot (both buy-ins). Tuned with simulated throws: a good player sinks about 40% at the Backyard and
 // about 20% on the last courts with the starter bag.
 const VENUES = [
-  { id: "backyard", name: "Backyard", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.62, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Pizza Patio", sub: "League night under the lights", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
-  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.83, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [6, 13], speed: "Icy boards" },
-  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.88, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
-  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.92, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
-  { id: "rooftop", name: "City Rooftop", sub: "Skyline lights and swirling wind", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.96, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [9, 17], speed: "Slick boards" },
-  { id: "lakeside", name: "Lakeside Dock", sub: "Morning mist on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 1.0, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [8, 15], speed: "Dewy boards" },
-  { id: "canyon", name: "Desert Canyon", sub: "Red rock, hot gusts", max: 900, fee: 3000000, win: 30, loss: 32, swing: 1.03, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [10, 19], speed: "Dusty boards" },
-  { id: "carnival", name: "County Fair", sub: "Ferris wheel and midway lights", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 1.06, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [9, 17], speed: "Fast boards" },
-  { id: "stadium", name: "Stadium Finals", sub: "The big show", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 1.09, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [10, 18], speed: "Fast pro boards" },
+  { id: "backyard", name: "Backyard", sub: "Where it all starts", max: 30, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 75, fee: 200, win: 6, loss: 4, swing: 0.62, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
+  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 150, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Pizza Patio", sub: "League night under the lights", max: 300, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
+  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 450, fee: 10000, win: 15, loss: 10, swing: 0.83, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [6, 13], speed: "Icy boards" },
+  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 750, fee: 30000, win: 18, loss: 13, swing: 0.88, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
+  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 900, fee: 100000, win: 20, loss: 16, swing: 0.92, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
+  { id: "rooftop", name: "City Rooftop", sub: "Skyline lights and swirling wind", max: 1050, fee: 300000, win: 22, loss: 19, swing: 0.96, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [9, 17], speed: "Slick boards" },
+  { id: "lakeside", name: "Lakeside Dock", sub: "Morning mist on the lake", max: 1200, fee: 1000000, win: 25, loss: 25, swing: 1.0, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [8, 15], speed: "Dewy boards" },
+  { id: "canyon", name: "Desert Canyon", sub: "Red rock, hot gusts", max: 1350, fee: 3000000, win: 30, loss: 32, swing: 1.03, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [10, 19], speed: "Dusty boards" },
+  { id: "carnival", name: "County Fair", sub: "Ferris wheel and midway lights", max: 1500, fee: 10000000, win: 38, loss: 42, swing: 1.06, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [9, 17], speed: "Fast boards" },
+  { id: "stadium", name: "Stadium Finals", sub: "The big show", max: 1650, fee: 30000000, win: 48, loss: 54, swing: 1.09, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [10, 18], speed: "Fast pro boards" },
 ];
 const pot = v => v.fee * 2;
 const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
@@ -3911,30 +3926,23 @@ function openCanSheet(i) {
   $("canHint").hidden = false; $("canHint").textContent = "Tap to open";
   $("canDone").hidden = true;
   $("canSheet").hidden = false;
+  can3dBuild(can);
   renderHub();
 }
 $("canStage").onclick = e => {
   if (!canRun || e.target.closest("button")) return;
   initAudio();
   if (canRun.step === "closed") {
-    canRun.step = "shaking"; $("canBody").classList.add("shake"); $("canHint").hidden = true; sfx.tick(); haptic("light");
+    canRun.step = "shaking"; $("canBody").classList.add("shake"); can3dShake(); $("canHint").hidden = true; sfx.tick(); haptic("light");
     setTimeout(popCan, 900);
   } else if (canRun.step === "prizes") nextPrize();
 };
 function popCan() {
   const R = canRun; if (!R) return;
-  const body = $("canBody"); body.classList.remove("shake"); body.classList.add("open");
+  const body = $("canBody"); body.classList.remove("shake"); body.classList.add("open"); can3dPop();
   sfx.whoosh(); haptic("big"); if (R.can.pulls >= 5) sfx.boom();
-  // The spray: more mist from rarer cans, tinted with the can's colour.
-  const cv = $("mist"), r = cv.getBoundingClientRect(); cv.width = r.width; cv.height = r.height;
-  const top = body.getBoundingClientRect(), x0 = top.left + top.width / 2 - r.left, y0 = top.top - r.top;
-  const n = 120 + R.can.pulls * 40;
-  for (let k = 0; k < n; k++) {
-    const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, v = 200 + Math.random() * 520;
-    R.mist.push({ x: x0 + (Math.random() - 0.5) * 30, y: y0, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 2 + Math.random() * 6, life: 1 + Math.random() * 1.2, max: 2.2, tint: Math.random() < 0.35 });
-  }
-  if (!R.anim) { R.last = performance.now(); R.anim = requestAnimationFrame(mistFrame); }
-  setTimeout(() => { body.classList.add("gone"); R.step = "prizes"; nextPrize(); }, 650);
+  // The spray is the 3D fizz (g4c_can3d.js); prizes start once it has burst.
+  setTimeout(() => { body.classList.add("gone"); R.step = "prizes"; nextPrize(); }, 1100);
 }
 function mistFrame(now) {
   const R = canRun; if (!R) return;
@@ -3997,7 +4005,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1793998477";
+const BUILD_ID = "1793998718";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -4066,6 +4074,123 @@ $("dailyBtn").onclick = () => {
   $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
   setTimeout(() => openCanSheet(career.cans.length - 1), 900);
 };
+
+// ───────────────────────── The can opening, in 3D
+// A glossy metal can (lathe-shaped body, printed label, lid and pull tab) spins in front of light rays in its rarity
+// colour. Tap: it shakes harder and harder, the tab snaps up and a burst of fizz sprays out with a flash.
+const RARITY_GLOW = { black: "#9aa4b2", white: "#e8f0ff", bronze: "#ffb070", silver: "#d8e8ff", gold: "#ffd84a", purple: "#c48cff", platinum: "#ffffff", diamond: "#7fe8ff", express: "#ff7ac0" };
+const C3 = { r: null, scene: null, cam: null, can: null, tab: null, glow: null, flash: null, fizz: null, sparkle: null, state: "off", t: 0, last: 0, raf: 0 };
+function can3dInit() {
+  if (C3.r) return;
+  const cv = $("can3d");
+  const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+  r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); r.outputColorSpace = THREE.SRGBColorSpace;
+  r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.15;
+  const scene = new THREE.Scene(), pm = new THREE.PMREMGenerator(r);
+  scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+  const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(3, 4, 5); scene.add(key);
+  const rimL = new THREE.DirectionalLight(0x9fd0ff, 1.4); rimL.position.set(-4, 2, -3); scene.add(rimL);
+  const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 100); cam.position.set(0, 1.7, 14.5); cam.lookAt(0, 1.4, 0);
+  Object.assign(C3, { r, scene, cam });
+}
+function canLabelTex(can) {
+  return canvasTex(1024, 512, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, can.color); g.addColorStop(0.5, can.rim); g.addColorStop(1, can.color);
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    c.fillStyle = "rgba(255,255,255,.18)"; for (let x = -h; x < w; x += 90) { c.beginPath(); c.moveTo(x, h); c.lineTo(x + 40, h); c.lineTo(x + 40 + h, 0); c.lineTo(x + h, 0); c.fill(); }
+    const dark = ["white", "platinum", "silver"].includes(can.id), ink = dark ? "#16233f" : "#ffffff";
+    for (const cx of [w * 0.25, w * 0.75]) { // the label wraps around, so print it twice
+      c.fillStyle = dark ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.28)"; c.beginPath(); c.ellipse(cx, h / 2, 210, 170, 0, 0, 7); c.fill();
+      c.fillStyle = ink; c.textAlign = "center"; c.font = "bold 74px 'Lilita One', Arial Black, sans-serif";
+      const words = can.name.split(" "); words.forEach((wd, i) => c.fillText(wd.toUpperCase(), cx, h / 2 - 22 + (i - (words.length - 1) / 2) * 78));
+      const rank = can.express ? 0 : CANS.indexOf(can) + 1;
+      c.font = "bold 34px Arial, sans-serif"; c.fillText(can.express ? "⚡ EXPRESS ⚡" : "★".repeat(Math.min(rank, 8)), cx, h / 2 + 108);
+      c.font = "bold 22px Arial, sans-serif"; c.fillText("PRIZE CAN", cx, h / 2 - 118);
+    }
+  });
+}
+function can3dBuild(can) {
+  can3dInit();
+  if (C3.can) { C3.scene.remove(C3.can); C3.can.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
+  const g = new THREE.Group();
+  const prof = [[0, 0], [0.72, 0], [0.9, 0.05], [0.98, 0.22], [1, 0.4], [1, 3.05], [0.9, 3.38], [0.84, 3.5], [0.86, 3.58], [0.8, 3.62], [0.02, 3.56]].map(([x, y]) => new THREE.Vector2(x, y));
+  const metal = new THREE.MeshPhysicalMaterial({ color: can.rim, metalness: 0.95, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08, transparent: true });
+  g.add(new THREE.Mesh(new THREE.LatheGeometry(prof, 72), metal));
+  const label = new THREE.Mesh(new THREE.CylinderGeometry(1.006, 1.006, 2.5, 72, 1, true),
+    new THREE.MeshPhysicalMaterial({ map: canLabelTex(can), metalness: 0.45, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true }));
+  label.position.y = 1.75; g.add(label);
+  const lid = new THREE.Mesh(new THREE.CircleGeometry(0.8, 48), new THREE.MeshStandardMaterial({ color: 0xc8ccd4, metalness: 1, roughness: 0.3, transparent: true }));
+  lid.rotation.x = -Math.PI / 2; lid.position.y = 3.57; g.add(lid);
+  const tab = new THREE.Group(); tab.position.set(0, 3.6, 0.12);
+  const tabMat = new THREE.MeshStandardMaterial({ color: 0xdfe3ea, metalness: 1, roughness: 0.25, transparent: true });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.04, 10, 24), tabMat); ring.rotation.x = Math.PI / 2; ring.position.z = 0.22; tab.add(ring);
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.03, 0.26), tabMat); plate.position.z = 0.06; tab.add(plate);
+  g.add(tab);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: RARITY_GLOW[can.id] || "#fff", blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }));
+  glow.position.set(0, 1.8, -1.2); glow.scale.setScalar(7.5); C3.scene.add(glow);
+  if (C3.glow) C3.scene.remove(C3.glow);
+  g.rotation.x = 0.08;
+  C3.scene.add(g);
+  Object.assign(C3, { can: g, tab, glow, mats: [metal, label.material, lid.material, tabMat], state: "idle", t: 0, shake: 0, popT: 0, kind: can });
+  $("canRays").style.setProperty("--ray", RARITY_GLOW[can.id] || "#fff");
+  can3dStart();
+}
+function can3dStart() {
+  can3dResize();
+  if (!C3.raf) { C3.last = performance.now(); C3.raf = requestAnimationFrame(can3dFrame); }
+}
+function can3dResize() {
+  const cv = $("can3d"), w = cv.clientWidth || 390, h = cv.clientHeight || 700;
+  C3.r.setSize(w, h, false); C3.cam.aspect = w / h; C3.cam.updateProjectionMatrix();
+}
+function can3dShake() { C3.state = "shake"; }
+// The pop: the tab snaps up, a flash, and fizz sprays out of the top; then the can drops away.
+function can3dPop() {
+  C3.state = "pop"; C3.popT = 0;
+  const can = C3.kind, n = 260 + CANS.indexOf(can) * 60, pos = new Float32Array(n * 3), vel = [];
+  for (let i = 0; i < n; i++) {
+    pos[i * 3] = (Math.random() - 0.5) * 0.3; pos[i * 3 + 1] = 3.65; pos[i * 3 + 2] = (Math.random() - 0.5) * 0.3;
+    const a = Math.random() * Math.PI * 2, sp = 0.5 + Math.random() * 2.2;
+    vel.push([Math.cos(a) * sp, 4 + Math.random() * 6, Math.sin(a) * sp]);
+  }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const fizz = new THREE.Points(geo, new THREE.PointsMaterial({ map: glowTex, color: 0xffffff, size: 0.22, transparent: true, depthWrite: false, opacity: 0.95 }));
+  fizz.userData = { vel, life: 1.6 }; C3.can.add(fizz); C3.fizz = fizz;
+  if (can.pulls >= 5) { // rare cans: sparkles too
+    const m = 70, sp = new Float32Array(m * 3), sv = [];
+    for (let i = 0; i < m; i++) { sp[i * 3 + 1] = 3.6; const a = Math.random() * Math.PI * 2, s = 1.5 + Math.random() * 3; sv.push([Math.cos(a) * s, 2 + Math.random() * 5, Math.sin(a) * s]); }
+    const sg = new THREE.BufferGeometry(); sg.setAttribute("position", new THREE.BufferAttribute(sp, 3));
+    const sparkle = new THREE.Points(sg, new THREE.PointsMaterial({ map: glowTex, color: RARITY_GLOW[can.id], size: 0.4, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    sparkle.userData = { vel: sv, life: 1.8 }; C3.can.add(sparkle); C3.sparkle = sparkle;
+  }
+  const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: RARITY_GLOW[can.id] || "#fff", blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  flash.position.set(0, 3.8, 0.3); flash.scale.setScalar(1); C3.can.add(flash); C3.flash = flash;
+}
+function stepPoints(p, dt) {
+  if (!p) return;
+  const pos = p.geometry.attributes.position, v = p.userData.vel;
+  for (let i = 0; i < v.length; i++) { v[i][1] -= 9 * dt; v[i][0] *= Math.pow(0.6, dt); v[i][2] *= Math.pow(0.6, dt); pos.array[i * 3] += v[i][0] * dt; pos.array[i * 3 + 1] += v[i][1] * dt; pos.array[i * 3 + 2] += v[i][2] * dt; }
+  pos.needsUpdate = true; p.userData.life -= dt; p.material.opacity = Math.max(0, Math.min(1, p.userData.life));
+}
+function can3dFrame(now) {
+  C3.raf = 0;
+  if ($("canSheet").hidden || !C3.can) return;
+  const dt = Math.min(0.05, (now - C3.last) / 1000); C3.last = now; C3.t += dt;
+  const g = C3.can;
+  if (C3.state === "idle") { g.rotation.y += dt * 0.9; g.position.y = Math.sin(C3.t * 2) * 0.08; g.rotation.z = 0; }
+  else if (C3.state === "shake") { C3.shake = Math.min(1, C3.shake + dt * 1.4); g.rotation.y += dt * 2; g.rotation.z = Math.sin(C3.t * 45) * 0.13 * C3.shake; g.position.y = Math.abs(Math.sin(C3.t * 22)) * 0.12 * C3.shake; }
+  else if (C3.state === "pop") {
+    C3.popT += dt; const k = C3.popT;
+    g.rotation.z *= Math.pow(0.02, dt); g.rotation.y = Math.round(g.rotation.y / (Math.PI * 2)) * Math.PI * 2 * 0 + g.rotation.y * Math.pow(0.4, dt);
+    C3.tab.rotation.x = -Math.min(1, k / 0.12) * 1.9;
+    if (C3.flash) { C3.flash.scale.setScalar(1 + k * 14); C3.flash.material.opacity = Math.max(0, 1 - k * 2.2); }
+    stepPoints(C3.fizz, dt); stepPoints(C3.sparkle, dt);
+    if (k > 0.75) { const d = Math.min(1, (k - 0.75) / 0.6); g.position.y = -d * d * 9; for (const m of C3.mats) m.opacity = 1 - d; C3.glow.material.opacity = 0.55 * (1 - d); }
+  }
+  C3.r.render(C3.scene, C3.cam);
+  C3.raf = requestAnimationFrame(can3dFrame);
+}
+window.addEventListener("resize", () => { if (C3.r) can3dResize(); });
 
 // ───────────────────────── Cameras
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);

@@ -161,30 +161,23 @@ function openCanSheet(i) {
   $("canHint").hidden = false; $("canHint").textContent = "Tap to open";
   $("canDone").hidden = true;
   $("canSheet").hidden = false;
+  can3dBuild(can);
   renderHub();
 }
 $("canStage").onclick = e => {
   if (!canRun || e.target.closest("button")) return;
   initAudio();
   if (canRun.step === "closed") {
-    canRun.step = "shaking"; $("canBody").classList.add("shake"); $("canHint").hidden = true; sfx.tick(); haptic("light");
+    canRun.step = "shaking"; $("canBody").classList.add("shake"); can3dShake(); $("canHint").hidden = true; sfx.tick(); haptic("light");
     setTimeout(popCan, 900);
   } else if (canRun.step === "prizes") nextPrize();
 };
 function popCan() {
   const R = canRun; if (!R) return;
-  const body = $("canBody"); body.classList.remove("shake"); body.classList.add("open");
+  const body = $("canBody"); body.classList.remove("shake"); body.classList.add("open"); can3dPop();
   sfx.whoosh(); haptic("big"); if (R.can.pulls >= 5) sfx.boom();
-  // The spray: more mist from rarer cans, tinted with the can's colour.
-  const cv = $("mist"), r = cv.getBoundingClientRect(); cv.width = r.width; cv.height = r.height;
-  const top = body.getBoundingClientRect(), x0 = top.left + top.width / 2 - r.left, y0 = top.top - r.top;
-  const n = 120 + R.can.pulls * 40;
-  for (let k = 0; k < n; k++) {
-    const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, v = 200 + Math.random() * 520;
-    R.mist.push({ x: x0 + (Math.random() - 0.5) * 30, y: y0, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: 2 + Math.random() * 6, life: 1 + Math.random() * 1.2, max: 2.2, tint: Math.random() < 0.35 });
-  }
-  if (!R.anim) { R.last = performance.now(); R.anim = requestAnimationFrame(mistFrame); }
-  setTimeout(() => { body.classList.add("gone"); R.step = "prizes"; nextPrize(); }, 650);
+  // The spray is the 3D fizz (g4c_can3d.js); prizes start once it has burst.
+  setTimeout(() => { body.classList.add("gone"); R.step = "prizes"; nextPrize(); }, 1100);
 }
 function mistFrame(now) {
   const R = canRun; if (!R) return;

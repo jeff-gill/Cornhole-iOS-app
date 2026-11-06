@@ -358,6 +358,18 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 @keyframes dailybob { 50% { transform: translateY(-3px) rotate(-2deg); } }
 .coolerhead { font-family: var(--font-display); font-size: 15px; letter-spacing: .08em; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.45); margin: 0 0 4px 4px; }
 s.was { opacity: .6; font-size: .8em; }
+.canrays { position: absolute; left: 50%; top: 40%; width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax; border-radius: 50%; opacity: .5; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, var(--ray, #fff) 0deg 7deg, transparent 7deg 22deg);
+  -webkit-mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 18%, transparent 55%); mask: radial-gradient(circle, #000 0, rgba(0,0,0,.6) 18%, transparent 55%);
+  animation: rays 18s linear infinite; }
+@keyframes rays { to { transform: rotate(1turn); } }
+#can3d { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#canBody { display: none; }
+.cantitle { z-index: 2; } .prize { z-index: 3; } .prizes, .canhint, #canDone { z-index: 3; }
+.prize.show { animation: cardflip .55s cubic-bezier(.2,1.4,.4,1); overflow: hidden; }
+.prize.show::after { content: ""; position: absolute; inset: -50% auto -50% -60%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: rotate(20deg); animation: shine .9s .35s ease-out both; pointer-events: none; }
+@keyframes cardflip { from { transform: perspective(700px) rotateY(100deg) scale(.6); } to { transform: perspective(700px) rotateY(0) scale(1); } }
+@keyframes shine { from { left: -60%; } to { left: 130%; } }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -564,6 +576,8 @@ s.was { opacity: .6; font-size: .8em; }
 </div></div>
 <div class="overlay" id="canSheet" hidden>
   <div class="canstage" id="canStage">
+    <div class="canrays" id="canRays"></div>
+    <canvas id="can3d"></canvas>
     <canvas id="mist"></canvas>
     <div class="cantitle" id="canTitle"></div>
     <div class="can" id="canBody"><div class="cantop"><i class="tab"></i></div><div class="canlabel" id="canLabel"></div></div>

@@ -22,7 +22,7 @@ body() { # $1 = import map JSON
   printf '\n<script>\n"use strict";\n'
   cat "$SRC/engine.js"
   printf '</script>\n<script type="importmap">%s</script>\n<script type="module">\n' "$1"
-  cat "$SRC/g1_flow.js" "$SRC/g1b_audio.js" "$SRC/g1c_online.js" "$SRC/g1d_economy.js" "$SRC/g2_world.js" "$SRC/g3_objects.js" "$SRC/g3b_aim.js" "$SRC/g3c_effects.js" "$SRC/g4b_extras.js" "$SRC/g4_ui.js"
+  cat "$SRC/g1_flow.js" "$SRC/g1b_audio.js" "$SRC/g1c_online.js" "$SRC/g1d_economy.js" "$SRC/g2_world.js" "$SRC/g3_objects.js" "$SRC/g3b_aim.js" "$SRC/g3c_effects.js" "$SRC/g4b_extras.js" "$SRC/g4c_can3d.js" "$SRC/g4_ui.js"
   printf '</script>\n'; } | brand
 }
 
