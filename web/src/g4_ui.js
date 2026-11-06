@@ -371,7 +371,7 @@ function openHub() {
 // 1,500 → 1.5K, 2,000,000 → 2M
 function short(n) { if (n >= 1e6) return +(n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M"; if (n >= 1e4) return +(n / 1e3).toFixed(n % 1e3 ? 1 : 0) + "K"; return n.toLocaleString(); }
 function renderHub() {
-  $("coins").textContent = short(career.coins);
+  $("coins").textContent = bigNum(career.coins);
   $("stars").textContent = career.stars;
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
   buildVenue(v.id); setBoardDesign(career.board);
@@ -494,7 +494,7 @@ function storeHTML() {
 }
 function renderShop() {
   testerTopUp();
-  $("shopCoins").textContent = career.coins.toLocaleString(); $("shopCaps").textContent = career.caps.toLocaleString();
+  $("shopCoins").textContent = bigNum(career.coins); $("shopCaps").textContent = bigNum(career.caps);
   for (const b of document.querySelectorAll("#shop .tabs button")) b.classList.toggle("on", b.dataset.tab === shopTab);
   const list = $("shopItems"); list.innerHTML = "";
   if (shopTab === "store") {

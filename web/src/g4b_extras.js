@@ -1,5 +1,21 @@
 
 // ───────────────────────── Clubhouse extras: avatar, lives, the cooler of cans, and opening a can
+// Coin and cap totals: exact up to 999, then 1.0K, 1.00M, 1.00B, 1.00T (rounded down, so it never shows more than you
+// have). Tapping a total shows the exact number.
+function bigNum(n) {
+  n = Math.max(0, Math.floor(n));
+  if (n < 1000) return String(n);
+  const units = [[1e12, "T", 2], [1e9, "B", 2], [1e6, "M", 2], [1e3, "K", 1]];
+  for (const [v, u, d] of units) if (n >= v) { const f = 10 ** d; return (Math.floor(n / v * f) / f).toFixed(d) + u; }
+  return String(n);
+}
+function showExact(el, n, what) {
+  document.querySelectorAll(".exacttip").forEach(t => t.remove());
+  const r = el.getBoundingClientRect(), t = document.createElement("div");
+  t.className = "exacttip"; t.textContent = `${Math.floor(n).toLocaleString()} ${what}`;
+  t.style.left = `${Math.min(window.innerWidth - 90, Math.max(90, r.left + r.width / 2))}px`; t.style.top = `${r.bottom}px`;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2200);
+}
 const clockText = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
 const topCourt = () => VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 
@@ -7,7 +23,7 @@ function renderHubExtras() {
   tickLives(); testerTopUp();
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
   $("lives").textContent = career.lives;
-  $("caps").textContent = short(career.caps);
+  $("caps").textContent = bigNum(career.caps);
   $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : "";
   const cooler = $("cooler"); cooler.innerHTML = "";
   const slots = Math.max(COOLER_SIZE, career.cans.length);
@@ -49,10 +65,10 @@ function renderLives() {
   $("livesClose").onclick = () => { $("livesSheet").hidden = true; };
 }
 $("livesBtn").onclick = openLives;
-$("capsBtn").onclick = () => {
-  showInfo(`<div class="pic"><i class="bcap big"></i></div><h2>Bottle caps: ${career.caps}</h2><div class="muted">Use caps to open a can right away (1 cap for every 10 minutes left) or to buy a life. You find them in cans, and every 4-bagger is worth 3.</div><button class="btn green" id="capStore">GET MORE CAPS</button>`);
-  $("capStore").onclick = () => { $("livesSheet").hidden = true; shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; };
-};
+$("coinsBtn").onclick = e => showExact(e.currentTarget, career.coins, "coins");
+$("shopCoinsBtn").onclick = e => showExact(e.currentTarget, career.coins, "coins");
+$("shopCapsBtn").onclick = e => showExact(e.currentTarget, career.caps, "bottle caps");
+$("capsBtn").onclick = e => showExact(e.currentTarget, career.caps, "bottle caps");
 const LIFE_CAPS = 15;
 
 // Tapping a can: open it if it's ready, start it if nothing else is opening, or show how long is left.
