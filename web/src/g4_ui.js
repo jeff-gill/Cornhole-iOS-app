@@ -620,6 +620,20 @@ $("helpBtn").onclick = () => { $("helpSheet").hidden = false; };
 $("menuHelp").onclick = () => { $("helpSheet").hidden = false; };
 $("helpClose").onclick = () => { $("helpSheet").hidden = true; };
 
+// Popups close when you tap outside them (on the dimmed background), the same as their DONE button.
+// The clubhouse, can opening, matchmaking and between-innings screens keep their own taps.
+for (const [id, close] of [
+  ["livesSheet", () => { $("livesSheet").hidden = true; }],
+  ["avatarSheet", () => { $("avatarSheet").hidden = true; }],
+  ["shop", () => $("shopClose").click()],
+  ["helpSheet", () => $("helpClose").click()],
+  ["pause", () => $("resumeBtn").click()],
+]) {
+  const el = $(id); let downOnBackdrop = false;
+  el.addEventListener("pointerdown", e => { downOnBackdrop = e.target === el; });
+  el.addEventListener("click", e => { if (e.target === el && downOnBackdrop) close(); downOnBackdrop = false; });
+}
+
 // ───────────────────────── Loop
 let lastT = 0;
 function frame(now) {
