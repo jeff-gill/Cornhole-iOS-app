@@ -211,6 +211,35 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .item .btn { font-size: 15px; padding: 9px 12px; min-width: 86px; }
 .big3 { font-family: var(--font-display); font-size: 46px; font-weight: 400; text-align: center; line-height: 1; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
 .rewards { display: flex; justify-content: center; gap: 10px; }
+/* Between-innings scorecard */
+#inningSheet { touch-action: none; }
+.card-wrap { max-height: 46vh; overflow-y: auto; border-radius: 16px; background: rgba(0,0,0,.25); border: 2px solid rgba(255,255,255,.15); }
+.scorecard { width: 100%; border-collapse: collapse; text-align: center; font-variant-numeric: tabular-nums; }
+.scorecard th { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); padding: 6px 2px 4px; position: sticky; top: 0; background: #16284a; }
+.scorecard thead tr:first-child th { top: 0; }
+.scorecard thead tr:nth-child(2) th { top: 30px; }
+.scorecard tr.names th { font-family: var(--font-display); font-size: 17px; font-weight: 400; letter-spacing: .01em; text-transform: none; padding-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.scorecard td { padding: 5px 2px; font-size: 16px; font-weight: 900; border-top: 1px solid rgba(255,255,255,.08); }
+.scorecard td.io { position: relative; width: 52px; height: 46px; padding: 0; }
+.scorecard td.io::before { content: ""; position: absolute; inset: 6px 10px; pointer-events: none;
+  background: linear-gradient(to bottom right, transparent calc(50% - 1px), rgba(255,255,255,.4) calc(50% - 1px), rgba(255,255,255,.4) calc(50% + 1px), transparent calc(50% + 1px)); }
+.scorecard td.io .in { position: absolute; left: 9px; top: 4px; font-size: 17px; }
+.scorecard td.io .on { position: absolute; right: 9px; bottom: 4px; font-size: 17px; opacity: .85; }
+.scorecard td.sc { font-family: var(--font-display); font-size: 20px; font-weight: 400; }
+.scorecard td.mid { width: 34%; }
+.scorecard td.mid small { display: block; font-size: 9px; letter-spacing: .1em; color: var(--ink-dim); }
+.scorecard .pts { display: inline-block; min-width: 54px; padding: 2px 10px; border-radius: 999px; font-family: var(--font-display); font-size: 18px; font-weight: 400;
+  color: #12203a; background: var(--c); box-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.scorecard .pts.wash { background: rgba(255,255,255,.15); color: var(--ink-dim); box-shadow: none; }
+.scorecard tr.last td { background: rgba(255,255,255,.08); }
+.scorecard tr.last .pts { animation: ptspop .5s cubic-bezier(.3,1.8,.5,1); }
+@keyframes ptspop { from { transform: scale(.4); } to { transform: scale(1); } }
+.totals { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; background: rgba(0,0,0,.3); border: 2px solid rgba(255,255,255,.2); border-radius: 16px; padding: 4px 14px; }
+.totals b { font-family: var(--font-display); font-size: 40px; font-weight: 400; text-align: center; text-shadow: 0 3px 0 rgba(0,0,0,.3); font-variant-numeric: tabular-nums; }
+.totals small { font-size: 10px; letter-spacing: .1em; color: var(--ink-dim); text-align: center; line-height: 1.3; }
+.swipehint { border: 0; background: none; color: var(--ink-dim); font-weight: 900; font-size: 14px; letter-spacing: .04em; padding: 6px; }
+.swipehint span { display: inline-block; animation: bob 1.2s ease-in-out infinite; color: var(--gold); font-size: 18px; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 /* First-match coach */
 #coach { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(92%, 420px); pointer-events: none; text-align: center;
   font-size: 16px; font-weight: 900; line-height: 1.3; padding: 10px 14px; border-radius: 18px; background: rgba(10,20,38,.88); border: 3px solid var(--gold);
@@ -781,7 +810,7 @@ const S = {
   world: new World(), scores: [0, 0], inning: 1, thrown: [0, 0], player: 0, leader: 0, phase: "hub",
   landing: null, end: null, landD: null, landPhi: 0, plan: null, ideal: null, prev: null,
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, overdrive: false, lastId: null, cpuT: 0, cpuPlan: null,
-  saved: {}, settleT: 0, acc: 0, push: null, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
+  saved: {}, settleT: 0, acc: 0, push: null, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null, history: [],
   pull: { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 }, planVersion: 0, wind: { mph: 0, dir: 0 }, fourBagger: [false, false],
   result: null, introT: 0, tut: { dragged: false, thrown: false },
 };
@@ -850,7 +879,7 @@ function startMatch(kind, vi) {
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
-  S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
+  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub");
@@ -970,6 +999,7 @@ function inningResult() {
 function finishInning() {
   const r = inningResult(); S.lastInning = r;
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
+  S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
   if (S.scores[best] >= 21) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
@@ -2004,16 +2034,39 @@ function renderCoach() {
   if (text && el.innerHTML !== text) el.innerHTML = text;
   if (text) $("hint").hidden = true;
 }
+// Between innings: a scorecard of every inning so far. Names on the outside, each player's bags in / on / inning
+// score beside their name, and the points that actually counted (after cancellation) in the middle.
+const ROW_COLORS = ["#ffc93a", "#3ee07a", "#ff8a1f", "#a24bff", "#00c2d1", "#ff2e88", "#7ab4ff", "#c7f03a"];
+function scorecardHTML() {
+  const L = COL.pl[0], R = COL.pl[1];
+  const rows = S.history.map((h, k) => {
+    const last = k === S.history.length - 1, c = ROW_COLORS[k % ROW_COLORS.length];
+    const mid = h.winner === null ? `<span class="pts wash" style="--c:${c}">·</span>`
+      : `<span class="pts" style="--c:${c}">${h.winner === 0 ? "◀ " : ""}+${h.awarded}${h.winner === 1 ? " ▶" : ""}</span>`;
+    const io = (p, col) => `<td class="io" style="color:${col}"><span class="in">${h.hole[p]}</span><span class="on">${h.on[p]}</span></td>`;
+    return `<tr class="${last ? "last" : ""}">
+      ${io(0, L)}<td class="sc" style="color:${L}">${h.raw[0]}</td>
+      <td class="mid"><small>${h.inning}</small>${mid}</td>
+      <td class="sc" style="color:${R}">${h.raw[1]}</td>${io(1, R)}</tr>`;
+  }).join("");
+  return `<div class="card-wrap"><table class="scorecard">
+    <thead>
+      <tr class="names"><th colspan="2" style="color:${L}">${esc(S.names[0])}</th><th></th><th colspan="2" style="color:${R}">${esc(S.names[1])}</th></tr>
+      <tr><th>In/On</th><th>Inn.</th><th>Points</th><th>Inn.</th><th>In/On</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table></div>
+  <div class="totals"><b style="color:${L}">${S.scores[0]}</b><small>GAME<br>to 21</small><b style="color:${R}">${S.scores[1]}</b></div>`;
+}
 function renderInningSheet() {
   const sheet = $("inningSheet");
   if (!((S.phase === "inning" || S.phase === "over") && S.lastInning)) { sheet.hidden = true; return; }
   const r = S.lastInning;
-  const col = p => `<div class="col" style="background:linear-gradient(${COL.pl[p]}, ${COL.p[p]} 55%, ${COL.pd[p]})"><div class="who" style="font-size:18px">${esc(S.names[p])}</div><div class="big2">${r.raw[p]}</div><small>${r.hole[p]} in · ${r.on[p]} on</small></div>`;
-  const line = r.winner === null ? `${r.raw[0]} − ${r.raw[1]} cancels out. No points this inning.`
-    : `${r.raw[r.winner]} − ${r.raw[1 - r.winner]} → ${esc(S.names[r.winner])} ${S.names[r.winner] === "You" ? "score" : "scores"} ${r.awarded}`;
+  const line = r.winner === null ? `${r.raw[0]} − ${r.raw[1]} cancels out: no points`
+    : `${r.raw[r.winner]} − ${r.raw[1 - r.winner]} = ${esc(S.names[r.winner])} +${r.awarded}`;
   let body;
   if (S.phase === "over") {
-    const res = S.result, youWon = S.kind === "career" ? res.won : true;
+    const res = S.result;
     const head = S.kind === "career" ? (res.won ? `<div class="big3" style="color:${COL.gold}">YOU WIN!</div>` : `<div class="big3">YOU LOSE</div>`)
       : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`;
     const rewards = S.kind === "career" ? `<div class="rewards">
@@ -2021,19 +2074,52 @@ function renderInningSheet() {
         <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${res.coins}</b></div></div>
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee;
-    body = `${head}<div class="center muted">Final: ${esc(S.names[0])} ${S.scores[0]} – ${S.scores[1]} ${esc(S.names[1])}</div>${rewards}
+    body = `${head}${scorecardHTML()}${rewards}
       <button class="btn go green" id="againBtn" ${canAgain ? "" : "disabled"}>${canAgain ? "PLAY AGAIN" + (fee ? ` · 🪙 ${fee.toLocaleString()}` : "") : "NOT ENOUGH COINS"}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
-    void youWon;
   } else {
-    body = `<h2>Inning ${S.inning}</h2><div class="cols">${col(0)}${col(1)}</div><div class="center" style="font-size:17px">${line}</div>
-      <div class="center muted">Game: ${esc(S.names[0])} ${S.scores[0]}, ${esc(S.names[1])} ${S.scores[1]}</div>
-      <button class="btn go green" id="nextBtn">NEXT INNING</button>`;
+    body = `<h2>After inning ${S.inning}</h2>${scorecardHTML()}<div class="center" style="font-size:16px">${line}</div>
+      <button class="swipehint" id="nextBtn">Swipe away for inning ${S.inning + 1} <span>⇡</span></button>`;
   }
   $("inningBody").innerHTML = body;
-  $("nextBtn").onclick = () => { sheet.hidden = true; if (S.phase === "over") openHub(); else nextInning(); };
+  const wrap = $("inningBody").querySelector(".card-wrap");
+  if (wrap) wrap.scrollTop = wrap.scrollHeight; // newest inning in view
+  $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => { sheet.hidden = true; const k = S.kind, v = S.venue; openHub(); startMatch(k, v); };
+  const body0 = $("inningBody");
+  body0.style.transition = "none"; body0.style.transform = ""; body0.style.opacity = "";
   sheet.hidden = false;
+}
+// The between-innings scorecard stays up until it's swiped away (any direction).
+function dismissScorecard(dx, dy) {
+  const el = $("inningBody"), sheet = $("inningSheet");
+  const len = Math.hypot(dx, dy) || 1;
+  el.style.transition = "transform .28s ease-in, opacity .28s ease-in";
+  el.style.transform = `translate(${dx / len * 700}px, ${dy / len * 900}px) rotate(${dx / len * 10}deg)`;
+  el.style.opacity = "0";
+  setTimeout(() => { sheet.hidden = true; el.style.transition = "none"; el.style.transform = ""; el.style.opacity = ""; nextInning(); }, 260);
+}
+{
+  let start = null;
+  const sheet = $("inningSheet"), el = $("inningBody");
+  sheet.addEventListener("pointerdown", e => {
+    if (S.phase !== "inning" || e.target.closest("button")) return;
+    start = { x: e.clientX, y: e.clientY }; el.style.transition = "none";
+  });
+  sheet.addEventListener("pointermove", e => {
+    if (!start) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    el.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx * 0.02}deg)`;
+    el.style.opacity = String(Math.max(0.3, 1 - Math.hypot(dx, dy) / 500));
+  });
+  const end = e => {
+    if (!start) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y; start = null;
+    if (Math.hypot(dx, dy) > 70) dismissScorecard(dx, dy);
+    else { el.style.transition = "transform .2s, opacity .2s"; el.style.transform = ""; el.style.opacity = ""; }
+  };
+  sheet.addEventListener("pointerup", end);
+  sheet.addEventListener("pointercancel", end);
 }
 
 // ───────────────────────── Clubhouse (career hub) and shop

@@ -84,7 +84,7 @@ const S = {
   world: new World(), scores: [0, 0], inning: 1, thrown: [0, 0], player: 0, leader: 0, phase: "hub",
   landing: null, end: null, landD: null, landPhi: 0, plan: null, ideal: null, prev: null,
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, overdrive: false, lastId: null, cpuT: 0, cpuPlan: null,
-  saved: {}, settleT: 0, acc: 0, push: null, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
+  saved: {}, settleT: 0, acc: 0, push: null, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null, history: [],
   pull: { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 }, planVersion: 0, wind: { mph: 0, dir: 0 }, fourBagger: [false, false],
   result: null, introT: 0, tut: { dragged: false, thrown: false },
 };
@@ -153,7 +153,7 @@ function startMatch(kind, vi) {
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
-  S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
+  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub");
@@ -273,6 +273,7 @@ function inningResult() {
 function finishInning() {
   const r = inningResult(); S.lastInning = r;
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
+  S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
   if (S.scores[best] >= 21) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
