@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420">
+<rect width="900" height="420" fill="#12203a"/>
+<defs><radialGradient id="ge8392b" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset=".25" stop-color="#e8392b"/><stop offset="1" stop-color="#a01810"/></radialGradient><radialGradient id="gffd23a" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset=".25" stop-color="#ffd23a"/><stop offset="1" stop-color="#c88a00"/></radialGradient><radialGradient id="g2f86ff" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset=".25" stop-color="#2f86ff"/><stop offset="1" stop-color="#14408a"/></radialGradient></defs>
+<polygon points="150.0,60.0 164.4,74.3 182.4,64.9 192.0,82.8 212.0,79.1 215.8,99.0 236.0,101.4 233.8,121.6 252.4,129.8 244.4,148.5 259.7,161.8 246.5,177.2 257.2,194.5 240.1,205.4 245.3,225.0 225.7,230.4 224.8,250.6 204.5,250.0 197.7,269.1 178.5,262.5 166.4,278.8 150.0,266.8 133.6,278.8 121.5,262.5 102.3,269.1 95.5,250.0 75.2,250.6 74.3,230.4 54.7,225.0 59.9,205.4 42.8,194.5 53.5,177.2 40.3,161.8 55.6,148.5 47.6,129.8 66.2,121.6 64.0,101.4 84.2,99.0 88.0,79.1 108.0,82.8 117.6,64.9 135.6,74.3" fill="#c8ccd4" stroke="#00000033" stroke-width="2"/>
+  <circle cx="150" cy="170" r="88.0" fill="url(#ge8392b)"/>
+  <circle cx="150" cy="170" r="88.0" fill="none" stroke="#00000030" stroke-width="3"/>
+  <circle cx="150" cy="170" r="68.2" fill="none" stroke="#ffffff55" stroke-width="2"/>
+  <text x="150" y="194.2" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="68" fill="#fff3c0">★</text>
+  <ellipse cx="119.2" cy="132.6" rx="33.0" ry="15.4" fill="#ffffff70" transform="rotate(-30 119.2 132.6)"/>
+<polygon points="450.0,60.0 464.4,74.3 482.4,64.9 492.0,82.8 512.0,79.1 515.8,99.0 536.0,101.4 533.8,121.6 552.4,129.8 544.4,148.5 559.7,161.8 546.5,177.2 557.2,194.5 540.1,205.4 545.3,225.0 525.7,230.4 524.8,250.6 504.5,250.0 497.7,269.1 478.5,262.5 466.4,278.8 450.0,266.8 433.6,278.8 421.5,262.5 402.3,269.1 395.5,250.0 375.2,250.6 374.3,230.4 354.7,225.0 359.9,205.4 342.8,194.5 353.5,177.2 340.3,161.8 355.6,148.5 347.6,129.8 366.2,121.6 364.0,101.4 384.2,99.0 388.0,79.1 408.0,82.8 417.6,64.9 435.6,74.3" fill="#b88a20" stroke="#00000033" stroke-width="2"/>
+  <circle cx="450" cy="170" r="88.0" fill="url(#gffd23a)"/>
+  <circle cx="450" cy="170" r="88.0" fill="none" stroke="#00000030" stroke-width="3"/>
+  <circle cx="450" cy="170" r="68.2" fill="none" stroke="#ffffff55" stroke-width="2"/>
+  <text x="450" y="194.2" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="68" fill="#7a4a00">C</text>
+  <ellipse cx="419.2" cy="132.6" rx="33.0" ry="15.4" fill="#ffffff70" transform="rotate(-30 419.2 132.6)"/>
+<polygon points="750.0,60.0 764.4,74.3 782.4,64.9 792.0,82.8 812.0,79.1 815.8,99.0 836.0,101.4 833.8,121.6 852.4,129.8 844.4,148.5 859.7,161.8 846.5,177.2 857.2,194.5 840.1,205.4 845.3,225.0 825.7,230.4 824.8,250.6 804.5,250.0 797.7,269.1 778.5,262.5 766.4,278.8 750.0,266.8 733.6,278.8 721.5,262.5 702.3,269.1 695.5,250.0 675.2,250.6 674.3,230.4 654.7,225.0 659.9,205.4 642.8,194.5 653.5,177.2 640.3,161.8 655.6,148.5 647.6,129.8 666.2,121.6 664.0,101.4 684.2,99.0 688.0,79.1 708.0,82.8 717.6,64.9 735.6,74.3" fill="#c8ccd4" stroke="#00000033" stroke-width="2"/>
+  <circle cx="750" cy="170" r="88.0" fill="url(#g2f86ff)"/>
+  <circle cx="750" cy="170" r="88.0" fill="none" stroke="#00000030" stroke-width="3"/>
+  <circle cx="750" cy="170" r="68.2" fill="none" stroke="#ffffff55" stroke-width="2"/>
+  <text x="750" y="194.2" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-weight="900" font-size="68" fill="#ffffff">★</text>
+  <ellipse cx="719.2" cy="132.6" rx="33.0" ry="15.4" fill="#ffffff70" transform="rotate(-30 719.2 132.6)"/>
+<g font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff" text-anchor="middle">
+<text x="150" y="340">A: red with a star</text><text x="450" y="340">B: gold with a "C"</text><text x="750" y="340">C: blue with a star</text>
+</g>
+<g font-family="Arial, sans-serif" font-size="20" fill="#aab4c8" text-anchor="middle">
+<text x="150" y="372">classic soda cap</text><text x="450" y="372">C for Cornhole</text><text x="750" y="372">stands out next to the gold coin</text>
+</g></svg>
