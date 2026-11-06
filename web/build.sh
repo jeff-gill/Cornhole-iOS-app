@@ -26,7 +26,7 @@ body() { # $1 = import map JSON
 }
 
 CDN_MAP='{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}'
-APP_MAP='{"imports":{"three":"./three.module.min.js","three/addons/geometries/RoundedBoxGeometry.js":"./RoundedBoxGeometry.js"}}'
+APP_MAP='{"imports":{"three":"./three.module.min.js","three/addons/":"./"}}'
 HEAD='<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">\n<meta name="apple-mobile-web-app-capable" content="yes">\n'
 
 # Web page (fragment form is what gets published as the artifact; index.html wraps it).
@@ -50,6 +50,9 @@ mkdir -p Cornhole/Web
   printf '\n</body>\n</html>\n'
 } > Cornhole/Web/index.html
 cp web/vendor/three.module.min.js web/vendor/RoundedBoxGeometry.js web/vendor/*.woff2 Cornhole/Web/
+# three.js add-ons (loaders, glow) and the Poly Haven assets, copied flat: the app serves files by name.
+cp web/vendor/addons/*/*.js Cornhole/Web/
+find web/assets -type f ! -name '*.md' -exec cp {} Cornhole/Web/ \;
 cat web/vendor/three-LICENSE.txt > Cornhole/Web/third-party-licenses.txt
 printf '\n\n---- Lilita One ----\n' >> Cornhole/Web/third-party-licenses.txt; cat web/vendor/lilita-one-OFL.txt >> Cornhole/Web/third-party-licenses.txt
 printf '\n\n---- Nunito ----\n' >> Cornhole/Web/third-party-licenses.txt; cat web/vendor/nunito-OFL.txt >> Cornhole/Web/third-party-licenses.txt

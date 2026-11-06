@@ -17,7 +17,7 @@ function renderHubExtras() {
       const k = canById(c.id), st = canState(c);
       b.className = `cslot full ${st}`;
       b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "tap to start opening"}`);
-      b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : durText(openMs(c.id))}</small>`;
+      b.innerHTML = `<span class="cname">${k.name}</span><span class="crow"><i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : durText(openMs(c.id))}</small></span>`;
       b.onclick = () => canTapped(i);
     } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
     cooler.appendChild(b);

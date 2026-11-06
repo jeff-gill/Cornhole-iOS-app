@@ -1,5 +1,11 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 // ───────────────────────── Helpers
 const $ = id => document.getElementById(id);
@@ -269,7 +275,7 @@ function windAccel() {
 }
 // online (optional): { seed, flip, lead, name, bag, trail, effect } agreed with the live opponent; flip and lead are
 // already from this phone's point of view (you are always player 0 on your own phone).
-function startMatch(kind, vi, online = null) {
+function startMatch(kind, vi, online = null, pick = null) {
   const v = VENUES[vi];
   S.online = null;
   if (kind === "career") {
@@ -283,7 +289,7 @@ function startMatch(kind, vi, online = null) {
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
       const [hi, lo] = v.cpu, skill = rand(lo, hi);
-      S.opponent = { avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
     }
     S.names = ["You", S.opponent.name];

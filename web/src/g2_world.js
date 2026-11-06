@@ -4,7 +4,7 @@ const canvas = $("gl"), stage = $("stage");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.VSMShadowMap; // soft-edged shadows (blur set by sun.shadow.radius)
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 const maxAniso = renderer.capabilities.getMaxAnisotropy();
@@ -21,10 +21,19 @@ function canvasTex(w, h, paint, repeat) {
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xf2cfa0, 90, 260);
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 700);
+// Glow: a soft bloom over bright things (string lights, fire, effects), then tone mapping.
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.32, 0.55, 0.92);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+let glowOn = true;
+function renderScene() { if (glowOn) composer.render(); else renderer.render(scene, camera); }
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
   if (!w || !h) return;
   renderer.setSize(w, h, false);
+  composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); bloom.setSize(w / 2, h / 2);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
@@ -34,7 +43,7 @@ const skyU = {
   top: { value: new THREE.Vector3() }, mid: { value: new THREE.Vector3() }, horizon: { value: new THREE.Vector3() },
   sunDir: { value: new THREE.Vector3(-0.55, 0.32, 0.2).normalize() }, sunGlow: { value: 1 }, night: { value: 0 },
 };
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.ShaderMaterial({
+const skyMesh = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.ShaderMaterial({
   side: THREE.BackSide, depthWrite: false, fog: false, uniforms: skyU,
   vertexShader: "varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
   fragmentShader: `varying vec3 vDir; uniform vec3 top, mid, horizon, sunDir; uniform float sunGlow, night;
@@ -48,16 +57,17 @@ scene.add(new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.Shader
       if (night > 0.5) { vec3 q = floor(vDir * 260.0); float st = step(0.9975, hash(q)) * smoothstep(0.05, 0.4, h); col += vec3(st); }
       gl_FragColor = vec4(col, 1.0);
     }`,
-})));
+}));
+scene.add(skyMesh);
 const hemi = new THREE.HemisphereLight(0xd6ecff, 0x557a2c, 1.25);
 const sun = new THREE.DirectionalLight(0xffe3b8, 2.9);
 sun.target.position.set(0, 0, -27);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 120 });
+Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 140 });
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.02;
-sun.shadow.radius = 3;
+sun.shadow.radius = 7; sun.shadow.blurSamples = 16;
 scene.add(hemi, sun, sun.target);
 
 // ───────────────────────── Venue scenery
@@ -516,6 +526,68 @@ function dock(g, x, z, len, rotY) {
   d.position.set(x, 0, z); d.rotation.y = rotY; g.add(d);
 }
 
+// ───────────────────────── Photo-real assets (Poly Haven, CC0): sky lighting, photo textures and 3D models.
+// Files live in web/assets/polyhaven/ (packed to .json/.jpg by web/tools/pack_assets.py; copied flat into the iPhone app). Anything that fails to load just
+// leaves the simpler built-in look in place.
+const ASSETS = "assets/polyhaven/", FT = 3.2808; // models are in metres; the court is in feet
+const gltfLoader = new GLTFLoader(), modelCache = new Map(), texLoader = new THREE.TextureLoader();
+function loadModel(name) {
+  if (!modelCache.has(name)) modelCache.set(name, gltfLoader.loadAsync(`${ASSETS}${name}/${name}_1k.json`).then(g => {
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return g.scene;
+  }).catch(() => null));
+  return modelCache.get(name);
+}
+// Drop a model into venue group g once it has loaded (skipped if the venue changed meanwhile).
+function placeModel(g, name, x, z, rotY = 0, scale = 1) {
+  loadModel(name).then(src => {
+    if (!src || venueGroup !== g) return;
+    const m = src.clone(); m.position.set(x, 0, z); m.rotation.y = rotY; m.scale.setScalar(FT * scale); g.add(m);
+  });
+}
+// A photo material: colour, normal and roughness maps, tiled `rx` by `ry` times. It starts as a plain colour and
+// swaps in the photo maps once they've all loaded, so a missing file never leaves a black surface.
+function photoMat(name, rx, ry, extra = {}) {
+  const m = new THREE.MeshStandardMaterial({ color: extra.fallback ?? 0x888888, roughness: 0.95 });
+  const load = k => texLoader.loadAsync(`${ASSETS}tex/${name}_${k}_1k.jpg`).then(tx => {
+    tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(rx, ry); tx.anisotropy = maxAniso;
+    if (extra.rotate) { tx.center.set(0.5, 0.5); tx.rotation = extra.rotate; }
+    return tx;
+  });
+  Promise.all([load("diff"), load("nor"), load("rough")]).then(([map, nor, rough]) => {
+    map.colorSpace = THREE.SRGBColorSpace;
+    Object.assign(m, { map, normalMap: nor, roughnessMap: rough, roughness: 1 });
+    m.color.set(extra.tint ?? 0xffffff); m.normalScale.set(extra.bump ?? 1, extra.bump ?? 1); m.needsUpdate = true;
+    if (extra.onReady) extra.onReady(m);
+  }).catch(() => { /* keep the plain colour */ });
+  return m;
+}
+// Real sky: an HDR photo of the sky lights the scene (reflections, soft fill) and is the backdrop.
+let skyPromise = null;
+function loadSky(file) {
+  // The HDR file is stored base64 in a .json (web hosts serve that); decode it back to bytes for the loader.
+  const hdrUrl = fetch(`${ASSETS}${file}.json`).then(r => r.json()).then(j => {
+    const bin = atob(j.b64), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes]));
+  });
+  return (skyPromise ||= hdrUrl.then(url => new RGBELoader().loadAsync(url)).then(t => {
+    t.mapping = THREE.EquirectangularReflectionMapping;
+    const pm = new THREE.PMREMGenerator(renderer), env = pm.fromEquirectangular(t).texture; pm.dispose();
+    return { bg: t, env };
+  }).catch(() => null));
+}
+function clearPhotoSky() { scene.environment = null; scene.background = null; skyMesh.visible = true; }
+function plankFence(g) {
+  const post = std(0x4a3420, { roughness: 0.9 });
+  const wall = (len, x, z, rot) => {
+    const m = photoMat("weathered_brown_planks", 1, len / 5, { rotate: Math.PI / 2, fallback: 0x8a6a4a }); // boards run up and down
+    const w = new THREE.Mesh(new THREE.BoxGeometry(len, 5.4, 0.3), m); w.position.set(x, 2.7, z); w.rotation.y = rot; w.castShadow = w.receiveShadow = true; g.add(w);
+    for (let k = 0; k <= len; k += 8) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.45, 6, 0.45), post); p.position.set(x + Math.cos(rot) * (k - len / 2), 3, z - Math.sin(rot) * (k - len / 2)); p.castShadow = true; g.add(p); }
+  };
+  wall(52, 0, -46, 0); wall(56, -26, -18, Math.PI / 2); wall(56, 26, -18, Math.PI / 2);
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -546,7 +618,7 @@ function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose()
 function buildVenue(id) {
   if (id === venueId) return;
   if (venueGroup) { scene.remove(venueGroup); disposeTree(venueGroup); }
-  venueId = id; glowSprites = []; venueAnim = [];
+  venueId = id; glowSprites = []; venueAnim = []; clearPhotoSky();
   const g = new THREE.Group(), L = VENUE_LOOK[id];
   skyU.top.value.set(...L.top); skyU.mid.value.set(...L.mid); skyU.horizon.value.set(...L.horizon); skyU.sunGlow.value = L.sunGlow; skyU.night.value = L.night;
   scene.fog.color.setHex(L.fog[0]); scene.fog.near = L.fog[1]; scene.fog.far = L.fog[2];
@@ -556,15 +628,26 @@ function buildVenue(id) {
   renderer.toneMappingExposure = L.exposure; venueDust = L.dust;
 
   if (id === "backyard") {
-    setGround(g, "grass", 6);
+    // Photo-real backyard: real sky light, a photo lawn and plank fence, and scanned chairs, table and shrubs.
+    const lawn = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), photoMat("sparse_grass", 520 / 9, 520 / 9, { tint: 0xb4ff6a, bump: 0.8, fallback: 0x5fae3e }));
+    lawn.rotation.x = -Math.PI / 2; lawn.position.z = -30; lawn.receiveShadow = true; g.add(lawn);
     trees(g, 21, [0x3f9a3c, 0x2f8a46, 0x58b043, 0x2b7a3a, 0x6cbf4a], { front: 62 });
     house(g, 4, 40, Math.PI, 0xf2e6d0, 0x4a5a6a); // the house behind you
-    picnicTable(g, -14, 14, 0.3);
-    fence(g, 33);
+    plankFence(g);
     stringLights(g, [[-9, -38], [9, -38], [-9, -14], [9, -14]], [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]], [[-9, -14], [9, -26]], [[9, -14], [-9, -26]]]);
     cooler(g, 5, -22, 0.4);
-    chair(g, -7.5, -36, 0.35, 0x2f86ff); // set back from the board, facing the players
-    chair(g, 7.8, -37, -0.35, 0xff4b3a);
+    placeModel(g, "plastic_monobloc_chair_01", -7.5, -36, 0.35); // set back from the board, facing the players
+    placeModel(g, "plastic_monobloc_chair_01", 7.8, -37, -0.35);
+    placeModel(g, "wooden_picnic_table", -15, 14, 0.3 + Math.PI / 2);
+    const r = rng(77);
+    for (let x = -22; x <= 22; x += 5.5 + r() * 2) placeModel(g, r() < 0.5 ? "shrub_02" : "shrub_04", x, -43.5 - r(), r() * 6, 0.9 + r() * 0.5);
+    for (let z = -38; z <= 4; z += 7 + r() * 3) for (const sx of [-1, 1]) placeModel(g, r() < 0.5 ? "shrub_02" : "shrub_04", sx * (23.5 - r()), z, r() * 6, 0.8 + r() * 0.5);
+    placeModel(g, "planter_box_01", -9, 34, 0); placeModel(g, "planter_box_01", 17, 34, 0);
+    loadSky("garden_nook_2k.hdr").then(sky => {
+      if (!sky || venueId !== "backyard") return;
+      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
+      hemi.intensity = 0.95; renderer.toneMappingExposure = 1.4; scene.fog.near = 140; scene.fog.far = 420;
+    });
   } else if (id === "tailgate") {
     setGround(g, "asphalt", 18);
     trees(g, 5, [0x3c7a3a, 0x4c8a3a], { back: -150, sides: false });

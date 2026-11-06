@@ -8,29 +8,66 @@ const netSend = obj => postNative("net", JSON.stringify({ op: "send", data: JSON
 let search = null; // { vi, t, host, name, hello, setup }
 const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutorialDone;
 
+// Throwdown brackets: players meet only others at the same court who have opened the same highest court, so a
+// player who has reached the Stadium never meets a beginner, even back at the Backyard.
+const bracket = vi => (vi + 1) * 100 + VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
+const randomPick = () => ({ name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id });
 function playCourt(vi) {
   tickLives(); if (career.lives <= 0) { openLives(); return; }
-  if (!canGoOnline()) { startMatch("career", vi); return; }
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
-  search = { vi, t: 0 };
-  postNative("net", JSON.stringify({ op: "find", group: vi + 1 }));
+  const online = canGoOnline();
+  search = { vi, t: 0, online, limit: online ? SEARCH_TIME : 2 + Math.random() * 1.5, reel: buildReel() };
+  if (online) postNative("net", JSON.stringify({ op: "find", group: bracket(vi) }));
   renderSearch();
 }
+// No live opponent: land the reel on a CPU opponent, then play.
 function cancelSearch(playCPU) {
   if (!search) return;
-  const vi = search.vi; search = null;
-  postNative("net", JSON.stringify({ op: "cancel" }));
-  $("searching").hidden = true;
-  if (playCPU) startMatch("career", vi);
+  if (search.online) postNative("net", JSON.stringify({ op: "cancel" }));
+  search.online = false;
+  if (!playCPU) { search = null; $("searching").hidden = true; return; }
+  const pick = randomPick(), vi = search.vi;
+  settleReel(pick, () => { search = null; $("searching").hidden = true; startMatch("career", vi, null, pick); });
+}
+// ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).
+const ROW = 68; // one reel row = the window's inner height
+function buildReel() {
+  const reel = $("oppReel"); reel.innerHTML = "";
+  const rows = Array.from({ length: 40 }, randomPick);
+  for (const r of rows) reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(r.avatar)}<span>${esc(r.name)}</span></div>`);
+  $("oppSpin").classList.remove("done"); $("oppSpin").hidden = false; $("searchSpin").hidden = true;
+  return { pos: 0, speed: 1400, rows: rows.length };
+}
+function settleReel(pick, done) {
+  const R = search && search.reel; if (!R || R.settle) return;
+  const reel = $("oppReel"), at = Math.ceil(R.pos / ROW) + 8; // land a few rows ahead
+  while (reel.children.length <= at) reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(randomPick().avatar)}<span>${esc(randomPick().name)}</span></div>`);
+  reel.children[at].innerHTML = `${avatarHTML(pick.avatar)}<span>${esc(pick.name)}</span>`;
+  R.settle = { from: R.pos, to: at * ROW, t: 0, dur: 1.6, done };
+}
+function updateReel(dt) {
+  const R = search && search.reel; if (!R) return;
+  if (R.settle) {
+    const S2 = R.settle; S2.t += dt;
+    const k = Math.min(1, S2.t / S2.dur), e = 1 - Math.pow(1 - k, 3); // ease out
+    R.pos = S2.from + (S2.to - S2.from) * e;
+    if (k >= 1 && !S2.landed) { S2.landed = true; $("oppSpin").classList.add("done"); sfx.thud(); haptic("thud"); setTimeout(S2.done, 900); }
+  } else {
+    R.pos += R.speed * dt;
+    const reel = $("oppReel"); // keep the reel long enough
+    if (R.pos > (reel.children.length - 6) * ROW) for (let k = 0; k < 20; k++) { const r = randomPick(); reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(r.avatar)}<span>${esc(r.name)}</span></div>`); }
+  }
+  $("oppReel").style.transform = `translateY(${-R.pos}px)`;
 }
 function renderSearch() {
   const el = $("searching");
   el.hidden = !search;
   if (!search) return;
   const v = VENUES[search.vi];
-  $("searchText").textContent = search.name ? `Throwdown with ${search.name}!` : `Looking for a Throwdown at ${v.name}…`;
-  $("searchSub").textContent = search.name ? "Getting the boards ready" : `${Math.max(0, Math.ceil(SEARCH_TIME - search.t))}s, then you'll play a CPU opponent`;
+  const landing = search.reel && search.reel.settle;
+  $("searchText").textContent = search.name ? `Throwdown with ${search.name}!` : landing ? "Opponent found!" : search.online ? `Looking for a Throwdown at ${v.name}…` : `Finding an opponent at ${v.name}…`;
+  $("searchSub").textContent = search.name ? "Getting the boards ready" : landing ? v.name : search.online ? `${Math.max(0, Math.ceil(search.limit - search.t))}s, then you'll play a CPU opponent` : "";
 }
 // Messages from the iPhone app: matched / left, and the opponent's own messages (already parsed JSON objects).
 window.__net = m => {
@@ -38,6 +75,7 @@ window.__net = m => {
   if (m.t === "matched") {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
+    settleReel({ name: search.name, avatar: "a0" }, () => { if (search) { search.landed = true; tryStartOnline(); } });
     netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
@@ -50,7 +88,7 @@ window.__net = m => {
     search.setup = { seed: m.seed | 0, flip: m.flip === 1 ? -1 : 1, lead: m.lead === 0 ? 1 : 0 };
     tryStartOnline();
   }
-  else if (m.t === "nomatch") { if (search && !search.name) cancelSearch(true); }
+  else if (m.t === "nomatch") { if (search && !search.name && !(search.reel && search.reel.settle)) cancelSearch(true); }
   else if (m.t === "left" || m.t === "quit") opponentLeft();
   else if (m.t === "rematch" && S.online) { S.online.rematch.them = true; tryRematch(); }
   else if (m.t === "resetup" && S.online && !S.online.host) {
@@ -60,7 +98,7 @@ window.__net = m => {
   else if (S.online) S.online.queue.push(m);
 };
 function tryStartOnline() {
-  if (!search || !search.name || !search.hello || !search.setup) return; // messages can arrive in any order
+  if (!search || !search.name || !search.hello || !search.setup || !search.landed) return; // messages can arrive in any order
   const s = search, h = s.hello; search = null;
   $("searching").hidden = true;
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
@@ -104,7 +142,11 @@ function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net
 
 // Per frame: the search countdown, the throw clock, and the opponent's queued messages.
 function updateOnline(dt) {
-  if (search && !search.name) { search.t += dt; if (search.t >= SEARCH_TIME) cancelSearch(true); else renderSearch(); }
+  if (search) {
+    updateReel(dt);
+    if (!search.name && !search.reel.settle) { search.t += dt; if (search.t >= search.limit) cancelSearch(true); }
+    if (search) renderSearch();
+  }
   if (S.clock != null && (S.phase === "aiming" || S.phase === "throw")) {
     const before = Math.ceil(S.clock);
     S.clock -= dt;
@@ -147,4 +189,4 @@ function renderClock() {
   el.hidden = !on;
   if (on) { el.querySelector("b").textContent = Math.max(0, Math.ceil(S.clock)); el.classList.toggle("hurry", S.clock <= 5); }
 }
-$("searchCancel").onclick = () => { if (!search) return; const vi = search.vi; search = null; postNative("net", JSON.stringify({ op: "cancel" })); $("searching").hidden = true; renderHub(); void vi; };
+$("searchCancel").onclick = () => { if (!search) return; if (search.online) postNative("net", JSON.stringify({ op: "cancel" })); search = null; $("searching").hidden = true; renderHub(); };

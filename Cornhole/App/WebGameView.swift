@@ -140,6 +140,9 @@ final class BundleSchemeHandler: NSObject, WKURLSchemeHandler {
         case "json": return "application/json"
         case "woff2": return "font/woff2"
         case "png": return "image/png"
+        case "jpg", "jpeg": return "image/jpeg"
+        case "gltf": return "model/gltf+json"
+        case "bin", "hdr": return "application/octet-stream"
         case "txt": return "text/plain; charset=utf-8"
         default: return "application/octet-stream"
         }

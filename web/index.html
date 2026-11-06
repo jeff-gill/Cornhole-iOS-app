@@ -110,6 +110,11 @@ body.inhub .score, body.inhub #panel { display: none; }
 #clock.hurry { background: linear-gradient(#ff6a5a, #c8102e); animation: pulse .5s ease-in-out infinite alternate; }
 @keyframes pulse { to { transform: scale(1.12); } }
 .searchsheet { display: grid; gap: 12px; justify-items: center; padding: 26px 20px; }
+.oppspin { width: 250px; height: 76px; box-sizing: border-box; overflow: hidden; border-radius: 18px; border: 4px solid #fff; background: linear-gradient(#12203a, #1b2f52); box-shadow: 0 6px 0 rgba(0,0,0,.35), inset 0 10px 14px rgba(0,0,0,.4), inset 0 -10px 14px rgba(0,0,0,.4); }
+.oppreel { will-change: transform; }
+.oppreel div { height: 68px; box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 0 14px; font-family: var(--font-display); font-size: 24px; white-space: nowrap; }
+.oppreel .avatar { width: 48px; height: 48px; font-size: 28px; flex: none; }
+.oppspin.done { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(255,201,58,.5), 0 6px 0 rgba(0,0,0,.35); animation: bump .45s cubic-bezier(.3,2,.5,1); }
 .spinner { width: 54px; height: 54px; border-radius: 50%; border: 6px solid rgba(255,255,255,.2); border-top-color: var(--gold); animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .cpu { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: #4b5a78; font-size: 11px; vertical-align: middle; }
@@ -290,21 +295,25 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 @keyframes splashload { to { width: 100%; } }
 .splashtag { font-weight: 900; color: var(--ink-dim); letter-spacing: .06em; }
 .cooler { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
-.cslot { height: 50px; border-radius: 12px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.45); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 4px; color: #fff; font: 900 12px/1.1 Nunito, system-ui, sans-serif; }
+.cslot { height: 58px; flex-direction: column; gap: 2px; border-radius: 12px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.45); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 4px; color: #fff; font: 900 12px/1.1 Nunito, system-ui, sans-serif; }
 .cslot.full { border: 2px solid rgba(255,255,255,.85); background: rgba(10,20,38,.7); }
 .cslot.ready { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,201,58,.6); animation: canbob 1.4s ease-in-out infinite; }
 .cslot.ticking small { color: #7fd8ff; }
 .cslot small { font-size: 12px; font-variant-numeric: tabular-nums; }
-.cslot .minican { width: 18px; height: 30px; flex: none; }
+.cslot .minican { width: 14px; height: 22px; flex: none; }
+.cslot .cname { font-size: 9.5px; line-height: 1.05; text-align: center; color: rgba(255,255,255,.85); max-width: 100%; overflow: hidden; }
+.cslot .crow { display: flex; align-items: center; gap: 4px; }
 .bcap { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.2em; flex: none; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Cdefs%3E%3CradialGradient%20id%3D%27g%27%20cx%3D%2738%25%27%20cy%3D%2732%25%27%20r%3D%2775%25%27%3E%3Cstop%20offset%3D%270%27%20stop-color%3D%27%23fff%27%20stop-opacity%3D%27.55%27/%3E%3Cstop%20offset%3D%27.25%27%20stop-color%3D%27%23e8392b%27/%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%23a01810%27/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpolygon%20points%3D%2732.0%2C0.0%2036.2%2C4.3%2041.4%2C1.4%2044.1%2C6.8%2050.0%2C5.6%2051.0%2C11.5%2057.0%2C12.0%2056.2%2C18.0%2061.8%2C20.3%2059.3%2C25.8%2063.9%2C29.6%2059.9%2C34.1%2063.2%2C39.1%2058.1%2C42.2%2059.7%2C48.0%2053.9%2C49.5%2053.8%2C55.5%2047.8%2C55.1%2045.9%2C60.8%2040.3%2C58.8%2036.8%2C63.6%2032.0%2C60.0%2027.2%2C63.6%2023.7%2C58.8%2018.1%2C60.8%2016.2%2C55.1%2010.2%2C55.5%2010.1%2C49.5%204.3%2C48.0%205.9%2C42.2%200.8%2C39.1%204.1%2C34.1%200.1%2C29.6%204.7%2C25.8%202.2%2C20.3%207.8%2C18.0%207.0%2C12.0%2013.0%2C11.5%2014.0%2C5.6%2019.9%2C6.8%2022.6%2C1.4%2027.8%2C4.3%27%20fill%3D%27%23c8ccd4%27%20stroke%3D%27%230003%27%20stroke-width%3D%271.2%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%2732%27%20r%3D%2725%27%20fill%3D%27url%28%23g%29%27%20stroke%3D%27%230003%27%20stroke-width%3D%271.5%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%2732%27%20r%3D%2719%27%20fill%3D%27none%27%20stroke%3D%27%23fff5%27%20stroke-width%3D%271.2%27/%3E%3Cpolygon%20points%3D%2732.0%2C22.0%2034.7%2C29.3%2042.5%2C29.6%2036.4%2C34.4%2038.5%2C41.9%2032.0%2C37.6%2025.5%2C41.9%2027.6%2C34.4%2021.5%2C29.6%2029.3%2C29.3%27%20fill%3D%27%23fff3c0%27/%3E%3Cellipse%20cx%3D%2723%27%20cy%3D%2721%27%20rx%3D%279%27%20ry%3D%274%27%20fill%3D%27%23fff7%27%20transform%3D%27rotate%28-30%2023%2021%29%27/%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
 .pill > .bcap { width: 28px; height: 28px; vertical-align: middle; }
 .bcap.big { width: 64px; height: 64px; }
 .cappill { color: #fff; font: inherit; }
 .vcarousel { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
-.vcarousel .venue { width: 80%; margin: 0 auto; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
-.vcarousel .venue.side { position: absolute; top: 0; bottom: 0; opacity: .55; overflow: hidden; padding: 14px 16px; cursor: pointer; }
-.vcarousel .venue.side.prev { left: calc(-70% - 8px); }
-.vcarousel .venue.side.next { left: calc(90% + 8px); }
+.vcarousel .venue { width: 72%; margin: 0 auto; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
+.vcarousel .venue.side { position: absolute; top: 0; bottom: 0; opacity: .5; overflow: hidden; padding: 14px 16px; cursor: pointer; }
+.vcarousel .venue.side h3 { font-size: 22px; }
+.vcarousel .venue .go { margin-top: 10px; width: 100%; font-size: 22px; }
+.vcarousel .venue.side.prev { left: calc(-58% - 18px); text-align: right; }
+.vcarousel .venue.side.next { left: calc(86% + 18px); }
 .vcarousel .venue.side .lvlno, .vcarousel .venue.side h3 { white-space: nowrap; }
 .vcarousel.dragging .venue { transition: none; }
 .vdots { display: flex; justify-content: center; gap: 5px; margin-top: 8px; }
@@ -495,7 +504,6 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
   <div class="hubbottom">
     <div class="cooler" id="cooler"></div>
     <div class="vcarousel" id="venueCard"></div>
-    <button class="btn green go" id="playBtn">PLAY</button>
     <div class="hubrow">
       <button class="btn small" id="shopBtn">SHOP</button>
       <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
@@ -529,7 +537,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 
 <div class="overlay" id="searching" hidden>
   <div class="sheet center searchsheet">
-    <div class="spinner"></div>
+    <div class="spinner" id="searchSpin"></div>
+    <div class="oppspin" id="oppSpin" hidden><div class="oppreel" id="oppReel"></div></div>
     <h2 id="searchText">Looking for a player…</h2>
     <div class="muted" id="searchSub"></div>
     <button class="btn ghost" id="searchCancel">CANCEL</button>
@@ -947,6 +956,12 @@ function gauss(s) { const u = Math.max(1e-9, Math.random()), v = Math.random(); 
 <script type="module">
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 // ───────────────────────── Helpers
 const $ = id => document.getElementById(id);
@@ -1216,7 +1231,7 @@ function windAccel() {
 }
 // online (optional): { seed, flip, lead, name, bag, trail, effect } agreed with the live opponent; flip and lead are
 // already from this phone's point of view (you are always player 0 on your own phone).
-function startMatch(kind, vi, online = null) {
+function startMatch(kind, vi, online = null, pick = null) {
   const v = VENUES[vi];
   S.online = null;
   if (kind === "career") {
@@ -1230,7 +1245,7 @@ function startMatch(kind, vi, online = null) {
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
       const [hi, lo] = v.cpu, skill = rand(lo, hi);
-      S.opponent = { avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
     }
     S.names = ["You", S.opponent.name];
@@ -1596,29 +1611,66 @@ const netSend = obj => postNative("net", JSON.stringify({ op: "send", data: JSON
 let search = null; // { vi, t, host, name, hello, setup }
 const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutorialDone;
 
+// Throwdown brackets: players meet only others at the same court who have opened the same highest court, so a
+// player who has reached the Stadium never meets a beginner, even back at the Backyard.
+const bracket = vi => (vi + 1) * 100 + VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
+const randomPick = () => ({ name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id });
 function playCourt(vi) {
   tickLives(); if (career.lives <= 0) { openLives(); return; }
-  if (!canGoOnline()) { startMatch("career", vi); return; }
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
-  search = { vi, t: 0 };
-  postNative("net", JSON.stringify({ op: "find", group: vi + 1 }));
+  const online = canGoOnline();
+  search = { vi, t: 0, online, limit: online ? SEARCH_TIME : 2 + Math.random() * 1.5, reel: buildReel() };
+  if (online) postNative("net", JSON.stringify({ op: "find", group: bracket(vi) }));
   renderSearch();
 }
+// No live opponent: land the reel on a CPU opponent, then play.
 function cancelSearch(playCPU) {
   if (!search) return;
-  const vi = search.vi; search = null;
-  postNative("net", JSON.stringify({ op: "cancel" }));
-  $("searching").hidden = true;
-  if (playCPU) startMatch("career", vi);
+  if (search.online) postNative("net", JSON.stringify({ op: "cancel" }));
+  search.online = false;
+  if (!playCPU) { search = null; $("searching").hidden = true; return; }
+  const pick = randomPick(), vi = search.vi;
+  settleReel(pick, () => { search = null; $("searching").hidden = true; startMatch("career", vi, null, pick); });
+}
+// ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).
+const ROW = 68; // one reel row = the window's inner height
+function buildReel() {
+  const reel = $("oppReel"); reel.innerHTML = "";
+  const rows = Array.from({ length: 40 }, randomPick);
+  for (const r of rows) reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(r.avatar)}<span>${esc(r.name)}</span></div>`);
+  $("oppSpin").classList.remove("done"); $("oppSpin").hidden = false; $("searchSpin").hidden = true;
+  return { pos: 0, speed: 1400, rows: rows.length };
+}
+function settleReel(pick, done) {
+  const R = search && search.reel; if (!R || R.settle) return;
+  const reel = $("oppReel"), at = Math.ceil(R.pos / ROW) + 8; // land a few rows ahead
+  while (reel.children.length <= at) reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(randomPick().avatar)}<span>${esc(randomPick().name)}</span></div>`);
+  reel.children[at].innerHTML = `${avatarHTML(pick.avatar)}<span>${esc(pick.name)}</span>`;
+  R.settle = { from: R.pos, to: at * ROW, t: 0, dur: 1.6, done };
+}
+function updateReel(dt) {
+  const R = search && search.reel; if (!R) return;
+  if (R.settle) {
+    const S2 = R.settle; S2.t += dt;
+    const k = Math.min(1, S2.t / S2.dur), e = 1 - Math.pow(1 - k, 3); // ease out
+    R.pos = S2.from + (S2.to - S2.from) * e;
+    if (k >= 1 && !S2.landed) { S2.landed = true; $("oppSpin").classList.add("done"); sfx.thud(); haptic("thud"); setTimeout(S2.done, 900); }
+  } else {
+    R.pos += R.speed * dt;
+    const reel = $("oppReel"); // keep the reel long enough
+    if (R.pos > (reel.children.length - 6) * ROW) for (let k = 0; k < 20; k++) { const r = randomPick(); reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(r.avatar)}<span>${esc(r.name)}</span></div>`); }
+  }
+  $("oppReel").style.transform = `translateY(${-R.pos}px)`;
 }
 function renderSearch() {
   const el = $("searching");
   el.hidden = !search;
   if (!search) return;
   const v = VENUES[search.vi];
-  $("searchText").textContent = search.name ? `Throwdown with ${search.name}!` : `Looking for a Throwdown at ${v.name}…`;
-  $("searchSub").textContent = search.name ? "Getting the boards ready" : `${Math.max(0, Math.ceil(SEARCH_TIME - search.t))}s, then you'll play a CPU opponent`;
+  const landing = search.reel && search.reel.settle;
+  $("searchText").textContent = search.name ? `Throwdown with ${search.name}!` : landing ? "Opponent found!" : search.online ? `Looking for a Throwdown at ${v.name}…` : `Finding an opponent at ${v.name}…`;
+  $("searchSub").textContent = search.name ? "Getting the boards ready" : landing ? v.name : search.online ? `${Math.max(0, Math.ceil(search.limit - search.t))}s, then you'll play a CPU opponent` : "";
 }
 // Messages from the iPhone app: matched / left, and the opponent's own messages (already parsed JSON objects).
 window.__net = m => {
@@ -1626,6 +1678,7 @@ window.__net = m => {
   if (m.t === "matched") {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
+    settleReel({ name: search.name, avatar: "a0" }, () => { if (search) { search.landed = true; tryStartOnline(); } });
     netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
@@ -1638,7 +1691,7 @@ window.__net = m => {
     search.setup = { seed: m.seed | 0, flip: m.flip === 1 ? -1 : 1, lead: m.lead === 0 ? 1 : 0 };
     tryStartOnline();
   }
-  else if (m.t === "nomatch") { if (search && !search.name) cancelSearch(true); }
+  else if (m.t === "nomatch") { if (search && !search.name && !(search.reel && search.reel.settle)) cancelSearch(true); }
   else if (m.t === "left" || m.t === "quit") opponentLeft();
   else if (m.t === "rematch" && S.online) { S.online.rematch.them = true; tryRematch(); }
   else if (m.t === "resetup" && S.online && !S.online.host) {
@@ -1648,7 +1701,7 @@ window.__net = m => {
   else if (S.online) S.online.queue.push(m);
 };
 function tryStartOnline() {
-  if (!search || !search.name || !search.hello || !search.setup) return; // messages can arrive in any order
+  if (!search || !search.name || !search.hello || !search.setup || !search.landed) return; // messages can arrive in any order
   const s = search, h = s.hello; search = null;
   $("searching").hidden = true;
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
@@ -1692,7 +1745,11 @@ function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net
 
 // Per frame: the search countdown, the throw clock, and the opponent's queued messages.
 function updateOnline(dt) {
-  if (search && !search.name) { search.t += dt; if (search.t >= SEARCH_TIME) cancelSearch(true); else renderSearch(); }
+  if (search) {
+    updateReel(dt);
+    if (!search.name && !search.reel.settle) { search.t += dt; if (search.t >= search.limit) cancelSearch(true); }
+    if (search) renderSearch();
+  }
   if (S.clock != null && (S.phase === "aiming" || S.phase === "throw")) {
     const before = Math.ceil(S.clock);
     S.clock -= dt;
@@ -1735,7 +1792,7 @@ function renderClock() {
   el.hidden = !on;
   if (on) { el.querySelector("b").textContent = Math.max(0, Math.ceil(S.clock)); el.classList.toggle("hurry", S.clock <= 5); }
 }
-$("searchCancel").onclick = () => { if (!search) return; const vi = search.vi; search = null; postNative("net", JSON.stringify({ op: "cancel" })); $("searching").hidden = true; renderHub(); void vi; };
+$("searchCancel").onclick = () => { if (!search) return; if (search.online) postNative("net", JSON.stringify({ op: "cancel" })); search = null; $("searching").hidden = true; renderHub(); };
 
 // ───────────────────────── Economy: cans, cards, lives, avatars
 // The money loop is deliberately tight. A win pays the pot (net +1 buy-in) and a can; a loss costs the buy-in and a
@@ -1919,7 +1976,7 @@ const canvas = $("gl"), stage = $("stage");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.VSMShadowMap; // soft-edged shadows (blur set by sun.shadow.radius)
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 const maxAniso = renderer.capabilities.getMaxAnisotropy();
@@ -1936,10 +1993,19 @@ function canvasTex(w, h, paint, repeat) {
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xf2cfa0, 90, 260);
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 700);
+// Glow: a soft bloom over bright things (string lights, fire, effects), then tone mapping.
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.32, 0.55, 0.92);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+let glowOn = true;
+function renderScene() { if (glowOn) composer.render(); else renderer.render(scene, camera); }
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
   if (!w || !h) return;
   renderer.setSize(w, h, false);
+  composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); bloom.setSize(w / 2, h / 2);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
@@ -1949,7 +2015,7 @@ const skyU = {
   top: { value: new THREE.Vector3() }, mid: { value: new THREE.Vector3() }, horizon: { value: new THREE.Vector3() },
   sunDir: { value: new THREE.Vector3(-0.55, 0.32, 0.2).normalize() }, sunGlow: { value: 1 }, night: { value: 0 },
 };
-scene.add(new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.ShaderMaterial({
+const skyMesh = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.ShaderMaterial({
   side: THREE.BackSide, depthWrite: false, fog: false, uniforms: skyU,
   vertexShader: "varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
   fragmentShader: `varying vec3 vDir; uniform vec3 top, mid, horizon, sunDir; uniform float sunGlow, night;
@@ -1963,16 +2029,17 @@ scene.add(new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.Shader
       if (night > 0.5) { vec3 q = floor(vDir * 260.0); float st = step(0.9975, hash(q)) * smoothstep(0.05, 0.4, h); col += vec3(st); }
       gl_FragColor = vec4(col, 1.0);
     }`,
-})));
+}));
+scene.add(skyMesh);
 const hemi = new THREE.HemisphereLight(0xd6ecff, 0x557a2c, 1.25);
 const sun = new THREE.DirectionalLight(0xffe3b8, 2.9);
 sun.target.position.set(0, 0, -27);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 120 });
+Object.assign(sun.shadow.camera, { left: -14, right: 14, top: 14, bottom: -14, near: 1, far: 140 });
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.02;
-sun.shadow.radius = 3;
+sun.shadow.radius = 7; sun.shadow.blurSamples = 16;
 scene.add(hemi, sun, sun.target);
 
 // ───────────────────────── Venue scenery
@@ -2431,6 +2498,68 @@ function dock(g, x, z, len, rotY) {
   d.position.set(x, 0, z); d.rotation.y = rotY; g.add(d);
 }
 
+// ───────────────────────── Photo-real assets (Poly Haven, CC0): sky lighting, photo textures and 3D models.
+// Files live in web/assets/polyhaven/ (packed to .json/.jpg by web/tools/pack_assets.py; copied flat into the iPhone app). Anything that fails to load just
+// leaves the simpler built-in look in place.
+const ASSETS = "assets/polyhaven/", FT = 3.2808; // models are in metres; the court is in feet
+const gltfLoader = new GLTFLoader(), modelCache = new Map(), texLoader = new THREE.TextureLoader();
+function loadModel(name) {
+  if (!modelCache.has(name)) modelCache.set(name, gltfLoader.loadAsync(`${ASSETS}${name}/${name}_1k.json`).then(g => {
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return g.scene;
+  }).catch(() => null));
+  return modelCache.get(name);
+}
+// Drop a model into venue group g once it has loaded (skipped if the venue changed meanwhile).
+function placeModel(g, name, x, z, rotY = 0, scale = 1) {
+  loadModel(name).then(src => {
+    if (!src || venueGroup !== g) return;
+    const m = src.clone(); m.position.set(x, 0, z); m.rotation.y = rotY; m.scale.setScalar(FT * scale); g.add(m);
+  });
+}
+// A photo material: colour, normal and roughness maps, tiled `rx` by `ry` times. It starts as a plain colour and
+// swaps in the photo maps once they've all loaded, so a missing file never leaves a black surface.
+function photoMat(name, rx, ry, extra = {}) {
+  const m = new THREE.MeshStandardMaterial({ color: extra.fallback ?? 0x888888, roughness: 0.95 });
+  const load = k => texLoader.loadAsync(`${ASSETS}tex/${name}_${k}_1k.jpg`).then(tx => {
+    tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.repeat.set(rx, ry); tx.anisotropy = maxAniso;
+    if (extra.rotate) { tx.center.set(0.5, 0.5); tx.rotation = extra.rotate; }
+    return tx;
+  });
+  Promise.all([load("diff"), load("nor"), load("rough")]).then(([map, nor, rough]) => {
+    map.colorSpace = THREE.SRGBColorSpace;
+    Object.assign(m, { map, normalMap: nor, roughnessMap: rough, roughness: 1 });
+    m.color.set(extra.tint ?? 0xffffff); m.normalScale.set(extra.bump ?? 1, extra.bump ?? 1); m.needsUpdate = true;
+    if (extra.onReady) extra.onReady(m);
+  }).catch(() => { /* keep the plain colour */ });
+  return m;
+}
+// Real sky: an HDR photo of the sky lights the scene (reflections, soft fill) and is the backdrop.
+let skyPromise = null;
+function loadSky(file) {
+  // The HDR file is stored base64 in a .json (web hosts serve that); decode it back to bytes for the loader.
+  const hdrUrl = fetch(`${ASSETS}${file}.json`).then(r => r.json()).then(j => {
+    const bin = atob(j.b64), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes]));
+  });
+  return (skyPromise ||= hdrUrl.then(url => new RGBELoader().loadAsync(url)).then(t => {
+    t.mapping = THREE.EquirectangularReflectionMapping;
+    const pm = new THREE.PMREMGenerator(renderer), env = pm.fromEquirectangular(t).texture; pm.dispose();
+    return { bg: t, env };
+  }).catch(() => null));
+}
+function clearPhotoSky() { scene.environment = null; scene.background = null; skyMesh.visible = true; }
+function plankFence(g) {
+  const post = std(0x4a3420, { roughness: 0.9 });
+  const wall = (len, x, z, rot) => {
+    const m = photoMat("weathered_brown_planks", 1, len / 5, { rotate: Math.PI / 2, fallback: 0x8a6a4a }); // boards run up and down
+    const w = new THREE.Mesh(new THREE.BoxGeometry(len, 5.4, 0.3), m); w.position.set(x, 2.7, z); w.rotation.y = rot; w.castShadow = w.receiveShadow = true; g.add(w);
+    for (let k = 0; k <= len; k += 8) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.45, 6, 0.45), post); p.position.set(x + Math.cos(rot) * (k - len / 2), 3, z - Math.sin(rot) * (k - len / 2)); p.castShadow = true; g.add(p); }
+  };
+  wall(52, 0, -46, 0); wall(56, -26, -18, Math.PI / 2); wall(56, 26, -18, Math.PI / 2);
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -2461,7 +2590,7 @@ function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose()
 function buildVenue(id) {
   if (id === venueId) return;
   if (venueGroup) { scene.remove(venueGroup); disposeTree(venueGroup); }
-  venueId = id; glowSprites = []; venueAnim = [];
+  venueId = id; glowSprites = []; venueAnim = []; clearPhotoSky();
   const g = new THREE.Group(), L = VENUE_LOOK[id];
   skyU.top.value.set(...L.top); skyU.mid.value.set(...L.mid); skyU.horizon.value.set(...L.horizon); skyU.sunGlow.value = L.sunGlow; skyU.night.value = L.night;
   scene.fog.color.setHex(L.fog[0]); scene.fog.near = L.fog[1]; scene.fog.far = L.fog[2];
@@ -2471,15 +2600,26 @@ function buildVenue(id) {
   renderer.toneMappingExposure = L.exposure; venueDust = L.dust;
 
   if (id === "backyard") {
-    setGround(g, "grass", 6);
+    // Photo-real backyard: real sky light, a photo lawn and plank fence, and scanned chairs, table and shrubs.
+    const lawn = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), photoMat("sparse_grass", 520 / 9, 520 / 9, { tint: 0xb4ff6a, bump: 0.8, fallback: 0x5fae3e }));
+    lawn.rotation.x = -Math.PI / 2; lawn.position.z = -30; lawn.receiveShadow = true; g.add(lawn);
     trees(g, 21, [0x3f9a3c, 0x2f8a46, 0x58b043, 0x2b7a3a, 0x6cbf4a], { front: 62 });
     house(g, 4, 40, Math.PI, 0xf2e6d0, 0x4a5a6a); // the house behind you
-    picnicTable(g, -14, 14, 0.3);
-    fence(g, 33);
+    plankFence(g);
     stringLights(g, [[-9, -38], [9, -38], [-9, -14], [9, -14]], [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]], [[-9, -14], [9, -26]], [[9, -14], [-9, -26]]]);
     cooler(g, 5, -22, 0.4);
-    chair(g, -7.5, -36, 0.35, 0x2f86ff); // set back from the board, facing the players
-    chair(g, 7.8, -37, -0.35, 0xff4b3a);
+    placeModel(g, "plastic_monobloc_chair_01", -7.5, -36, 0.35); // set back from the board, facing the players
+    placeModel(g, "plastic_monobloc_chair_01", 7.8, -37, -0.35);
+    placeModel(g, "wooden_picnic_table", -15, 14, 0.3 + Math.PI / 2);
+    const r = rng(77);
+    for (let x = -22; x <= 22; x += 5.5 + r() * 2) placeModel(g, r() < 0.5 ? "shrub_02" : "shrub_04", x, -43.5 - r(), r() * 6, 0.9 + r() * 0.5);
+    for (let z = -38; z <= 4; z += 7 + r() * 3) for (const sx of [-1, 1]) placeModel(g, r() < 0.5 ? "shrub_02" : "shrub_04", sx * (23.5 - r()), z, r() * 6, 0.8 + r() * 0.5);
+    placeModel(g, "planter_box_01", -9, 34, 0); placeModel(g, "planter_box_01", 17, 34, 0);
+    loadSky("garden_nook_2k.hdr").then(sky => {
+      if (!sky || venueId !== "backyard") return;
+      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
+      hemi.intensity = 0.95; renderer.toneMappingExposure = 1.4; scene.fog.near = 140; scene.fog.far = 420;
+    });
   } else if (id === "tailgate") {
     setGround(g, "asphalt", 18);
     trees(g, 5, [0x3c7a3a, 0x4c8a3a], { back: -150, sides: false });
@@ -3381,7 +3521,7 @@ function renderHubExtras() {
       const k = canById(c.id), st = canState(c);
       b.className = `cslot full ${st}`;
       b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "tap to start opening"}`);
-      b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : durText(openMs(c.id))}</small>`;
+      b.innerHTML = `<span class="cname">${k.name}</span><span class="crow"><i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : durText(openMs(c.id))}</small></span>`;
       b.onclick = () => canTapped(i);
     } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
     cooler.appendChild(b);
@@ -3935,10 +4075,11 @@ function renderHub() {
   $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
     <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
-    ${open ? "" : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}</div>${peek(hubVenue + 1, "next")}
+    ${open ? "" : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
     <div class="vdots">${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
-  const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
+  $("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
+    const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras();
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
@@ -3978,7 +4119,6 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
   // a click right after a swipe shouldn't also open a side court
   car.addEventListener("click", e => { if (car.classList.contains("dragging")) e.stopPropagation(); }, true);
 }
-$("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
 let shopTab = "bags";
 function swatch(item, kind) {
@@ -4205,7 +4345,7 @@ function frame(now) {
   updateFx(dt);
   venueTick(dt, S.time);
   updateCamera(dt);
-  if (!window.__skipRender) renderer.render(scene, camera);
+  if (!window.__skipRender) renderScene();
   requestAnimationFrame(frame);
 }
 
@@ -4216,7 +4356,7 @@ postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own
 setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
 
 requestAnimationFrame(frame);
-window.__cornhole = { ui, finishMatch, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { setGlow: v => { glowOn = v; }, ui, finishMatch, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
 </script>
 
 </body>
