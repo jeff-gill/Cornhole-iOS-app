@@ -276,6 +276,7 @@ function newWind() {
   const [lo, hi] = venue().wind;
   const r = S.online ? rng(S.online.seed + S.inning * 7919) : Math.random; // online: both phones get the same wind
   S.wind = { mph: Math.round(lo + r() * (hi - lo)), dir: r() * Math.PI * 2 }; // steady for the whole inning, any direction
+  if (S.practice && S.practice.wind != null) S.wind.mph = S.practice.wind; // practice: the wind speed you picked
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
   setAmbience({ wind: mph, surf: ["beach", "bonfire", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: ["brewery", "bonfire", "carnival"].includes(id), fire: id === "bonfire" || id === "lodge" });
@@ -286,9 +287,19 @@ function windAccel() {
 }
 // online (optional): { seed, flip, lead, name, bag, trail, effect } agreed with the live opponent; flip and lead are
 // already from this phone's point of view (you are always player 0 on your own phone).
+// Practice: 1, 2 or 4 players on one phone. Solo practice has no opponent bags (the other side starts each inning
+// "thrown out"). With 4 players, throws go Team 1 A, Team 2 A, Team 1 B, Team 2 B and repeat.
+const soloThrown = () => (S.practice && S.practice.players === 1 ? [0, 4] : [0, 0]);
+function throwerName(p) {
+  const P = S.practice;
+  if (!P || P.players !== 4) return S.names[p];
+  const b = S.thrown[p] % 2; // bags 1 and 3 are A, 2 and 4 are B
+  return P.names[p === 0 ? (b ? 2 : 0) : (b ? 3 : 1)];
+}
 function startMatch(kind, vi, online = null, pick = null) {
   const v = VENUES[vi];
   S.online = null;
+  if (kind === "career") S.practice = null;
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!useLife()) return;
@@ -306,7 +317,8 @@ function startMatch(kind, vi, online = null, pick = null) {
     S.names = [myHandle(), S.opponent.name];
   } else {
     S.opponent = null;
-    S.names = ["Player 1", "Player 2"];
+    const P = S.practice, n = P ? P.names : [];
+    S.names = !P ? ["Player 1", "Player 2"] : P.players === 1 ? [n[0], "—"] : P.players === 2 ? [n[0], n[1]] : [`${n[0]} & ${n[2]}`, `${n[1]} & ${n[3]}`];
     S.gear = [bagById(career.bag), RIVAL_BAGS[0]];
   }
   S.kind = kind; S.venue = vi; S.botRematch = null;
@@ -314,7 +326,8 @@ function startMatch(kind, vi, online = null, pick = null) {
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
-  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
+  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
+  if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
@@ -487,7 +500,7 @@ function finishMatch() {
 // A court's stars stay between 0 and its max.
 function addCourtStars(vi, n) { const v = VENUES[vi]; career.courtStars[v.id] = clamp(courtStars(vi) + n, 0, v.max); updateUnlocks(); }
 function nextInning() {
-  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
+  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = soloThrown(); S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
   newWind(); venueAmbience(); beginTurn();
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.7; renderBanner(); }

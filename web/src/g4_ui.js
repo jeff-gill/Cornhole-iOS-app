@@ -153,7 +153,7 @@ function outcomeText(p) {
   return "Off the board";
 }
 const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${label}</small><b>${value}</b></div>`;
-const whoName = p => S.kind === "career" && p === 0 ? "Your" : esc(S.names[p]) + "'s";
+const whoName = p => S.kind === "career" && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   renderScore();
   const hint = $("hint");
@@ -426,7 +426,7 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
   // a click right after a swipe shouldn't also open a side court
   car.addEventListener("click", e => { if (car.classList.contains("dragging")) e.stopPropagation(); }, true);
 }
-$("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
+$("passBtn").onclick = () => { initAudio(); openPractice(); };
 let shopTab = "bags";
 function swatch(item, kind) {
   const c = document.createElement("canvas"); c.width = 128; c.height = 128;
@@ -648,6 +648,7 @@ for (const [id, close] of [
   ["avatarSheet", () => { $("avatarSheet").hidden = true; }],
   ["shop", () => $("shopClose").click()],
   ["helpSheet", () => $("helpClose").click()],
+  ["practiceSheet", () => { $("practiceSheet").hidden = true; }],
   ["pause", () => $("resumeBtn").click()],
 ]) {
   const el = $(id); let downOnBackdrop = false;

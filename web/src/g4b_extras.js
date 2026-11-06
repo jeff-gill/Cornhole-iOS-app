@@ -309,3 +309,34 @@ $("dailyBtn").onclick = () => {
   $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
   setTimeout(() => openCanSheet(career.cans.length - 1), 900);
 };
+
+// ── Practice setup: how many players, their names, and the wind.
+function practiceCfg() {
+  const P = (career.practiceCfg ||= { players: 2, names: [], wind: null });
+  const defaults = [myHandle(), "Player 2", "Player 3", "Player 4"];
+  for (let i = 0; i < 4; i++) if (!P.names[i]) P.names[i] = defaults[i];
+  return P;
+}
+function openPractice() { renderPractice(); $("practiceSheet").hidden = false; }
+function renderPractice() {
+  const P = practiceCfg(), v = VENUES[hubVenue];
+  const slots = P.players === 1 ? [["You", 0]] : P.players === 2 ? [["Player 1", 0], ["Player 2", 1]] : [["Team 1 · A", 0], ["Team 2 · A", 1], ["Team 1 · B", 0], ["Team 2 · B", 1]];
+  $("practiceBody").innerHTML = `<h2>Practice</h2><div class="muted">${esc(v.name)} · no buy-in, tickets or stars</div>
+    <div class="label">Players</div>
+    <div class="seg" id="pPlayers">${[1, 2, 4].map(n => `<button data-n="${n}" class="${P.players === n ? "on" : ""}">${n}</button>`).join("")}</div>
+    <div class="label">Names</div>
+    <div class="pnames">${slots.map(([lbl, team], i) => `<label><span><i style="background:${COL.p[team]}"></i>${lbl}</span><input data-i="${i}" maxlength="16" value="${esc(P.names[i])}" autocomplete="off" spellcheck="false"></label>`).join("")}</div>
+    ${P.players === 4 ? `<div class="muted">Throws go Team 1 A, Team 2 A, Team 1 B, Team 2 B, then repeat.</div>` : ""}
+    <div class="label">Wind</div>
+    <div class="windset"><input type="range" id="pWind" min="0" max="20" value="${P.wind ?? 5}" ${P.wind == null ? "disabled" : ""}><button class="btn small" id="pWindMode">${P.wind == null ? "RANDOM" : `${P.wind} MPH`}</button></div>
+    <button class="btn green go" id="pStart">START PRACTICE</button>`;
+  for (const b of document.querySelectorAll("#pPlayers button")) b.onclick = () => { P.players = +b.dataset.n; save(); renderPractice(); };
+  for (const inp of document.querySelectorAll(".pnames input")) inp.oninput = () => { P.names[+inp.dataset.i] = inp.value.slice(0, 16); save(); };
+  $("pWind").oninput = e => { P.wind = +e.target.value; $("pWindMode").textContent = `${P.wind} MPH`; save(); };
+  $("pWindMode").onclick = () => { P.wind = P.wind == null ? 5 : null; save(); renderPractice(); };
+  $("pStart").onclick = () => {
+    const names = P.names.map((n, i) => (n || "").trim() || ["Player 1", "Player 2", "Player 3", "Player 4"][i]);
+    S.practice = { players: P.players, names, wind: P.wind };
+    $("practiceSheet").hidden = true; initAudio(); startMatch("pass", hubVenue);
+  };
+}

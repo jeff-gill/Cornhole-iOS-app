@@ -370,6 +370,15 @@ s.was { opacity: .6; font-size: .8em; }
 .prize.show::after { content: ""; position: absolute; inset: -50% auto -50% -60%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: rotate(20deg); animation: shine .9s .35s ease-out both; pointer-events: none; }
 @keyframes cardflip { from { transform: perspective(700px) rotateY(100deg) scale(.6); } to { transform: perspective(700px) rotateY(0) scale(1); } }
 @keyframes shine { from { left: -60%; } to { left: 130%; } }
+.seg { display: grid; grid-auto-flow: column; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 14px; }
+.seg button { border: 0; border-radius: 10px; padding: 9px 4px; background: none; color: var(--ink-dim); font-family: var(--font-display); font-size: 17px; }
+.seg button.on { background: #fff; color: var(--deck); }
+.pnames { display: grid; gap: 8px; }
+.pnames label { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; font-weight: 900; font-size: 13px; }
+.pnames label i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.pnames input { font: 900 17px Nunito, system-ui, sans-serif; padding: 8px 10px; border-radius: 12px; border: 2px solid rgba(255,255,255,.4); background: rgba(0,0,0,.3); color: #fff; min-width: 0; }
+.windset { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; font-weight: 900; }
+.windset input[type=range] { width: 100%; accent-color: var(--gold); }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -559,7 +568,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="vcarousel" id="venueCard"></div>
     <div class="hubrow">
       <button class="btn small" id="shopBtn">SHOP<i class="nbadge" id="shopBadge" hidden></i></button>
-      <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
+      <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
     <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button></div>
@@ -587,6 +596,7 @@ s.was { opacity: .6; font-size: .8em; }
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>
+<div class="overlay" id="practiceSheet" hidden><div class="sheet" id="practiceBody"></div></div>
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
     <div class="row"><h2 style="text-align:left;white-space:nowrap;font-size:26px">Pro Shop</h2><span class="spacer"></span><button class="pill cappill" id="shopCoinsBtn"><i class="coin"></i><b id="shopCoins">0</b></button><button class="pill cappill" id="shopCapsBtn"><i class="bcap"></i><b id="shopCaps">0</b></button></div>

@@ -378,6 +378,15 @@ s.was { opacity: .6; font-size: .8em; }
 .prize.show::after { content: ""; position: absolute; inset: -50% auto -50% -60%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: rotate(20deg); animation: shine .9s .35s ease-out both; pointer-events: none; }
 @keyframes cardflip { from { transform: perspective(700px) rotateY(100deg) scale(.6); } to { transform: perspective(700px) rotateY(0) scale(1); } }
 @keyframes shine { from { left: -60%; } to { left: 130%; } }
+.seg { display: grid; grid-auto-flow: column; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 14px; }
+.seg button { border: 0; border-radius: 10px; padding: 9px 4px; background: none; color: var(--ink-dim); font-family: var(--font-display); font-size: 17px; }
+.seg button.on { background: #fff; color: var(--deck); }
+.pnames { display: grid; gap: 8px; }
+.pnames label { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; font-weight: 900; font-size: 13px; }
+.pnames label i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.pnames input { font: 900 17px Nunito, system-ui, sans-serif; padding: 8px 10px; border-radius: 12px; border: 2px solid rgba(255,255,255,.4); background: rgba(0,0,0,.3); color: #fff; min-width: 0; }
+.windset { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; font-weight: 900; }
+.windset input[type=range] { width: 100%; accent-color: var(--gold); }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -567,7 +576,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="vcarousel" id="venueCard"></div>
     <div class="hubrow">
       <button class="btn small" id="shopBtn">SHOP<i class="nbadge" id="shopBadge" hidden></i></button>
-      <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
+      <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
     <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button></div>
@@ -595,6 +604,7 @@ s.was { opacity: .6; font-size: .8em; }
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>
+<div class="overlay" id="practiceSheet" hidden><div class="sheet" id="practiceBody"></div></div>
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
     <div class="row"><h2 style="text-align:left;white-space:nowrap;font-size:26px">Pro Shop</h2><span class="spacer"></span><button class="pill cappill" id="shopCoinsBtn"><i class="coin"></i><b id="shopCoins">0</b></button><button class="pill cappill" id="shopCapsBtn"><i class="bcap"></i><b id="shopCaps">0</b></button></div>
@@ -1302,6 +1312,7 @@ function newWind() {
   const [lo, hi] = venue().wind;
   const r = S.online ? rng(S.online.seed + S.inning * 7919) : Math.random; // online: both phones get the same wind
   S.wind = { mph: Math.round(lo + r() * (hi - lo)), dir: r() * Math.PI * 2 }; // steady for the whole inning, any direction
+  if (S.practice && S.practice.wind != null) S.wind.mph = S.practice.wind; // practice: the wind speed you picked
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
   setAmbience({ wind: mph, surf: ["beach", "bonfire", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: ["brewery", "bonfire", "carnival"].includes(id), fire: id === "bonfire" || id === "lodge" });
@@ -1312,9 +1323,19 @@ function windAccel() {
 }
 // online (optional): { seed, flip, lead, name, bag, trail, effect } agreed with the live opponent; flip and lead are
 // already from this phone's point of view (you are always player 0 on your own phone).
+// Practice: 1, 2 or 4 players on one phone. Solo practice has no opponent bags (the other side starts each inning
+// "thrown out"). With 4 players, throws go Team 1 A, Team 2 A, Team 1 B, Team 2 B and repeat.
+const soloThrown = () => (S.practice && S.practice.players === 1 ? [0, 4] : [0, 0]);
+function throwerName(p) {
+  const P = S.practice;
+  if (!P || P.players !== 4) return S.names[p];
+  const b = S.thrown[p] % 2; // bags 1 and 3 are A, 2 and 4 are B
+  return P.names[p === 0 ? (b ? 2 : 0) : (b ? 3 : 1)];
+}
 function startMatch(kind, vi, online = null, pick = null) {
   const v = VENUES[vi];
   S.online = null;
+  if (kind === "career") S.practice = null;
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!useLife()) return;
@@ -1332,7 +1353,8 @@ function startMatch(kind, vi, online = null, pick = null) {
     S.names = [myHandle(), S.opponent.name];
   } else {
     S.opponent = null;
-    S.names = ["Player 1", "Player 2"];
+    const P = S.practice, n = P ? P.names : [];
+    S.names = !P ? ["Player 1", "Player 2"] : P.players === 1 ? [n[0], "—"] : P.players === 2 ? [n[0], n[1]] : [`${n[0]} & ${n[2]}`, `${n[1]} & ${n[3]}`];
     S.gear = [bagById(career.bag), RIVAL_BAGS[0]];
   }
   S.kind = kind; S.venue = vi; S.botRematch = null;
@@ -1340,7 +1362,8 @@ function startMatch(kind, vi, online = null, pick = null) {
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
-  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
+  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
+  if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
@@ -1513,7 +1536,7 @@ function finishMatch() {
 // A court's stars stay between 0 and its max.
 function addCourtStars(vi, n) { const v = VENUES[vi]; career.courtStars[v.id] = clamp(courtStars(vi) + n, 0, v.max); updateUnlocks(); }
 function nextInning() {
-  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
+  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = soloThrown(); S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
   newWind(); venueAmbience(); beginTurn();
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.7; renderBanner(); }
@@ -4005,7 +4028,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1793998718";
+const BUILD_ID = "1793998988";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -4074,6 +4097,37 @@ $("dailyBtn").onclick = () => {
   $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
   setTimeout(() => openCanSheet(career.cans.length - 1), 900);
 };
+
+// ── Practice setup: how many players, their names, and the wind.
+function practiceCfg() {
+  const P = (career.practiceCfg ||= { players: 2, names: [], wind: null });
+  const defaults = [myHandle(), "Player 2", "Player 3", "Player 4"];
+  for (let i = 0; i < 4; i++) if (!P.names[i]) P.names[i] = defaults[i];
+  return P;
+}
+function openPractice() { renderPractice(); $("practiceSheet").hidden = false; }
+function renderPractice() {
+  const P = practiceCfg(), v = VENUES[hubVenue];
+  const slots = P.players === 1 ? [["You", 0]] : P.players === 2 ? [["Player 1", 0], ["Player 2", 1]] : [["Team 1 · A", 0], ["Team 2 · A", 1], ["Team 1 · B", 0], ["Team 2 · B", 1]];
+  $("practiceBody").innerHTML = `<h2>Practice</h2><div class="muted">${esc(v.name)} · no buy-in, tickets or stars</div>
+    <div class="label">Players</div>
+    <div class="seg" id="pPlayers">${[1, 2, 4].map(n => `<button data-n="${n}" class="${P.players === n ? "on" : ""}">${n}</button>`).join("")}</div>
+    <div class="label">Names</div>
+    <div class="pnames">${slots.map(([lbl, team], i) => `<label><span><i style="background:${COL.p[team]}"></i>${lbl}</span><input data-i="${i}" maxlength="16" value="${esc(P.names[i])}" autocomplete="off" spellcheck="false"></label>`).join("")}</div>
+    ${P.players === 4 ? `<div class="muted">Throws go Team 1 A, Team 2 A, Team 1 B, Team 2 B, then repeat.</div>` : ""}
+    <div class="label">Wind</div>
+    <div class="windset"><input type="range" id="pWind" min="0" max="20" value="${P.wind ?? 5}" ${P.wind == null ? "disabled" : ""}><button class="btn small" id="pWindMode">${P.wind == null ? "RANDOM" : `${P.wind} MPH`}</button></div>
+    <button class="btn green go" id="pStart">START PRACTICE</button>`;
+  for (const b of document.querySelectorAll("#pPlayers button")) b.onclick = () => { P.players = +b.dataset.n; save(); renderPractice(); };
+  for (const inp of document.querySelectorAll(".pnames input")) inp.oninput = () => { P.names[+inp.dataset.i] = inp.value.slice(0, 16); save(); };
+  $("pWind").oninput = e => { P.wind = +e.target.value; $("pWindMode").textContent = `${P.wind} MPH`; save(); };
+  $("pWindMode").onclick = () => { P.wind = P.wind == null ? 5 : null; save(); renderPractice(); };
+  $("pStart").onclick = () => {
+    const names = P.names.map((n, i) => (n || "").trim() || ["Player 1", "Player 2", "Player 3", "Player 4"][i]);
+    S.practice = { players: P.players, names, wind: P.wind };
+    $("practiceSheet").hidden = true; initAudio(); startMatch("pass", hubVenue);
+  };
+}
 
 // ───────────────────────── The can opening, in 3D
 // A glossy metal can (lathe-shaped body, printed label, lid and pull tab) spins in front of light rays in its rarity
@@ -4346,7 +4400,7 @@ function outcomeText(p) {
   return "Off the board";
 }
 const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${label}</small><b>${value}</b></div>`;
-const whoName = p => S.kind === "career" && p === 0 ? "Your" : esc(S.names[p]) + "'s";
+const whoName = p => S.kind === "career" && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   renderScore();
   const hint = $("hint");
@@ -4619,7 +4673,7 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
   // a click right after a swipe shouldn't also open a side court
   car.addEventListener("click", e => { if (car.classList.contains("dragging")) e.stopPropagation(); }, true);
 }
-$("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
+$("passBtn").onclick = () => { initAudio(); openPractice(); };
 let shopTab = "bags";
 function swatch(item, kind) {
   const c = document.createElement("canvas"); c.width = 128; c.height = 128;
@@ -4841,6 +4895,7 @@ for (const [id, close] of [
   ["avatarSheet", () => { $("avatarSheet").hidden = true; }],
   ["shop", () => $("shopClose").click()],
   ["helpSheet", () => $("helpClose").click()],
+  ["practiceSheet", () => { $("practiceSheet").hidden = true; }],
   ["pause", () => $("resumeBtn").click()],
 ]) {
   const el = $(id); let downOnBackdrop = false;
