@@ -85,6 +85,8 @@ function paintBoard(c, w, h, design) {
 const boardTopMat = new THREE.MeshStandardMaterial({ roughness: 0.55 });
 const frameMat = new THREE.MeshStandardMaterial({ color: 0x1f3a6e, roughness: 0.55 });
 const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffc93a, roughness: 0.4 });
+const frameModelMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6 });
+frameModelMat.color = frameMat.color; // shares the design colour set in setBoardDesign
 let boardDesignId = "";
 function setBoardDesign(id) {
   if (id === boardDesignId) return;
@@ -109,7 +111,7 @@ function makeBoard() {
   const L = BY - FY;
   for (const [geo, x, z] of [[new THREE.BoxGeometry(0.08, 0.3, L), HW - 0.04, -L / 2], [new THREE.BoxGeometry(0.08, 0.3, L), -HW + 0.04, -L / 2],
     [new THREE.BoxGeometry(2 * HW, 0.3, 0.08), 0, -0.04], [new THREE.BoxGeometry(2 * HW, 0.3, 0.08), 0, -L + 0.04]]) {
-    const m = new THREE.Mesh(geo, frameMat); m.position.set(x, -0.15, z); m.castShadow = true; m.receiveShadow = true; tilt.add(m);
+    const m = new THREE.Mesh(geo, frameMat); m.position.set(x, -0.15, z); m.castShadow = true; m.receiveShadow = true; m.userData.simple = "frame"; tilt.add(m);
   }
   for (const x of [HW + 0.002, -HW - 0.002]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.035, L - 0.3), stripeMat); s.position.set(x, -0.1, -L / 2); tilt.add(s); }
   const tube = new THREE.Mesh(new THREE.CylinderGeometry(HR, HR, 0.4, 40, 1, true), new THREE.MeshBasicMaterial({ color: 0x120c08, side: THREE.BackSide }));
@@ -117,9 +119,28 @@ function makeBoard() {
   const floor = new THREE.Mesh(new THREE.CircleGeometry(HR, 32), new THREE.MeshBasicMaterial({ color: 0x050302 }));
   floor.rotation.x = -Math.PI / 2; floor.position.set(0, -0.32, -(HOLE.y - FY)); tilt.add(floor);
   const legMat = new THREE.MeshStandardMaterial({ color: 0x9c6f3d, roughness: 0.8 });
-  for (const x of [-HW + 0.12, HW - 0.12]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, BH - 0.2, 0.28), legMat); leg.position.set(x, (BH - 0.2) / 2, -(L - 0.4)); leg.castShadow = true; g.add(leg); }
+  for (const x of [-HW + 0.12, HW - 0.12]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, BH - 0.2, 0.28), legMat); leg.position.set(x, (BH - 0.2) / 2, -(L - 0.4)); leg.castShadow = true; leg.userData.simple = "legs"; g.add(leg); }
+  upgradeBoard(g, tilt);
   return g;
 }
+// Blender-built frame and legs (web/tools/blender/board.py): rounded 2x4s, a brace, splayed legs and bolt heads with
+// baked shadows. They replace the plain boxes once loaded; the frame takes the board design's colour.
+function upgradeBoard(g, tilt) {
+  const swap = (name, parent, simple, mat) => loadBlender(name).then(src => {
+    if (!src) return;
+    const m = src.clone();
+    m.traverse(o => { if (o.isMesh) { if (mat) o.material = mat; o.castShadow = true; o.receiveShadow = true; } });
+    parent.add(m);
+    for (const o of [...parent.children]) if (o.userData.simple === simple) o.visible = false;
+  });
+  swap("board_frame", tilt, "frame", frameModelMat);
+  swap("board_legs", g, "legs", null);
+}
+// Real plywood grain on the painted top (Poly Haven normal and roughness maps, matched to the paint's mapping).
+texLoader.loadAsync(`${ASSETS}tex/plywood_nor_1k.jpg`).then(nor => {
+  nor.wrapS = nor.wrapT = THREE.RepeatWrapping; nor.repeat.set(0.5, 0.25);
+  boardTopMat.normalMap = nor; boardTopMat.normalScale.set(0.35, 0.35); boardTopMat.needsUpdate = true;
+}).catch(() => {});
 const targetBoard = makeBoard(); targetBoard.position.z = -FY; scene.add(targetBoard);
 const ownBoard = makeBoard(); ownBoard.rotation.y = Math.PI; scene.add(ownBoard);
 

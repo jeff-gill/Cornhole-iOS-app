@@ -20,6 +20,7 @@ function camMode() {
   return "watch";
 }
 function updateCamera(dt) {
+  if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   if (mode === "preview") {
@@ -500,8 +501,8 @@ function renderShop() {
     b.querySelector(".nbadge")?.remove();
     if (n) b.insertAdjacentHTML("beforeend", `<i class="nbadge">${n}</i>`);
   }
-  // An item's badge: new cards since you last looked, or NEW! if those cards unlocked it.
-  const itemBadge = (catKey, id) => { const nb = (career.newCards || {})[`${catKey}:${id}`]; return nb ? `<i class="nbadge item-badge">${nb.unlocked ? "NEW!" : `+${nb.n} 🃏`}</i>` : ""; };
+  // An item's badge: NEW! when cards have just unlocked it (it's now yours to equip).
+  const itemBadge = (catKey, id) => { const nb = (career.newCards || {})[`${catKey}:${id}`]; return nb && nb.unlocked ? `<i class="nbadge item-badge">NEW!</i>` : ""; };
   const list = $("shopItems"); list.innerHTML = "";
   if (shopTab === "store") {
     list.innerHTML = storeHTML();
@@ -525,10 +526,11 @@ function renderShop() {
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      main.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `<i class="coin"></i> ${short(it.price)}` : "FREE";
-      main.disabled = equipped || (!owned && career.coins < it.price);
+      const cost = cardPrice(catByKey(isThrow ? "trail" : "fx"), it), off = cost < it.price;
+      main.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `${off ? `<s class="was">${short(it.price)}</s> ` : ""}<i class="coin"></i> ${short(cost)}` : "FREE";
+      main.disabled = equipped || (!owned && career.coins < cost);
       main.onclick = () => {
-        if (!owned) { career.coins -= it.price; mine.push(it.id); }
+        if (!owned) { career.coins -= cost; mine.push(it.id); delete career.cards[cardKey(catByKey(isThrow ? "trail" : "fx"), it)]; }
         if (isThrow) career.trail = it.id; else career.effect = it.id;
         save(); renderShop(); renderHub();
       };
@@ -557,10 +559,11 @@ function renderShop() {
       btn.onclick = () => { shopTab = "store"; renderShop(); };
     } else {
       btn.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      btn.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `<i class="coin"></i> ${short(it.price)}` : "FREE";
-      btn.disabled = equipped || (!owned && career.coins < it.price);
+      const cat = catByKey(shopTab === "bags" ? "bag" : "board"), cost = cardPrice(cat, it), off = cost < it.price;
+      btn.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `${off ? `<s class="was">${short(it.price)}</s> ` : ""}<i class="coin"></i> ${short(cost)}` : "FREE";
+      btn.disabled = equipped || (!owned && career.coins < cost);
       btn.onclick = () => {
-        if (!owned) { career.coins -= it.price; (shopTab === "bags" ? career.bags : career.boards).push(it.id); }
+        if (!owned) { career.coins -= cost; (shopTab === "bags" ? career.bags : career.boards).push(it.id); delete career.cards[cardKey(cat, it)]; }
         if (shopTab === "bags") career.bag = it.id; else { career.board = it.id; setBoardDesign(it.id); }
         save(); renderShop(); renderHub();
       };

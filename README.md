@@ -18,7 +18,8 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
   - **Profile:** your handle and stats. New players are "guest-" plus 10 digits, or their Game Center name, until they choose a handle (3–16 letters, numbers, dots, dashes or underscores). Live opponents see your handle.
   - **Settings:** music and sound effects on/off and volume, haptics, and alerts.
 - **Computer opponents** and the CPU players in season groups use player-style handles (for example SliderSam22) and aren't labeled; How to play mentions that you play a computer opponent when no one is available.
-- **New-card badges:** red number badges lead from the SHOP button to the tab to the item when cans add cards (+N 🃏) or unlock an item (NEW!). Viewing a tab clears its badges.
+- **New-item badges:** red number badges lead from the SHOP button to the tab to the item when cards from cans unlock it (NEW!). Viewing a tab clears its badges.
+- **Card discount:** cards collected toward an item take up to 30% off its coin price, growing slowly (squared), so half the cards is only 7.5% off.
 - **Aiming:** tap where the bag should finish, then drag the landing ring around the gold zone. Near the finish it sticks, farther back it slides, and off to the side it adds spin.
 - **Throwing:** one move. Pull back for power, and the arrow swings faster the harder you pull. Let go in the gold band with the arrow straight. Pulling into overdrive makes the throw wild.
 - **Wind:** steady for each inning, from any direction, and stronger at higher venues. The aiming guide ignores it.
@@ -137,6 +138,7 @@ The odds are not shown in the game. The App Store requires the odds for paid loo
 Custom 3D art is made with Blender scripts in `web/tools/blender/`, so it can be regenerated or tweaked at any time. Each script builds models, bakes soft shading (ambient occlusion) into their vertex colors with Cycles, and exports them to `web/assets/blender/` as single `.json` glTF files.
 
 - `trees.py`: the stylized oak, maple and pine trees used in the Backyard.
+- `board.py`: the board's frame (rounded 2x4 rails, brace, bolt heads) and splayed legs with a cross brace. The frame takes each board design's color. The painted top stays in the game and gets Poly Haven plywood grain.
 
 Run from the repo root (needs Blender 4 with numpy for the glTF exporter), then rebuild:
 

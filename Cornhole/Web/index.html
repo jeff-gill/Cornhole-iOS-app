@@ -368,6 +368,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .dailybtn b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 14px; line-height: 1; }
 .dailybtn small { font: 900 11px/1.2 Nunito, system-ui, sans-serif; }
 @keyframes dailybob { 50% { transform: translateY(-3px) rotate(-2deg); } }
+.coolerhead { font-family: var(--font-display); font-size: 15px; letter-spacing: .08em; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.45); margin: 0 0 4px 4px; }
+s.was { opacity: .6; font-size: .8em; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -552,6 +554,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <button class="dailybtn" id="dailyBtn" hidden><span class="gift">🎁</span><span><b>Daily reward</b><small><i class="coin"></i> 100 + a free can</small></span></button>
   </div>
   <div class="hubbottom">
+    <div class="coolerhead">PRIZE COOLER</div>
     <div class="cooler" id="cooler"></div>
     <div class="vcarousel" id="venueCard"></div>
     <div class="hubrow">
@@ -1972,13 +1975,22 @@ function addCards(cat, it, n) {
   if (owned) { const c = dupCoins(it) * n; career.coins += c; return { owned: true, coins: c }; }
   const k = cardKey(cat, it), need = cardsNeeded(cat, it);
   career.cards[k] = (career.cards[k] || 0) + n;
-  // Badges: remember which items got new cards (or were unlocked) until you've seen them in the shop.
-  career.newCards ||= {};
-  const nb = career.newCards[k] ||= { n: 0, unlocked: false }; nb.n += n;
-  if (career.cards[k] >= need) { delete career.cards[k]; cat.owned().push(it.id); nb.unlocked = true; return { unlocked: true, have: need, need }; }
+  // Badges: remember items your cards just unlocked (newly available to use) until you've seen them in the shop.
+  if (career.cards[k] >= need) {
+    delete career.cards[k]; cat.owned().push(it.id);
+    (career.newCards ||= {})[k] = { unlocked: true };
+    return { unlocked: true, have: need, need };
+  }
   return { have: career.cards[k], need };
 }
-// Badge counts: items with news, overall or for one card category (bag, board, trail, fx).
+// Cards you've collected toward an item knock a little off its coin price, at most 30% and growing slowly at first
+// (squared), so the house stays well ahead: half the cards is only 7.5% off.
+function cardPrice(cat, it) {
+  if (!it.price || it.premium) return it.price || 0;
+  const have = career.cards[cardKey(cat, it)] || 0, need = cardsNeeded(cat, it);
+  return Math.round(it.price * (1 - 0.3 * Math.min(1, have / need) ** 2));
+}
+// Badge counts: newly unlocked items, overall or for one card category (bag, board, trail, fx).
 const newCount = catKey => Object.keys(career.newCards || {}).filter(k => !catKey || k.startsWith(catKey + ":")).length;
 
 // ── Opening a can: decide every prize up front, then the reveal plays them one by one.
@@ -3072,6 +3084,8 @@ function paintBoard(c, w, h, design) {
 const boardTopMat = new THREE.MeshStandardMaterial({ roughness: 0.55 });
 const frameMat = new THREE.MeshStandardMaterial({ color: 0x1f3a6e, roughness: 0.55 });
 const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffc93a, roughness: 0.4 });
+const frameModelMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6 });
+frameModelMat.color = frameMat.color; // shares the design colour set in setBoardDesign
 let boardDesignId = "";
 function setBoardDesign(id) {
   if (id === boardDesignId) return;
@@ -3096,7 +3110,7 @@ function makeBoard() {
   const L = BY - FY;
   for (const [geo, x, z] of [[new THREE.BoxGeometry(0.08, 0.3, L), HW - 0.04, -L / 2], [new THREE.BoxGeometry(0.08, 0.3, L), -HW + 0.04, -L / 2],
     [new THREE.BoxGeometry(2 * HW, 0.3, 0.08), 0, -0.04], [new THREE.BoxGeometry(2 * HW, 0.3, 0.08), 0, -L + 0.04]]) {
-    const m = new THREE.Mesh(geo, frameMat); m.position.set(x, -0.15, z); m.castShadow = true; m.receiveShadow = true; tilt.add(m);
+    const m = new THREE.Mesh(geo, frameMat); m.position.set(x, -0.15, z); m.castShadow = true; m.receiveShadow = true; m.userData.simple = "frame"; tilt.add(m);
   }
   for (const x of [HW + 0.002, -HW - 0.002]) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.004, 0.035, L - 0.3), stripeMat); s.position.set(x, -0.1, -L / 2); tilt.add(s); }
   const tube = new THREE.Mesh(new THREE.CylinderGeometry(HR, HR, 0.4, 40, 1, true), new THREE.MeshBasicMaterial({ color: 0x120c08, side: THREE.BackSide }));
@@ -3104,9 +3118,28 @@ function makeBoard() {
   const floor = new THREE.Mesh(new THREE.CircleGeometry(HR, 32), new THREE.MeshBasicMaterial({ color: 0x050302 }));
   floor.rotation.x = -Math.PI / 2; floor.position.set(0, -0.32, -(HOLE.y - FY)); tilt.add(floor);
   const legMat = new THREE.MeshStandardMaterial({ color: 0x9c6f3d, roughness: 0.8 });
-  for (const x of [-HW + 0.12, HW - 0.12]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, BH - 0.2, 0.28), legMat); leg.position.set(x, (BH - 0.2) / 2, -(L - 0.4)); leg.castShadow = true; g.add(leg); }
+  for (const x of [-HW + 0.12, HW - 0.12]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, BH - 0.2, 0.28), legMat); leg.position.set(x, (BH - 0.2) / 2, -(L - 0.4)); leg.castShadow = true; leg.userData.simple = "legs"; g.add(leg); }
+  upgradeBoard(g, tilt);
   return g;
 }
+// Blender-built frame and legs (web/tools/blender/board.py): rounded 2x4s, a brace, splayed legs and bolt heads with
+// baked shadows. They replace the plain boxes once loaded; the frame takes the board design's colour.
+function upgradeBoard(g, tilt) {
+  const swap = (name, parent, simple, mat) => loadBlender(name).then(src => {
+    if (!src) return;
+    const m = src.clone();
+    m.traverse(o => { if (o.isMesh) { if (mat) o.material = mat; o.castShadow = true; o.receiveShadow = true; } });
+    parent.add(m);
+    for (const o of [...parent.children]) if (o.userData.simple === simple) o.visible = false;
+  });
+  swap("board_frame", tilt, "frame", frameModelMat);
+  swap("board_legs", g, "legs", null);
+}
+// Real plywood grain on the painted top (Poly Haven normal and roughness maps, matched to the paint's mapping).
+texLoader.loadAsync(`${ASSETS}tex/plywood_nor_1k.jpg`).then(nor => {
+  nor.wrapS = nor.wrapT = THREE.RepeatWrapping; nor.repeat.set(0.5, 0.25);
+  boardTopMat.normalMap = nor; boardTopMat.normalScale.set(0.35, 0.35); boardTopMat.needsUpdate = true;
+}).catch(() => {});
 const targetBoard = makeBoard(); targetBoard.position.z = -FY; scene.add(targetBoard);
 const ownBoard = makeBoard(); ownBoard.rotation.y = Math.PI; scene.add(ownBoard);
 
@@ -3967,6 +4000,13 @@ if (!nativeBridge) {
     save();
   }
 }
+// Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
+const BUILD_ID = "1793998477";
+if (testing() && career.testBuild !== BUILD_ID) {
+  career.testBuild = BUILD_ID;
+  career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
+  save();
+}
 if (testing()) { // Test cans: also in Xcode debug builds
   $("testCans").hidden = false;
   $("testCans").onclick = () => {
@@ -4052,6 +4092,7 @@ function camMode() {
   return "watch";
 }
 function updateCamera(dt) {
+  if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   if (mode === "preview") {
@@ -4532,8 +4573,8 @@ function renderShop() {
     b.querySelector(".nbadge")?.remove();
     if (n) b.insertAdjacentHTML("beforeend", `<i class="nbadge">${n}</i>`);
   }
-  // An item's badge: new cards since you last looked, or NEW! if those cards unlocked it.
-  const itemBadge = (catKey, id) => { const nb = (career.newCards || {})[`${catKey}:${id}`]; return nb ? `<i class="nbadge item-badge">${nb.unlocked ? "NEW!" : `+${nb.n} 🃏`}</i>` : ""; };
+  // An item's badge: NEW! when cards have just unlocked it (it's now yours to equip).
+  const itemBadge = (catKey, id) => { const nb = (career.newCards || {})[`${catKey}:${id}`]; return nb && nb.unlocked ? `<i class="nbadge item-badge">NEW!</i>` : ""; };
   const list = $("shopItems"); list.innerHTML = "";
   if (shopTab === "store") {
     list.innerHTML = storeHTML();
@@ -4557,10 +4598,11 @@ function renderShop() {
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      main.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `<i class="coin"></i> ${short(it.price)}` : "FREE";
-      main.disabled = equipped || (!owned && career.coins < it.price);
+      const cost = cardPrice(catByKey(isThrow ? "trail" : "fx"), it), off = cost < it.price;
+      main.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `${off ? `<s class="was">${short(it.price)}</s> ` : ""}<i class="coin"></i> ${short(cost)}` : "FREE";
+      main.disabled = equipped || (!owned && career.coins < cost);
       main.onclick = () => {
-        if (!owned) { career.coins -= it.price; mine.push(it.id); }
+        if (!owned) { career.coins -= cost; mine.push(it.id); delete career.cards[cardKey(catByKey(isThrow ? "trail" : "fx"), it)]; }
         if (isThrow) career.trail = it.id; else career.effect = it.id;
         save(); renderShop(); renderHub();
       };
@@ -4589,10 +4631,11 @@ function renderShop() {
       btn.onclick = () => { shopTab = "store"; renderShop(); };
     } else {
       btn.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      btn.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `<i class="coin"></i> ${short(it.price)}` : "FREE";
-      btn.disabled = equipped || (!owned && career.coins < it.price);
+      const cat = catByKey(shopTab === "bags" ? "bag" : "board"), cost = cardPrice(cat, it), off = cost < it.price;
+      btn.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `${off ? `<s class="was">${short(it.price)}</s> ` : ""}<i class="coin"></i> ${short(cost)}` : "FREE";
+      btn.disabled = equipped || (!owned && career.coins < cost);
       btn.onclick = () => {
-        if (!owned) { career.coins -= it.price; (shopTab === "bags" ? career.bags : career.boards).push(it.id); }
+        if (!owned) { career.coins -= cost; (shopTab === "bags" ? career.bags : career.boards).push(it.id); delete career.cards[cardKey(cat, it)]; }
         if (shopTab === "bags") career.bag = it.id; else { career.board = it.id; setBoardDesign(it.id); }
         save(); renderShop(); renderHub();
       };

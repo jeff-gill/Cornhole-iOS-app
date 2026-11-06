@@ -11,7 +11,8 @@ source "$SRC/game.env"
 sed_esc() { printf '%s' "$1" | sed -e 's/[\\|&]/\\&/g'; }
 FIRST="${GAME_NAME%% *}"; REST="${GAME_NAME#"$FIRST"}"; REST="${REST# }"
 TITLE_HTML="$FIRST${REST:+ <span>$REST</span>}" # first word white, the rest gold
-brand() { sed -e "s|__GAME_NAME__|$(sed_esc "$GAME_NAME")|g" -e "s|__GAME_TAGLINE__|$(sed_esc "$GAME_TAGLINE")|g" -e "s|__GAME_TITLE_HTML__|$(sed_esc "$TITLE_HTML")|g"; }
+BUILD_ID="$(date +%s)" # changes every build (the preview refills its test cans on a new build)
+brand() { sed -e "s|__BUILD_ID__|$BUILD_ID|g" -e "s|__GAME_NAME__|$(sed_esc "$GAME_NAME")|g" -e "s|__GAME_TAGLINE__|$(sed_esc "$GAME_TAGLINE")|g" -e "s|__GAME_TITLE_HTML__|$(sed_esc "$TITLE_HTML")|g"; }
 
 # The iPhone app's display name (under the icon) comes from the same place.
 sed -i.bak -e "s|INFOPLIST_KEY_CFBundleDisplayName = .*;|INFOPLIST_KEY_CFBundleDisplayName = \"$(sed_esc "$GAME_NAME")\";|" Cornhole.xcodeproj/project.pbxproj && rm -f Cornhole.xcodeproj/project.pbxproj.bak

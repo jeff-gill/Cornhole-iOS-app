@@ -99,13 +99,22 @@ function addCards(cat, it, n) {
   if (owned) { const c = dupCoins(it) * n; career.coins += c; return { owned: true, coins: c }; }
   const k = cardKey(cat, it), need = cardsNeeded(cat, it);
   career.cards[k] = (career.cards[k] || 0) + n;
-  // Badges: remember which items got new cards (or were unlocked) until you've seen them in the shop.
-  career.newCards ||= {};
-  const nb = career.newCards[k] ||= { n: 0, unlocked: false }; nb.n += n;
-  if (career.cards[k] >= need) { delete career.cards[k]; cat.owned().push(it.id); nb.unlocked = true; return { unlocked: true, have: need, need }; }
+  // Badges: remember items your cards just unlocked (newly available to use) until you've seen them in the shop.
+  if (career.cards[k] >= need) {
+    delete career.cards[k]; cat.owned().push(it.id);
+    (career.newCards ||= {})[k] = { unlocked: true };
+    return { unlocked: true, have: need, need };
+  }
   return { have: career.cards[k], need };
 }
-// Badge counts: items with news, overall or for one card category (bag, board, trail, fx).
+// Cards you've collected toward an item knock a little off its coin price, at most 30% and growing slowly at first
+// (squared), so the house stays well ahead: half the cards is only 7.5% off.
+function cardPrice(cat, it) {
+  if (!it.price || it.premium) return it.price || 0;
+  const have = career.cards[cardKey(cat, it)] || 0, need = cardsNeeded(cat, it);
+  return Math.round(it.price * (1 - 0.3 * Math.min(1, have / need) ** 2));
+}
+// Badge counts: newly unlocked items, overall or for one card category (bag, board, trail, fx).
 const newCount = catKey => Object.keys(career.newCards || {}).filter(k => !catKey || k.startsWith(catKey + ":")).length;
 
 // ── Opening a can: decide every prize up front, then the reveal plays them one by one.

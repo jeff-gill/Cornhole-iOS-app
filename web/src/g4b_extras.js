@@ -246,6 +246,13 @@ if (!nativeBridge) {
     save();
   }
 }
+// Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
+const BUILD_ID = "__BUILD_ID__";
+if (testing() && career.testBuild !== BUILD_ID) {
+  career.testBuild = BUILD_ID;
+  career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
+  save();
+}
 if (testing()) { // Test cans: also in Xcode debug builds
   $("testCans").hidden = false;
   $("testCans").onclick = () => {
