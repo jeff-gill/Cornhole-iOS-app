@@ -52,7 +52,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0 });
+const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -60,7 +60,11 @@ const haptic = kind => postNative("haptic", kind);
 let career = fresh();
 try {
   const raw = window.__nativeCareer || localStorage.getItem(SAVE_KEY);
-  if (raw) career = { ...fresh(), ...(typeof raw === "string" ? JSON.parse(raw) : raw) };
+  if (raw) {
+    const old = typeof raw === "string" ? JSON.parse(raw) : raw;
+    career = { ...fresh(), ...old };
+    if (old.tutorialDone === undefined && (old.wins || old.losses)) career.tutorialDone = true; // veterans skip the coach
+  }
 } catch (e) { /* storage unavailable: play without saving */ }
 function save() {
   const json = JSON.stringify(career);
@@ -79,7 +83,7 @@ const S = {
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, overdrive: false, lastId: null, cpuT: 0, cpuPlan: null,
   saved: {}, settleT: 0, acc: 0, push: null, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
   pull: { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 }, planVersion: 0, wind: { mph: 0, dir: 0 }, fourBagger: [false, false],
-  result: null, introT: 0,
+  result: null, introT: 0, tut: { dragged: false, thrown: false },
 };
 globalThis.S = S; // the engine's what-if simulation reads the board from here
 const isCPU = p => S.kind === "career" && p === 1;
@@ -119,6 +123,9 @@ function newWind() {
   const [lo, hi] = venue().wind;
   S.wind = { mph: Math.round(rand(lo, hi)), dir: rand(0, Math.PI * 2) }; // steady for the whole inning, any direction
 }
+function venueAmbience(id = venue().id, mph = S.wind.mph) {
+  setAmbience({ wind: mph, surf: id === "beach", crowd: id === "stadium" || id === "tailgate", night: id === "brewery" });
+}
 function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
   return { x: Math.sin(S.wind.dir) * a, y: Math.cos(S.wind.dir) * a };
@@ -144,7 +151,8 @@ function startMatch(kind, vi) {
   T.mu = v.mu;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
-  setTeamColors(); clearBagMeshes(); setBoardDesign(career.board); buildVenue(v.id); newWind();
+  setTeamColors(); clearBagMeshes(); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
+  S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub");
   showBanner(`${S.names[S.leader] === "You" ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
   S.introT = 0;
@@ -175,6 +183,7 @@ function moveMarker(kind, p) {
   } else if (S.plan) {
     const v = { x: p.x - S.end.x, y: p.y - S.end.y };
     S.landD = Math.hypot(v.x, v.y); S.landPhi = wrap(heading(v) - heading(S.plan.z.back));
+    S.tut.dragged = true;
   }
   refreshPlan(); ui();
 }
@@ -241,10 +250,12 @@ function releaseBag(e) {
   S.perfect = !S.overdrive && S.feedback.every(f => f.text === "Perfect");
   S.lastId = S.world.launch(actual, S.player);
   S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh(); haptic("release");
+  if (!isCPU(S.player)) S.tut.thrown = true;
   if (S.overdrive) showBanner("OVERDRIVE!", S.player); else if (S.perfect) showBanner("PERFECT!", S.player);
   ui();
 }
 function endTurn() {
+  if (S.kind === "career" && !career.tutorialDone && S.tut.thrown) { career.tutorialDone = true; save(); }
   if (S.thrown[0] >= 4 && S.thrown[1] >= 4) { finishInning(); return; }
   const other = 1 - S.player; if (S.thrown[other] < 4) S.player = other;
   beginTurn();
@@ -264,7 +275,7 @@ function finishInning() {
   ui();
 }
 function finishMatch() {
-  sfx.hole();
+  if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
   const v = venue(), won = S.winner === 0, before = career.stars;
   const starDelta = won ? 3 + S.venue : -(1 + S.venue);
@@ -279,7 +290,7 @@ function finishMatch() {
 }
 function nextInning() {
   S.world.clear(); clearBagMeshes(); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
-  newWind(); beginTurn();
+  newWind(); venueAmbience(); beginTurn();
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.7; renderBanner(); }
 function checkFourBagger() {
@@ -299,7 +310,7 @@ function handleEvents(evts) {
     else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
     else if (e.type === "land") { sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
     else if (e.type === "hit") { sfx.thud(); haptic("light"); }
-    else if (e.type === "ground") { dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
+    else if (e.type === "ground") { sfx.grass(); dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
     else if (e.type === "off") showBanner(e.bag.id === S.lastId ? "Slid off" : "Knocked off!", e.bag.owner);
   }
   if (evts.some(e => e.type === "swish" || e.type === "drop")) checkFourBagger();

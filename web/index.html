@@ -211,6 +211,16 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .item .btn { font-size: 15px; padding: 9px 12px; min-width: 86px; }
 .big3 { font-family: var(--font-display); font-size: 46px; font-weight: 400; text-align: center; line-height: 1; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
 .rewards { display: flex; justify-content: center; gap: 10px; }
+/* First-match coach */
+#coach { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(92%, 420px); pointer-events: none; text-align: center;
+  font-size: 16px; font-weight: 900; line-height: 1.3; padding: 10px 14px; border-radius: 18px; background: rgba(10,20,38,.88); border: 3px solid var(--gold);
+  box-shadow: 0 5px 0 rgba(0,0,0,.3); animation: coachbob 1.6s ease-in-out infinite; }
+#coach b { color: var(--gold); }
+#coach.top { bottom: auto; top: 64px; width: min(70%, 360px); font-size: 14px; }
+@keyframes coachbob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
+.toast { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); background: linear-gradient(#ffe27a, #ffc93a); color: #3a2600; font-family: var(--font-display);
+  font-size: 20px; padding: 8px 18px; border-radius: 999px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.3); white-space: nowrap; animation: toastin 3.2s ease forwards; pointer-events: none; }
+@keyframes toastin { 0% { opacity: 0; transform: translateX(-50%) scale(.6); } 10% { opacity: 1; transform: translateX(-50%) scale(1.06); } 16% { transform: translateX(-50%) scale(1); } 85% { opacity: 1; } 100% { opacity: 0; } }
 /* 4-BAGGER title */
 #fourbag { position: fixed; left: 0; right: 0; top: 34%; z-index: 30; text-align: center; pointer-events: none; opacity: 0;
   font-family: var(--font-display); font-size: clamp(56px, 17vw, 120px); line-height: 1; color: #fff; letter-spacing: .02em;
@@ -242,6 +252,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
+    <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
     <div id="aim" hidden></div>
@@ -266,7 +277,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
       <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
       <button class="btn small" id="onlineBtn" disabled>ONLINE<br><span style="font-size:11px">coming soon</span></button>
     </div>
-    <div class="row" style="justify-content:center"><button class="linkbtn" id="menuHelp">How to play</button></div>
+    <div class="row" style="justify-content:center;gap:22px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="soundBtn">Sound: on</button></div>
   </div>
 </div>
 
@@ -283,6 +294,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
   <div class="sheet">
     <h2>Paused</h2>
     <button class="btn green go" id="resumeBtn">RESUME</button>
+    <button class="btn" id="pauseSound">SOUND: ON</button>
     <button class="btn" id="forfeitBtn">QUIT MATCH</button>
     <div class="muted center" id="forfeitNote"></div>
   </div>
@@ -301,6 +313,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>
     </div>
     <button class="btn green go" id="helpClose">GOT IT</button>
+    <button class="linkbtn" id="replayTut">Show the tutorial again in my next match</button>
   </div>
 </div>
 
@@ -672,22 +685,6 @@ function cpuPlan(pl, bags) {
 }
 function gauss(s) { const u = Math.max(1e-9, Math.random()), v = Math.random(); return clamp(Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v) * s, -1, 1); }
 
-// ───────────────────────── Sound (starts after the first tap)
-let audio = null;
-function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) { audio = null; } }
-function tone(freq, dur, type = "sine", vol = 0.25, when = 0) {
-  if (!audio) return;
-  const t0 = audio.currentTime + when, o = audio.createOscillator(), g = audio.createGain();
-  o.type = type; o.frequency.setValueAtTime(freq, t0); o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * 0.5), t0 + dur);
-  g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-  o.connect(g).connect(audio.destination); o.start(t0); o.stop(t0 + dur + 0.02);
-}
-const sfx = {
-  thud: () => tone(95, 0.16, "sine", 0.45),
-  tick: () => tone(900, 0.04, "square", 0.06),
-  hole: () => { tone(523, 0.15, "triangle", 0.25); tone(784, 0.3, "triangle", 0.25, 0.12); },
-  whoosh: () => tone(300, 0.25, "sawtooth", 0.04),
-};
 
 </script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
@@ -746,7 +743,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0 });
+const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -754,7 +751,11 @@ const haptic = kind => postNative("haptic", kind);
 let career = fresh();
 try {
   const raw = window.__nativeCareer || localStorage.getItem(SAVE_KEY);
-  if (raw) career = { ...fresh(), ...(typeof raw === "string" ? JSON.parse(raw) : raw) };
+  if (raw) {
+    const old = typeof raw === "string" ? JSON.parse(raw) : raw;
+    career = { ...fresh(), ...old };
+    if (old.tutorialDone === undefined && (old.wins || old.losses)) career.tutorialDone = true; // veterans skip the coach
+  }
 } catch (e) { /* storage unavailable: play without saving */ }
 function save() {
   const json = JSON.stringify(career);
@@ -773,7 +774,7 @@ const S = {
   errors: { dir: 0, pow: 0, ht: 0 }, feedback: [], perfect: false, overdrive: false, lastId: null, cpuT: 0, cpuPlan: null,
   saved: {}, settleT: 0, acc: 0, push: null, time: 0, relT: 99, banner: null, bannerT: 0, lastInning: null, winner: null,
   pull: { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 }, planVersion: 0, wind: { mph: 0, dir: 0 }, fourBagger: [false, false],
-  result: null, introT: 0,
+  result: null, introT: 0, tut: { dragged: false, thrown: false },
 };
 globalThis.S = S; // the engine's what-if simulation reads the board from here
 const isCPU = p => S.kind === "career" && p === 1;
@@ -813,6 +814,9 @@ function newWind() {
   const [lo, hi] = venue().wind;
   S.wind = { mph: Math.round(rand(lo, hi)), dir: rand(0, Math.PI * 2) }; // steady for the whole inning, any direction
 }
+function venueAmbience(id = venue().id, mph = S.wind.mph) {
+  setAmbience({ wind: mph, surf: id === "beach", crowd: id === "stadium" || id === "tailgate", night: id === "brewery" });
+}
 function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
   return { x: Math.sin(S.wind.dir) * a, y: Math.cos(S.wind.dir) * a };
@@ -838,7 +842,8 @@ function startMatch(kind, vi) {
   T.mu = v.mu;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
-  setTeamColors(); clearBagMeshes(); setBoardDesign(career.board); buildVenue(v.id); newWind();
+  setTeamColors(); clearBagMeshes(); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
+  S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub");
   showBanner(`${S.names[S.leader] === "You" ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
   S.introT = 0;
@@ -869,6 +874,7 @@ function moveMarker(kind, p) {
   } else if (S.plan) {
     const v = { x: p.x - S.end.x, y: p.y - S.end.y };
     S.landD = Math.hypot(v.x, v.y); S.landPhi = wrap(heading(v) - heading(S.plan.z.back));
+    S.tut.dragged = true;
   }
   refreshPlan(); ui();
 }
@@ -935,10 +941,12 @@ function releaseBag(e) {
   S.perfect = !S.overdrive && S.feedback.every(f => f.text === "Perfect");
   S.lastId = S.world.launch(actual, S.player);
   S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh(); haptic("release");
+  if (!isCPU(S.player)) S.tut.thrown = true;
   if (S.overdrive) showBanner("OVERDRIVE!", S.player); else if (S.perfect) showBanner("PERFECT!", S.player);
   ui();
 }
 function endTurn() {
+  if (S.kind === "career" && !career.tutorialDone && S.tut.thrown) { career.tutorialDone = true; save(); }
   if (S.thrown[0] >= 4 && S.thrown[1] >= 4) { finishInning(); return; }
   const other = 1 - S.player; if (S.thrown[other] < 4) S.player = other;
   beginTurn();
@@ -958,7 +966,7 @@ function finishInning() {
   ui();
 }
 function finishMatch() {
-  sfx.hole();
+  if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
   const v = venue(), won = S.winner === 0, before = career.stars;
   const starDelta = won ? 3 + S.venue : -(1 + S.venue);
@@ -973,7 +981,7 @@ function finishMatch() {
 }
 function nextInning() {
   S.world.clear(); clearBagMeshes(); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
-  newWind(); beginTurn();
+  newWind(); venueAmbience(); beginTurn();
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.7; renderBanner(); }
 function checkFourBagger() {
@@ -993,7 +1001,7 @@ function handleEvents(evts) {
     else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
     else if (e.type === "land") { sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
     else if (e.type === "hit") { sfx.thud(); haptic("light"); }
-    else if (e.type === "ground") { dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
+    else if (e.type === "ground") { sfx.grass(); dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
     else if (e.type === "off") showBanner(e.bag.id === S.lastId ? "Slid off" : "Knocked off!", e.bag.owner);
   }
   if (evts.some(e => e.type === "swish" || e.type === "drop")) checkFourBagger();
@@ -1011,6 +1019,84 @@ function cpuTurn() {
     refreshPlan();
   }
   ui();
+}
+
+// ───────────────────────── Sound: effects and venue ambience (Web Audio, starts after the first tap)
+let audio = null, master = null, noiseBuf = null, amb = null, wantAmb = null;
+let muted = false;
+try { muted = localStorage.getItem("backyard-cornhole.muted") === "1"; } catch (e) { /* ignore */ }
+function initAudio() {
+  try {
+    if (!audio) {
+      audio = new (window.AudioContext || window.webkitAudioContext)();
+      master = audio.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(audio.destination);
+    }
+    audio.resume();
+    if (wantAmb && !amb) startAmbience(wantAmb);
+  } catch (e) { audio = null; }
+}
+function setMuted(m) {
+  muted = m;
+  try { localStorage.setItem("backyard-cornhole.muted", m ? "1" : "0"); } catch (e) { /* ignore */ }
+  if (master) master.gain.setTargetAtTime(m ? 0 : 0.9, audio.currentTime, 0.05);
+}
+function noise() {
+  if (!noiseBuf) {
+    const n = audio.sampleRate * 2; noiseBuf = audio.createBuffer(1, n, audio.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  }
+  return noiseBuf;
+}
+// Filtered noise burst: thumps, whooshes, cheers, crackles.
+function burst({ dur, freq, q = 0.8, vol, type = "lowpass", when = 0, attack = 0.004, sweep = 0 }) {
+  if (!audio) return;
+  const t0 = audio.currentTime + when, src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+  src.buffer = noise(); src.loop = true;
+  f.type = type; f.frequency.setValueAtTime(freq, t0); f.Q.value = q;
+  if (sweep) f.frequency.exponentialRampToValueAtTime(Math.max(40, freq * sweep), t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + attack); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(f).connect(g).connect(master); src.start(t0, Math.random()); src.stop(t0 + dur + 0.05);
+}
+function tone(freq, dur, type = "sine", vol = 0.25, when = 0, slideTo = 0) {
+  if (!audio) return;
+  const t0 = audio.currentTime + when, o = audio.createOscillator(), g = audio.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+  g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + 0.02);
+}
+const sfx = {
+  tick: () => tone(1250, 0.035, "square", 0.04),
+  whoosh: () => burst({ dur: 0.38, freq: 900, q: 0.7, vol: 0.22, type: "bandpass", attack: 0.12, sweep: 2.4 }),
+  thud: () => { burst({ dur: 0.16, freq: 520, vol: 0.9, sweep: 0.4 }); tone(95, 0.14, "sine", 0.55, 0, 50); },   // canvas bag on plywood
+  grass: () => burst({ dur: 0.14, freq: 1400, vol: 0.35, sweep: 0.5 }),
+  cheer: (len = 1.6, vol = 0.3) => { burst({ dur: len, freq: 1200, q: 0.5, vol, type: "bandpass", attack: 0.25 }); burst({ dur: len * 0.8, freq: 2600, q: 0.6, vol: vol * 0.5, type: "bandpass", attack: 0.2, when: 0.05 }); },
+  hole: () => { burst({ dur: 0.22, freq: 260, vol: 0.7, sweep: 0.3 }); tone(523, 0.14, "triangle", 0.22, 0.06); tone(784, 0.32, "triangle", 0.22, 0.18); sfx.cheer(1.5, 0.22); },
+  boom: () => { burst({ dur: 0.9, freq: 160, vol: 0.9, sweep: 0.35 }); for (let k = 0; k < 7; k++) burst({ dur: 0.05, freq: 3000 + Math.random() * 3000, vol: 0.12, type: "highpass", when: 0.25 + Math.random() * 0.6 }); },
+  win: () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, "triangle", 0.2, i * 0.12)); sfx.cheer(2.2, 0.3); },
+};
+// Looping background for each venue: wind that matches its speed, surf at the beach, a crowd at the stadium.
+function setAmbience(opts) {
+  wantAmb = opts;
+  if (amb) { const old = amb; amb = null; try { old.gain.gain.setTargetAtTime(0.0001, audio.currentTime, 0.3); setTimeout(() => old.nodes.forEach(n => { try { n.stop ? n.stop() : 0; n.disconnect(); } catch (e) { /* ignore */ } }), 1500); } catch (e) { /* ignore */ } }
+  if (audio && opts) startAmbience(opts);
+}
+function startAmbience({ wind = 0, surf = false, crowd = false, night = false }) {
+  const out = audio.createGain(); out.gain.value = 0.0001; out.connect(master);
+  const nodes = [out];
+  const layer = (type, freq, q, vol, lfoRate, lfoDepth) => {
+    const src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+    src.buffer = noise(); src.loop = true; f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = vol;
+    src.connect(f).connect(g).connect(out); src.start(0, Math.random() * 2);
+    nodes.push(src, f, g);
+    if (lfoRate) { const l = audio.createOscillator(), lg = audio.createGain(); l.frequency.value = lfoRate; lg.gain.value = lfoDepth; l.connect(lg).connect(g.gain); l.start(); nodes.push(l, lg); }
+  };
+  if (wind > 0) layer("lowpass", 300 + wind * 40, 0.6, 0.05 + wind * 0.012, 0.13, 0.02 + wind * 0.006);
+  if (surf) layer("lowpass", 700, 0.5, 0.12, 0.11, 0.1);
+  if (crowd) { layer("bandpass", 900, 0.6, 0.07, 0.07, 0.025); layer("bandpass", 2200, 0.8, 0.025, 0.05, 0.01); }
+  if (night) layer("highpass", 5200, 3, 0.012, 3.2, 0.01); // crickets-ish shimmer
+  out.gain.setTargetAtTime(1, audio.currentTime, 0.8);
+  amb = { gain: out, nodes };
 }
 
 // ───────────────────────── Renderer, sky, lights
@@ -1662,7 +1748,7 @@ function fourBagger(owner) {
     setTimeout(() => {
       const c = new THREE.Vector3(rand(-9, 9), rand(6, 13), -FY - rand(3, 14));
       fireworkBurst(c, new THREE.Color(cols[k % cols.length]));
-      sfx.hole();
+      sfx.boom();
     }, k * 260);
   }
   shake = 0.8;
@@ -1852,6 +1938,7 @@ function ui() {
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
   else if (canEdit() && S.landing) { hint.textContent = "Drag the yellow ring around the gold zone"; hint.hidden = false; }
   else hint.hidden = true;
+  renderCoach();
   const side = SIDES[S.player] < 0 ? "Left box" : "Right box";
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${whoName(S.player)} throw</div>`;
   if (S.phase === "aiming") {
@@ -1890,6 +1977,24 @@ function ui() {
   updateHUD();
   renderInningSheet();
 }
+// First career match only: one step at a time, following what the player is doing.
+function coachText() {
+  if (S.kind !== "career" || career.tutorialDone || isCPU(S.player)) return "";
+  if (S.phase === "aiming" && !S.end) return "👆 <b>Tap the board</b> where you want your bag to finish.";
+  if (S.phase === "aiming" && !S.tut.dragged) return "👉 <b>Drag the yellow ring</b> to pick where it lands first. Close to the green spot sticks, farther back slides.";
+  if (S.phase === "aiming") return "👇 Happy with it? <b>Tap THROW.</b>";
+  if (S.phase === "throw" && !S.pull.active) return "⬇️ <b>Pull down anywhere</b> and watch the power bar fill.";
+  if (S.phase === "throw") return "Let go in the <b>gold band</b> with the <b>arrow pointing straight</b>. Too far is OVERDRIVE!";
+  if (S.phase === "flight" && S.tut.thrown) return "🌬️ The <b>wind</b> (top left) pushes your bag. Aim a little into it next time.";
+  return "";
+}
+function renderCoach() {
+  const el = $("coach"), text = coachText();
+  el.hidden = !text;
+  el.classList.toggle("top", S.phase === "throw"); // keep the arrow clear while pulling
+  if (text && el.innerHTML !== text) el.innerHTML = text;
+  if (text) $("hint").hidden = true;
+}
 function renderInningSheet() {
   const sheet = $("inningSheet");
   if (!((S.phase === "inning" || S.phase === "over") && S.lastInning)) { sheet.hidden = true; return; }
@@ -1906,8 +2011,10 @@ function renderInningSheet() {
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${res.coins}</b></div></div>
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
+    const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee;
     body = `${head}<div class="center muted">Final: ${esc(S.names[0])} ${S.scores[0]} – ${S.scores[1]} ${esc(S.names[1])}</div>${rewards}
-      <button class="btn go green" id="nextBtn">CONTINUE</button>`;
+      <button class="btn go green" id="againBtn" ${canAgain ? "" : "disabled"}>${canAgain ? "PLAY AGAIN" + (fee ? ` · 🪙 ${fee.toLocaleString()}` : "") : "NOT ENOUGH COINS"}</button>
+      <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
     void youWon;
   } else {
     body = `<h2>Inning ${S.inning}</h2><div class="cols">${col(0)}${col(1)}</div><div class="center" style="font-size:17px">${line}</div>
@@ -1916,6 +2023,7 @@ function renderInningSheet() {
   }
   $("inningBody").innerHTML = body;
   $("nextBtn").onclick = () => { sheet.hidden = true; if (S.phase === "over") openHub(); else nextInning(); };
+  if ($("againBtn")) $("againBtn").onclick = () => { sheet.hidden = true; const k = S.kind, v = S.venue; openHub(); startMatch(k, v); };
   sheet.hidden = false;
 }
 
@@ -1926,12 +2034,19 @@ function openHub() {
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
+  const today = new Date().toDateString();
+  if (career.lastDaily !== today) {
+    career.lastDaily = today; career.coins += 100; save(); renderHub();
+    const t = document.createElement("div"); t.className = "toast"; t.textContent = "Daily bonus 🪙 +100";
+    $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
+  }
 }
 function renderHub() {
   $("coins").textContent = career.coins.toLocaleString();
   $("stars").textContent = career.stars;
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), nextV = VENUES.find(x => x.stars > career.stars);
   buildVenue(v.id); setBoardDesign(career.board);
+  venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
   const prog = nextV ? `<div class="muted" style="margin-top:8px">Next venue: ${esc(nextV.name)} at ${nextV.stars} ⭐</div><div class="progress"><i style="width:${Math.min(100, career.stars / nextV.stars * 100)}%"></i></div>` : "";
   $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous venue">‹</button>
     <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next venue">›</button>
@@ -1994,6 +2109,11 @@ $("forfeitBtn").onclick = () => {
   if (S.kind === "career") { career.stars = Math.max(0, career.stars - (1 + S.venue)); career.losses++; save(); }
   openHub();
 };
+function renderSoundButtons() { $("soundBtn").textContent = `Sound: ${muted ? "off" : "on"}`; $("pauseSound").textContent = `SOUND: ${muted ? "OFF" : "ON"}`; }
+$("soundBtn").onclick = () => { initAudio(); setMuted(!muted); renderSoundButtons(); };
+$("pauseSound").onclick = () => { initAudio(); setMuted(!muted); renderSoundButtons(); };
+$("replayTut").onclick = () => { career.tutorialDone = false; save(); $("replayTut").textContent = "Tutorial will show in your next match"; };
+renderSoundButtons();
 $("helpBtn").onclick = () => { $("helpSheet").hidden = false; };
 $("menuHelp").onclick = () => { $("helpSheet").hidden = false; };
 $("helpClose").onclick = () => { $("helpSheet").hidden = true; };
@@ -2006,7 +2126,7 @@ function frame(now) {
   S.time += dt; S.relT += dt;
   if (S.banner) { S.bannerT -= dt; if (S.bannerT <= 0) { S.banner = null; renderBanner(); } }
   if (pendingDrag && dragging) { moveMarker(dragging, pendingDrag); pendingDrag = null; }
-  if (S.phase === "throw") { updatePull(dt); updateHUD(); }
+  if (S.phase === "throw") { const was = S.pull.active; updatePull(dt); updateHUD(); if (was !== S.pull.active || (S.pull.active && !career.tutorialDone)) renderCoach(); }
   else if (S.phase === "cpu") {
     S.cpuT += dt;
     if (!S.cpuPlan && S.cpuT > 0.6) cpuTurn();

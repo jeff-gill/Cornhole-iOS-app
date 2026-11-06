@@ -296,7 +296,7 @@ function fourBagger(owner) {
     setTimeout(() => {
       const c = new THREE.Vector3(rand(-9, 9), rand(6, 13), -FY - rand(3, 14));
       fireworkBurst(c, new THREE.Color(cols[k % cols.length]));
-      sfx.hole();
+      sfx.boom();
     }, k * 260);
   }
   shake = 0.8;

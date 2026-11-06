@@ -152,6 +152,7 @@ function ui() {
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
   else if (canEdit() && S.landing) { hint.textContent = "Drag the yellow ring around the gold zone"; hint.hidden = false; }
   else hint.hidden = true;
+  renderCoach();
   const side = SIDES[S.player] < 0 ? "Left box" : "Right box";
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${whoName(S.player)} throw</div>`;
   if (S.phase === "aiming") {
@@ -190,6 +191,24 @@ function ui() {
   updateHUD();
   renderInningSheet();
 }
+// First career match only: one step at a time, following what the player is doing.
+function coachText() {
+  if (S.kind !== "career" || career.tutorialDone || isCPU(S.player)) return "";
+  if (S.phase === "aiming" && !S.end) return "👆 <b>Tap the board</b> where you want your bag to finish.";
+  if (S.phase === "aiming" && !S.tut.dragged) return "👉 <b>Drag the yellow ring</b> to pick where it lands first. Close to the green spot sticks, farther back slides.";
+  if (S.phase === "aiming") return "👇 Happy with it? <b>Tap THROW.</b>";
+  if (S.phase === "throw" && !S.pull.active) return "⬇️ <b>Pull down anywhere</b> and watch the power bar fill.";
+  if (S.phase === "throw") return "Let go in the <b>gold band</b> with the <b>arrow pointing straight</b>. Too far is OVERDRIVE!";
+  if (S.phase === "flight" && S.tut.thrown) return "🌬️ The <b>wind</b> (top left) pushes your bag. Aim a little into it next time.";
+  return "";
+}
+function renderCoach() {
+  const el = $("coach"), text = coachText();
+  el.hidden = !text;
+  el.classList.toggle("top", S.phase === "throw"); // keep the arrow clear while pulling
+  if (text && el.innerHTML !== text) el.innerHTML = text;
+  if (text) $("hint").hidden = true;
+}
 function renderInningSheet() {
   const sheet = $("inningSheet");
   if (!((S.phase === "inning" || S.phase === "over") && S.lastInning)) { sheet.hidden = true; return; }
@@ -206,8 +225,10 @@ function renderInningSheet() {
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${res.coins}</b></div></div>
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
+    const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee;
     body = `${head}<div class="center muted">Final: ${esc(S.names[0])} ${S.scores[0]} – ${S.scores[1]} ${esc(S.names[1])}</div>${rewards}
-      <button class="btn go green" id="nextBtn">CONTINUE</button>`;
+      <button class="btn go green" id="againBtn" ${canAgain ? "" : "disabled"}>${canAgain ? "PLAY AGAIN" + (fee ? ` · 🪙 ${fee.toLocaleString()}` : "") : "NOT ENOUGH COINS"}</button>
+      <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
     void youWon;
   } else {
     body = `<h2>Inning ${S.inning}</h2><div class="cols">${col(0)}${col(1)}</div><div class="center" style="font-size:17px">${line}</div>
@@ -216,6 +237,7 @@ function renderInningSheet() {
   }
   $("inningBody").innerHTML = body;
   $("nextBtn").onclick = () => { sheet.hidden = true; if (S.phase === "over") openHub(); else nextInning(); };
+  if ($("againBtn")) $("againBtn").onclick = () => { sheet.hidden = true; const k = S.kind, v = S.venue; openHub(); startMatch(k, v); };
   sheet.hidden = false;
 }
 
@@ -226,12 +248,19 @@ function openHub() {
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
+  const today = new Date().toDateString();
+  if (career.lastDaily !== today) {
+    career.lastDaily = today; career.coins += 100; save(); renderHub();
+    const t = document.createElement("div"); t.className = "toast"; t.textContent = "Daily bonus 🪙 +100";
+    $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
+  }
 }
 function renderHub() {
   $("coins").textContent = career.coins.toLocaleString();
   $("stars").textContent = career.stars;
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), nextV = VENUES.find(x => x.stars > career.stars);
   buildVenue(v.id); setBoardDesign(career.board);
+  venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
   const prog = nextV ? `<div class="muted" style="margin-top:8px">Next venue: ${esc(nextV.name)} at ${nextV.stars} ⭐</div><div class="progress"><i style="width:${Math.min(100, career.stars / nextV.stars * 100)}%"></i></div>` : "";
   $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous venue">‹</button>
     <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next venue">›</button>
@@ -294,6 +323,11 @@ $("forfeitBtn").onclick = () => {
   if (S.kind === "career") { career.stars = Math.max(0, career.stars - (1 + S.venue)); career.losses++; save(); }
   openHub();
 };
+function renderSoundButtons() { $("soundBtn").textContent = `Sound: ${muted ? "off" : "on"}`; $("pauseSound").textContent = `SOUND: ${muted ? "OFF" : "ON"}`; }
+$("soundBtn").onclick = () => { initAudio(); setMuted(!muted); renderSoundButtons(); };
+$("pauseSound").onclick = () => { initAudio(); setMuted(!muted); renderSoundButtons(); };
+$("replayTut").onclick = () => { career.tutorialDone = false; save(); $("replayTut").textContent = "Tutorial will show in your next match"; };
+renderSoundButtons();
 $("helpBtn").onclick = () => { $("helpSheet").hidden = false; };
 $("menuHelp").onclick = () => { $("helpSheet").hidden = false; };
 $("helpClose").onclick = () => { $("helpSheet").hidden = true; };
@@ -306,7 +340,7 @@ function frame(now) {
   S.time += dt; S.relT += dt;
   if (S.banner) { S.bannerT -= dt; if (S.bannerT <= 0) { S.banner = null; renderBanner(); } }
   if (pendingDrag && dragging) { moveMarker(dragging, pendingDrag); pendingDrag = null; }
-  if (S.phase === "throw") { updatePull(dt); updateHUD(); }
+  if (S.phase === "throw") { const was = S.pull.active; updatePull(dt); updateHUD(); if (was !== S.pull.active || (S.pull.active && !career.tutorialDone)) renderCoach(); }
   else if (S.phase === "cpu") {
     S.cpuT += dt;
     if (!S.cpuPlan && S.cpuT > 0.6) cpuTurn();

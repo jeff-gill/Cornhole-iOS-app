@@ -360,20 +360,4 @@ function cpuPlan(pl, bags) {
 }
 function gauss(s) { const u = Math.max(1e-9, Math.random()), v = Math.random(); return clamp(Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v) * s, -1, 1); }
 
-// ───────────────────────── Sound (starts after the first tap)
-let audio = null;
-function initAudio() { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) { audio = null; } }
-function tone(freq, dur, type = "sine", vol = 0.25, when = 0) {
-  if (!audio) return;
-  const t0 = audio.currentTime + when, o = audio.createOscillator(), g = audio.createGain();
-  o.type = type; o.frequency.setValueAtTime(freq, t0); o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * 0.5), t0 + dur);
-  g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-  o.connect(g).connect(audio.destination); o.start(t0); o.stop(t0 + dur + 0.02);
-}
-const sfx = {
-  thud: () => tone(95, 0.16, "sine", 0.45),
-  tick: () => tone(900, 0.04, "square", 0.06),
-  hole: () => { tone(523, 0.15, "triangle", 0.25); tone(784, 0.3, "triangle", 0.25, 0.12); },
-  whoosh: () => tone(300, 0.25, "sawtooth", 0.04),
-};
 
