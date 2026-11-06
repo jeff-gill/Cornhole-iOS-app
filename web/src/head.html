@@ -197,13 +197,9 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .avatarbtn { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; padding: 0; background: none; box-shadow: 0 4px 0 rgba(0,0,0,.3); overflow: hidden; }
 .avatar { display: inline-grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; font-size: 24px; line-height: 1; }
 .avatar.sm { width: 22px; height: 22px; font-size: 13px; vertical-align: -4px; margin-right: 5px; border: 2px solid rgba(255,255,255,.8); }
-.hubmid { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; max-width: 560px; margin: 8px auto 0; }
 .livespill { color: #fff; font: inherit; }
 .livespill b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
 .livespill small { font-size: 11px; color: var(--ink-dim); font-weight: 900; }
-.cooler { display: flex; gap: 6px; }
-.cslot { width: 34px; height: 46px; border-radius: 9px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.35); display: grid; place-items: center; padding: 0; }
-.cslot.full { border: 2px solid #fff; animation: canbob 1.6s ease-in-out infinite; }
 @keyframes canbob { 50% { transform: translateY(-3px); } }
 .minican { width: 20px; height: 32px; border-radius: 5px 5px 4px 4px; box-shadow: inset -4px 0 0 rgba(0,0,0,.25), inset 3px 0 0 rgba(255,255,255,.35); position: relative; }
 .minican::before { content: ""; position: absolute; left: 2px; right: 2px; top: -3px; height: 4px; border-radius: 3px; background: inherit; filter: brightness(1.3); }
@@ -244,6 +240,42 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .canhint { position: absolute; bottom: 12%; font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
 #canDone { position: absolute; bottom: 7%; min-width: 200px; }
 .oddsrow { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; font-size: 14px; text-align: left; }
+
+.coin { display: inline-block; width: 1.05em; height: 1.05em; border-radius: 50%; vertical-align: -0.18em; position: relative; flex: none;
+  background: radial-gradient(circle at 35% 30%, #fff6b0, #ffd23a 38%, #e8a010 70%, #b07400); box-shadow: inset 0 0 0 0.09em #a86e00, 0 1px 0 rgba(0,0,0,.35); }
+.coin::after { content: "$"; position: absolute; inset: 0; display: grid; place-items: center; font: 900 0.72em/1 Nunito, system-ui, sans-serif; color: #8a5600; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+.pill > .coin { width: 28px; height: 28px; vertical-align: middle; }
+.pill > .coin::after { font-size: 18px; }
+.coin.big { width: 64px; height: 64px; } .coin.big::after { font-size: 42px; }
+.hubhead { width: 100%; max-width: 560px; margin: 0 auto; }
+.hubtitle { font-family: var(--font-display); text-align: center; white-space: nowrap; line-height: 1; font-size: 40px; text-shadow: 0 4px 0 rgba(0,0,0,.4); letter-spacing: .01em; }
+.hubtitle span { color: var(--gold); }
+.hubhead .gcname { text-align: center; margin: 2px 0 0; }
+.hubhead .hubtop { margin-top: 8px; }
+.hubright { display: flex; align-items: center; gap: 6px; }
+.hubright .pill, .hubleft .pill { padding-right: 9px; }
+#splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 22px; background: radial-gradient(circle at 50% 35%, #2b4a80, #0b1528 75%); transition: opacity .5s ease; }
+#splash.out { opacity: 0; pointer-events: none; }
+.splashtitle { font-family: var(--font-display); text-align: center; line-height: .9; font-size: min(17vw, 92px); text-shadow: 0 6px 0 rgba(0,0,0,.4); animation: splashin .8s cubic-bezier(.3,1.6,.5,1) both; }
+.splashtitle span { display: block; color: var(--gold); }
+@keyframes splashin { from { transform: scale(.4); opacity: 0; } }
+.splashboard { position: relative; width: 120px; height: 190px; border-radius: 8px; background: linear-gradient(90deg, #c8955a, #e8c08a 40%, #c8955a); border: 5px solid #8a5a2a; transform: perspective(400px) rotateX(38deg); box-shadow: 0 18px 30px rgba(0,0,0,.45); }
+.splashboard .hole { position: absolute; left: 50%; top: 22px; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; background: #1a0f06; box-shadow: inset 0 4px 6px rgba(0,0,0,.8); }
+.sbag { position: absolute; width: 34px; height: 30px; border-radius: 8px; background: #e8392b; box-shadow: inset 0 -4px 0 rgba(0,0,0,.25); }
+.sbag.b1 { left: 24px; top: 110px; transform: rotate(-12deg); }
+.sbag.b2 { left: 50%; top: -60px; margin-left: -17px; background: #2f86ff; animation: sbagdrop 1.6s ease-in .6s infinite; }
+@keyframes sbagdrop { 0% { top: -80px; opacity: 0; } 15% { opacity: 1; } 60% { top: 26px; transform: scale(1); opacity: 1; } 75%, 100% { top: 30px; transform: scale(.2); opacity: 0; } }
+.splashbar { width: 200px; height: 12px; border-radius: 8px; background: rgba(0,0,0,.35); overflow: hidden; border: 2px solid rgba(255,255,255,.6); }
+.splashbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #fff1a8); animation: splashload 2.6s ease-out forwards; }
+@keyframes splashload { to { width: 100%; } }
+.splashtag { font-weight: 900; color: var(--ink-dim); letter-spacing: .06em; }
+.cooler { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+.cslot { height: 50px; border-radius: 12px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.45); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 4px; color: #fff; font: 900 12px/1.1 Nunito, system-ui, sans-serif; }
+.cslot.full { border: 2px solid rgba(255,255,255,.85); background: rgba(10,20,38,.7); }
+.cslot.ready { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,201,58,.6); animation: canbob 1.4s ease-in-out infinite; }
+.cslot.ticking small { color: #7fd8ff; }
+.cslot small { font-size: 12px; font-variant-numeric: tabular-nums; }
+.cslot .minican { width: 18px; height: 30px; flex: none; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -383,7 +415,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
   </header>
   <div id="stage">
-    <div id="loading">Setting up the yard…</div>
+    <div id="loading" hidden></div>
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
@@ -399,17 +431,23 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 
 <div id="fourbag" aria-live="polite"></div>
 
+<div id="splash">
+  <div class="splashtitle">BACKYARD<span>CORNHOLE</span></div>
+  <div class="splashboard"><i class="hole"></i><i class="sbag b1"></i><i class="sbag b2"></i></div>
+  <div class="splashbar"><i></i></div>
+  <div class="splashtag">Aim it. Throw it. Sink it.</div>
+</div>
 <div class="overlay" id="hub">
-  <div class="hubtop">
-    <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="coins">0</b></div></div>
-    <div class="logo" style="font-size:22px;line-height:1">BACKYARD<span style="font-size:24px">CORNHOLE</span><div class="gcname" id="gcName" hidden></div></div>
-    <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div>
-  </div>
-  <div class="hubmid">
-    <button class="pill livespill" id="livesBtn"><span class="ico" style="background:#ff7aa8">🍹</span><b id="lives">5</b><small id="livesTimer"></small></button>
-    <div class="cooler" id="cooler"></div>
+  <div class="hubhead">
+    <div class="hubtitle" id="hubTitle">BACKYARD <span>CORNHOLE</span></div>
+    <div class="gcname" id="gcName" hidden></div>
+    <div class="hubtop">
+      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill" id="livesBtn"><span class="ico" style="background:#ff7aa8">🍹</span><b id="lives">5</b><small id="livesTimer"></small></button></div>
+      <div class="hubright"><div class="pill"><i class="coin"></i><b id="coins">0</b></div><div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
+    </div>
   </div>
   <div class="hubbottom">
+    <div class="cooler" id="cooler"></div>
     <div class="venue" id="venueCard"></div>
     <button class="btn green go" id="playBtn">PLAY</button>
     <div class="hubrow">
@@ -436,7 +474,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 </div>
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
-    <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>
+    <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><i class="coin"></i><b id="shopCoins">0</b></div></div>
     <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="throw">THROW</button><button data-tab="hole">CORNHOLE</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn" id="shopClose">DONE</button>

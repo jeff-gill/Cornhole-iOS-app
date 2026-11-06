@@ -271,21 +271,21 @@ function renderInningSheet() {
       : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`;
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
-        <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${short(res.coins)}</b></div>
+        <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
         ${res.lifeLost ? `<div class="pill"><span class="ico" style="background:#ff7aa8">🍹</span><b>−1</b></div>` : ""}</div>
-        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>` : ""}
+        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
     const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
     const again = !canAgain ? "NOT ENOUGH COINS"
       : bot && S.botRematch === "asking" ? `WAITING FOR ${who}…`
       : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
-      : bot ? `REMATCH · 🪙 ${short(fee)}`
-      : !O ? "PLAY AGAIN" + (fee ? ` · 🪙 ${short(fee)}` : "")
+      : bot ? `REMATCH · <i class="coin"></i> ${short(fee)}`
+      : !O ? "PLAY AGAIN" + (fee ? ` · <i class="coin"></i> ${short(fee)}` : "")
       : O.gone ? `${who} left`
       : R.me ? `WAITING FOR ${who}…`
-      : R.them ? `${who} WANTS A REMATCH! · 🪙 ${short(fee)}`
-      : `REMATCH · 🪙 ${short(fee)}`;
+      : R.them ? `${who} WANTS A REMATCH! · <i class="coin"></i> ${short(fee)}`
+      : `REMATCH · <i class="coin"></i> ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
       <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
@@ -362,6 +362,11 @@ function openHub() {
     $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
   }
 }
+// The clubhouse title fills the width of the screen.
+function fitTitle() {
+  const el = $("hubTitle"), w = el.parentElement.clientWidth; if (!w) return;
+  el.style.fontSize = "40px"; el.style.fontSize = Math.min(72, 40 * w / el.scrollWidth) + "px";
+}
 // 1,500 → 1.5K, 2,000,000 → 2M
 function short(n) { if (n >= 1e6) return +(n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M"; if (n >= 1e4) return +(n / 1e3).toFixed(n % 1e3 ? 1 : 0) + "K"; return n.toLocaleString(); }
 function renderHub() {
@@ -375,7 +380,7 @@ function renderHub() {
   $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous court">‹</button>
     <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next court">›</button>
     <div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : "🪙 " + short(v.fee))}${chip("Payout", "🪙 " + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}`;
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
@@ -384,7 +389,7 @@ function renderHub() {
   renderHubExtras();
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
-  play.textContent = !open ? "LOCKED" : noLives ? `NO LIVES · 🍹 IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
+  play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · 🍹 IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
@@ -445,7 +450,7 @@ function storeHTML() {
     const ic = it.kind === "can" ? `<i class="minican" style="width:30px;height:46px;background:linear-gradient(90deg, ${canById(it.can).color}, ${canById(it.can).rim} 40%, ${canById(it.can).color})"></i>` : it.icon;
     parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
   }
-  parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can? (odds)</button></div>`);
+  parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);
   parts.push(`<div class="label">Exclusive sets</div>`);
   for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
     parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
@@ -481,7 +486,7 @@ function renderShop() {
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      main.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${short(it.price)}` : "FREE";
+      main.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `<i class="coin"></i> ${short(it.price)}` : "FREE";
       main.disabled = equipped || (!owned && career.coins < it.price);
       main.onclick = () => {
         if (!owned) { career.coins -= it.price; mine.push(it.id); }
@@ -512,7 +517,7 @@ function renderShop() {
       btn.onclick = () => { shopTab = "store"; renderShop(); };
     } else {
       btn.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      btn.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
+      btn.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `<i class="coin"></i> ${short(it.price)}` : "FREE";
       btn.disabled = equipped || (!owned && career.coins < it.price);
       btn.onclick = () => {
         if (!owned) { career.coins -= it.price; (shopTab === "bags" ? career.bags : career.boards).push(it.id); }
@@ -623,6 +628,8 @@ function frame(now) {
 resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
-$("loading").hidden = true;
+// Splash: hold the title for a few seconds, then fade into the clubhouse.
+setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
+fitTitle(); window.addEventListener("resize", fitTitle);
 requestAnimationFrame(frame);
 window.__cornhole = { ui, finishMatch, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };

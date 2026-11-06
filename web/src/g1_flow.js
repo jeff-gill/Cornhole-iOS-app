@@ -73,7 +73,7 @@ BAGS.push(
 );
 // Store products (prices are placeholders until the App Store reports the real, local ones).
 const STORE = [
-  { id: PID("coins.small"), kind: "coins", coins: 20000, price: "$0.99", title: "Handful of Coins", icon: "🪙" },
+  { id: PID("coins.small"), kind: "coins", coins: 20000, price: "$0.99", title: "Handful of Coins", icon: "💵" },
   { id: PID("coins.medium"), kind: "coins", coins: 150000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
   { id: PID("coins.large"), kind: "coins", coins: 500000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
   { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
@@ -100,7 +100,7 @@ const TRAILS = [
   { id: "neon", name: "Neon", price: 1500000, icon: "💡", blurb: "A glowing ribbon in your colour" },
   { id: "rainbow", name: "Rainbow", price: 4000000, icon: "🌈", blurb: "Every colour, all the way" },
   { id: "galaxy", name: "Galaxy", price: 10000000, icon: "🌌", blurb: "Stardust and nebula" },
-  { id: "gold", name: "Gold Rush", price: 25000000, icon: "🪙", blurb: "Spills gold coins" },
+  { id: "gold", name: "Gold Rush", price: 25000000, icon: "💰", blurb: "Spills gold coins" },
   { id: "comet", name: "Comet", price: 60000000, icon: "☄️", blurb: "A blazing comet tail" },
 ];
 // Opponents and the second local player use these.
@@ -451,13 +451,14 @@ function finishMatch() {
   const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
   const coins = won ? pot(v) : 0;
   let can = null, coolerFull = false;
-  if (won) { refundLife(); can = rollCan(); coolerFull = !giveCan(can, S.venue); }
+  const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
+  if (won) { refundLife(); can = rollCan(null, holes); coolerFull = !giveCan(can, S.venue); }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
   const newly = updateUnlocks();
   save();
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, lifeLost: !won };
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won };
   postScores();
 }
 // A court's stars stay between 0 and its max.

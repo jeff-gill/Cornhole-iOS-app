@@ -2,16 +2,17 @@ import Foundation
 import UserNotifications
 
 /// Local notification for "your lives are full". The game asks for permission when the player turns alerts on,
-/// then reschedules the one alert whenever their lives change. Messages: {"op":"permission"}, {"op":"cancel"},
+/// then reschedules the alert whenever their lives change. An optional "id" (e.g. "can.ready") keeps other alerts separate. Messages: {"op":"permission"}, {"op":"cancel"},
 /// {"op":"schedule","at":<ms since 1970>,"title":"…","body":"…"}.
 enum LivesAlert {
-    private static let id = "lives.full"
+    private static let livesID = "lives.full"
 
     static func handle(_ json: String) {
         guard let data = json.data(using: .utf8),
               let msg = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let op = msg["op"] as? String else { return }
         let center = UNUserNotificationCenter.current()
+        let id = (msg["id"] as? String).map { String($0.prefix(40)) } ?? livesID
         switch op {
         case "permission":
             center.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }

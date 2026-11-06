@@ -6,7 +6,7 @@ const EFFECTS = [
   { id: "streamers", name: "Streamers", price: 500, icon: "🎏", blurb: "Long ribbons in your colours" },
   { id: "bubbles", name: "Bubbles", price: 2000, icon: "🫧", blurb: "Bubbles float up out of the hole" },
   { id: "hearts", name: "Hearts", price: 8000, icon: "💖", blurb: "A shower of hearts" },
-  { id: "coins", name: "Gold Coins", price: 25000, icon: "🪙", blurb: "A jackpot spray that bounces on the board" },
+  { id: "coins", name: "Gold Coins", price: 25000, icon: "💰", blurb: "A jackpot spray that bounces on the board" },
   { id: "stars", name: "Stars", price: 80000, icon: "⭐", blurb: "Twinkling stars burst out" },
   { id: "blizzard", name: "Blizzard", price: 250000, icon: "❄️", blurb: "A frosty snowburst" },
   { id: "lightning", name: "Lightning", price: 800000, icon: "⚡", blurb: "A bolt strikes the hole" },

@@ -16,13 +16,37 @@ const CANS = [
   { id: "purple", name: "Royal Purple", color: "#7a3ad6", rim: "#d8b8ff", odds: 2.4, pulls: 6, coins: [2.5, 5], cards: [26, 40], bias: 2.3, life: 0.05 },
   { id: "platinum", name: "Platinum Pils", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [4, 8], cards: [40, 60], bias: 1.8, life: 0.06 },
   { id: "diamond", name: "Diamond Reserve", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [6, 12], cards: [60, 90], bias: 1.3, life: 0.08 },
+  // Express: rare, middling contents, but it opens right away.
+  { id: "express", name: "Express Shot", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.5, 1.5], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
 ];
+// How long a can takes to open once you start it (one at a time). The better the can, the longer the wait.
+const OPEN_MIN = { black: 15, white: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
+const openMs = id => OPEN_MIN[id] * 60000;
+const durText = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Math.round(m / 60)}h` : `${m}m`; };
+const timeText = ms => { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`; };
+// A can's state: "ready" to open, "ticking" while it opens, or "idle" (waiting for you to start it).
+function canState(slot) {
+  if (canById(slot.id).express) return "ready";
+  if (!slot.start) return "idle";
+  return Date.now() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
+}
+const canLeft = slot => Math.max(0, slot.start + openMs(slot.id) - Date.now());
+const anyTicking = () => career.cans.some(c => canState(c) === "ticking");
+function startCan(i) {
+  const slot = career.cans[i];
+  if (!slot || anyTicking() || canState(slot) !== "idle") return false;
+  slot.start = Date.now(); save();
+  if (career.alerts) postNative("notify", JSON.stringify({ op: "schedule", id: "can.ready", at: slot.start + openMs(slot.id), title: `Your ${canById(slot.id).name} is ready! 🥫`, body: "Crack it open and see what's inside." }));
+  return true;
+}
 const COOLER_SIZE = 4;
 const canById = id => CANS.find(c => c.id === id) || CANS[0];
 // Daily free can: mostly the low tiers.
-const DAILY_ODDS = { black: 60, white: 30, bronze: 9, silver: 1 };
-function rollCan(odds) {
-  const list = odds ? CANS.filter(c => odds[c.id]) : CANS, w = c => (odds ? odds[c.id] : c.odds);
+const DAILY_ODDS = { black: 58, white: 30, bronze: 9, silver: 1, express: 2 };
+// boost: your cornholes in the match. Each one tilts the odds toward the rarer cans (capped at 30).
+function rollCan(odds, boost = 0) {
+  const k = 1 + Math.min(30, boost) * 0.012, rank = c => CANS.indexOf(c);
+  const list = odds ? CANS.filter(c => odds[c.id]) : CANS, w = c => (odds ? odds[c.id] : c.express ? c.odds : c.odds * k ** rank(c));
   let x = Math.random() * list.reduce((t, c) => t + w(c), 0);
   for (const c of list) { x -= w(c); if (x <= 0) return c.id; }
   return list[0].id;

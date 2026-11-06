@@ -205,13 +205,9 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .avatarbtn { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; padding: 0; background: none; box-shadow: 0 4px 0 rgba(0,0,0,.3); overflow: hidden; }
 .avatar { display: inline-grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; font-size: 24px; line-height: 1; }
 .avatar.sm { width: 22px; height: 22px; font-size: 13px; vertical-align: -4px; margin-right: 5px; border: 2px solid rgba(255,255,255,.8); }
-.hubmid { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; max-width: 560px; margin: 8px auto 0; }
 .livespill { color: #fff; font: inherit; }
 .livespill b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
 .livespill small { font-size: 11px; color: var(--ink-dim); font-weight: 900; }
-.cooler { display: flex; gap: 6px; }
-.cslot { width: 34px; height: 46px; border-radius: 9px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.35); display: grid; place-items: center; padding: 0; }
-.cslot.full { border: 2px solid #fff; animation: canbob 1.6s ease-in-out infinite; }
 @keyframes canbob { 50% { transform: translateY(-3px); } }
 .minican { width: 20px; height: 32px; border-radius: 5px 5px 4px 4px; box-shadow: inset -4px 0 0 rgba(0,0,0,.25), inset 3px 0 0 rgba(255,255,255,.35); position: relative; }
 .minican::before { content: ""; position: absolute; left: 2px; right: 2px; top: -3px; height: 4px; border-radius: 3px; background: inherit; filter: brightness(1.3); }
@@ -252,6 +248,42 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .canhint { position: absolute; bottom: 12%; font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
 #canDone { position: absolute; bottom: 7%; min-width: 200px; }
 .oddsrow { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; font-size: 14px; text-align: left; }
+
+.coin { display: inline-block; width: 1.05em; height: 1.05em; border-radius: 50%; vertical-align: -0.18em; position: relative; flex: none;
+  background: radial-gradient(circle at 35% 30%, #fff6b0, #ffd23a 38%, #e8a010 70%, #b07400); box-shadow: inset 0 0 0 0.09em #a86e00, 0 1px 0 rgba(0,0,0,.35); }
+.coin::after { content: "$"; position: absolute; inset: 0; display: grid; place-items: center; font: 900 0.72em/1 Nunito, system-ui, sans-serif; color: #8a5600; text-shadow: 0 1px 0 rgba(255,255,255,.5); }
+.pill > .coin { width: 28px; height: 28px; vertical-align: middle; }
+.pill > .coin::after { font-size: 18px; }
+.coin.big { width: 64px; height: 64px; } .coin.big::after { font-size: 42px; }
+.hubhead { width: 100%; max-width: 560px; margin: 0 auto; }
+.hubtitle { font-family: var(--font-display); text-align: center; white-space: nowrap; line-height: 1; font-size: 40px; text-shadow: 0 4px 0 rgba(0,0,0,.4); letter-spacing: .01em; }
+.hubtitle span { color: var(--gold); }
+.hubhead .gcname { text-align: center; margin: 2px 0 0; }
+.hubhead .hubtop { margin-top: 8px; }
+.hubright { display: flex; align-items: center; gap: 6px; }
+.hubright .pill, .hubleft .pill { padding-right: 9px; }
+#splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 22px; background: radial-gradient(circle at 50% 35%, #2b4a80, #0b1528 75%); transition: opacity .5s ease; }
+#splash.out { opacity: 0; pointer-events: none; }
+.splashtitle { font-family: var(--font-display); text-align: center; line-height: .9; font-size: min(17vw, 92px); text-shadow: 0 6px 0 rgba(0,0,0,.4); animation: splashin .8s cubic-bezier(.3,1.6,.5,1) both; }
+.splashtitle span { display: block; color: var(--gold); }
+@keyframes splashin { from { transform: scale(.4); opacity: 0; } }
+.splashboard { position: relative; width: 120px; height: 190px; border-radius: 8px; background: linear-gradient(90deg, #c8955a, #e8c08a 40%, #c8955a); border: 5px solid #8a5a2a; transform: perspective(400px) rotateX(38deg); box-shadow: 0 18px 30px rgba(0,0,0,.45); }
+.splashboard .hole { position: absolute; left: 50%; top: 22px; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; background: #1a0f06; box-shadow: inset 0 4px 6px rgba(0,0,0,.8); }
+.sbag { position: absolute; width: 34px; height: 30px; border-radius: 8px; background: #e8392b; box-shadow: inset 0 -4px 0 rgba(0,0,0,.25); }
+.sbag.b1 { left: 24px; top: 110px; transform: rotate(-12deg); }
+.sbag.b2 { left: 50%; top: -60px; margin-left: -17px; background: #2f86ff; animation: sbagdrop 1.6s ease-in .6s infinite; }
+@keyframes sbagdrop { 0% { top: -80px; opacity: 0; } 15% { opacity: 1; } 60% { top: 26px; transform: scale(1); opacity: 1; } 75%, 100% { top: 30px; transform: scale(.2); opacity: 0; } }
+.splashbar { width: 200px; height: 12px; border-radius: 8px; background: rgba(0,0,0,.35); overflow: hidden; border: 2px solid rgba(255,255,255,.6); }
+.splashbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #fff1a8); animation: splashload 2.6s ease-out forwards; }
+@keyframes splashload { to { width: 100%; } }
+.splashtag { font-weight: 900; color: var(--ink-dim); letter-spacing: .06em; }
+.cooler { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
+.cslot { height: 50px; border-radius: 12px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.45); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 4px; color: #fff; font: 900 12px/1.1 Nunito, system-ui, sans-serif; }
+.cslot.full { border: 2px solid rgba(255,255,255,.85); background: rgba(10,20,38,.7); }
+.cslot.ready { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,201,58,.6); animation: canbob 1.4s ease-in-out infinite; }
+.cslot.ticking small { color: #7fd8ff; }
+.cslot small { font-size: 12px; font-variant-numeric: tabular-nums; }
+.cslot .minican { width: 18px; height: 30px; flex: none; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -391,7 +423,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
   </header>
   <div id="stage">
-    <div id="loading">Setting up the yard…</div>
+    <div id="loading" hidden></div>
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
@@ -407,17 +439,23 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 
 <div id="fourbag" aria-live="polite"></div>
 
+<div id="splash">
+  <div class="splashtitle">BACKYARD<span>CORNHOLE</span></div>
+  <div class="splashboard"><i class="hole"></i><i class="sbag b1"></i><i class="sbag b2"></i></div>
+  <div class="splashbar"><i></i></div>
+  <div class="splashtag">Aim it. Throw it. Sink it.</div>
+</div>
 <div class="overlay" id="hub">
-  <div class="hubtop">
-    <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="coins">0</b></div></div>
-    <div class="logo" style="font-size:22px;line-height:1">BACKYARD<span style="font-size:24px">CORNHOLE</span><div class="gcname" id="gcName" hidden></div></div>
-    <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div>
-  </div>
-  <div class="hubmid">
-    <button class="pill livespill" id="livesBtn"><span class="ico" style="background:#ff7aa8">🍹</span><b id="lives">5</b><small id="livesTimer"></small></button>
-    <div class="cooler" id="cooler"></div>
+  <div class="hubhead">
+    <div class="hubtitle" id="hubTitle">BACKYARD <span>CORNHOLE</span></div>
+    <div class="gcname" id="gcName" hidden></div>
+    <div class="hubtop">
+      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill" id="livesBtn"><span class="ico" style="background:#ff7aa8">🍹</span><b id="lives">5</b><small id="livesTimer"></small></button></div>
+      <div class="hubright"><div class="pill"><i class="coin"></i><b id="coins">0</b></div><div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
+    </div>
   </div>
   <div class="hubbottom">
+    <div class="cooler" id="cooler"></div>
     <div class="venue" id="venueCard"></div>
     <button class="btn green go" id="playBtn">PLAY</button>
     <div class="hubrow">
@@ -444,7 +482,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 </div>
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
-    <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>
+    <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><i class="coin"></i><b id="shopCoins">0</b></div></div>
     <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="throw">THROW</button><button data-tab="hole">CORNHOLE</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn" id="shopClose">DONE</button>
@@ -944,7 +982,7 @@ BAGS.push(
 );
 // Store products (prices are placeholders until the App Store reports the real, local ones).
 const STORE = [
-  { id: PID("coins.small"), kind: "coins", coins: 20000, price: "$0.99", title: "Handful of Coins", icon: "🪙" },
+  { id: PID("coins.small"), kind: "coins", coins: 20000, price: "$0.99", title: "Handful of Coins", icon: "💵" },
   { id: PID("coins.medium"), kind: "coins", coins: 150000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
   { id: PID("coins.large"), kind: "coins", coins: 500000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
   { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
@@ -971,7 +1009,7 @@ const TRAILS = [
   { id: "neon", name: "Neon", price: 1500000, icon: "💡", blurb: "A glowing ribbon in your colour" },
   { id: "rainbow", name: "Rainbow", price: 4000000, icon: "🌈", blurb: "Every colour, all the way" },
   { id: "galaxy", name: "Galaxy", price: 10000000, icon: "🌌", blurb: "Stardust and nebula" },
-  { id: "gold", name: "Gold Rush", price: 25000000, icon: "🪙", blurb: "Spills gold coins" },
+  { id: "gold", name: "Gold Rush", price: 25000000, icon: "💰", blurb: "Spills gold coins" },
   { id: "comet", name: "Comet", price: 60000000, icon: "☄️", blurb: "A blazing comet tail" },
 ];
 // Opponents and the second local player use these.
@@ -1322,13 +1360,14 @@ function finishMatch() {
   const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
   const coins = won ? pot(v) : 0;
   let can = null, coolerFull = false;
-  if (won) { refundLife(); can = rollCan(); coolerFull = !giveCan(can, S.venue); }
+  const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
+  if (won) { refundLife(); can = rollCan(null, holes); coolerFull = !giveCan(can, S.venue); }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
   const newly = updateUnlocks();
   save();
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, lifeLost: !won };
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won };
   postScores();
 }
 // A court's stars stay between 0 and its max.
@@ -1672,13 +1711,37 @@ const CANS = [
   { id: "purple", name: "Royal Purple", color: "#7a3ad6", rim: "#d8b8ff", odds: 2.4, pulls: 6, coins: [2.5, 5], cards: [26, 40], bias: 2.3, life: 0.05 },
   { id: "platinum", name: "Platinum Pils", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [4, 8], cards: [40, 60], bias: 1.8, life: 0.06 },
   { id: "diamond", name: "Diamond Reserve", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [6, 12], cards: [60, 90], bias: 1.3, life: 0.08 },
+  // Express: rare, middling contents, but it opens right away.
+  { id: "express", name: "Express Shot", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.5, 1.5], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
 ];
+// How long a can takes to open once you start it (one at a time). The better the can, the longer the wait.
+const OPEN_MIN = { black: 15, white: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
+const openMs = id => OPEN_MIN[id] * 60000;
+const durText = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Math.round(m / 60)}h` : `${m}m`; };
+const timeText = ms => { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`; };
+// A can's state: "ready" to open, "ticking" while it opens, or "idle" (waiting for you to start it).
+function canState(slot) {
+  if (canById(slot.id).express) return "ready";
+  if (!slot.start) return "idle";
+  return Date.now() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
+}
+const canLeft = slot => Math.max(0, slot.start + openMs(slot.id) - Date.now());
+const anyTicking = () => career.cans.some(c => canState(c) === "ticking");
+function startCan(i) {
+  const slot = career.cans[i];
+  if (!slot || anyTicking() || canState(slot) !== "idle") return false;
+  slot.start = Date.now(); save();
+  if (career.alerts) postNative("notify", JSON.stringify({ op: "schedule", id: "can.ready", at: slot.start + openMs(slot.id), title: `Your ${canById(slot.id).name} is ready! 🥫`, body: "Crack it open and see what's inside." }));
+  return true;
+}
 const COOLER_SIZE = 4;
 const canById = id => CANS.find(c => c.id === id) || CANS[0];
 // Daily free can: mostly the low tiers.
-const DAILY_ODDS = { black: 60, white: 30, bronze: 9, silver: 1 };
-function rollCan(odds) {
-  const list = odds ? CANS.filter(c => odds[c.id]) : CANS, w = c => (odds ? odds[c.id] : c.odds);
+const DAILY_ODDS = { black: 58, white: 30, bronze: 9, silver: 1, express: 2 };
+// boost: your cornholes in the match. Each one tilts the odds toward the rarer cans (capped at 30).
+function rollCan(odds, boost = 0) {
+  const k = 1 + Math.min(30, boost) * 0.012, rank = c => CANS.indexOf(c);
+  const list = odds ? CANS.filter(c => odds[c.id]) : CANS, w = c => (odds ? odds[c.id] : c.express ? c.odds : c.odds * k ** rank(c));
   let x = Math.random() * list.reduce((t, c) => t + w(c), 0);
   for (const c of list) { x -= w(c); if (x <= 0) return c.id; }
   return list[0].id;
@@ -3139,7 +3202,7 @@ const EFFECTS = [
   { id: "streamers", name: "Streamers", price: 500, icon: "🎏", blurb: "Long ribbons in your colours" },
   { id: "bubbles", name: "Bubbles", price: 2000, icon: "🫧", blurb: "Bubbles float up out of the hole" },
   { id: "hearts", name: "Hearts", price: 8000, icon: "💖", blurb: "A shower of hearts" },
-  { id: "coins", name: "Gold Coins", price: 25000, icon: "🪙", blurb: "A jackpot spray that bounces on the board" },
+  { id: "coins", name: "Gold Coins", price: 25000, icon: "💰", blurb: "A jackpot spray that bounces on the board" },
   { id: "stars", name: "Stars", price: 80000, icon: "⭐", blurb: "Twinkling stars burst out" },
   { id: "blizzard", name: "Blizzard", price: 250000, icon: "❄️", blurb: "A frosty snowburst" },
   { id: "lightning", name: "Lightning", price: 800000, icon: "⚡", blurb: "A bolt strikes the hole" },
@@ -3232,15 +3295,18 @@ function renderHubExtras() {
   tickLives();
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
   $("lives").textContent = career.lives;
-  $("livesTimer").textContent = career.lives < MAX_LIVES ? ` +1 in ${clockText(nextLifeIn())}` : career.lives === MAX_LIVES ? " FULL" : "";
+  $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : career.lives === MAX_LIVES ? " FULL" : "";
   const cooler = $("cooler"); cooler.innerHTML = "";
   const slots = Math.max(COOLER_SIZE, career.cans.length);
   for (let i = 0; i < slots; i++) {
     const c = career.cans[i], b = document.createElement("button");
-    b.className = "cslot" + (c ? " full" : "");
-    b.setAttribute("aria-label", c ? `Open ${canById(c.id).name}` : "Empty cooler slot");
-    if (c) { const k = canById(c.id); b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i>`; b.onclick = () => openCanSheet(i); }
-    else b.onclick = () => showInfo(cansInfoHTML());
+    if (c) {
+      const k = canById(c.id), st = canState(c);
+      b.className = `cslot full ${st}`;
+      b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "tap to start opening"}`);
+      b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : durText(openMs(c.id))}</small>`;
+      b.onclick = () => canTapped(i);
+    } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
     cooler.appendChild(b);
   }
 }
@@ -3254,7 +3320,7 @@ function renderLives() {
     <div class="liferow">${Array.from({ length: Math.max(MAX_LIVES, career.lives) }, (_, i) => `<span class="${i < career.lives ? "" : "gone"}">🍹</span>`).join("")}</div>
     <div class="muted">Each match uses a cocktail. Win and you get it back. One refills every hour, up to ${MAX_LIVES}.</div>
     <div class="big">${full ? "Full!" : `Next one in ${clockText(nextLifeIn())}`}</div>
-    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 🍹 · 🪙 ${short(price)}</button>
+    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 🍹 · <i class="coin"></i> ${short(price)}</button>
     <button class="btn blue" id="lifeStore">MORE IN THE STORE</button>
     <button class="btn ghost" id="alertsBtn">🔔 Tell me when they're full: ${career.alerts ? "ON" : "OFF"}</button>
     <button class="btn" id="livesClose">DONE</button>`;
@@ -3269,14 +3335,23 @@ function renderLives() {
 }
 $("livesBtn").onclick = openLives;
 
+// Tapping a can: open it if it's ready, start it if nothing else is opening, or show how long is left.
+function canTapped(i) {
+  const c = career.cans[i], k = canById(c.id), st = canState(c);
+  if (st === "ready") { openCanSheet(i); return; }
+  if (st === "ticking") { showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="big">Opens in ${timeText(canLeft(c))}</div><div class="muted">Win more matches while you wait. Your cooler holds ${COOLER_SIZE}.</div>`); return; }
+  const busy = anyTicking();
+  showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="muted">${k.pulls} prizes inside. It takes ${durText(openMs(c.id))} to open${busy ? ", and another can is opening right now. One at a time." : "."}</div>
+    ${busy ? "" : `<button class="btn green" id="startCan">START OPENING · ${durText(openMs(c.id))}</button>`}`);
+  if (!busy) $("startCan").onclick = () => { startCan(i); $("livesSheet").hidden = true; renderHubExtras(); sfx.tick(); };
+}
 // ── A small info sheet (can odds), reusing the lives sheet frame
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
-  const total = CANS.reduce((t, c) => t + c.odds, 0);
-  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can (your cooler holds ${COOLER_SIZE}). There's a free can every day too. Rarer cans hold more prizes and better cards, but every can is a gamble.</div>
-    <div class="label">Chance per win</div>
-    ${CANS.map(c => `<div class="oddsrow"><i class="minican" style="background:linear-gradient(90deg, ${c.color}, ${c.rim} 40%, ${c.color})"></i><span>${c.name} · ${c.pulls} prizes</span><b>${(c.odds / total * 100).toFixed(c.odds < 1 ? 1 : 0)}%</b></div>`).join("")}`;
+  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Start one opening at a time; the better the can, the longer it takes. Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
+    ${CANS.map(c => `<div class="oddsrow"><i class="minican" style="background:linear-gradient(90deg, ${c.color}, ${c.rim} 40%, ${c.color})"></i><span>${c.name} · ${c.pulls} prizes</span><b>${c.express ? "Instant" : durText(openMs(c.id))}</b></div>`).join("")}`;
 }
+
 
 // ── Avatar picker
 function openAvatars() {
@@ -3348,7 +3423,7 @@ function mistFrame(now) {
   R.anim = R.mist.length ? requestAnimationFrame(mistFrame) : 0;
 }
 function prizeHTML(p) {
-  if (p.kind === "coins") return { pic: `<div class="pic">🪙</div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `🪙 ${short(p.n)}` };
+  if (p.kind === "coins") return { pic: `<div class="pic"><i class="coin big"></i></div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `<i class="coin"></i> ${short(p.n)}` };
   if (p.kind === "life") return { pic: `<div class="pic">🍹</div>`, line: `<b>+1 life!</b><small>A bonus cocktail</small>`, chip: "🍹 +1" };
   const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
   const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];
@@ -3645,21 +3720,21 @@ function renderInningSheet() {
       : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`;
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
-        <div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b>+${short(res.coins)}</b></div>
+        <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
         ${res.lifeLost ? `<div class="pill"><span class="ico" style="background:#ff7aa8">🍹</span><b>−1</b></div>` : ""}</div>
-        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>` : ""}
+        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
     const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
     const again = !canAgain ? "NOT ENOUGH COINS"
       : bot && S.botRematch === "asking" ? `WAITING FOR ${who}…`
       : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
-      : bot ? `REMATCH · 🪙 ${short(fee)}`
-      : !O ? "PLAY AGAIN" + (fee ? ` · 🪙 ${short(fee)}` : "")
+      : bot ? `REMATCH · <i class="coin"></i> ${short(fee)}`
+      : !O ? "PLAY AGAIN" + (fee ? ` · <i class="coin"></i> ${short(fee)}` : "")
       : O.gone ? `${who} left`
       : R.me ? `WAITING FOR ${who}…`
-      : R.them ? `${who} WANTS A REMATCH! · 🪙 ${short(fee)}`
-      : `REMATCH · 🪙 ${short(fee)}`;
+      : R.them ? `${who} WANTS A REMATCH! · <i class="coin"></i> ${short(fee)}`
+      : `REMATCH · <i class="coin"></i> ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
       <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
@@ -3736,6 +3811,11 @@ function openHub() {
     $("hub").appendChild(t); setTimeout(() => t.remove(), 3400);
   }
 }
+// The clubhouse title fills the width of the screen.
+function fitTitle() {
+  const el = $("hubTitle"), w = el.parentElement.clientWidth; if (!w) return;
+  el.style.fontSize = "40px"; el.style.fontSize = Math.min(72, 40 * w / el.scrollWidth) + "px";
+}
 // 1,500 → 1.5K, 2,000,000 → 2M
 function short(n) { if (n >= 1e6) return +(n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M"; if (n >= 1e4) return +(n / 1e3).toFixed(n % 1e3 ? 1 : 0) + "K"; return n.toLocaleString(); }
 function renderHub() {
@@ -3749,7 +3829,7 @@ function renderHub() {
   $("venueCard").innerHTML = `<button class="nav prev" id="vPrev" ${hubVenue === 0 ? "disabled" : ""} aria-label="Previous court">‹</button>
     <button class="nav next" id="vNext" ${hubVenue === VENUES.length - 1 ? "disabled" : ""} aria-label="Next court">›</button>
     <div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : "🪙 " + short(v.fee))}${chip("Payout", "🪙 " + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}`;
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
@@ -3758,7 +3838,7 @@ function renderHub() {
   renderHubExtras();
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
-  play.textContent = !open ? "LOCKED" : noLives ? `NO LIVES · 🍹 IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${short(v.fee)}`;
+  play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · 🍹 IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
@@ -3819,7 +3899,7 @@ function storeHTML() {
     const ic = it.kind === "can" ? `<i class="minican" style="width:30px;height:46px;background:linear-gradient(90deg, ${canById(it.can).color}, ${canById(it.can).rim} 40%, ${canById(it.can).color})"></i>` : it.icon;
     parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
   }
-  parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can? (odds)</button></div>`);
+  parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);
   parts.push(`<div class="label">Exclusive sets</div>`);
   for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
     parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
@@ -3855,7 +3935,7 @@ function renderShop() {
       const btns = document.createElement("div"); btns.className = "fxbtns";
       const main = document.createElement("button");
       main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      main.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${short(it.price)}` : "FREE";
+      main.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `<i class="coin"></i> ${short(it.price)}` : "FREE";
       main.disabled = equipped || (!owned && career.coins < it.price);
       main.onclick = () => {
         if (!owned) { career.coins -= it.price; mine.push(it.id); }
@@ -3886,7 +3966,7 @@ function renderShop() {
       btn.onclick = () => { shopTab = "store"; renderShop(); };
     } else {
       btn.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-      btn.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
+      btn.innerHTML = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `<i class="coin"></i> ${short(it.price)}` : "FREE";
       btn.disabled = equipped || (!owned && career.coins < it.price);
       btn.onclick = () => {
         if (!owned) { career.coins -= it.price; (shopTab === "bags" ? career.bags : career.boards).push(it.id); }
@@ -3997,7 +4077,9 @@ function frame(now) {
 resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
-$("loading").hidden = true;
+// Splash: hold the title for a few seconds, then fade into the clubhouse.
+setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
+fitTitle(); window.addEventListener("resize", fitTitle);
 requestAnimationFrame(frame);
 window.__cornhole = { ui, finishMatch, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
 </script>

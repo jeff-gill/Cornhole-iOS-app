@@ -7,15 +7,18 @@ function renderHubExtras() {
   tickLives();
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
   $("lives").textContent = career.lives;
-  $("livesTimer").textContent = career.lives < MAX_LIVES ? ` +1 in ${clockText(nextLifeIn())}` : career.lives === MAX_LIVES ? " FULL" : "";
+  $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : career.lives === MAX_LIVES ? " FULL" : "";
   const cooler = $("cooler"); cooler.innerHTML = "";
   const slots = Math.max(COOLER_SIZE, career.cans.length);
   for (let i = 0; i < slots; i++) {
     const c = career.cans[i], b = document.createElement("button");
-    b.className = "cslot" + (c ? " full" : "");
-    b.setAttribute("aria-label", c ? `Open ${canById(c.id).name}` : "Empty cooler slot");
-    if (c) { const k = canById(c.id); b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i>`; b.onclick = () => openCanSheet(i); }
-    else b.onclick = () => showInfo(cansInfoHTML());
+    if (c) {
+      const k = canById(c.id), st = canState(c);
+      b.className = `cslot full ${st}`;
+      b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "tap to start opening"}`);
+      b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : durText(openMs(c.id))}</small>`;
+      b.onclick = () => canTapped(i);
+    } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
     cooler.appendChild(b);
   }
 }
@@ -29,7 +32,7 @@ function renderLives() {
     <div class="liferow">${Array.from({ length: Math.max(MAX_LIVES, career.lives) }, (_, i) => `<span class="${i < career.lives ? "" : "gone"}">🍹</span>`).join("")}</div>
     <div class="muted">Each match uses a cocktail. Win and you get it back. One refills every hour, up to ${MAX_LIVES}.</div>
     <div class="big">${full ? "Full!" : `Next one in ${clockText(nextLifeIn())}`}</div>
-    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 🍹 · 🪙 ${short(price)}</button>
+    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 🍹 · <i class="coin"></i> ${short(price)}</button>
     <button class="btn blue" id="lifeStore">MORE IN THE STORE</button>
     <button class="btn ghost" id="alertsBtn">🔔 Tell me when they're full: ${career.alerts ? "ON" : "OFF"}</button>
     <button class="btn" id="livesClose">DONE</button>`;
@@ -44,14 +47,23 @@ function renderLives() {
 }
 $("livesBtn").onclick = openLives;
 
+// Tapping a can: open it if it's ready, start it if nothing else is opening, or show how long is left.
+function canTapped(i) {
+  const c = career.cans[i], k = canById(c.id), st = canState(c);
+  if (st === "ready") { openCanSheet(i); return; }
+  if (st === "ticking") { showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="big">Opens in ${timeText(canLeft(c))}</div><div class="muted">Win more matches while you wait. Your cooler holds ${COOLER_SIZE}.</div>`); return; }
+  const busy = anyTicking();
+  showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="muted">${k.pulls} prizes inside. It takes ${durText(openMs(c.id))} to open${busy ? ", and another can is opening right now. One at a time." : "."}</div>
+    ${busy ? "" : `<button class="btn green" id="startCan">START OPENING · ${durText(openMs(c.id))}</button>`}`);
+  if (!busy) $("startCan").onclick = () => { startCan(i); $("livesSheet").hidden = true; renderHubExtras(); sfx.tick(); };
+}
 // ── A small info sheet (can odds), reusing the lives sheet frame
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
-  const total = CANS.reduce((t, c) => t + c.odds, 0);
-  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can (your cooler holds ${COOLER_SIZE}). There's a free can every day too. Rarer cans hold more prizes and better cards, but every can is a gamble.</div>
-    <div class="label">Chance per win</div>
-    ${CANS.map(c => `<div class="oddsrow"><i class="minican" style="background:linear-gradient(90deg, ${c.color}, ${c.rim} 40%, ${c.color})"></i><span>${c.name} · ${c.pulls} prizes</span><b>${(c.odds / total * 100).toFixed(c.odds < 1 ? 1 : 0)}%</b></div>`).join("")}`;
+  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Start one opening at a time; the better the can, the longer it takes. Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
+    ${CANS.map(c => `<div class="oddsrow"><i class="minican" style="background:linear-gradient(90deg, ${c.color}, ${c.rim} 40%, ${c.color})"></i><span>${c.name} · ${c.pulls} prizes</span><b>${c.express ? "Instant" : durText(openMs(c.id))}</b></div>`).join("")}`;
 }
+
 
 // ── Avatar picker
 function openAvatars() {
@@ -123,7 +135,7 @@ function mistFrame(now) {
   R.anim = R.mist.length ? requestAnimationFrame(mistFrame) : 0;
 }
 function prizeHTML(p) {
-  if (p.kind === "coins") return { pic: `<div class="pic">🪙</div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `🪙 ${short(p.n)}` };
+  if (p.kind === "coins") return { pic: `<div class="pic"><i class="coin big"></i></div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `<i class="coin"></i> ${short(p.n)}` };
   if (p.kind === "life") return { pic: `<div class="pic">🍹</div>`, line: `<b>+1 life!</b><small>A bonus cocktail</small>`, chip: "🍹 +1" };
   const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
   const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];

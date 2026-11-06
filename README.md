@@ -6,7 +6,7 @@ A 3D cornhole game for iPhone (and the web) with a career mode. It's built with 
 
 - **Career:** eight venues (Backyard, Tailgate Lot, Beach Bar, Brewery Patio, Mountain Lodge, Bonfire Beach, Island Hop, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with stronger wind, a faster aim arrow, a smaller sweet spot, slicker boards and better opponents. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
 - **Pro Shop:** spend coins on bags (Accuracy, Control and Spin stats, plus a sticky, neutral or fast slide), board designs, throw effects and cornhole effects. Every coin item can also be unlocked by collecting its cards from cans.
-- **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Reserve. Rarer cans hold more prizes (coins, item cards, now and then a life). Opening one sprays mist and the prizes pop out one at a time.
+- **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Reserve, plus rare Express Shot cans. Rarer cans hold more prizes (coins, item cards, now and then a life) and take longer to open: 15 minutes for Black up to 24 hours for Diamond. Only one can opens at a time, and Express cans open right away. Each of your cornholes in a match improves the odds of a better can. Opening one sprays mist and the prizes pop out one at a time.
 - **Lives (🍹):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra lives come from the Store, from coins (at a steep price), or rarely from a can. The iPhone app can notify you when they're full.
 - **Avatars:** 4 to start, and 2 more with each court you open.
 - **Aiming:** tap where the bag should finish, then drag the landing ring around the gold zone. Near the finish it sticks, farther back it slides, and off to the side it adds spin.
@@ -78,19 +78,20 @@ At an even win rate, coins barely grow, and a court's winnings buy the shop tier
 
 **Cans.** Chance per win and contents. Coins are counted in buy-ins of the court where the can was won.
 
-| Can | Chance | Prizes | Coins | Cards | Life chance per prize |
-|---|---|---|---|---|---|
-| Backyard Black | 40% | 2 | 0.2–0.5 | 2–4 | 1% |
-| Picnic White | 25% | 3 | 0.3–0.8 | 4–7 | 1.5% |
-| Bronze Lager | 15% | 3 | 0.5–1.2 | 6–10 | 2% |
-| Silver Stout | 10.5% | 4 | 0.8–2 | 10–16 | 3% |
-| Golden Ale | 6% | 5 | 1.5–3.5 | 16–26 | 4% |
-| Royal Purple | 2.4% | 6 | 2.5–5 | 26–40 | 5% |
-| Platinum Pils | 0.9% | 7 | 4–8 | 40–60 | 6% |
-| Diamond Reserve | 0.2% | 8 | 6–12 | 60–90 | 8% |
+| Can | Chance | Prizes | Coins | Cards | Life chance per prize | Time to open |
+|---|---|---|---|---|---|---|
+| Backyard Black | 40% | 2 | 0.2–0.5 | 2–4 | 1% | 15 min |
+| Picnic White | 25% | 3 | 0.3–0.8 | 4–7 | 1.5% | 1 h |
+| Bronze Lager | 15% | 3 | 0.5–1.2 | 6–10 | 2% | 2 h |
+| Silver Stout | 10.5% | 4 | 0.8–2 | 10–16 | 3% | 3 h |
+| Golden Ale | 6% | 5 | 1.5–3.5 | 16–26 | 4% | 5 h |
+| Royal Purple | 2.4% | 6 | 2.5–5 | 26–40 | 5% | 8 h |
+| Platinum Pils | 0.9% | 7 | 4–8 | 40–60 | 6% | 12 h |
+| Diamond Reserve | 0.2% | 8 | 6–12 | 60–90 | 8% | 24 h |
+| Express Shot | 3% | 3 | 0.5–1.5 | 6–12 | 3% | Instant |
 
-Rolls are skewed toward the low end of each range, so a rare can is usually good but not always.
+Rolls are skewed toward the low end of each range, so a rare can is usually good but not always. Each of your cornholes in the match (up to 30) multiplies a tier's chance by 1.012 per rank above Black: 20 cornholes make a Diamond about 4.5 times as likely.
 
 **Cards needed** to unlock an item go from 3 (the cheapest item in its tab) to 90 (the most expensive), and the steps get bigger near the top. Cards for cheap items are common; rarer cans reach further up the list.
 
-The App Store requires loot-box odds to be shown before purchase. The Store's "What's in a can?" link and the cooler both show the chances.
+The odds are not shown in the game. The App Store requires the odds for paid loot boxes to be shown before purchase. Before submitting, either show the odds next to the paid cans in the Store, or remove the paid cans.
