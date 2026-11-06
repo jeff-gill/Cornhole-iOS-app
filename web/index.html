@@ -199,8 +199,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff1a8); }
 /* Shop */
-.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
-.tabs button { border: 0; background: none; padding: 9px; border-radius: 12px; font-family: var(--font-display); font-size: 17px; font-weight: 400; color: var(--ink-dim); }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
+.tabs button { border: 0; background: none; padding: 9px 2px; border-radius: 12px; font-family: var(--font-display); font-size: 15px; font-weight: 400; color: var(--ink-dim); }
 .tabs button.on { background: #fff; color: var(--deck); }
 .items { display: flex; flex-direction: column; gap: 10px; }
 .item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; background: rgba(255,255,255,.06); border: 3px solid rgba(255,255,255,.12); border-radius: 16px; padding: 10px; }
@@ -258,6 +258,27 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .swipehint { border: 0; background: none; color: var(--ink-dim); font-weight: 900; font-size: 14px; letter-spacing: .04em; padding: 6px; }
 .swipehint span { display: inline-block; animation: bob 1.2s ease-in-out infinite; color: var(--gold); font-size: 18px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+/* Store */
+.storeitem { position: relative; display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; border-radius: 18px; padding: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border: 3px solid rgba(255,255,255,.18); }
+.storeitem.hero { grid-template-columns: 1fr auto; background: linear-gradient(135deg, #ff7a3a, #ff2e88 55%, #7a3aff); border-color: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.3); }
+.storeitem .ic { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; background: rgba(0,0,0,.25); }
+.storeitem h4 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 19px; }
+.storeitem .sub { font-size: 12px; color: var(--ink-dim); font-weight: 700; }
+.storeitem.hero .sub { color: #fff; }
+.storeitem .tag { position: absolute; top: -10px; right: 12px; font-family: var(--font-display); font-size: 12px; padding: 2px 10px; border-radius: 999px; background: var(--gold); color: #3a2600; border: 2px solid #fff; }
+.storeitem .btn { font-size: 16px; padding: 10px 14px; min-width: 84px; }
+.swrow { display: flex; gap: 6px; margin-top: 4px; }
+.swrow canvas { width: 40px; height: 40px; border-radius: 10px; }
+.chiprow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.chiprow button { border: 2px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); border-radius: 999px; padding: 4px 10px; font-weight: 900; font-size: 12px; }
+.chiprow button.on { background: var(--go); border-color: #fff; color: #12203a; }
+.storenote { font-size: 12px; color: var(--ink-dim); text-align: center; line-height: 1.4; }
+.shoptoast { position: sticky; bottom: 0; text-align: center; background: var(--gold); color: #3a2600; border-radius: 12px; padding: 8px; font-weight: 900; }
+.fxicon { width: 64px; height: 64px; border-radius: 12px; display: grid; place-items: center; font-size: 34px; background: radial-gradient(#2b4a80, #12203a); }
+.fxbtns { display: flex; flex-direction: column; gap: 6px; }
+.fxbtns .btn { min-width: 86px; }
+.btn.ghost { background: rgba(255,255,255,.1); box-shadow: none; font-size: 13px; padding: 6px 8px; }
 /* Pause toggles */
 .toggles { display: flex; flex-direction: column; gap: 8px; }
 .toggle { display: flex; justify-content: space-between; align-items: center; border: 3px solid rgba(255,255,255,.18); background: rgba(255,255,255,.07); border-radius: 16px; padding: 10px 14px;
@@ -339,7 +360,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
     <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>
-    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button></div>
+    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="effects">EFFECTS</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn" id="shopClose">DONE</button>
   </div>
@@ -787,28 +808,81 @@ const pot = v => v.fee * 2;
 const starsForWin = vi => 2 + vi, starsForLoss = vi => 1 + vi;
 // The house covers your Backyard entry if you're short, so you can never get stuck.
 const houseCovers = vi => vi === 0 && career.coins < VENUES[0].fee;
+// Twenty coin bags. Prices climb with widening gaps (each about 35-40% more than the last), so maxing out takes a career:
+// the Gold Standard is roughly 15 Stadium wins. Stats rise gradually; a few mid-price bags are specialists.
 const BAGS = [
   { id: "starter", name: "Duck Cloth", price: 0, acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#ff4b3a", pattern: "plain" },
-  { id: "backyard", name: "Backyard Pro", price: 300, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
-  { id: "sticky", name: "Sticky Fingers", price: 800, acc: 2, ctrl: 3, spin: 2, feel: "sticky", c: "#2fbf71", pattern: "dots" },
-  { id: "slick", name: "Slick Rick", price: 800, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#a24bff", pattern: "chevron" },
-  { id: "twister", name: "Twister", price: 2200, acc: 3, ctrl: 3, spin: 5, feel: "neutral", c: "#00b8c8", pattern: "swirl" },
-  { id: "laser", name: "Laser", price: 5000, acc: 5, ctrl: 4, spin: 3, feel: "fast", c: "#ff2e88", pattern: "bolt" },
-  { id: "gold", name: "Gold Standard", price: 12000, acc: 5, ctrl: 5, spin: 5, feel: "neutral", c: "#f2b705", pattern: "star" },
+  { id: "backyard", name: "Backyard Pro", price: 150, acc: 2, ctrl: 1, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
+  { id: "picnic", name: "Picnic Plaid", price: 220, acc: 1, ctrl: 2, spin: 2, feel: "sticky", c: "#d62828", pattern: "plaid" },
+  { id: "lemonade", name: "Lemonade", price: 320, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#f2c230", pattern: "dots" },
+  { id: "camo", name: "Camo Crew", price: 450, acc: 2, ctrl: 2, spin: 2, feel: "sticky", c: "#5b7a3a", pattern: "camo" },
+  { id: "skychev", name: "Sky Chevron", price: 650, acc: 2, ctrl: 3, spin: 2, feel: "neutral", c: "#2f86ff", pattern: "chevron" },
+  { id: "zigzag", name: "Zigzag", price: 900, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#0fb5a5", pattern: "zigzag" },
+  { id: "twotone", name: "Two-Tone", price: 1300, acc: 3, ctrl: 3, spin: 2, feel: "neutral", c: "#8a3ffc", pattern: "split" },
+  { id: "bullseye", name: "Bullseye", price: 1800, acc: 3, ctrl: 2, spin: 3, feel: "neutral", c: "#e8392b", pattern: "target" },
+  { id: "slick", name: "Slick Rick", price: 2600, acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#a24bff", pattern: "chevron" },
+  { id: "sticky", name: "Sticky Fingers", price: 3600, acc: 3, ctrl: 4, spin: 3, feel: "sticky", c: "#2fbf71", pattern: "dots" },
+  { id: "diamond", name: "Diamond Back", price: 5000, acc: 4, ctrl: 3, spin: 3, feel: "neutral", c: "#1f3a6e", pattern: "diamond" },
+  { id: "twister", name: "Twister", price: 7000, acc: 3, ctrl: 3, spin: 5, feel: "neutral", c: "#00b8c8", pattern: "swirl" },
+  { id: "thunder", name: "Thunder", price: 9500, acc: 4, ctrl: 4, spin: 3, feel: "fast", c: "#f2b705", pattern: "bolt" },
+  { id: "royal", name: "Royal", price: 13000, acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#6a2c91", pattern: "diamond" },
+  { id: "laser", name: "Laser", price: 18000, acc: 5, ctrl: 4, spin: 3, feel: "fast", c: "#ff2e88", pattern: "bolt" },
+  { id: "midnight", name: "Midnight", price: 25000, acc: 4, ctrl: 5, spin: 4, feel: "sticky", c: "#14214a", pattern: "star" },
+  { id: "champion", name: "Champion", price: 34000, acc: 5, ctrl: 4, spin: 5, feel: "neutral", c: "#c8102e", pattern: "star" },
+  { id: "platinum", name: "Platinum", price: 46000, acc: 5, ctrl: 5, spin: 4, feel: "neutral", c: "#9aa4b2", pattern: "diamond" },
+  { id: "gold", name: "Gold Standard", price: 62000, acc: 5, ctrl: 5, spin: 5, feel: "neutral", c: "#f2b705", pattern: "star" },
 ];
+// Premium items come only from the Store (real money). Exclusive looks; stats are good but never better than the
+// best coin bag, so nobody can buy wins.
+const PID = s => "com.jeffgill.cornhole." + s;
+BAGS.push(
+  { id: "firecracker", name: "Firecracker", premium: PID("starterpack"), acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#e8392b", pattern: "flame" },
+  { id: "galaxy", name: "Galaxy", premium: PID("set.galaxy"), acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#5b3bd6", pattern: "galaxy" },
+  { id: "inferno", name: "Inferno", premium: PID("set.inferno"), acc: 4, ctrl: 4, spin: 4, feel: "fast", c: "#ff5a00", pattern: "flame" },
+);
+// Store products (prices are placeholders until the App Store reports the real, local ones).
+const STORE = [
+  { id: PID("coins.1000"), kind: "coins", coins: 1000, price: "$0.99", title: "Handful of Coins", icon: "🪙" },
+  { id: PID("coins.6000"), kind: "coins", coins: 6000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
+  { id: PID("coins.15000"), kind: "coins", coins: 15000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
+  { id: PID("coins.40000"), kind: "coins", coins: 40000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
+  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 5000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "5,000 coins + Firecracker bags + Neon Nights board" },
+  { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb"], blurb: "Exclusive Galaxy bags and board" },
+  { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob"], blurb: "Exclusive Inferno bags and board" },
+  { id: PID("trails"), kind: "once", price: "$1.99", title: "Bag Trails", grants: ["trail:sparkle", "trail:fire", "trail:rainbow"], blurb: "Sparkle, fire and rainbow trails behind your bag" },
+];
+const TRAILS = [{ id: "none", name: "None" }, { id: "sparkle", name: "Sparkle" }, { id: "fire", name: "Fire" }, { id: "rainbow", name: "Rainbow" }];
 // Opponents and the second local player use these.
 const RIVAL_BAGS = [
   { id: "rival", name: "Blue Duck", acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#2f86ff", pattern: "plain" },
   { id: "rival2", name: "Navy Stripe", acc: 2, ctrl: 2, spin: 2, feel: "neutral", c: "#2456c9", pattern: "stripe" },
   { id: "rival3", name: "Teal Twist", acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#0f9fb5", pattern: "swirl" },
 ];
+// Twenty coin boards (looks only), on a similar but gentler climb, plus the exclusive Store boards.
 const BOARDS = [
   { id: "classic", name: "Classic Navy", price: 0, paint: "band", a: "#1f3a6e", b: "#ffc93a" },
-  { id: "stripes", name: "Stars & Stripes", price: 400, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
-  { id: "sunset", name: "Sunset Fade", price: 900, paint: "fade", a: "#ff7a3a", b: "#a83279" },
-  { id: "checker", name: "Checkered Flag", price: 1600, paint: "checker", a: "#111111", b: "#ffffff" },
-  { id: "waves", name: "Ocean Waves", price: 2500, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
-  { id: "goldpro", name: "Gold Pro", price: 8000, paint: "gold", a: "#151515", b: "#ffd84a" },
+  { id: "redband", name: "Red Band", price: 100, paint: "band", a: "#c8102e", b: "#ffffff" },
+  { id: "lake", name: "Lake Blue", price: 180, paint: "fade", a: "#2f86ff", b: "#0fb5a5" },
+  { id: "polka", name: "Polka Party", price: 280, paint: "polka", a: "#ff2e88", b: "#ffffff" },
+  { id: "sunburst", name: "Sunburst", price: 400, paint: "sunburst", a: "#ff8a1f", b: "#ffd84a" },
+  { id: "stripes", name: "Stars & Stripes", price: 600, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
+  { id: "diag", name: "Diagonal Rush", price: 850, paint: "diag", a: "#2f86ff", b: "#ffffff" },
+  { id: "plaid", name: "Picnic Plaid", price: 1200, paint: "plaid", a: "#c8102e", b: "#1f3a6e" },
+  { id: "sunset", name: "Sunset Fade", price: 1700, paint: "fade", a: "#ff7a3a", b: "#a83279" },
+  { id: "camo", name: "Camo", price: 2400, paint: "camo", a: "#5b7a3a", b: "#3d5229" },
+  { id: "checker", name: "Checkered Flag", price: 3300, paint: "checker", a: "#111111", b: "#ffffff" },
+  { id: "chev", name: "Chevron Charge", price: 4500, paint: "chev", a: "#ffc93a", b: "#1f3a6e" },
+  { id: "waves", name: "Ocean Waves", price: 6000, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
+  { id: "target", name: "Bullseye", price: 8000, paint: "target", a: "#e8392b", b: "#ffffff" },
+  { id: "split", name: "Split Decision", price: 11000, paint: "split", a: "#8a3ffc", b: "#ffc93a" },
+  { id: "retro", name: "Retro Rays", price: 15000, paint: "sunburst", a: "#a83279", b: "#ff7a3a" },
+  { id: "midband", name: "Midnight Band", price: 20000, paint: "band", a: "#0d1430", b: "#9aa4b2" },
+  { id: "tropic", name: "Tropical", price: 27000, paint: "waves", a: "#ff2e88", b: "#ffd84a" },
+  { id: "racing", name: "Racing Checker", price: 36000, paint: "checker", a: "#c8102e", b: "#111111" },
+  { id: "goldpro", name: "Gold Pro", price: 50000, paint: "gold", a: "#151515", b: "#ffd84a" },
+  { id: "neon", name: "Neon Nights", premium: PID("starterpack"), paint: "neon", a: "#0d0d1a", b: "#2ef2ff" },
+  { id: "galaxyb", name: "Galaxy", premium: PID("set.galaxy"), paint: "galaxy", a: "#140a3a", b: "#b48cff" },
+  { id: "infernob", name: "Inferno", premium: PID("set.inferno"), paint: "flames", a: "#1a0a05", b: "#ff7a1a" },
 ];
 const OPPONENTS = ["Backyard Bob", "Dirt Bag Dave", "Tailgate Tina", "Sandy Shores", "Big Earl", "Hops Hannah", "Slider Sam", "Airmail Annie",
   "The Professor", "Lefty Lou", "Swish Rodriguez", "Cornelius", "Four-Bag Fran", "Kernel Sanders", "Woody", "Blocker Betty"];
@@ -816,7 +890,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "" });
+const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -838,6 +912,21 @@ function save() {
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
 const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
 const venueUnlocked = i => career.unlocked.includes(VENUES[i].id);
+// Deliver a store purchase. Coin packs can be bought again; one-time items (and restores) never pay out twice.
+function grantPurchase(id, restored) {
+  const item = STORE.find(x => x.id === id);
+  if (!item) return null;
+  if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
+  if (career.purchases.includes(id)) return item;
+  career.purchases.push(id);
+  if (item.coins && !restored) career.coins += item.coins;
+  for (const g of item.grants || []) {
+    const [type, key] = g.split(":"), list = type === "bag" ? career.bags : type === "board" ? career.boards : career.trails;
+    if (!list.includes(key)) list.push(key);
+  }
+  save();
+  return item;
+}
 
 // ───────────────────────── Game state
 const S = {
@@ -916,7 +1005,7 @@ function startMatch(kind, vi) {
   T.mu = v.mu;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
-  setTeamColors(); clearBagMeshes(); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
+  setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub");
   showBanner(`${S.names[S.leader] === "You" ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
@@ -1056,7 +1145,7 @@ function finishMatch() {
   S.result = { won, starDelta: career.stars - before, coins, newly: newly.map(x => x.name) };
 }
 function nextInning() {
-  S.world.clear(); clearBagMeshes(); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
+  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
   newWind(); venueAmbience(); beginTurn();
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.7; renderBanner(); }
@@ -1073,8 +1162,12 @@ function checkFourBagger() {
 }
 function handleEvents(evts) {
   for (const e of evts) {
-    if (e.type === "swish") { showBanner("SWISH!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
-    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
+    if (e.type === "swish" || e.type === "drop") {
+      const p = e.bag.owner, n = S.world.bags.filter(b => b.owner === p && b.state === "inHole").length;
+      const name = n === 2 ? "2-BAGGER!" : n === 3 ? "3-BAGGER!" : e.type === "swish" ? "SWISH!" : e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!";
+      if (n < 4) showBanner(name, p);
+      sfx.hole(); haptic(n >= 3 ? "big" : "success"); celebrate(p); holeStreak(p, n);
+    }
     else if (e.type === "land") { sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
     else if (e.type === "hit") { sfx.thud(); haptic("light"); }
     else if (e.type === "ground") { sfx.grass(); dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
@@ -1609,6 +1702,40 @@ function paintBoard(c, w, h, design) {
     const gg = c.createLinearGradient(0, h * 0.4, 0, h); gg.addColorStop(0, d.b); gg.addColorStop(1, d.a); c.fillStyle = gg; c.fillRect(0, h * 0.42, w, h * 0.58);
     c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = 6;
     for (let y = h * 0.5; y < h; y += 70) { c.beginPath(); for (let x = 0; x <= w; x += 8) { const yy = y + Math.sin(x / 30) * 12; x ? c.lineTo(x, yy) : c.moveTo(x, yy); } c.stroke(); }
+  } else if (d.paint === "polka") {
+    c.fillStyle = d.a; c.fillRect(0, h * 0.45, w, h * 0.55); c.fillStyle = d.b;
+    for (let y = 0; y < 6; y++) for (let x = 0; x < 5; x++) { c.beginPath(); c.arc(w * (0.1 + x * 0.2 + (y % 2) * 0.1), h * (0.5 + y * 0.085), w * 0.035, 0, 7); c.fill(); }
+  } else if (d.paint === "sunburst") {
+    const cx = w / 2, cy = h * 1.02;
+    for (let k = 0; k < 18; k++) { c.fillStyle = k % 2 ? d.a : d.b; c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, h * 0.6, Math.PI + k * Math.PI / 18, Math.PI + (k + 1) * Math.PI / 18); c.closePath(); c.fill(); }
+  } else if (d.paint === "diag") {
+    c.lineWidth = 34; for (let k = -h; k < w + h; k += 110) { c.strokeStyle = d.a; c.beginPath(); c.moveTo(k, h); c.lineTo(k + h * 0.6, h * 0.4); c.stroke(); c.strokeStyle = d.b; c.lineWidth = 8; c.stroke(); c.lineWidth = 34; }
+  } else if (d.paint === "plaid") {
+    c.globalAlpha = 0.55; c.fillStyle = d.a; for (let k = 0; k < 6; k++) { c.fillRect(w * (k / 6), h * 0.42, w * 0.07, h); c.fillRect(0, h * (0.45 + k * 0.1), w, h * 0.04); }
+    c.fillStyle = d.b; for (let k = 0; k < 6; k++) { c.fillRect(w * (k / 6) + w * 0.09, h * 0.42, w * 0.025, h); c.fillRect(0, h * (0.48 + k * 0.1), w, h * 0.015); } c.globalAlpha = 1;
+  } else if (d.paint === "camo") {
+    for (let k = 0; k < 26; k++) { c.fillStyle = [d.a, d.b, "#8a7a4a", "#2b3a1e"][k % 4]; c.beginPath(); c.ellipse(r() * w, h * 0.4 + r() * h * 0.6, 30 + r() * 50, 18 + r() * 30, r() * 3, 0, 7); c.fill(); }
+  } else if (d.paint === "chev") {
+    c.lineWidth = 40; for (let k = 0; k < 4; k++) { c.strokeStyle = k % 2 ? d.b : d.a; const y = h * (0.55 + k * 0.11); c.beginPath(); c.moveTo(0, y + 60); c.lineTo(w / 2, y); c.lineTo(w, y + 60); c.stroke(); }
+  } else if (d.paint === "target") {
+    for (const [r0, col] of [[0.48, d.a], [0.38, d.b], [0.28, d.a], [0.18, d.b]]) { c.fillStyle = col; c.beginPath(); c.arc(w / 2, h * 0.72, w * r0 * 1.6, 0, 7); c.fill(); }
+  } else if (d.paint === "split") {
+    c.fillStyle = d.a; c.beginPath(); c.moveTo(0, h * 0.4); c.lineTo(w, h * 0.65); c.lineTo(w, h); c.lineTo(0, h); c.closePath(); c.fill();
+    c.strokeStyle = d.b; c.lineWidth = 14; c.beginPath(); c.moveTo(0, h * 0.4); c.lineTo(w, h * 0.65); c.stroke();
+  } else if (d.paint === "neon") {
+    c.fillStyle = d.a; c.fillRect(0, 0, w, h);
+    c.shadowColor = d.b; c.shadowBlur = 18; c.lineWidth = 7;
+    for (const [col, y] of [[d.b, 0.55], ["#ff2e88", 0.66], ["#c7f03a", 0.77], [d.b, 0.88]]) { c.strokeStyle = col; c.beginPath(); c.moveTo(-10, h * y + 40); c.lineTo(w + 10, h * y - 40); c.stroke(); }
+    c.shadowBlur = 0;
+  } else if (d.paint === "galaxy") {
+    const gg = c.createLinearGradient(0, 0, w, h); gg.addColorStop(0, d.a); gg.addColorStop(0.6, "#3a1a7a"); gg.addColorStop(1, "#0a0420"); c.fillStyle = gg; c.fillRect(0, 0, w, h);
+    const neb = c.createRadialGradient(w * 0.3, h * 0.7, 10, w * 0.3, h * 0.7, w * 0.8); neb.addColorStop(0, "rgba(255,110,210,.55)"); neb.addColorStop(1, "rgba(255,110,210,0)"); c.fillStyle = neb; c.fillRect(0, 0, w, h);
+    c.fillStyle = "#fff"; for (let k = 0; k < 160; k++) { c.globalAlpha = 0.3 + r() * 0.7; c.beginPath(); c.arc(r() * w, r() * h, 0.6 + r() * 2, 0, 7); c.fill(); }
+    c.globalAlpha = 1;
+  } else if (d.paint === "flames") {
+    c.fillStyle = d.a; c.fillRect(0, 0, w, h);
+    const fl = (x, hgt, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x - 40, h); c.quadraticCurveTo(x - 60, h - hgt * 0.5, x + (r() - 0.5) * 30, h - hgt); c.quadraticCurveTo(x + 60, h - hgt * 0.5, x + 40, h); c.fill(); };
+    for (let k = 0; k < 7; k++) { const x = w * (k + 0.5) / 7, hh = h * (0.35 + r() * 0.25); fl(x, hh, "#c41e0a"); fl(x, hh * 0.75, d.b); fl(x, hh * 0.45, "#ffe24a"); }
   } else if (d.paint === "gold") {
     c.fillStyle = d.a; c.fillRect(0, 0, w, h);
     c.strokeStyle = d.b; c.lineWidth = 5; for (let k = -h; k < w + h; k += 90) { c.beginPath(); c.moveTo(k, h); c.lineTo(k + h * 0.5, h * 0.5); c.stroke(); }
@@ -1617,7 +1744,8 @@ function paintBoard(c, w, h, design) {
   c.strokeStyle = d.b === "#ffffff" ? "#ffc93a" : d.b; c.lineWidth = 0.06 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.1) * s, 0, 7); c.stroke();
   c.strokeStyle = d.a; c.lineWidth = 0.03 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.17) * s, 0, 7); c.stroke();
   c.restore();
-  if (d.paint !== "gold") grain(40, "90,55,20", 0.07);
+  if (!["gold", "neon", "galaxy", "flames"].includes(d.paint)) grain(40, "90,55,20", 0.07);
+  // keep the hole area readable on busy designs
   const sh = c.createLinearGradient(0, 0, w * 0.8, h * 0.6);
   sh.addColorStop(0, "rgba(255,255,255,.18)"); sh.addColorStop(0.5, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,.05)");
   c.fillStyle = sh; c.fillRect(0, 0, w, h);
@@ -1675,6 +1803,28 @@ function paintBag(c, w, h, bag) {
   else if (bag.pattern === "chevron") { c.lineWidth = w * 0.07; for (const y of [0.35, 0.6]) { c.beginPath(); c.moveTo(w * 0.15, h * (y + 0.12)); c.lineTo(w * 0.5, h * y); c.lineTo(w * 0.85, h * (y + 0.12)); c.stroke(); } }
   else if (bag.pattern === "swirl") { c.lineWidth = w * 0.05; c.beginPath(); for (let a = 0; a < 14; a += 0.1) { const rr = a * w * 0.025; const x = w / 2 + Math.cos(a) * rr, y = h / 2 + Math.sin(a) * rr; a ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
   else if (bag.pattern === "bolt") { c.beginPath(); c.moveTo(w * 0.58, h * 0.12); c.lineTo(w * 0.3, h * 0.55); c.lineTo(w * 0.5, h * 0.55); c.lineTo(w * 0.4, h * 0.88); c.lineTo(w * 0.72, h * 0.42); c.lineTo(w * 0.52, h * 0.42); c.closePath(); c.fill(); }
+  else if (bag.pattern === "plaid") {
+    c.globalAlpha = 0.35; for (let k = 0; k < 4; k++) { c.fillRect(w * (0.1 + k * 0.25), 0, w * 0.1, h); c.fillRect(0, h * (0.1 + k * 0.25), w, h * 0.1); } c.globalAlpha = 1;
+    c.strokeStyle = "rgba(255,255,255,.6)"; c.lineWidth = 2; for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(w * (0.15 + k * 0.25), 0); c.lineTo(w * (0.15 + k * 0.25), h); c.stroke(); }
+  }
+  else if (bag.pattern === "camo") {
+    for (const [x, y, r0, col] of [[0.2, 0.3, 0.18, "#3d5229"], [0.65, 0.25, 0.2, "#8a7a4a"], [0.45, 0.65, 0.22, "#2b3a1e"], [0.85, 0.75, 0.16, "#8a7a4a"], [0.15, 0.8, 0.15, "#3d5229"]]) {
+      c.fillStyle = col; c.beginPath(); c.ellipse(w * x, h * y, w * r0, h * r0 * 0.7, x * 3, 0, 7); c.fill(); }
+  }
+  else if (bag.pattern === "zigzag") { c.lineWidth = w * 0.06; for (const y of [0.35, 0.6]) { c.beginPath(); for (let k = 0; k <= 8; k++) c.lineTo(w * k / 8, h * y + (k % 2 ? -h * 0.07 : h * 0.07)); c.stroke(); } }
+  else if (bag.pattern === "split") { c.fillStyle = "rgba(255,255,255,.85)"; c.beginPath(); c.moveTo(w, 0); c.lineTo(w, h); c.lineTo(0, h); c.closePath(); c.fill(); c.fillStyle = base; c.globalAlpha = 0.25; c.fill(); c.globalAlpha = 1; }
+  else if (bag.pattern === "target") { for (const [r0, col] of [[0.34, "rgba(255,255,255,.9)"], [0.24, base], [0.13, "rgba(255,255,255,.9)"], [0.05, base]]) { c.fillStyle = col; c.beginPath(); c.arc(w / 2, h / 2, w * r0, 0, 7); c.fill(); } }
+  else if (bag.pattern === "diamond") { c.lineWidth = 2; for (let k = -2; k < 6; k++) { c.beginPath(); c.moveTo(w * k / 4, 0); c.lineTo(w * k / 4 + w, h); c.stroke(); c.beginPath(); c.moveTo(w * k / 4 + w, 0); c.lineTo(w * k / 4, h); c.stroke(); } }
+  else if (bag.pattern === "flame") {
+    const fl = (x, hgt, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x - w * 0.12, h); c.quadraticCurveTo(x - w * 0.16, h - hgt * 0.5, x, h - hgt); c.quadraticCurveTo(x + w * 0.16, h - hgt * 0.5, x + w * 0.12, h); c.fill(); };
+    for (const [x, k] of [[0.15, 0.55], [0.38, 0.8], [0.62, 0.65], [0.85, 0.75]]) { fl(w * x, h * k, "#ffb21a"); fl(w * x, h * k * 0.6, "#fff27a"); }
+  }
+  else if (bag.pattern === "galaxy") {
+    const neb = c.createRadialGradient(w * 0.6, h * 0.4, 4, w * 0.6, h * 0.4, w * 0.5); neb.addColorStop(0, "rgba(255,120,220,.65)"); neb.addColorStop(1, "rgba(255,120,220,0)");
+    c.fillStyle = neb; c.fillRect(0, 0, w, h);
+    c.fillStyle = "#fff"; for (let k = 0; k < 40; k++) { const r0 = ((k * 97) % 13) / 13; c.globalAlpha = 0.5 + r0 * 0.5; c.beginPath(); c.arc(((k * 53) % 100) / 100 * w, ((k * 31) % 100) / 100 * h, 1 + r0 * 2.2, 0, 7); c.fill(); }
+    c.globalAlpha = 1;
+  }
   else if (bag.pattern === "star") { c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? w * 0.13 : w * 0.3; c.lineTo(w / 2 + Math.cos(a) * rr, h / 2 + Math.sin(a) * rr); } c.closePath(); c.fill(); }
   c.restore();
   c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 1;
@@ -1714,6 +1864,7 @@ function updateBags(dt) {
     m.scale.set(1 + 0.25 * sq, 1 - 0.45 * sq, 1 + 0.25 * sq);
     if (b.state === "flying") {
       m.position.copy(W(b.x, b.y, b.z));
+      if (b.owner === 0 && career.trail !== "none") trailPuff(m.position, career.trail);
       m.rotation.set(0.2 * Math.sin(b.angle * 1.7), -b.angle, 0.15 * Math.cos(b.angle * 1.3));
     } else if (b.state === "inHole") {
       v.dropT += dt;
@@ -1832,6 +1983,16 @@ function dust(b, color) {
   flatOnBoard(ring, b); ring.position.y += 0.01; scene.add(ring);
   fx.push({ o: ring, life: 0.45, max: 0.45, kind: "ring" });
 }
+// Store "Bag Trails": a few glowing puffs per frame behind your bag in flight.
+function trailPuff(pos, kind) {
+  for (let k = 0; k < 2; k++) {
+    const col = kind === "fire" ? new THREE.Color().setHSL(0.02 + Math.random() * 0.09, 1, 0.55) : kind === "rainbow" ? new THREE.Color().setHSL((S.time * 0.8 + k * 0.1) % 1, 1, 0.6) : new THREE.Color(Math.random() < 0.5 ? 0xffffff : 0xffe27a);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+    s.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2));
+    s.scale.setScalar(kind === "sparkle" ? 0.25 : 0.4); scene.add(s);
+    fx.push({ o: s, vel: new THREE.Vector3(0, kind === "fire" ? 0.8 : 0.1, 0), life: 0.5, max: 0.5, grow: kind === "fire" ? 0.4 : 0.1, kind: "dust" });
+  }
+}
 const confettiGeo = new THREE.PlaneGeometry(0.09, 0.05);
 function confetti(owner) {
   const cols = [COL.p[owner], COL.gold, "#ffffff", COL.pl[owner], COL.go];
@@ -1848,6 +2009,38 @@ function confetti(owner) {
   glow.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.2)); glow.scale.setScalar(0.8); scene.add(glow);
   fx.push({ o: glow, life: 0.9, max: 0.9, kind: "glow" });
   shake = Math.max(shake, 0.45);
+}
+// Escalating hole effects as one player's bags pile into the hole in an inning.
+const holeHalo = new THREE.Mesh(new THREE.RingGeometry(HR + 0.01, HR + 0.16, 48), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+holeHalo.renderOrder = 6; holeHalo.visible = false; scene.add(holeHalo);
+let haloLevel = 0;
+function setHoleHalo(level) {
+  haloLevel = level;
+  holeHalo.visible = level >= 2;
+  if (level >= 2) { flatOnBoard(holeHalo, HOLE); holeHalo.position.y += 0.006; }
+}
+function shockwave(color, size = 6) {
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.42, 64), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  flatOnBoard(ring, HOLE); ring.position.y += 0.02; scene.add(ring);
+  fx.push({ o: ring, life: 0.7, max: 0.7, kind: "wave", size });
+}
+const beamTex = canvasTex(32, 256, (c, w, h) => { const g = c.createLinearGradient(0, h, 0, 0); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h); });
+function lightBeam(color) {
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(HR * 1.1, HR * 0.9, 14, 32, 1, true), new THREE.MeshBasicMaterial({ map: beamTex, color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  beam.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 7)); scene.add(beam);
+  fx.push({ o: beam, life: 1.8, max: 1.8, kind: "beam" });
+  const n = 60, geo = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), parts = [];
+  for (let i = 0; i < n; i++) parts.push({ a: Math.random() * 6.28, r: 0.3 + Math.random() * 0.4, y: Math.random() * 0.5, v: 2 + Math.random() * 3 });
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ map: dotTex, color, size: 0.35, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  pts.frustumCulled = false; scene.add(pts);
+  fx.push({ o: pts, parts, base: W(HOLE.x, HOLE.y, plane(HOLE.y)), life: 1.8, max: 1.8, kind: "spiral" });
+}
+// Called after a bag lands in the hole: n = how many of this player's bags are in the hole this inning.
+function holeStreak(owner, n) {
+  setHoleHalo(Math.max(haloLevel, n));
+  if (n >= 2) { shockwave(n >= 3 ? 0xff8a1f : 0xffc93a, n >= 3 ? 9 : 6); confetti(owner); }
+  if (n >= 3) { lightBeam(n >= 4 ? 0xffffff : 0xffb347); shake = Math.max(shake, 0.6); sfx.cheer(2.4, 0.4); }
 }
 // 4-BAGGER: a big fireworks show over the board plus the title across the screen.
 function fireworkBurst(center, color, n = 140) {
@@ -1889,6 +2082,13 @@ function updateFx(dt) {
     else if (f.kind === "ring") { const s = 1 + (1 - a) * 2.6; f.o.scale.set(s, s, s); f.o.material.opacity = 0.7 * a; }
     else if (f.kind === "glow") { f.o.scale.setScalar(0.8 + (1 - a) * 3); f.o.material.opacity = a; }
     else if (f.kind === "flash") { f.o.scale.setScalar(4 + (1 - a) * 10); f.o.material.opacity = a; }
+    else if (f.kind === "wave") { const sc = 1 + (1 - a) * f.size; f.o.scale.set(sc, sc, sc); f.o.material.opacity = 0.9 * a; }
+    else if (f.kind === "beam") { f.o.material.opacity = Math.min(1, a * 2) * (0.75 + 0.25 * Math.sin(S.time * 30)); f.o.scale.set(1 + (1 - a) * 0.6, 1, 1 + (1 - a) * 0.6); }
+    else if (f.kind === "spiral") {
+      const pos = f.o.geometry.attributes.position;
+      f.parts.forEach((q, k) => { q.y += q.v * dt; q.a += dt * 4; pos.array[k * 3] = f.base.x + Math.cos(q.a) * q.r; pos.array[k * 3 + 1] = f.base.y + q.y; pos.array[k * 3 + 2] = f.base.z + Math.sin(q.a) * q.r; });
+      pos.needsUpdate = true; f.o.material.opacity = Math.min(1, a * 2);
+    }
     else if (f.kind === "firework") {
       const pos = f.o.geometry.attributes.position;
       f.vel.forEach((v, k) => { v.y -= 6 * dt; v.multiplyScalar(Math.pow(0.4, dt)); pos.array[k * 3] += v.x * dt; pos.array[k * 3 + 1] += v.y * dt; pos.array[k * 3 + 2] += v.z * dt; });
@@ -1903,9 +2103,15 @@ function updateFx(dt) {
       });
       f.o.instanceMatrix.needsUpdate = true; f.o.material.opacity = Math.min(1, a * 2);
     }
+    else updateCelebrationFx(f, dt, a);
     if (f.life <= 0) { scene.remove(f.o); if (f.o.geometry && f.kind !== "confetti") f.o.geometry.dispose(); if (f.o.material) f.o.material.dispose(); fx.splice(i, 1); }
   }
   shake = Math.max(0, shake - dt);
+  if (holeHalo.visible) { // the rim glows gold at 2, fiery at 3, cycles rainbow at 4
+    if (haloLevel >= 4) holeHalo.material.color.setHSL((S.time * 0.6) % 1, 1, 0.6);
+    else holeHalo.material.color.set(haloLevel >= 3 ? 0xff7a1a : 0xffc93a);
+    holeHalo.material.opacity = 0.55 + 0.35 * Math.sin(S.time * 6);
+  }
 }
 
 // ───────────────────────── Throw aim: a glowing arrow and power ring lying on the lane
@@ -2082,6 +2288,86 @@ function fireAim() {
   const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0xffffff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
   g.position.copy(aimRig.position).add(new THREE.Vector3(0, 0.3, 0)); g.scale.setScalar(3); scene.add(g);
   fx.push({ o: g, life: 0.35, max: 0.35, kind: "flash" });
+}
+
+// ───────────────────────── Cornhole celebrations (shop "Effects" tab)
+// Each effect plays at the hole when your bag drops in; the 2/3/4-bagger build-up layers on top.
+const EFFECTS = [
+  { id: "confetti", name: "Confetti", price: 0, icon: "🎉", blurb: "The classic burst" },
+  { id: "streamers", name: "Streamers", price: 400, icon: "🎏", blurb: "Long ribbons in your colours" },
+  { id: "bubbles", name: "Bubbles", price: 900, icon: "🫧", blurb: "Bubbles float up out of the hole" },
+  { id: "coins", name: "Gold Coins", price: 1800, icon: "🪙", blurb: "A jackpot spray that bounces on the board" },
+  { id: "stars", name: "Stars", price: 3000, icon: "⭐", blurb: "Twinkling stars burst out" },
+  { id: "lightning", name: "Lightning", price: 5500, icon: "⚡", blurb: "A bolt strikes the hole" },
+  { id: "flames", name: "Flames", price: 9000, icon: "🔥", blurb: "Fire erupts from the hole" },
+  { id: "fireworks", name: "Mini Fireworks", price: 15000, icon: "🎆", blurb: "A firework pops over the board" },
+  { id: "rainbow", name: "Rainbow Burst", price: 25000, icon: "🌈", blurb: "Shimmering rainbow sparkle" },
+];
+const fxTex = {
+  star: canvasTex(64, 64, (c) => { c.fillStyle = "#fff"; c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k % 2 ? 12 : 30; c.lineTo(32 + Math.cos(a) * r, 32 + Math.sin(a) * r); } c.fill(); }),
+  coin: canvasTex(64, 64, (c) => { const g = c.createRadialGradient(24, 22, 4, 32, 32, 30); g.addColorStop(0, "#fff6b0"); g.addColorStop(0.5, "#ffc93a"); g.addColorStop(1, "#b07a00"); c.fillStyle = g; c.beginPath(); c.arc(32, 32, 28, 0, 7); c.fill(); c.strokeStyle = "#8a5a00"; c.lineWidth = 4; c.stroke(); c.fillStyle = "#b07a00"; c.font = "bold 30px sans-serif"; c.textAlign = "center"; c.fillText("$", 32, 43); }),
+  bubble: canvasTex(64, 64, (c) => { c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 3; c.beginPath(); c.arc(32, 32, 26, 0, 7); c.stroke(); c.fillStyle = "rgba(160,220,255,.25)"; c.fill(); c.fillStyle = "rgba(255,255,255,.9)"; c.beginPath(); c.ellipse(22, 20, 7, 4, -0.6, 0, 7); c.fill(); }),
+};
+// A burst of sprite particles: n of them, launched upward in a cone, with gravity and a fade.
+function spriteBurst({ n = 40, tex = dotTex, colors = [0xffffff], speed = [3, 7], up = [5, 9], spread = 0.7, gravity = 12, life = [1, 1.6], size = [0.12, 0.22], additive = false, drag = 0.4, bounce = false, rise = 0 }) {
+  const base = W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.1);
+  for (let i = 0; i < n; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: colors[i % colors.length], transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
+    const a = Math.random() * Math.PI * 2, v = rand(speed[0], speed[1]) * spread;
+    s.position.copy(base); s.scale.setScalar(rand(size[0], size[1])); scene.add(s);
+    const L = rand(life[0], life[1]);
+    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]), Math.sin(a) * v), gravity, drag, bounce, rise, life: L, max: L, s0: s.scale.x });
+  }
+}
+function lightningStrike(color = 0xbfe6ff) {
+  const pts = [], top = W(HOLE.x + rand(-2, 2), HOLE.y + rand(-1, 1), 26), end = W(HOLE.x, HOLE.y, plane(HOLE.y));
+  for (let k = 0; k <= 14; k++) {
+    const t = k / 14, p = top.clone().lerp(end, t);
+    if (k > 0 && k < 14) p.add(new THREE.Vector3(rand(-0.8, 0.8), 0, rand(-0.8, 0.8)).multiplyScalar(1 - t * 0.6));
+    pts.push(p);
+  }
+  for (const [w, op] of [[1, 1], [1, 0.5]]) {
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map(p => p.clone().add(new THREE.Vector3(rand(-0.05, 0.05) * w, 0, 0)))),
+      new THREE.LineBasicMaterial({ color, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
+    scene.add(line); fx.push({ o: line, kind: "flicker", life: 0.6, max: 0.6 });
+  }
+  const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+  flash.position.copy(end).add(new THREE.Vector3(0, 0.4, 0)); flash.scale.setScalar(5); scene.add(flash);
+  fx.push({ o: flash, life: 0.5, max: 0.5, kind: "flash" });
+  spriteBurst({ n: 30, colors: [0xffffff, 0xbfe6ff], additive: true, speed: [3, 8], up: [1, 4], life: [0.4, 0.8], size: [0.08, 0.16] });
+  shake = Math.max(shake, 0.35);
+}
+function celebrate(owner, forced) {
+  const id = forced || (owner === 0 ? career.effect : "confetti");
+  const team = [COL.p[owner], COL.pl[owner], "#ffffff"];
+  switch (id) {
+    case "streamers": confetti(owner); spriteBurst({ n: 30, colors: team, speed: [2, 4], up: [7, 11], gravity: 5, life: [1.6, 2.2], size: [0.1, 0.18], drag: 0.6 }); break;
+    case "bubbles": spriteBurst({ n: 34, tex: fxTex.bubble, speed: [0.5, 1.6], up: [1, 2.5], gravity: -0.6, life: [2, 3], size: [0.2, 0.45], drag: 0.7 }); break;
+    case "coins": spriteBurst({ n: 36, tex: fxTex.coin, speed: [2, 5], up: [6, 10], gravity: 16, life: [1.6, 2.2], size: [0.18, 0.26], bounce: true }); sfx.tick(); break;
+    case "stars": spriteBurst({ n: 40, tex: fxTex.star, colors: [0xffe27a, 0xffffff, 0xffc93a], additive: true, speed: [3, 7], up: [4, 8], gravity: 6, life: [1, 1.6], size: [0.15, 0.3] }); break;
+    case "lightning": lightningStrike(); break;
+    case "flames": // tongues of fire: a hot core plus embers thrown wide
+      spriteBurst({ n: 60, colors: [0xff3a1a, 0xff6a1a, 0xff8a1f], additive: true, speed: [1, 3], up: [3, 7], gravity: -0.5, life: [0.5, 1], size: [0.14, 0.3], drag: 0.35 });
+      spriteBurst({ n: 30, colors: [0xffc93a, 0xfff27a], additive: true, speed: [0.3, 1], up: [4, 8], gravity: 2, life: [0.4, 0.8], size: [0.1, 0.2], drag: 0.5 });
+      spriteBurst({ n: 24, colors: [0xffb347], additive: true, speed: [4, 8], up: [5, 9], gravity: 10, life: [1, 1.5], size: [0.04, 0.08] }); break;
+    case "fireworks": fireworkBurst(W(HOLE.x, HOLE.y, 5.5).clone(), new THREE.Color(COL.p[owner]), 120); fireworkBurst(W(HOLE.x + 0.8, HOLE.y - 0.5, 6.5).clone(), new THREE.Color(0xffc93a), 90); sfx.boom(); break;
+    case "rainbow": spriteBurst({ n: 70, colors: [0xff3a3a, 0xff9a1f, 0xfff23a, 0x3ee07a, 0x2f86ff, 0xa24bff], additive: true, speed: [3, 8], up: [4, 9], gravity: 7, life: [1.2, 1.8], size: [0.1, 0.2] }); break;
+    default: confetti(owner);
+  }
+}
+// The per-frame update for the particle kinds above (called from updateFx).
+function updateCelebrationFx(f, dt, a) {
+  if (f.kind === "sprite") {
+    f.vel.y -= f.gravity * dt; f.vel.multiplyScalar(Math.pow(f.drag, dt));
+    f.o.position.addScaledVector(f.vel, dt);
+    const floor = surf({ x: f.o.position.x, y: -f.o.position.z }) + 0.05;
+    if (f.o.position.y < floor) { f.o.position.y = floor; if (f.bounce && Math.abs(f.vel.y) > 1) f.vel.y *= -0.45; else f.vel.set(0, 0, 0); }
+    f.o.material.opacity = Math.min(1, a * 2.5);
+    f.o.material.rotation += dt * 3;
+    return true;
+  }
+  if (f.kind === "flicker") { f.o.material.opacity = a * (Math.random() < 0.6 ? 1 : 0.2); return true; }
+  return false;
 }
 
 // ───────────────────────── Cameras
@@ -2425,30 +2711,112 @@ function swatch(item, kind) {
   else { ctx.save(); ctx.scale(0.5, 0.5); ctx.translate(64, 0); const tmp = document.createElement("canvas"); tmp.width = 128; tmp.height = 256; paintBoard(tmp.getContext("2d"), 128, 256, item); ctx.drawImage(tmp, 0, 0); ctx.restore(); }
   return c;
 }
+// ── Real-money store. Inside the iPhone app purchases go through Apple (StoreKit, via the native bridge); in a browser
+// the buttons explain that.
+const storePrices = {};
+let pendingBuy = null, shopMsg = "";
+const canBuy = () => !!(nativeBridge && nativeBridge.purchase);
+window.__storePrices = prices => { Object.assign(storePrices, prices || {}); if (!$("shop").hidden) renderShop(); };
+window.__purchaseComplete = (id, ok, message, restored) => {
+  if (pendingBuy === id) pendingBuy = null;
+  if (ok) {
+    const item = grantPurchase(id, !!restored);
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+  } else if (message) shopMsg = message;
+  renderShop(); renderHub();
+};
+window.__restoreDone = count => { shopMsg = count ? "Purchases restored" : "Nothing to restore"; renderShop(); renderHub(); };
+function buy(id) {
+  if (!canBuy()) { shopMsg = "Purchases are available in the iPhone app."; renderShop(); return; }
+  pendingBuy = id; shopMsg = ""; postNative("purchase", id); renderShop();
+}
+function storeHTML() {
+  const price = it => storePrices[it.id] || it.price;
+  const btn = it => {
+    const owned = it.kind === "once" && career.purchases.includes(it.id);
+    if (owned) return `<button class="btn" disabled>OWNED</button>`;
+    if (pendingBuy === it.id) return `<button class="btn" disabled>…</button>`;
+    return `<button class="btn green" data-buy="${it.id}">${price(it)}</button>`;
+  };
+  const sw = keys => `<div class="swrow">${keys.filter(k => !k.startsWith("trail")).map(k => `<canvas data-sw="${k}" width="80" height="80"></canvas>`).join("")}</div>`;
+  const starter = STORE.find(x => x.id === PID("starterpack"));
+  const parts = [];
+  if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
+  parts.push(`<div class="label">Coins</div>`);
+  for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${it.coins.toLocaleString()} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
+  parts.push(`<div class="label">Exclusive sets</div>`);
+  for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
+    const trails = it.id === PID("trails") && career.purchases.includes(it.id)
+      ? `<div class="chiprow">${TRAILS.map(t => `<button data-trail="${t.id}" class="${career.trail === t.id ? "on" : ""}">${t.name}</button>`).join("")}</div>` : "";
+    parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}${trails}</div>${btn(it)}</div>`);
+  }
+  if (career.purchases.includes(starter.id)) parts.push(`<div class="storeitem"><div class="ic">⭐</div><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div></div>${btn(starter)}</div>`);
+  parts.push(`<div class="storenote">No ads, ever. Coins and items stay on this device.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
+  if (shopMsg) parts.push(`<div class="shoptoast">${esc(shopMsg)}</div>`);
+  return parts.join("");
+}
 function renderShop() {
   $("shopCoins").textContent = career.coins.toLocaleString();
   for (const b of document.querySelectorAll("#shop .tabs button")) b.classList.toggle("on", b.dataset.tab === shopTab);
   const list = $("shopItems"); list.innerHTML = "";
+  if (shopTab === "store") {
+    list.innerHTML = storeHTML();
+    for (const c of list.querySelectorAll("canvas[data-sw]")) {
+      const [type, key] = c.dataset.sw.split(":"), ctx = c.getContext("2d");
+      if (type === "bag") paintBag(ctx, 80, 80, bagById(key));
+      else { const tmp = document.createElement("canvas"); tmp.width = 80; tmp.height = 160; paintBoard(tmp.getContext("2d"), 80, 160, boardById(key)); ctx.drawImage(tmp, 20, 0, 40, 80); }
+    }
+    for (const b of list.querySelectorAll("[data-buy]")) b.onclick = () => buy(b.dataset.buy);
+    for (const b of list.querySelectorAll("[data-trail]")) b.onclick = () => { career.trail = b.dataset.trail; save(); renderShop(); };
+    $("restoreBtn").onclick = () => { if (!canBuy()) { shopMsg = "Restore works in the iPhone app."; renderShop(); return; } shopMsg = "Restoring…"; postNative("restore", ""); renderShop(); };
+    return;
+  }
+  if (shopTab === "effects") {
+    for (const it of EFFECTS) {
+      const owned = career.effects.includes(it.id), equipped = career.effect === it.id;
+      const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
+      row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div></div>`;
+      const btns = document.createElement("div"); btns.className = "fxbtns";
+      const main = document.createElement("button");
+      main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
+      main.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
+      main.disabled = equipped || (!owned && career.coins < it.price);
+      main.onclick = () => { if (!owned) { career.coins -= it.price; career.effects.push(it.id); } career.effect = it.id; save(); renderShop(); renderHub(); };
+      const prev = document.createElement("button"); prev.className = "btn ghost"; prev.textContent = "▶ Preview";
+      prev.onclick = () => { // play it on the board behind the shop
+        $("shop").hidden = true; $("hub").hidden = true; initAudio(); sfx.hole(); celebrate(0, it.id);
+        setTimeout(() => { $("hub").hidden = S.phase !== "hub"; $("shop").hidden = false; }, 2300);
+      };
+      btns.append(main, prev); row.appendChild(btns); list.appendChild(row);
+    }
+    return;
+  }
   const items = shopTab === "bags" ? BAGS : BOARDS;
   for (const it of items) {
     const owned = (shopTab === "bags" ? career.bags : career.boards).includes(it.id), equipped = (shopTab === "bags" ? career.bag : career.board) === it.id;
     const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
     row.appendChild(swatch(it, shopTab));
     const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<div class="muted">Board design</div>`;
-    const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}</h4>${stats}`;
+    const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}`;
     row.appendChild(info);
-    const btn = document.createElement("button"); btn.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-    btn.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
-    btn.disabled = equipped || (!owned && career.coins < it.price);
-    btn.onclick = () => {
-      if (!owned) { career.coins -= it.price; (shopTab === "bags" ? career.bags : career.boards).push(it.id); }
-      if (shopTab === "bags") career.bag = it.id; else { career.board = it.id; setBoardDesign(it.id); }
-      save(); renderShop(); renderHub();
-    };
+    const btn = document.createElement("button");
+    if (it.premium && !owned) {
+      btn.className = "btn"; btn.textContent = "IN STORE";
+      btn.onclick = () => { shopTab = "store"; renderShop(); };
+    } else {
+      btn.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
+      btn.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
+      btn.disabled = equipped || (!owned && career.coins < it.price);
+      btn.onclick = () => {
+        if (!owned) { career.coins -= it.price; (shopTab === "bags" ? career.bags : career.boards).push(it.id); }
+        if (shopTab === "bags") career.bag = it.id; else { career.board = it.id; setBoardDesign(it.id); }
+        save(); renderShop(); renderHub();
+      };
+    }
     row.appendChild(btn); list.appendChild(row);
   }
 }
-$("shopBtn").onclick = () => { renderShop(); $("shop").hidden = false; };
+$("shopBtn").onclick = () => { shopMsg = ""; renderShop(); $("shop").hidden = false; };
 $("shopClose").onclick = () => { $("shop").hidden = true; renderHub(); };
 for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { shopTab = b.dataset.tab; renderShop(); };
 let pausedPhase = null;
@@ -2513,9 +2881,10 @@ function frame(now) {
 }
 
 resize(); openHub();
+postNative("store", "load"); // ask the iPhone app for real, local prices
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
 </script>
 
 </body>
