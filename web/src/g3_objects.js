@@ -34,6 +34,40 @@ function paintBoard(c, w, h, design) {
     const gg = c.createLinearGradient(0, h * 0.4, 0, h); gg.addColorStop(0, d.b); gg.addColorStop(1, d.a); c.fillStyle = gg; c.fillRect(0, h * 0.42, w, h * 0.58);
     c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = 6;
     for (let y = h * 0.5; y < h; y += 70) { c.beginPath(); for (let x = 0; x <= w; x += 8) { const yy = y + Math.sin(x / 30) * 12; x ? c.lineTo(x, yy) : c.moveTo(x, yy); } c.stroke(); }
+  } else if (d.paint === "polka") {
+    c.fillStyle = d.a; c.fillRect(0, h * 0.45, w, h * 0.55); c.fillStyle = d.b;
+    for (let y = 0; y < 6; y++) for (let x = 0; x < 5; x++) { c.beginPath(); c.arc(w * (0.1 + x * 0.2 + (y % 2) * 0.1), h * (0.5 + y * 0.085), w * 0.035, 0, 7); c.fill(); }
+  } else if (d.paint === "sunburst") {
+    const cx = w / 2, cy = h * 1.02;
+    for (let k = 0; k < 18; k++) { c.fillStyle = k % 2 ? d.a : d.b; c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, h * 0.6, Math.PI + k * Math.PI / 18, Math.PI + (k + 1) * Math.PI / 18); c.closePath(); c.fill(); }
+  } else if (d.paint === "diag") {
+    c.lineWidth = 34; for (let k = -h; k < w + h; k += 110) { c.strokeStyle = d.a; c.beginPath(); c.moveTo(k, h); c.lineTo(k + h * 0.6, h * 0.4); c.stroke(); c.strokeStyle = d.b; c.lineWidth = 8; c.stroke(); c.lineWidth = 34; }
+  } else if (d.paint === "plaid") {
+    c.globalAlpha = 0.55; c.fillStyle = d.a; for (let k = 0; k < 6; k++) { c.fillRect(w * (k / 6), h * 0.42, w * 0.07, h); c.fillRect(0, h * (0.45 + k * 0.1), w, h * 0.04); }
+    c.fillStyle = d.b; for (let k = 0; k < 6; k++) { c.fillRect(w * (k / 6) + w * 0.09, h * 0.42, w * 0.025, h); c.fillRect(0, h * (0.48 + k * 0.1), w, h * 0.015); } c.globalAlpha = 1;
+  } else if (d.paint === "camo") {
+    for (let k = 0; k < 26; k++) { c.fillStyle = [d.a, d.b, "#8a7a4a", "#2b3a1e"][k % 4]; c.beginPath(); c.ellipse(r() * w, h * 0.4 + r() * h * 0.6, 30 + r() * 50, 18 + r() * 30, r() * 3, 0, 7); c.fill(); }
+  } else if (d.paint === "chev") {
+    c.lineWidth = 40; for (let k = 0; k < 4; k++) { c.strokeStyle = k % 2 ? d.b : d.a; const y = h * (0.55 + k * 0.11); c.beginPath(); c.moveTo(0, y + 60); c.lineTo(w / 2, y); c.lineTo(w, y + 60); c.stroke(); }
+  } else if (d.paint === "target") {
+    for (const [r0, col] of [[0.48, d.a], [0.38, d.b], [0.28, d.a], [0.18, d.b]]) { c.fillStyle = col; c.beginPath(); c.arc(w / 2, h * 0.72, w * r0 * 1.6, 0, 7); c.fill(); }
+  } else if (d.paint === "split") {
+    c.fillStyle = d.a; c.beginPath(); c.moveTo(0, h * 0.4); c.lineTo(w, h * 0.65); c.lineTo(w, h); c.lineTo(0, h); c.closePath(); c.fill();
+    c.strokeStyle = d.b; c.lineWidth = 14; c.beginPath(); c.moveTo(0, h * 0.4); c.lineTo(w, h * 0.65); c.stroke();
+  } else if (d.paint === "neon") {
+    c.fillStyle = d.a; c.fillRect(0, 0, w, h);
+    c.shadowColor = d.b; c.shadowBlur = 18; c.lineWidth = 7;
+    for (const [col, y] of [[d.b, 0.55], ["#ff2e88", 0.66], ["#c7f03a", 0.77], [d.b, 0.88]]) { c.strokeStyle = col; c.beginPath(); c.moveTo(-10, h * y + 40); c.lineTo(w + 10, h * y - 40); c.stroke(); }
+    c.shadowBlur = 0;
+  } else if (d.paint === "galaxy") {
+    const gg = c.createLinearGradient(0, 0, w, h); gg.addColorStop(0, d.a); gg.addColorStop(0.6, "#3a1a7a"); gg.addColorStop(1, "#0a0420"); c.fillStyle = gg; c.fillRect(0, 0, w, h);
+    const neb = c.createRadialGradient(w * 0.3, h * 0.7, 10, w * 0.3, h * 0.7, w * 0.8); neb.addColorStop(0, "rgba(255,110,210,.55)"); neb.addColorStop(1, "rgba(255,110,210,0)"); c.fillStyle = neb; c.fillRect(0, 0, w, h);
+    c.fillStyle = "#fff"; for (let k = 0; k < 160; k++) { c.globalAlpha = 0.3 + r() * 0.7; c.beginPath(); c.arc(r() * w, r() * h, 0.6 + r() * 2, 0, 7); c.fill(); }
+    c.globalAlpha = 1;
+  } else if (d.paint === "flames") {
+    c.fillStyle = d.a; c.fillRect(0, 0, w, h);
+    const fl = (x, hgt, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x - 40, h); c.quadraticCurveTo(x - 60, h - hgt * 0.5, x + (r() - 0.5) * 30, h - hgt); c.quadraticCurveTo(x + 60, h - hgt * 0.5, x + 40, h); c.fill(); };
+    for (let k = 0; k < 7; k++) { const x = w * (k + 0.5) / 7, hh = h * (0.35 + r() * 0.25); fl(x, hh, "#c41e0a"); fl(x, hh * 0.75, d.b); fl(x, hh * 0.45, "#ffe24a"); }
   } else if (d.paint === "gold") {
     c.fillStyle = d.a; c.fillRect(0, 0, w, h);
     c.strokeStyle = d.b; c.lineWidth = 5; for (let k = -h; k < w + h; k += 90) { c.beginPath(); c.moveTo(k, h); c.lineTo(k + h * 0.5, h * 0.5); c.stroke(); }
@@ -42,7 +76,8 @@ function paintBoard(c, w, h, design) {
   c.strokeStyle = d.b === "#ffffff" ? "#ffc93a" : d.b; c.lineWidth = 0.06 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.1) * s, 0, 7); c.stroke();
   c.strokeStyle = d.a; c.lineWidth = 0.03 * s; c.beginPath(); c.arc(hx, hy, (HR + 0.17) * s, 0, 7); c.stroke();
   c.restore();
-  if (d.paint !== "gold") grain(40, "90,55,20", 0.07);
+  if (!["gold", "neon", "galaxy", "flames"].includes(d.paint)) grain(40, "90,55,20", 0.07);
+  // keep the hole area readable on busy designs
   const sh = c.createLinearGradient(0, 0, w * 0.8, h * 0.6);
   sh.addColorStop(0, "rgba(255,255,255,.18)"); sh.addColorStop(0.5, "rgba(255,255,255,0)"); sh.addColorStop(1, "rgba(0,0,0,.05)");
   c.fillStyle = sh; c.fillRect(0, 0, w, h);
@@ -100,6 +135,28 @@ function paintBag(c, w, h, bag) {
   else if (bag.pattern === "chevron") { c.lineWidth = w * 0.07; for (const y of [0.35, 0.6]) { c.beginPath(); c.moveTo(w * 0.15, h * (y + 0.12)); c.lineTo(w * 0.5, h * y); c.lineTo(w * 0.85, h * (y + 0.12)); c.stroke(); } }
   else if (bag.pattern === "swirl") { c.lineWidth = w * 0.05; c.beginPath(); for (let a = 0; a < 14; a += 0.1) { const rr = a * w * 0.025; const x = w / 2 + Math.cos(a) * rr, y = h / 2 + Math.sin(a) * rr; a ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
   else if (bag.pattern === "bolt") { c.beginPath(); c.moveTo(w * 0.58, h * 0.12); c.lineTo(w * 0.3, h * 0.55); c.lineTo(w * 0.5, h * 0.55); c.lineTo(w * 0.4, h * 0.88); c.lineTo(w * 0.72, h * 0.42); c.lineTo(w * 0.52, h * 0.42); c.closePath(); c.fill(); }
+  else if (bag.pattern === "plaid") {
+    c.globalAlpha = 0.35; for (let k = 0; k < 4; k++) { c.fillRect(w * (0.1 + k * 0.25), 0, w * 0.1, h); c.fillRect(0, h * (0.1 + k * 0.25), w, h * 0.1); } c.globalAlpha = 1;
+    c.strokeStyle = "rgba(255,255,255,.6)"; c.lineWidth = 2; for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(w * (0.15 + k * 0.25), 0); c.lineTo(w * (0.15 + k * 0.25), h); c.stroke(); }
+  }
+  else if (bag.pattern === "camo") {
+    for (const [x, y, r0, col] of [[0.2, 0.3, 0.18, "#3d5229"], [0.65, 0.25, 0.2, "#8a7a4a"], [0.45, 0.65, 0.22, "#2b3a1e"], [0.85, 0.75, 0.16, "#8a7a4a"], [0.15, 0.8, 0.15, "#3d5229"]]) {
+      c.fillStyle = col; c.beginPath(); c.ellipse(w * x, h * y, w * r0, h * r0 * 0.7, x * 3, 0, 7); c.fill(); }
+  }
+  else if (bag.pattern === "zigzag") { c.lineWidth = w * 0.06; for (const y of [0.35, 0.6]) { c.beginPath(); for (let k = 0; k <= 8; k++) c.lineTo(w * k / 8, h * y + (k % 2 ? -h * 0.07 : h * 0.07)); c.stroke(); } }
+  else if (bag.pattern === "split") { c.fillStyle = "rgba(255,255,255,.85)"; c.beginPath(); c.moveTo(w, 0); c.lineTo(w, h); c.lineTo(0, h); c.closePath(); c.fill(); c.fillStyle = base; c.globalAlpha = 0.25; c.fill(); c.globalAlpha = 1; }
+  else if (bag.pattern === "target") { for (const [r0, col] of [[0.34, "rgba(255,255,255,.9)"], [0.24, base], [0.13, "rgba(255,255,255,.9)"], [0.05, base]]) { c.fillStyle = col; c.beginPath(); c.arc(w / 2, h / 2, w * r0, 0, 7); c.fill(); } }
+  else if (bag.pattern === "diamond") { c.lineWidth = 2; for (let k = -2; k < 6; k++) { c.beginPath(); c.moveTo(w * k / 4, 0); c.lineTo(w * k / 4 + w, h); c.stroke(); c.beginPath(); c.moveTo(w * k / 4 + w, 0); c.lineTo(w * k / 4, h); c.stroke(); } }
+  else if (bag.pattern === "flame") {
+    const fl = (x, hgt, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(x - w * 0.12, h); c.quadraticCurveTo(x - w * 0.16, h - hgt * 0.5, x, h - hgt); c.quadraticCurveTo(x + w * 0.16, h - hgt * 0.5, x + w * 0.12, h); c.fill(); };
+    for (const [x, k] of [[0.15, 0.55], [0.38, 0.8], [0.62, 0.65], [0.85, 0.75]]) { fl(w * x, h * k, "#ffb21a"); fl(w * x, h * k * 0.6, "#fff27a"); }
+  }
+  else if (bag.pattern === "galaxy") {
+    const neb = c.createRadialGradient(w * 0.6, h * 0.4, 4, w * 0.6, h * 0.4, w * 0.5); neb.addColorStop(0, "rgba(255,120,220,.65)"); neb.addColorStop(1, "rgba(255,120,220,0)");
+    c.fillStyle = neb; c.fillRect(0, 0, w, h);
+    c.fillStyle = "#fff"; for (let k = 0; k < 40; k++) { const r0 = ((k * 97) % 13) / 13; c.globalAlpha = 0.5 + r0 * 0.5; c.beginPath(); c.arc(((k * 53) % 100) / 100 * w, ((k * 31) % 100) / 100 * h, 1 + r0 * 2.2, 0, 7); c.fill(); }
+    c.globalAlpha = 1;
+  }
   else if (bag.pattern === "star") { c.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? w * 0.13 : w * 0.3; c.lineTo(w / 2 + Math.cos(a) * rr, h / 2 + Math.sin(a) * rr); } c.closePath(); c.fill(); }
   c.restore();
   c.strokeStyle = "rgba(255,255,255,.07)"; c.lineWidth = 1;
@@ -139,6 +196,7 @@ function updateBags(dt) {
     m.scale.set(1 + 0.25 * sq, 1 - 0.45 * sq, 1 + 0.25 * sq);
     if (b.state === "flying") {
       m.position.copy(W(b.x, b.y, b.z));
+      if (b.owner === 0 && career.trail !== "none") trailPuff(m.position, career.trail);
       m.rotation.set(0.2 * Math.sin(b.angle * 1.7), -b.angle, 0.15 * Math.cos(b.angle * 1.3));
     } else if (b.state === "inHole") {
       v.dropT += dt;
@@ -257,6 +315,16 @@ function dust(b, color) {
   flatOnBoard(ring, b); ring.position.y += 0.01; scene.add(ring);
   fx.push({ o: ring, life: 0.45, max: 0.45, kind: "ring" });
 }
+// Store "Bag Trails": a few glowing puffs per frame behind your bag in flight.
+function trailPuff(pos, kind) {
+  for (let k = 0; k < 2; k++) {
+    const col = kind === "fire" ? new THREE.Color().setHSL(0.02 + Math.random() * 0.09, 1, 0.55) : kind === "rainbow" ? new THREE.Color().setHSL((S.time * 0.8 + k * 0.1) % 1, 1, 0.6) : new THREE.Color(Math.random() < 0.5 ? 0xffffff : 0xffe27a);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+    s.position.copy(pos).add(new THREE.Vector3((Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.2));
+    s.scale.setScalar(kind === "sparkle" ? 0.25 : 0.4); scene.add(s);
+    fx.push({ o: s, vel: new THREE.Vector3(0, kind === "fire" ? 0.8 : 0.1, 0), life: 0.5, max: 0.5, grow: kind === "fire" ? 0.4 : 0.1, kind: "dust" });
+  }
+}
 const confettiGeo = new THREE.PlaneGeometry(0.09, 0.05);
 function confetti(owner) {
   const cols = [COL.p[owner], COL.gold, "#ffffff", COL.pl[owner], COL.go];
@@ -273,6 +341,38 @@ function confetti(owner) {
   glow.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.2)); glow.scale.setScalar(0.8); scene.add(glow);
   fx.push({ o: glow, life: 0.9, max: 0.9, kind: "glow" });
   shake = Math.max(shake, 0.45);
+}
+// Escalating hole effects as one player's bags pile into the hole in an inning.
+const holeHalo = new THREE.Mesh(new THREE.RingGeometry(HR + 0.01, HR + 0.16, 48), new THREE.MeshBasicMaterial({ color: 0xffd76a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+holeHalo.renderOrder = 6; holeHalo.visible = false; scene.add(holeHalo);
+let haloLevel = 0;
+function setHoleHalo(level) {
+  haloLevel = level;
+  holeHalo.visible = level >= 2;
+  if (level >= 2) { flatOnBoard(holeHalo, HOLE); holeHalo.position.y += 0.006; }
+}
+function shockwave(color, size = 6) {
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.42, 64), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  flatOnBoard(ring, HOLE); ring.position.y += 0.02; scene.add(ring);
+  fx.push({ o: ring, life: 0.7, max: 0.7, kind: "wave", size });
+}
+const beamTex = canvasTex(32, 256, (c, w, h) => { const g = c.createLinearGradient(0, h, 0, 0); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, w, h); });
+function lightBeam(color) {
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(HR * 1.1, HR * 0.9, 14, 32, 1, true), new THREE.MeshBasicMaterial({ map: beamTex, color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  beam.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 7)); scene.add(beam);
+  fx.push({ o: beam, life: 1.8, max: 1.8, kind: "beam" });
+  const n = 60, geo = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), parts = [];
+  for (let i = 0; i < n; i++) parts.push({ a: Math.random() * 6.28, r: 0.3 + Math.random() * 0.4, y: Math.random() * 0.5, v: 2 + Math.random() * 3 });
+  geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ map: dotTex, color, size: 0.35, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  pts.frustumCulled = false; scene.add(pts);
+  fx.push({ o: pts, parts, base: W(HOLE.x, HOLE.y, plane(HOLE.y)), life: 1.8, max: 1.8, kind: "spiral" });
+}
+// Called after a bag lands in the hole: n = how many of this player's bags are in the hole this inning.
+function holeStreak(owner, n) {
+  setHoleHalo(Math.max(haloLevel, n));
+  if (n >= 2) { shockwave(n >= 3 ? 0xff8a1f : 0xffc93a, n >= 3 ? 9 : 6); confetti(owner); }
+  if (n >= 3) { lightBeam(n >= 4 ? 0xffffff : 0xffb347); shake = Math.max(shake, 0.6); sfx.cheer(2.4, 0.4); }
 }
 // 4-BAGGER: a big fireworks show over the board plus the title across the screen.
 function fireworkBurst(center, color, n = 140) {
@@ -314,6 +414,13 @@ function updateFx(dt) {
     else if (f.kind === "ring") { const s = 1 + (1 - a) * 2.6; f.o.scale.set(s, s, s); f.o.material.opacity = 0.7 * a; }
     else if (f.kind === "glow") { f.o.scale.setScalar(0.8 + (1 - a) * 3); f.o.material.opacity = a; }
     else if (f.kind === "flash") { f.o.scale.setScalar(4 + (1 - a) * 10); f.o.material.opacity = a; }
+    else if (f.kind === "wave") { const sc = 1 + (1 - a) * f.size; f.o.scale.set(sc, sc, sc); f.o.material.opacity = 0.9 * a; }
+    else if (f.kind === "beam") { f.o.material.opacity = Math.min(1, a * 2) * (0.75 + 0.25 * Math.sin(S.time * 30)); f.o.scale.set(1 + (1 - a) * 0.6, 1, 1 + (1 - a) * 0.6); }
+    else if (f.kind === "spiral") {
+      const pos = f.o.geometry.attributes.position;
+      f.parts.forEach((q, k) => { q.y += q.v * dt; q.a += dt * 4; pos.array[k * 3] = f.base.x + Math.cos(q.a) * q.r; pos.array[k * 3 + 1] = f.base.y + q.y; pos.array[k * 3 + 2] = f.base.z + Math.sin(q.a) * q.r; });
+      pos.needsUpdate = true; f.o.material.opacity = Math.min(1, a * 2);
+    }
     else if (f.kind === "firework") {
       const pos = f.o.geometry.attributes.position;
       f.vel.forEach((v, k) => { v.y -= 6 * dt; v.multiplyScalar(Math.pow(0.4, dt)); pos.array[k * 3] += v.x * dt; pos.array[k * 3 + 1] += v.y * dt; pos.array[k * 3 + 2] += v.z * dt; });
@@ -328,7 +435,13 @@ function updateFx(dt) {
       });
       f.o.instanceMatrix.needsUpdate = true; f.o.material.opacity = Math.min(1, a * 2);
     }
+    else updateCelebrationFx(f, dt, a);
     if (f.life <= 0) { scene.remove(f.o); if (f.o.geometry && f.kind !== "confetti") f.o.geometry.dispose(); if (f.o.material) f.o.material.dispose(); fx.splice(i, 1); }
   }
   shake = Math.max(0, shake - dt);
+  if (holeHalo.visible) { // the rim glows gold at 2, fiery at 3, cycles rainbow at 4
+    if (haloLevel >= 4) holeHalo.material.color.setHSL((S.time * 0.6) % 1, 1, 0.6);
+    else holeHalo.material.color.set(haloLevel >= 3 ? 0xff7a1a : 0xffc93a);
+    holeHalo.material.opacity = 0.55 + 0.35 * Math.sin(S.time * 6);
+  }
 }

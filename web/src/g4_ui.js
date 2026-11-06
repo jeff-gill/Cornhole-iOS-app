@@ -340,30 +340,112 @@ function swatch(item, kind) {
   else { ctx.save(); ctx.scale(0.5, 0.5); ctx.translate(64, 0); const tmp = document.createElement("canvas"); tmp.width = 128; tmp.height = 256; paintBoard(tmp.getContext("2d"), 128, 256, item); ctx.drawImage(tmp, 0, 0); ctx.restore(); }
   return c;
 }
+// ── Real-money store. Inside the iPhone app purchases go through Apple (StoreKit, via the native bridge); in a browser
+// the buttons explain that.
+const storePrices = {};
+let pendingBuy = null, shopMsg = "";
+const canBuy = () => !!(nativeBridge && nativeBridge.purchase);
+window.__storePrices = prices => { Object.assign(storePrices, prices || {}); if (!$("shop").hidden) renderShop(); };
+window.__purchaseComplete = (id, ok, message, restored) => {
+  if (pendingBuy === id) pendingBuy = null;
+  if (ok) {
+    const item = grantPurchase(id, !!restored);
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+  } else if (message) shopMsg = message;
+  renderShop(); renderHub();
+};
+window.__restoreDone = count => { shopMsg = count ? "Purchases restored" : "Nothing to restore"; renderShop(); renderHub(); };
+function buy(id) {
+  if (!canBuy()) { shopMsg = "Purchases are available in the iPhone app."; renderShop(); return; }
+  pendingBuy = id; shopMsg = ""; postNative("purchase", id); renderShop();
+}
+function storeHTML() {
+  const price = it => storePrices[it.id] || it.price;
+  const btn = it => {
+    const owned = it.kind === "once" && career.purchases.includes(it.id);
+    if (owned) return `<button class="btn" disabled>OWNED</button>`;
+    if (pendingBuy === it.id) return `<button class="btn" disabled>…</button>`;
+    return `<button class="btn green" data-buy="${it.id}">${price(it)}</button>`;
+  };
+  const sw = keys => `<div class="swrow">${keys.filter(k => !k.startsWith("trail")).map(k => `<canvas data-sw="${k}" width="80" height="80"></canvas>`).join("")}</div>`;
+  const starter = STORE.find(x => x.id === PID("starterpack"));
+  const parts = [];
+  if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
+  parts.push(`<div class="label">Coins</div>`);
+  for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${it.coins.toLocaleString()} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
+  parts.push(`<div class="label">Exclusive sets</div>`);
+  for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
+    const trails = it.id === PID("trails") && career.purchases.includes(it.id)
+      ? `<div class="chiprow">${TRAILS.map(t => `<button data-trail="${t.id}" class="${career.trail === t.id ? "on" : ""}">${t.name}</button>`).join("")}</div>` : "";
+    parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}${trails}</div>${btn(it)}</div>`);
+  }
+  if (career.purchases.includes(starter.id)) parts.push(`<div class="storeitem"><div class="ic">⭐</div><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div></div>${btn(starter)}</div>`);
+  parts.push(`<div class="storenote">No ads, ever. Coins and items stay on this device.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
+  if (shopMsg) parts.push(`<div class="shoptoast">${esc(shopMsg)}</div>`);
+  return parts.join("");
+}
 function renderShop() {
   $("shopCoins").textContent = career.coins.toLocaleString();
   for (const b of document.querySelectorAll("#shop .tabs button")) b.classList.toggle("on", b.dataset.tab === shopTab);
   const list = $("shopItems"); list.innerHTML = "";
+  if (shopTab === "store") {
+    list.innerHTML = storeHTML();
+    for (const c of list.querySelectorAll("canvas[data-sw]")) {
+      const [type, key] = c.dataset.sw.split(":"), ctx = c.getContext("2d");
+      if (type === "bag") paintBag(ctx, 80, 80, bagById(key));
+      else { const tmp = document.createElement("canvas"); tmp.width = 80; tmp.height = 160; paintBoard(tmp.getContext("2d"), 80, 160, boardById(key)); ctx.drawImage(tmp, 20, 0, 40, 80); }
+    }
+    for (const b of list.querySelectorAll("[data-buy]")) b.onclick = () => buy(b.dataset.buy);
+    for (const b of list.querySelectorAll("[data-trail]")) b.onclick = () => { career.trail = b.dataset.trail; save(); renderShop(); };
+    $("restoreBtn").onclick = () => { if (!canBuy()) { shopMsg = "Restore works in the iPhone app."; renderShop(); return; } shopMsg = "Restoring…"; postNative("restore", ""); renderShop(); };
+    return;
+  }
+  if (shopTab === "effects") {
+    for (const it of EFFECTS) {
+      const owned = career.effects.includes(it.id), equipped = career.effect === it.id;
+      const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
+      row.innerHTML = `<div class="fxicon">${it.icon}</div><div><h4>${esc(it.name)}</h4><div class="muted">${esc(it.blurb)}</div></div>`;
+      const btns = document.createElement("div"); btns.className = "fxbtns";
+      const main = document.createElement("button");
+      main.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
+      main.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
+      main.disabled = equipped || (!owned && career.coins < it.price);
+      main.onclick = () => { if (!owned) { career.coins -= it.price; career.effects.push(it.id); } career.effect = it.id; save(); renderShop(); renderHub(); };
+      const prev = document.createElement("button"); prev.className = "btn ghost"; prev.textContent = "▶ Preview";
+      prev.onclick = () => { // play it on the board behind the shop
+        $("shop").hidden = true; $("hub").hidden = true; initAudio(); sfx.hole(); celebrate(0, it.id);
+        setTimeout(() => { $("hub").hidden = S.phase !== "hub"; $("shop").hidden = false; }, 2300);
+      };
+      btns.append(main, prev); row.appendChild(btns); list.appendChild(row);
+    }
+    return;
+  }
   const items = shopTab === "bags" ? BAGS : BOARDS;
   for (const it of items) {
     const owned = (shopTab === "bags" ? career.bags : career.boards).includes(it.id), equipped = (shopTab === "bags" ? career.bag : career.board) === it.id;
     const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
     row.appendChild(swatch(it, shopTab));
     const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<div class="muted">Board design</div>`;
-    const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}</h4>${stats}`;
+    const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}`;
     row.appendChild(info);
-    const btn = document.createElement("button"); btn.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
-    btn.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
-    btn.disabled = equipped || (!owned && career.coins < it.price);
-    btn.onclick = () => {
-      if (!owned) { career.coins -= it.price; (shopTab === "bags" ? career.bags : career.boards).push(it.id); }
-      if (shopTab === "bags") career.bag = it.id; else { career.board = it.id; setBoardDesign(it.id); }
-      save(); renderShop(); renderHub();
-    };
+    const btn = document.createElement("button");
+    if (it.premium && !owned) {
+      btn.className = "btn"; btn.textContent = "IN STORE";
+      btn.onclick = () => { shopTab = "store"; renderShop(); };
+    } else {
+      btn.className = "btn " + (equipped ? "" : owned ? "blue" : "green");
+      btn.textContent = equipped ? "EQUIPPED" : owned ? "EQUIP" : it.price ? `🪙 ${it.price.toLocaleString()}` : "FREE";
+      btn.disabled = equipped || (!owned && career.coins < it.price);
+      btn.onclick = () => {
+        if (!owned) { career.coins -= it.price; (shopTab === "bags" ? career.bags : career.boards).push(it.id); }
+        if (shopTab === "bags") career.bag = it.id; else { career.board = it.id; setBoardDesign(it.id); }
+        save(); renderShop(); renderHub();
+      };
+    }
     row.appendChild(btn); list.appendChild(row);
   }
 }
-$("shopBtn").onclick = () => { renderShop(); $("shop").hidden = false; };
+$("shopBtn").onclick = () => { shopMsg = ""; renderShop(); $("shop").hidden = false; };
 $("shopClose").onclick = () => { $("shop").hidden = true; renderHub(); };
 for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { shopTab = b.dataset.tab; renderShop(); };
 let pausedPhase = null;
@@ -428,6 +510,7 @@ function frame(now) {
 }
 
 resize(); openHub();
+postNative("store", "load"); // ask the iPhone app for real, local prices
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };

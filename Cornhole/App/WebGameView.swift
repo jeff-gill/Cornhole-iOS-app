@@ -18,6 +18,9 @@ struct WebGameView: UIViewRepresentable {
         let handler = WeakMessageHandler(context.coordinator)
         controller.add(handler, name: "save")
         controller.add(handler, name: "haptic")
+        controller.add(handler, name: "store")
+        controller.add(handler, name: "purchase")
+        controller.add(handler, name: "restore")
         if let saved = CareerStore.load() {
             controller.addUserScript(WKUserScript(source: "window.__nativeCareer = \(saved);",
                                                   injectionTime: .atDocumentStart, forMainFrameOnly: true))
@@ -35,6 +38,7 @@ struct WebGameView: UIViewRepresentable {
         #if DEBUG
         if #available(iOS 16.4, *) { webView.isInspectable = true } // Safari > Develop can inspect the game
         #endif
+        context.coordinator.store.webView = webView
         if let url = URL(string: "\(BundleSchemeHandler.scheme)://game/index.html") {
             webView.load(URLRequest(url: url))
         }
@@ -45,6 +49,7 @@ struct WebGameView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKScriptMessageHandler {
         private let haptics = Haptics()
+        let store = StoreManager()
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             switch message.name {
@@ -52,6 +57,17 @@ struct WebGameView: UIViewRepresentable {
                 if let json = message.body as? String { CareerStore.save(json) }
             case "haptic":
                 haptics.play(message.body as? String ?? "")
+            case "store":
+                let store = self.store
+                Task { await store.loadProducts() }
+            case "purchase":
+                if let id = message.body as? String {
+                    let store = self.store
+                    Task { await store.purchase(id) }
+                }
+            case "restore":
+                let store = self.store
+                Task { await store.restore() }
             default:
                 break
             }

@@ -32,28 +32,81 @@ const pot = v => v.fee * 2;
 const starsForWin = vi => 2 + vi, starsForLoss = vi => 1 + vi;
 // The house covers your Backyard entry if you're short, so you can never get stuck.
 const houseCovers = vi => vi === 0 && career.coins < VENUES[0].fee;
+// Twenty coin bags. Prices climb with widening gaps (each about 35-40% more than the last), so maxing out takes a career:
+// the Gold Standard is roughly 15 Stadium wins. Stats rise gradually; a few mid-price bags are specialists.
 const BAGS = [
   { id: "starter", name: "Duck Cloth", price: 0, acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#ff4b3a", pattern: "plain" },
-  { id: "backyard", name: "Backyard Pro", price: 300, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
-  { id: "sticky", name: "Sticky Fingers", price: 800, acc: 2, ctrl: 3, spin: 2, feel: "sticky", c: "#2fbf71", pattern: "dots" },
-  { id: "slick", name: "Slick Rick", price: 800, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#a24bff", pattern: "chevron" },
-  { id: "twister", name: "Twister", price: 2200, acc: 3, ctrl: 3, spin: 5, feel: "neutral", c: "#00b8c8", pattern: "swirl" },
-  { id: "laser", name: "Laser", price: 5000, acc: 5, ctrl: 4, spin: 3, feel: "fast", c: "#ff2e88", pattern: "bolt" },
-  { id: "gold", name: "Gold Standard", price: 12000, acc: 5, ctrl: 5, spin: 5, feel: "neutral", c: "#f2b705", pattern: "star" },
+  { id: "backyard", name: "Backyard Pro", price: 150, acc: 2, ctrl: 1, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
+  { id: "picnic", name: "Picnic Plaid", price: 220, acc: 1, ctrl: 2, spin: 2, feel: "sticky", c: "#d62828", pattern: "plaid" },
+  { id: "lemonade", name: "Lemonade", price: 320, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#f2c230", pattern: "dots" },
+  { id: "camo", name: "Camo Crew", price: 450, acc: 2, ctrl: 2, spin: 2, feel: "sticky", c: "#5b7a3a", pattern: "camo" },
+  { id: "skychev", name: "Sky Chevron", price: 650, acc: 2, ctrl: 3, spin: 2, feel: "neutral", c: "#2f86ff", pattern: "chevron" },
+  { id: "zigzag", name: "Zigzag", price: 900, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#0fb5a5", pattern: "zigzag" },
+  { id: "twotone", name: "Two-Tone", price: 1300, acc: 3, ctrl: 3, spin: 2, feel: "neutral", c: "#8a3ffc", pattern: "split" },
+  { id: "bullseye", name: "Bullseye", price: 1800, acc: 3, ctrl: 2, spin: 3, feel: "neutral", c: "#e8392b", pattern: "target" },
+  { id: "slick", name: "Slick Rick", price: 2600, acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#a24bff", pattern: "chevron" },
+  { id: "sticky", name: "Sticky Fingers", price: 3600, acc: 3, ctrl: 4, spin: 3, feel: "sticky", c: "#2fbf71", pattern: "dots" },
+  { id: "diamond", name: "Diamond Back", price: 5000, acc: 4, ctrl: 3, spin: 3, feel: "neutral", c: "#1f3a6e", pattern: "diamond" },
+  { id: "twister", name: "Twister", price: 7000, acc: 3, ctrl: 3, spin: 5, feel: "neutral", c: "#00b8c8", pattern: "swirl" },
+  { id: "thunder", name: "Thunder", price: 9500, acc: 4, ctrl: 4, spin: 3, feel: "fast", c: "#f2b705", pattern: "bolt" },
+  { id: "royal", name: "Royal", price: 13000, acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#6a2c91", pattern: "diamond" },
+  { id: "laser", name: "Laser", price: 18000, acc: 5, ctrl: 4, spin: 3, feel: "fast", c: "#ff2e88", pattern: "bolt" },
+  { id: "midnight", name: "Midnight", price: 25000, acc: 4, ctrl: 5, spin: 4, feel: "sticky", c: "#14214a", pattern: "star" },
+  { id: "champion", name: "Champion", price: 34000, acc: 5, ctrl: 4, spin: 5, feel: "neutral", c: "#c8102e", pattern: "star" },
+  { id: "platinum", name: "Platinum", price: 46000, acc: 5, ctrl: 5, spin: 4, feel: "neutral", c: "#9aa4b2", pattern: "diamond" },
+  { id: "gold", name: "Gold Standard", price: 62000, acc: 5, ctrl: 5, spin: 5, feel: "neutral", c: "#f2b705", pattern: "star" },
 ];
+// Premium items come only from the Store (real money). Exclusive looks; stats are good but never better than the
+// best coin bag, so nobody can buy wins.
+const PID = s => "com.jeffgill.cornhole." + s;
+BAGS.push(
+  { id: "firecracker", name: "Firecracker", premium: PID("starterpack"), acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#e8392b", pattern: "flame" },
+  { id: "galaxy", name: "Galaxy", premium: PID("set.galaxy"), acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#5b3bd6", pattern: "galaxy" },
+  { id: "inferno", name: "Inferno", premium: PID("set.inferno"), acc: 4, ctrl: 4, spin: 4, feel: "fast", c: "#ff5a00", pattern: "flame" },
+);
+// Store products (prices are placeholders until the App Store reports the real, local ones).
+const STORE = [
+  { id: PID("coins.1000"), kind: "coins", coins: 1000, price: "$0.99", title: "Handful of Coins", icon: "🪙" },
+  { id: PID("coins.6000"), kind: "coins", coins: 6000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
+  { id: PID("coins.15000"), kind: "coins", coins: 15000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
+  { id: PID("coins.40000"), kind: "coins", coins: 40000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
+  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 5000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "5,000 coins + Firecracker bags + Neon Nights board" },
+  { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb"], blurb: "Exclusive Galaxy bags and board" },
+  { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob"], blurb: "Exclusive Inferno bags and board" },
+  { id: PID("trails"), kind: "once", price: "$1.99", title: "Bag Trails", grants: ["trail:sparkle", "trail:fire", "trail:rainbow"], blurb: "Sparkle, fire and rainbow trails behind your bag" },
+];
+const TRAILS = [{ id: "none", name: "None" }, { id: "sparkle", name: "Sparkle" }, { id: "fire", name: "Fire" }, { id: "rainbow", name: "Rainbow" }];
 // Opponents and the second local player use these.
 const RIVAL_BAGS = [
   { id: "rival", name: "Blue Duck", acc: 1, ctrl: 1, spin: 1, feel: "neutral", c: "#2f86ff", pattern: "plain" },
   { id: "rival2", name: "Navy Stripe", acc: 2, ctrl: 2, spin: 2, feel: "neutral", c: "#2456c9", pattern: "stripe" },
   { id: "rival3", name: "Teal Twist", acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#0f9fb5", pattern: "swirl" },
 ];
+// Twenty coin boards (looks only), on a similar but gentler climb, plus the exclusive Store boards.
 const BOARDS = [
   { id: "classic", name: "Classic Navy", price: 0, paint: "band", a: "#1f3a6e", b: "#ffc93a" },
-  { id: "stripes", name: "Stars & Stripes", price: 400, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
-  { id: "sunset", name: "Sunset Fade", price: 900, paint: "fade", a: "#ff7a3a", b: "#a83279" },
-  { id: "checker", name: "Checkered Flag", price: 1600, paint: "checker", a: "#111111", b: "#ffffff" },
-  { id: "waves", name: "Ocean Waves", price: 2500, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
-  { id: "goldpro", name: "Gold Pro", price: 8000, paint: "gold", a: "#151515", b: "#ffd84a" },
+  { id: "redband", name: "Red Band", price: 100, paint: "band", a: "#c8102e", b: "#ffffff" },
+  { id: "lake", name: "Lake Blue", price: 180, paint: "fade", a: "#2f86ff", b: "#0fb5a5" },
+  { id: "polka", name: "Polka Party", price: 280, paint: "polka", a: "#ff2e88", b: "#ffffff" },
+  { id: "sunburst", name: "Sunburst", price: 400, paint: "sunburst", a: "#ff8a1f", b: "#ffd84a" },
+  { id: "stripes", name: "Stars & Stripes", price: 600, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
+  { id: "diag", name: "Diagonal Rush", price: 850, paint: "diag", a: "#2f86ff", b: "#ffffff" },
+  { id: "plaid", name: "Picnic Plaid", price: 1200, paint: "plaid", a: "#c8102e", b: "#1f3a6e" },
+  { id: "sunset", name: "Sunset Fade", price: 1700, paint: "fade", a: "#ff7a3a", b: "#a83279" },
+  { id: "camo", name: "Camo", price: 2400, paint: "camo", a: "#5b7a3a", b: "#3d5229" },
+  { id: "checker", name: "Checkered Flag", price: 3300, paint: "checker", a: "#111111", b: "#ffffff" },
+  { id: "chev", name: "Chevron Charge", price: 4500, paint: "chev", a: "#ffc93a", b: "#1f3a6e" },
+  { id: "waves", name: "Ocean Waves", price: 6000, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
+  { id: "target", name: "Bullseye", price: 8000, paint: "target", a: "#e8392b", b: "#ffffff" },
+  { id: "split", name: "Split Decision", price: 11000, paint: "split", a: "#8a3ffc", b: "#ffc93a" },
+  { id: "retro", name: "Retro Rays", price: 15000, paint: "sunburst", a: "#a83279", b: "#ff7a3a" },
+  { id: "midband", name: "Midnight Band", price: 20000, paint: "band", a: "#0d1430", b: "#9aa4b2" },
+  { id: "tropic", name: "Tropical", price: 27000, paint: "waves", a: "#ff2e88", b: "#ffd84a" },
+  { id: "racing", name: "Racing Checker", price: 36000, paint: "checker", a: "#c8102e", b: "#111111" },
+  { id: "goldpro", name: "Gold Pro", price: 50000, paint: "gold", a: "#151515", b: "#ffd84a" },
+  { id: "neon", name: "Neon Nights", premium: PID("starterpack"), paint: "neon", a: "#0d0d1a", b: "#2ef2ff" },
+  { id: "galaxyb", name: "Galaxy", premium: PID("set.galaxy"), paint: "galaxy", a: "#140a3a", b: "#b48cff" },
+  { id: "infernob", name: "Inferno", premium: PID("set.inferno"), paint: "flames", a: "#1a0a05", b: "#ff7a1a" },
 ];
 const OPPONENTS = ["Backyard Bob", "Dirt Bag Dave", "Tailgate Tina", "Sandy Shores", "Big Earl", "Hops Hannah", "Slider Sam", "Airmail Annie",
   "The Professor", "Lefty Lou", "Swish Rodriguez", "Cornelius", "Four-Bag Fran", "Kernel Sanders", "Woody", "Blocker Betty"];
@@ -61,7 +114,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "" });
+const fresh = () => ({ coins: 250, stars: 0, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -83,6 +136,21 @@ function save() {
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
 const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
 const venueUnlocked = i => career.unlocked.includes(VENUES[i].id);
+// Deliver a store purchase. Coin packs can be bought again; one-time items (and restores) never pay out twice.
+function grantPurchase(id, restored) {
+  const item = STORE.find(x => x.id === id);
+  if (!item) return null;
+  if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
+  if (career.purchases.includes(id)) return item;
+  career.purchases.push(id);
+  if (item.coins && !restored) career.coins += item.coins;
+  for (const g of item.grants || []) {
+    const [type, key] = g.split(":"), list = type === "bag" ? career.bags : type === "board" ? career.boards : career.trails;
+    if (!list.includes(key)) list.push(key);
+  }
+  save();
+  return item;
+}
 
 // ───────────────────────── Game state
 const S = {
@@ -161,7 +229,7 @@ function startMatch(kind, vi) {
   T.mu = v.mu;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 0]; S.leader = Math.random() < 0.5 ? 0 : 1; S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
-  setTeamColors(); clearBagMeshes(); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
+  setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub");
   showBanner(`${S.names[S.leader] === "You" ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
@@ -301,7 +369,7 @@ function finishMatch() {
   S.result = { won, starDelta: career.stars - before, coins, newly: newly.map(x => x.name) };
 }
 function nextInning() {
-  S.world.clear(); clearBagMeshes(); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
+  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = [0, 0]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
   newWind(); venueAmbience(); beginTurn();
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.7; renderBanner(); }
@@ -318,8 +386,12 @@ function checkFourBagger() {
 }
 function handleEvents(evts) {
   for (const e of evts) {
-    if (e.type === "swish") { showBanner("SWISH!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
-    else if (e.type === "drop") { showBanner(e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!", e.bag.owner); sfx.hole(); haptic("success"); confetti(e.bag.owner); }
+    if (e.type === "swish" || e.type === "drop") {
+      const p = e.bag.owner, n = S.world.bags.filter(b => b.owner === p && b.state === "inHole").length;
+      const name = n === 2 ? "2-BAGGER!" : n === 3 ? "3-BAGGER!" : e.type === "swish" ? "SWISH!" : e.bag.id === S.lastId ? "CORNHOLE!" : "KNOCKED IN!";
+      if (n < 4) showBanner(name, p);
+      sfx.hole(); haptic(n >= 3 ? "big" : "success"); celebrate(p); holeStreak(p, n);
+    }
     else if (e.type === "land") { sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
     else if (e.type === "hit") { sfx.thud(); haptic("light"); }
     else if (e.type === "ground") { sfx.grass(); dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }

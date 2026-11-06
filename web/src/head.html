@@ -191,8 +191,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff1a8); }
 /* Shop */
-.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
-.tabs button { border: 0; background: none; padding: 9px; border-radius: 12px; font-family: var(--font-display); font-size: 17px; font-weight: 400; color: var(--ink-dim); }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 16px; }
+.tabs button { border: 0; background: none; padding: 9px 2px; border-radius: 12px; font-family: var(--font-display); font-size: 15px; font-weight: 400; color: var(--ink-dim); }
 .tabs button.on { background: #fff; color: var(--deck); }
 .items { display: flex; flex-direction: column; gap: 10px; }
 .item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; background: rgba(255,255,255,.06); border: 3px solid rgba(255,255,255,.12); border-radius: 16px; padding: 10px; }
@@ -250,6 +250,27 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .swipehint { border: 0; background: none; color: var(--ink-dim); font-weight: 900; font-size: 14px; letter-spacing: .04em; padding: 6px; }
 .swipehint span { display: inline-block; animation: bob 1.2s ease-in-out infinite; color: var(--gold); font-size: 18px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+/* Store */
+.storeitem { position: relative; display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; border-radius: 18px; padding: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border: 3px solid rgba(255,255,255,.18); }
+.storeitem.hero { grid-template-columns: 1fr auto; background: linear-gradient(135deg, #ff7a3a, #ff2e88 55%, #7a3aff); border-color: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.3); }
+.storeitem .ic { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; background: rgba(0,0,0,.25); }
+.storeitem h4 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 19px; }
+.storeitem .sub { font-size: 12px; color: var(--ink-dim); font-weight: 700; }
+.storeitem.hero .sub { color: #fff; }
+.storeitem .tag { position: absolute; top: -10px; right: 12px; font-family: var(--font-display); font-size: 12px; padding: 2px 10px; border-radius: 999px; background: var(--gold); color: #3a2600; border: 2px solid #fff; }
+.storeitem .btn { font-size: 16px; padding: 10px 14px; min-width: 84px; }
+.swrow { display: flex; gap: 6px; margin-top: 4px; }
+.swrow canvas { width: 40px; height: 40px; border-radius: 10px; }
+.chiprow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.chiprow button { border: 2px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); border-radius: 999px; padding: 4px 10px; font-weight: 900; font-size: 12px; }
+.chiprow button.on { background: var(--go); border-color: #fff; color: #12203a; }
+.storenote { font-size: 12px; color: var(--ink-dim); text-align: center; line-height: 1.4; }
+.shoptoast { position: sticky; bottom: 0; text-align: center; background: var(--gold); color: #3a2600; border-radius: 12px; padding: 8px; font-weight: 900; }
+.fxicon { width: 64px; height: 64px; border-radius: 12px; display: grid; place-items: center; font-size: 34px; background: radial-gradient(#2b4a80, #12203a); }
+.fxbtns { display: flex; flex-direction: column; gap: 6px; }
+.fxbtns .btn { min-width: 86px; }
+.btn.ghost { background: rgba(255,255,255,.1); box-shadow: none; font-size: 13px; padding: 6px 8px; }
 /* Pause toggles */
 .toggles { display: flex; flex-direction: column; gap: 8px; }
 .toggle { display: flex; justify-content: space-between; align-items: center; border: 3px solid rgba(255,255,255,.18); background: rgba(255,255,255,.07); border-radius: 16px; padding: 10px 14px;
@@ -331,7 +352,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
     <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><span class="ico" style="background:#ffc93a">🪙</span><b id="shopCoins">0</b></div></div>
-    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button></div>
+    <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="effects">EFFECTS</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn" id="shopClose">DONE</button>
   </div>
