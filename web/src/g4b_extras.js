@@ -4,10 +4,10 @@ const clockText = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s
 const topCourt = () => VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 
 function renderHubExtras() {
-  tickLives();
+  tickLives(); testerTopUp();
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
   $("lives").textContent = career.lives;
-  $("caps").textContent = career.caps.toLocaleString();
+  $("caps").textContent = short(career.caps);
   $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : "";
   const cooler = $("cooler"); cooler.innerHTML = "";
   const slots = Math.max(COOLER_SIZE, career.cans.length);
@@ -178,6 +178,17 @@ function nextPrize() {
 }
 $("canDone").onclick = () => { $("canSheet").hidden = true; canRun = null; renderHub(); };
 
+// ── Testing tools: the browser preview and Xcode debug builds (the app sets window.__debugBuild), never the App Store.
+// Tester mode keeps coins and bottle caps topped up so everything can be tried; it's on until switched off.
+const TEST_BANK = 99999999;
+const testing = () => !nativeBridge || !!window.__debugBuild;
+function testerTopUp() { if (testing() && career.tester !== false) { career.coins = TEST_BANK; career.caps = TEST_BANK; } }
+if (testing()) {
+  const b = $("testerBtn"); b.hidden = false;
+  const label = () => { b.textContent = `🧪 Tester mode: ${career.tester !== false ? "on" : "off"}`; };
+  b.onclick = () => { career.tester = career.tester === false; if (career.tester) testerTopUp(); save(); label(); renderHub(); };
+  label(); testerTopUp();
+}
 // Browser preview only (never in the iPhone app): fill the cooler with cans that are ready to open, for testing.
 if (!nativeBridge) {
   // An empty cooler in the preview gets a demo set: one opening, one ready (Express) and two waiting to start.
@@ -186,6 +197,8 @@ if (!nativeBridge) {
     career.cans = [{ id: "gold", court: c, start: Date.now() - 3600000 }, { id: "express", court: c }, { id: "silver", court: c }, { id: "purple", court: c }];
     save();
   }
+}
+if (testing()) { // Test cans: also in Xcode debug builds
   $("testCans").hidden = false;
   $("testCans").onclick = () => {
     const pick = ["silver", "gold", "purple", "platinum", "diamond", "express"].sort(() => Math.random() - 0.5).slice(0, COOLER_SIZE);
@@ -202,9 +215,11 @@ function renderSeasonBadge() {
 function openSeason() {
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
   const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : ""}</small></div>`).reverse().join("");
+  // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
+  if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, "You"]], s.title, s.id), "me", s.id), me: "me" };
   const G = S.groupStandings;
   if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
-  const group = G && G.size ? `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => `<div class="${e[0] === G.me ? "me" : ""}"><span>${i + 1}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`).join("")}${G.rank > 10 ? `<div class="me"><span>${G.rank}</span><span>You</span><small>${s.points} pts</small></div>` : ""}</div>` : "";
+  const group = G && G.size ? `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => `<div class="${e[0] === G.me ? "me" : ""}"><span>${i + 1}</span><span>${esc(String(e[2] || "Player"))}${e[3] ? ' <span class="cpu">CPU</span>' : ""}</span><small>${e[1]} pts</small></div>`).join("")}${G.rank > 10 ? `<div class="me"><span>${G.rank}</span><span>You</span><small>${s.points} pts</small></div>` : ""}</div><div class="muted">Top ${Math.max(1, Math.round(G.size * PROMOTE_TOP))} move up · bottom ${Math.max(1, Math.round(G.size * DEMOTE_BOTTOM))} move down</div>` : "";
   showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month. Every title is a league split into groups of up to 100 players. Finish in the top 20% of your group to move up a title; the bottom 20% (and anyone who doesn't play) move down.</div>${group}
     <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
     <div class="ladder">${rows}</div>`);

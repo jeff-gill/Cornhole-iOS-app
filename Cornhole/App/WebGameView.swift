@@ -31,6 +31,10 @@ struct WebGameView: UIViewRepresentable {
             controller.addUserScript(WKUserScript(source: "window.__nativeCareer = \(saved);",
                                                   injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
+        #if DEBUG
+        // Debug builds from Xcode get the game's testing tools (tester mode with unlimited coins and caps).
+        controller.addUserScript(WKUserScript(source: "window.__debugBuild = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        #endif
         config.userContentController = controller
 
         let webView = WKWebView(frame: .zero, configuration: config)

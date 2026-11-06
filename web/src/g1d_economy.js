@@ -220,20 +220,40 @@ function myGroup(entries, me, season) {
   const list = order.slice(g * per, g * per + per).sort((a, b) => b[1] - a[1] || (String(a[0]) < String(b[0]) ? -1 : 1));
   return { list, rank: list.findIndex(e => e[0] === me) + 1, size: list.length };
 }
+// CPU players fill the first two titles while they're short on people: Rookie groups up to 100, Weekend Warrior up to
+// 50, none above that, and none at all once a league has that many real players. They're made the same way on every
+// phone (from the season and title), and their points build up over the month.
+const BOT_FILL = [100, 50];
+const BOT_FIRST = ["Sam", "Jess", "Rico", "Maya", "Dale", "Tess", "Bo", "Lena", "Gus", "Ivy", "Hank", "Kit", "Moe", "Nia", "Ray", "Pip", "Cal", "Dot", "Jax", "Flo"];
+const BOT_LAST = ["Slider", "Airmail", "Blocker", "Woody", "Swish", "Kernel", "Duck", "Drop", "Hooks", "Push"];
+function withBots(entries, title, season) {
+  const want = (BOT_FILL[title] || 0) - entries.length;
+  if (want <= 0) return entries;
+  const d = new Date(), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+  const progress = season === seasonId() ? clamp((Date.now() - start) / (seasonEnds() - start), 0, 1) : 1;
+  const mean = title === 0 ? 35 : 60, bots = [];
+  for (let i = 0; i < want; i++) {
+    const h = hashStr(`bot|${season}|${title}|${i}`), u = (h % 100000) / 100000;
+    const final = Math.round(-Math.log(1 - u * 0.995) * mean);
+    bots.push([`cpu:${i}`, Math.round(final * progress), `${BOT_FIRST[h % 20]} ${BOT_LAST[(h >>> 8) % 10]}`, true]);
+  }
+  return entries.concat(bots);
+}
 window.__seasonEntries = msg => {
   if (!msg || !Array.isArray(msg.entries)) return;
   const s = seasonState();
   if (msg.op === "result") {
     if (!s.pending) return;
-    const G = myGroup(msg.entries, msg.me, s.pending.id);
+    const G = myGroup(withBots(msg.entries, s.pending.title, s.pending.id), msg.me, s.pending.id);
     settleSeason(G.rank > 0 && G.size > 0 ? G.rank / G.size : null);
-  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(msg.entries, msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("livesSheet").hidden) openSeason(); }
+  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(withBots(msg.entries, s.title, s.id), msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("livesSheet").hidden) openSeason(); }
 };
 function settleSeason(frac) {
   const s = seasonState(), p = s.pending; if (!p) return;
   let move = 0;
   if (!p.played) move = -1;
   else if (frac != null) move = frac <= PROMOTE_TOP ? 1 : frac > 1 - DEMOTE_BOTTOM ? -1 : 0;
+  else if (BOT_FILL[p.title]) { const G = myGroup(withBots([["me", p.points, "You"]], p.title, p.id), "me", p.id); const f = G.rank / G.size; move = f <= PROMOTE_TOP ? 1 : f > 1 - DEMOTE_BOTTOM ? -1 : 0; }
   else move = p.points >= offlinePromoteAt(p.title) ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
   const title = clamp(p.title + move, 0, TITLES.length - 1);
   Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, frac } });
