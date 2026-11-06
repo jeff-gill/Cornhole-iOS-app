@@ -330,7 +330,7 @@ const REL_H = 3, REL_Y = 0.5, REL_X = 1.8;
 // Which pitcher's box each player throws from this match (-1 = left, +1 = right). Randomized per match.
 const SIDES = [-1, 1];
 const SLOPE = Math.atan2(BH - FH, BY - FY), SS = Math.sin(SLOPE), SC = Math.cos(SLOPE);
-const T = { mu: 0.35, rBase: 0.75, rSteep: 0.6, rest: 0.35, cap: 0.22, stop: 0.08, dt: 1 / 240, carry: 1,
+const T = { mu: 0.35, rBase: 0.75, rSteep: 0.6, rest: 0.35, cap: 0.2, luckSpeed: 0.08, luckDir: 0.07, grab: 0.08, stop: 0.08, dt: 1 / 240, carry: 1,
   minEl: 10 * Math.PI / 180, maxEl: 65 * Math.PI / 180, defEl: 32 * Math.PI / 180 };
 // Gear for the throw being planned: bag spin strength and how far the bag slides.
 const CUR = { spinMul: 1, slideMul: 1 };
@@ -436,7 +436,12 @@ class World {
     else if (c.kind === "ground") { b.state = "ground"; b.z = 0; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "ground", bag: b }); }
     else {
       const sm = b.t.spinMul || 1;
-      b.state = "sliding"; const lv = rot(landingVel(c.v, b.t.slideMul || 1), (b.t.spin || 0) * SPIN_KICK * sm); b.vx = lv.x; b.vy = lv.y;
+      let lv = rot(landingVel(c.v, b.t.slideMul || 1), (b.t.spin || 0) * SPIN_KICK * sm);
+      if (this.random) { // real bags: a little luck in every landing, and now and then one grabs the wood
+        const k = Math.max(0.2, 1 + gaussRand() * T.luckSpeed) * (Math.random() < T.grab ? 0.35 : 1);
+        lv = rot({ x: lv.x * k, y: lv.y * k }, gaussRand() * T.luckDir);
+      }
+      b.state = "sliding"; b.vx = lv.x; b.vy = lv.y;
       b.curve = (b.t.spin || 0) * SPIN_CURVE * sm; b.spin *= 0.6;
       this.events.push({ type: "land", bag: b }); this.bounds(b);
     }
@@ -487,6 +492,7 @@ class World {
     }
   }
 }
+function gaussRand() { const u = Math.max(1e-9, Math.random()), v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 function onSurface(b) { return b.state === "sliding" || b.state === "resting"; }
 function bagPoints(b) {
   if (b.state === "inHole") return 3;
@@ -653,7 +659,7 @@ const METERS = [
   { key: "pow", title: "Strength", lo: "Short", hi: "Long" },
   { key: "ht", title: "Height", lo: "Flat", hi: "High" },
 ];
-const MAX_DIR = rad(4), MAX_POW = 0.10, MAX_HT = rad(9);
+const MAX_DIR = rad(6), MAX_POW = 0.14, MAX_HT = rad(9);
 const needleAt = (time, lv) => -Math.cos(2 * Math.PI * lv.freq * time);
 const eff = (e, lv) => Math.abs(e) <= lv.zone ? 0 : clamp(e, -1, 1);
 function applyErrors(e, ideal, lv) {
