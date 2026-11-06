@@ -80,7 +80,11 @@ const STORE = [
   { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 25000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "25,000 coins + Firecracker bags + Neon Nights board" },
   { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
-  { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Pitcher of Cocktails", icon: "🍹", blurb: "+5 lives, even past the usual 5" },
+  { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
+  { id: PID("caps.450"), kind: "caps", caps: 450, price: "$4.99", title: "Bucket of Caps", tag: "BEST VALUE" },
+  { id: PID("caps.1000"), kind: "caps", caps: 1000, price: "$9.99", title: "Crate of Caps" },
+  { id: PID("caps.2200"), kind: "caps", caps: 2200, price: "$19.99", title: "Bar's Worth of Caps" },
+  { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Book of Tickets", icon: "🎟️", blurb: "+5 lives, even past the usual 5" },
   { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Ale can", icon: "🥫", blurb: "5 prizes: coins and cards" },
   { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Pils can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
   { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
@@ -141,7 +145,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
+const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 20, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -186,6 +190,7 @@ function grantPurchase(id, restored) {
   const item = STORE.find(x => x.id === id);
   if (!item) return null;
   if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
+  if (item.kind === "caps") { if (!restored) career.caps += item.caps; save(); return item; }
   if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
   if (item.kind === "can") { // bought cans skip the cooler limit
     if (!restored) career.cans.push({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
@@ -475,7 +480,7 @@ function checkFourBagger() {
     if (inHole >= 4) {
       S.fourBagger[p] = true;
       fourBagger(p);
-      if (S.kind === "career" && p === 0) { career.coins += Math.max(50, Math.round(venue().fee / 2)); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
+      if (S.kind === "career" && p === 0) { career.caps += 3; career.coins += Math.max(50, Math.round(venue().fee / 2)); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
     }
   }
 }

@@ -272,7 +272,7 @@ function renderInningSheet() {
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
-        ${res.lifeLost ? `<div class="pill"><span class="ico" style="background:#ff7aa8">🍹</span><b>−1</b></div>` : ""}</div>
+        ${res.lifeLost ? `<div class="pill"><span class="ico" style="background:#ffd8e8">🎟️</span><b>−1</b></div>` : ""}</div>
         ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
@@ -389,7 +389,7 @@ function renderHub() {
   renderHubExtras();
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
-  play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · 🍹 IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
+  play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · 🎟️ IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
@@ -416,7 +416,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "lives" ? "+5 lives! 🍹" : item.kind === "can" ? `${item.title} is in your cooler!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 lives! 🎟️" : item.kind === "can" ? `${item.title} is in your cooler!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
   renderShop(); renderHub();
 };
@@ -445,6 +445,8 @@ function storeHTML() {
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
   parts.push(`<div class="label">Coins</div>`);
   for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
+  parts.push(`<div class="label">Bottle caps</div>`);
+  for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Lives and cans</div>`);
   for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
     const ic = it.kind === "can" ? `<i class="minican" style="width:30px;height:46px;background:linear-gradient(90deg, ${canById(it.can).color}, ${canById(it.can).rim} 40%, ${canById(it.can).color})"></i>` : it.icon;
@@ -461,7 +463,7 @@ function storeHTML() {
   return parts.join("");
 }
 function renderShop() {
-  $("shopCoins").textContent = career.coins.toLocaleString();
+  $("shopCoins").textContent = career.coins.toLocaleString(); $("shopCaps").textContent = career.caps.toLocaleString();
   for (const b of document.querySelectorAll("#shop .tabs button")) b.classList.toggle("on", b.dataset.tab === shopTab);
   const list = $("shopItems"); list.innerHTML = "";
   if (shopTab === "store") {

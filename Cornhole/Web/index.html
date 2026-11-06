@@ -265,7 +265,13 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubhead .gcname { text-align: center; margin: 2px 0 0; }
 .hubhead .hubtop { margin-top: 8px; }
 .hubright { display: flex; align-items: center; gap: 6px; }
-.hubright .pill, .hubleft .pill { padding-right: 9px; }
+.hubright .pill, .hubleft .pill { padding: 2px 8px 2px 3px; gap: 4px; border-width: 2px; }
+.hubtop .pill b { font-size: 16px; }
+.hubtop .pill .ico, .hubtop .pill > .coin, .hubtop .pill > .bcap { width: 24px; height: 24px; font-size: 13px; }
+.hubtop .pill > .coin::after { font-size: 15px; }
+.hubleft, .hubright { gap: 5px; min-width: 0; }
+.hubtop .avatarbtn { width: 38px; height: 38px; }
+.livespill small { white-space: nowrap; }
 #splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 22px; background: radial-gradient(circle at 50% 35%, #2b4a80, #0b1528 75%); transition: opacity .5s ease; }
 #splash.out { opacity: 0; pointer-events: none; }
 .splashtitle { font-family: var(--font-display); text-align: center; line-height: .9; font-size: min(17vw, 92px); text-shadow: 0 6px 0 rgba(0,0,0,.4); animation: splashin .8s cubic-bezier(.3,1.6,.5,1) both; }
@@ -288,6 +294,10 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .cslot.ticking small { color: #7fd8ff; }
 .cslot small { font-size: 12px; font-variant-numeric: tabular-nums; }
 .cslot .minican { width: 18px; height: 30px; flex: none; }
+.bcap { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.2em; flex: none; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Cdefs%3E%3CradialGradient%20id%3D%27g%27%20cx%3D%2738%25%27%20cy%3D%2732%25%27%20r%3D%2775%25%27%3E%3Cstop%20offset%3D%270%27%20stop-color%3D%27%23fff%27%20stop-opacity%3D%27.55%27/%3E%3Cstop%20offset%3D%27.25%27%20stop-color%3D%27%23e8392b%27/%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%23a01810%27/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpolygon%20points%3D%2732.0%2C0.0%2036.2%2C4.3%2041.4%2C1.4%2044.1%2C6.8%2050.0%2C5.6%2051.0%2C11.5%2057.0%2C12.0%2056.2%2C18.0%2061.8%2C20.3%2059.3%2C25.8%2063.9%2C29.6%2059.9%2C34.1%2063.2%2C39.1%2058.1%2C42.2%2059.7%2C48.0%2053.9%2C49.5%2053.8%2C55.5%2047.8%2C55.1%2045.9%2C60.8%2040.3%2C58.8%2036.8%2C63.6%2032.0%2C60.0%2027.2%2C63.6%2023.7%2C58.8%2018.1%2C60.8%2016.2%2C55.1%2010.2%2C55.5%2010.1%2C49.5%204.3%2C48.0%205.9%2C42.2%200.8%2C39.1%204.1%2C34.1%200.1%2C29.6%204.7%2C25.8%202.2%2C20.3%207.8%2C18.0%207.0%2C12.0%2013.0%2C11.5%2014.0%2C5.6%2019.9%2C6.8%2022.6%2C1.4%2027.8%2C4.3%27%20fill%3D%27%23c8ccd4%27%20stroke%3D%27%230003%27%20stroke-width%3D%271.2%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%2732%27%20r%3D%2725%27%20fill%3D%27url%28%23g%29%27%20stroke%3D%27%230003%27%20stroke-width%3D%271.5%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%2732%27%20r%3D%2719%27%20fill%3D%27none%27%20stroke%3D%27%23fff5%27%20stroke-width%3D%271.2%27/%3E%3Cpolygon%20points%3D%2732.0%2C22.0%2034.7%2C29.3%2042.5%2C29.6%2036.4%2C34.4%2038.5%2C41.9%2032.0%2C37.6%2025.5%2C41.9%2027.6%2C34.4%2021.5%2C29.6%2029.3%2C29.3%27%20fill%3D%27%23fff3c0%27/%3E%3Cellipse%20cx%3D%2723%27%20cy%3D%2721%27%20rx%3D%279%27%20ry%3D%274%27%20fill%3D%27%23fff7%27%20transform%3D%27rotate%28-30%2023%2021%29%27/%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
+.pill > .bcap { width: 28px; height: 28px; vertical-align: middle; }
+.bcap.big { width: 64px; height: 64px; }
+.cappill { color: #fff; font: inherit; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -454,8 +464,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     <div class="hubtitle" id="hubTitle">BACKYARD <span>CORNHOLE</span></div>
     <div class="gcname" id="gcName" hidden></div>
     <div class="hubtop">
-      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill" id="livesBtn"><span class="ico" style="background:#ff7aa8">🍹</span><b id="lives">5</b><small id="livesTimer"></small></button></div>
-      <div class="hubright"><div class="pill"><i class="coin"></i><b id="coins">0</b></div><div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
+      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill" id="livesBtn"><span class="ico" style="background:#ffd8e8">🎟️</span><b id="lives">5</b><small id="livesTimer"></small></button></div>
+      <div class="hubright"><div class="pill"><i class="coin"></i><b id="coins">0</b></div><button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button><div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
     </div>
   </div>
   <div class="hubbottom">
@@ -467,7 +477,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
       <button class="btn small" id="passBtn">PASS &amp; PLAY</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:14px;white-space:nowrap;font-size:14px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button></div>
+    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button></div>
   </div>
 </div>
 
@@ -486,7 +496,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 </div>
 <div class="overlay" id="shop" hidden>
   <div class="sheet">
-    <div class="row"><h2 style="text-align:left">Pro Shop</h2><span class="spacer"></span><div class="pill"><i class="coin"></i><b id="shopCoins">0</b></div></div>
+    <div class="row"><h2 style="text-align:left;white-space:nowrap;font-size:26px">Pro Shop</h2><span class="spacer"></span><div class="pill"><i class="coin"></i><b id="shopCoins">0</b></div><div class="pill"><i class="bcap"></i><b id="shopCaps">0</b></div></div>
     <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="throw">THROW</button><button data-tab="hole">CORNHOLE</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn" id="shopClose">DONE</button>
@@ -993,7 +1003,11 @@ const STORE = [
   { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 25000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "25,000 coins + Firecracker bags + Neon Nights board" },
   { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
-  { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Pitcher of Cocktails", icon: "🍹", blurb: "+5 lives, even past the usual 5" },
+  { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
+  { id: PID("caps.450"), kind: "caps", caps: 450, price: "$4.99", title: "Bucket of Caps", tag: "BEST VALUE" },
+  { id: PID("caps.1000"), kind: "caps", caps: 1000, price: "$9.99", title: "Crate of Caps" },
+  { id: PID("caps.2200"), kind: "caps", caps: 2200, price: "$19.99", title: "Bar's Worth of Caps" },
+  { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Book of Tickets", icon: "🎟️", blurb: "+5 lives, even past the usual 5" },
   { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Ale can", icon: "🥫", blurb: "5 prizes: coins and cards" },
   { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Pils can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
   { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
@@ -1054,7 +1068,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
+const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 20, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
@@ -1099,6 +1113,7 @@ function grantPurchase(id, restored) {
   const item = STORE.find(x => x.id === id);
   if (!item) return null;
   if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
+  if (item.kind === "caps") { if (!restored) career.caps += item.caps; save(); return item; }
   if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
   if (item.kind === "can") { // bought cans skip the cooler limit
     if (!restored) career.cans.push({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
@@ -1388,7 +1403,7 @@ function checkFourBagger() {
     if (inHole >= 4) {
       S.fourBagger[p] = true;
       fourBagger(p);
-      if (S.kind === "career" && p === 0) { career.coins += Math.max(50, Math.round(venue().fee / 2)); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
+      if (S.kind === "career" && p === 0) { career.caps += 3; career.coins += Math.max(50, Math.round(venue().fee / 2)); career.fourBaggers = (career.fourBaggers || 0) + 1; save(); postScores(); }
     }
   }
 }
@@ -1705,7 +1720,7 @@ $("searchCancel").onclick = () => { if (!search) return; const vi = search.vi; s
 
 // ── Cans (the game's chests). Rarer cans hold more prizes and better ones, but any can can be a dud.
 // pulls: how many prizes pop out; coins: range in buy-ins of the court the can came from; cards: total item cards;
-// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🍹 life.
+// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🎟️ life.
 const CANS = [
   { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.2, 0.5], cards: [2, 4], bias: 5, life: 0.01 },
   { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.3, 0.8], cards: [4, 7], bias: 4.5, life: 0.015 },
@@ -1729,7 +1744,15 @@ function canState(slot) {
   if (!slot.start) return "idle";
   return Date.now() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
 }
-const canLeft = slot => Math.max(0, slot.start + openMs(slot.id) - Date.now());
+const canLeft = slot => (slot.start ? Math.max(0, slot.start + openMs(slot.id) - Date.now()) : openMs(slot.id));
+// Bottle caps open a can right now: 1 cap per 10 minutes still to wait (at least 1).
+const skipCost = slot => Math.max(1, Math.ceil(canLeft(slot) / 600000));
+function skipCan(i) {
+  const slot = career.cans[i]; if (!slot || canState(slot) === "ready") return true;
+  const cost = skipCost(slot); if (career.caps < cost) return false;
+  career.caps -= cost; slot.start = Date.now() - openMs(slot.id); save();
+  return true;
+}
 const anyTicking = () => career.cans.some(c => canState(c) === "ticking");
 function startCan(i) {
   const slot = career.cans[i];
@@ -1804,6 +1827,9 @@ function openCan(index) {
   const coinRoll = can.coins[0] + (can.coins[1] - can.coins[0]) * Math.random() ** 1.8;
   const coins = Math.max(5, Math.round(fee * coinRoll / 5) * 5);
   career.coins += coins; prizes.push({ kind: "coins", n: coins });
+  // Bottle caps: sometimes, more likely (and more of them) in rarer cans.
+  const rank = Math.max(0, CANS.indexOf(can));
+  if (!can.express && Math.random() < 0.08 + rank * 0.07) { const n = 1 + rank * 2 + Math.floor(Math.random() * (rank * 2 + 1)); career.caps += n; prizes.push({ kind: "caps", n }); }
   // Cards: the can's total split into stacks over its remaining prizes.
   let cards = Math.round(can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5);
   const stacks = can.pulls - 1;
@@ -1818,7 +1844,7 @@ function openCan(index) {
   return { can, prizes };
 }
 
-// ── Lives: you hold up to 5 cocktails; one refills every hour. A match takes one up front and gives it back if
+// ── Lives: you hold up to 5 raffle tickets; one refills every hour. A match takes one up front and gives it back if
 // you win, so closing the app mid-match can't dodge a loss. Bought lives can go past 5.
 const MAX_LIVES = 5, LIFE_MS = 60 * 60 * 1000;
 function tickLives() {
@@ -1847,7 +1873,7 @@ const lifePrice = () => 3 * VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m
 function scheduleLivesAlert() {
   if (!career.alerts) { postNative("notify", JSON.stringify({ op: "cancel" })); return; }
   if (career.lives >= MAX_LIVES) postNative("notify", JSON.stringify({ op: "cancel" }));
-  else postNative("notify", JSON.stringify({ op: "schedule", at: fullLivesAt(), title: "Your cocktails are full! 🍹", body: "5 lives ready. Time to throw some bags." }));
+  else postNative("notify", JSON.stringify({ op: "schedule", at: fullLivesAt(), title: "Your tickets are full! 🎟️", body: "5 lives ready. Time to throw some bags." }));
 }
 
 // ── Avatars: 4 to start, 2 more with every court you open.
@@ -3299,7 +3325,8 @@ function renderHubExtras() {
   tickLives();
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
   $("lives").textContent = career.lives;
-  $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : career.lives === MAX_LIVES ? " FULL" : "";
+  $("caps").textContent = career.caps.toLocaleString();
+  $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : "";
   const cooler = $("cooler"); cooler.innerHTML = "";
   const slots = Math.max(COOLER_SIZE, career.cans.length);
   for (let i = 0; i < slots; i++) {
@@ -3320,15 +3347,17 @@ function openLives() { renderLives(); $("livesSheet").hidden = false; }
 function renderLives() {
   tickLives();
   const price = lifePrice(), full = career.lives >= MAX_LIVES;
-  $("livesBody").innerHTML = `<div class="lifebig">🍹</div><h2>Lives: ${career.lives}</h2>
-    <div class="liferow">${Array.from({ length: Math.max(MAX_LIVES, career.lives) }, (_, i) => `<span class="${i < career.lives ? "" : "gone"}">🍹</span>`).join("")}</div>
-    <div class="muted">Each match uses a cocktail. Win and you get it back. One refills every hour, up to ${MAX_LIVES}.</div>
+  $("livesBody").innerHTML = `<div class="lifebig">🎟️</div><h2>Lives: ${career.lives}</h2>
+    <div class="liferow">${Array.from({ length: Math.max(MAX_LIVES, career.lives) }, (_, i) => `<span class="${i < career.lives ? "" : "gone"}">🎟️</span>`).join("")}</div>
+    <div class="muted">Each match uses a ticket. Win and you get it back. One refills every hour, up to ${MAX_LIVES}.</div>
     <div class="big">${full ? "Full!" : `Next one in ${clockText(nextLifeIn())}`}</div>
-    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 🍹 · <i class="coin"></i> ${short(price)}</button>
+    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 🎟️ · <i class="coin"></i> ${short(price)}</button>
+    <button class="btn green" id="lifeCaps" ${career.caps >= LIFE_CAPS ? "" : "disabled"}>+1 🎟️ · <i class="bcap"></i> ${LIFE_CAPS}</button>
     <button class="btn blue" id="lifeStore">MORE IN THE STORE</button>
     <button class="btn ghost" id="alertsBtn">🔔 Tell me when they're full: ${career.alerts ? "ON" : "OFF"}</button>
     <button class="btn" id="livesClose">DONE</button>`;
   $("lifeBuy").onclick = () => { if (career.coins < price) return; career.coins -= price; career.lives++; save(); scheduleLivesAlert(); sfx.tick(); renderLives(); renderHub(); };
+  $("lifeCaps").onclick = () => { if (career.caps < LIFE_CAPS) return; career.caps -= LIFE_CAPS; career.lives++; save(); scheduleLivesAlert(); sfx.tick(); renderLives(); renderHub(); };
   $("lifeStore").onclick = () => { $("livesSheet").hidden = true; shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; };
   $("alertsBtn").onclick = () => {
     career.alerts = !career.alerts; save();
@@ -3338,16 +3367,29 @@ function renderLives() {
   $("livesClose").onclick = () => { $("livesSheet").hidden = true; };
 }
 $("livesBtn").onclick = openLives;
+$("capsBtn").onclick = () => {
+  showInfo(`<div class="pic"><i class="bcap big"></i></div><h2>Bottle caps: ${career.caps}</h2><div class="muted">Use caps to open a can right away (1 cap for every 10 minutes left) or to buy a life. You find them in cans, and every 4-bagger is worth 3.</div><button class="btn green" id="capStore">GET MORE CAPS</button>`);
+  $("capStore").onclick = () => { $("livesSheet").hidden = true; shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; };
+};
+const LIFE_CAPS = 15;
 
 // Tapping a can: open it if it's ready, start it if nothing else is opening, or show how long is left.
 function canTapped(i) {
   const c = career.cans[i], k = canById(c.id), st = canState(c);
   if (st === "ready") { openCanSheet(i); return; }
-  if (st === "ticking") { showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="big">Opens in ${timeText(canLeft(c))}</div><div class="muted">Win more matches while you wait. Your cooler holds ${COOLER_SIZE}.</div>`); return; }
-  const busy = anyTicking();
-  showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="muted">${k.pulls} prizes inside. It takes ${durText(openMs(c.id))} to open${busy ? ", and another can is opening right now. One at a time." : "."}</div>
-    ${busy ? "" : `<button class="btn green" id="startCan">START OPENING · ${durText(openMs(c.id))}</button>`}`);
-  if (!busy) $("startCan").onclick = () => { startCan(i); $("livesSheet").hidden = true; renderHubExtras(); sfx.tick(); };
+  const cost = skipCost(c), afford = career.caps >= cost;
+  const nowBtn = `<button class="btn ${afford ? "blue" : ""}" id="openNow">${afford ? "OPEN NOW" : "NEED"} · <i class="bcap"></i> ${cost}</button>`;
+  if (st === "ticking") { showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="big">Opens in ${timeText(canLeft(c))}</div>${nowBtn}<div class="muted">You have <i class="bcap"></i> ${career.caps}. Win matches while you wait.</div>`); }
+  else {
+    const busy = anyTicking();
+    showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="muted">${k.pulls} prizes inside. It takes ${durText(openMs(c.id))} to open${busy ? ", and another can is opening right now. One at a time." : "."}</div>
+      ${busy ? "" : `<button class="btn green" id="startCan">START OPENING · ${durText(openMs(c.id))}</button>`}${nowBtn}<div class="muted">You have <i class="bcap"></i> ${career.caps}.</div>`);
+    if (!busy) $("startCan").onclick = () => { startCan(i); $("livesSheet").hidden = true; renderHubExtras(); sfx.tick(); };
+  }
+  $("openNow").onclick = () => {
+    if (!afford) { $("livesSheet").hidden = true; shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; return; }
+    skipCan(i); $("livesSheet").hidden = true; openCanSheet(i);
+  };
 }
 // ── A small info sheet (can odds), reusing the lives sheet frame
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
@@ -3428,7 +3470,8 @@ function mistFrame(now) {
 }
 function prizeHTML(p) {
   if (p.kind === "coins") return { pic: `<div class="pic"><i class="coin big"></i></div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `<i class="coin"></i> ${short(p.n)}` };
-  if (p.kind === "life") return { pic: `<div class="pic">🍹</div>`, line: `<b>+1 life!</b><small>A bonus cocktail</small>`, chip: "🍹 +1" };
+  if (p.kind === "caps") return { pic: `<div class="pic"><i class="bcap big"></i></div>`, line: `<b>+${p.n} bottle caps</b><small>Open cans early with these</small>`, chip: `<i class="bcap"></i> ${p.n}` };
+  if (p.kind === "life") return { pic: `<div class="pic">🎟️</div>`, line: `<b>+1 life!</b><small>A bonus ticket</small>`, chip: "🎟️ +1" };
   const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
   const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];
   const status = p.unlocked ? `<small class="new">UNLOCKED!</small>` : p.owned ? `<small>Already yours: +${p.coins.toLocaleString()} coins</small>` : `<small>${p.have} / ${p.need} cards</small>`;
@@ -3735,7 +3778,7 @@ function renderInningSheet() {
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
-        ${res.lifeLost ? `<div class="pill"><span class="ico" style="background:#ff7aa8">🍹</span><b>−1</b></div>` : ""}</div>
+        ${res.lifeLost ? `<div class="pill"><span class="ico" style="background:#ffd8e8">🎟️</span><b>−1</b></div>` : ""}</div>
         ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
@@ -3852,7 +3895,7 @@ function renderHub() {
   renderHubExtras();
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
-  play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · 🍹 IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
+  play.innerHTML = !open ? "LOCKED" : noLives ? `NO LIVES · 🎟️ IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
@@ -3879,7 +3922,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "lives" ? "+5 lives! 🍹" : item.kind === "can" ? `${item.title} is in your cooler!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 lives! 🎟️" : item.kind === "can" ? `${item.title} is in your cooler!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
   renderShop(); renderHub();
 };
@@ -3908,6 +3951,8 @@ function storeHTML() {
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
   parts.push(`<div class="label">Coins</div>`);
   for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
+  parts.push(`<div class="label">Bottle caps</div>`);
+  for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Lives and cans</div>`);
   for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
     const ic = it.kind === "can" ? `<i class="minican" style="width:30px;height:46px;background:linear-gradient(90deg, ${canById(it.can).color}, ${canById(it.can).rim} 40%, ${canById(it.can).color})"></i>` : it.icon;
@@ -3924,7 +3969,7 @@ function storeHTML() {
   return parts.join("");
 }
 function renderShop() {
-  $("shopCoins").textContent = career.coins.toLocaleString();
+  $("shopCoins").textContent = career.coins.toLocaleString(); $("shopCaps").textContent = career.caps.toLocaleString();
   for (const b of document.querySelectorAll("#shop .tabs button")) b.classList.toggle("on", b.dataset.tab === shopTab);
   const list = $("shopItems"); list.innerHTML = "";
   if (shopTab === "store") {

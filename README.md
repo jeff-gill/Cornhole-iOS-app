@@ -7,7 +7,8 @@ A 3D cornhole game for iPhone (and the web) with a career mode. It's built with 
 - **Career:** eight venues (Backyard, Tailgate Lot, Beach Bar, Brewery Patio, Mountain Lodge, Bonfire Beach, Island Hop, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with stronger wind, a faster aim arrow, a smaller sweet spot, slicker boards and better opponents. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
 - **Pro Shop:** spend coins on bags (Accuracy, Control and Spin stats, plus a sticky, neutral or fast slide), board designs, throw effects and cornhole effects. Every coin item can also be unlocked by collecting its cards from cans.
 - **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Reserve, plus rare Express Shot cans. Rarer cans hold more prizes (coins, item cards, now and then a life) and take longer to open: 15 minutes for Black up to 24 hours for Diamond. Only one can opens at a time, and Express cans open right away. Each of your cornholes in a match improves the odds of a better can. Opening one sprays mist and the prizes pop out one at a time.
-- **Lives (🍹):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra lives come from the Store, from coins (at a steep price), or rarely from a can. The iPhone app can notify you when they're full.
+- **Lives (🎟️ raffle tickets):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra tickets come from the Store, from coins (at a steep price), from 15 bottle caps, or rarely from a can. The iPhone app can notify you when they're full.
+- **Bottle caps:** the premium currency (a red cap with a star). Use them to open a can now (1 cap for every 10 minutes left) or to buy a ticket. You start with 20, get some from cans (more often from rare ones) and 3 per 4-bagger, and can buy packs in the Store.
 - **Avatars:** 4 to start, and 2 more with each court you open.
 - **Aiming:** tap where the bag should finish, then drag the landing ring around the gold zone. Near the finish it sticks, farther back it slides, and off to the side it adds spin.
 - **Throwing:** one move. Pull back for power, and the arrow swings faster the harder you pull. Let go in the gold band with the arrow straight. Pulling into overdrive makes the throw wild.
@@ -71,7 +72,11 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Loss | Buy-in, stars and a life |
 | 4-bagger | Half a buy-in |
 | Daily | A free can (mostly Black or White) |
-| Life for coins | 3 buy-ins at your highest open court |
+| Ticket (life) for coins | 3 buy-ins at your highest open court |
+| Ticket (life) for caps | 15 caps |
+| Open a can now | 1 cap per 10 minutes left |
+| Caps from cans | chance 8% (Black) to 57% (Diamond); 1–3 caps (Black) to 15–29 (Diamond) |
+| Caps per 4-bagger | 3 |
 | Duplicate card | 0.25% of the item's price per card |
 
 At an even win rate, coins barely grow, and a court's winnings buy the shop tier or two that match it.

@@ -6,7 +6,7 @@
 
 // ── Cans (the game's chests). Rarer cans hold more prizes and better ones, but any can can be a dud.
 // pulls: how many prizes pop out; coins: range in buy-ins of the court the can came from; cards: total item cards;
-// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🍹 life.
+// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🎟️ life.
 const CANS = [
   { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.2, 0.5], cards: [2, 4], bias: 5, life: 0.01 },
   { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.3, 0.8], cards: [4, 7], bias: 4.5, life: 0.015 },
@@ -30,7 +30,15 @@ function canState(slot) {
   if (!slot.start) return "idle";
   return Date.now() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
 }
-const canLeft = slot => Math.max(0, slot.start + openMs(slot.id) - Date.now());
+const canLeft = slot => (slot.start ? Math.max(0, slot.start + openMs(slot.id) - Date.now()) : openMs(slot.id));
+// Bottle caps open a can right now: 1 cap per 10 minutes still to wait (at least 1).
+const skipCost = slot => Math.max(1, Math.ceil(canLeft(slot) / 600000));
+function skipCan(i) {
+  const slot = career.cans[i]; if (!slot || canState(slot) === "ready") return true;
+  const cost = skipCost(slot); if (career.caps < cost) return false;
+  career.caps -= cost; slot.start = Date.now() - openMs(slot.id); save();
+  return true;
+}
 const anyTicking = () => career.cans.some(c => canState(c) === "ticking");
 function startCan(i) {
   const slot = career.cans[i];
@@ -105,6 +113,9 @@ function openCan(index) {
   const coinRoll = can.coins[0] + (can.coins[1] - can.coins[0]) * Math.random() ** 1.8;
   const coins = Math.max(5, Math.round(fee * coinRoll / 5) * 5);
   career.coins += coins; prizes.push({ kind: "coins", n: coins });
+  // Bottle caps: sometimes, more likely (and more of them) in rarer cans.
+  const rank = Math.max(0, CANS.indexOf(can));
+  if (!can.express && Math.random() < 0.08 + rank * 0.07) { const n = 1 + rank * 2 + Math.floor(Math.random() * (rank * 2 + 1)); career.caps += n; prizes.push({ kind: "caps", n }); }
   // Cards: the can's total split into stacks over its remaining prizes.
   let cards = Math.round(can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5);
   const stacks = can.pulls - 1;
@@ -119,7 +130,7 @@ function openCan(index) {
   return { can, prizes };
 }
 
-// ── Lives: you hold up to 5 cocktails; one refills every hour. A match takes one up front and gives it back if
+// ── Lives: you hold up to 5 raffle tickets; one refills every hour. A match takes one up front and gives it back if
 // you win, so closing the app mid-match can't dodge a loss. Bought lives can go past 5.
 const MAX_LIVES = 5, LIFE_MS = 60 * 60 * 1000;
 function tickLives() {
@@ -148,7 +159,7 @@ const lifePrice = () => 3 * VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m
 function scheduleLivesAlert() {
   if (!career.alerts) { postNative("notify", JSON.stringify({ op: "cancel" })); return; }
   if (career.lives >= MAX_LIVES) postNative("notify", JSON.stringify({ op: "cancel" }));
-  else postNative("notify", JSON.stringify({ op: "schedule", at: fullLivesAt(), title: "Your cocktails are full! 🍹", body: "5 lives ready. Time to throw some bags." }));
+  else postNative("notify", JSON.stringify({ op: "schedule", at: fullLivesAt(), title: "Your tickets are full! 🎟️", body: "5 lives ready. Time to throw some bags." }));
 }
 
 // ── Avatars: 4 to start, 2 more with every court you open.
