@@ -134,7 +134,7 @@ function renderScore() {
   }
   $("inningNum").textContent = S.inning;
   if (S.opponent) $("opp").innerHTML = S.opponent.live
-    ? `<b>${esc(S.opponent.name)}<span class="live">LIVE</span></b>${esc(venue().name)}`
+    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>Live · ${esc(venue().name)}`
     : `<b>${esc(S.opponent.name)}<span class="cpu">CPU</span></b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
 }
 function renderBanner() {
@@ -267,7 +267,8 @@ function renderInningSheet() {
   let body;
   if (S.phase === "over") {
     const res = S.result;
-    const head = S.kind === "career" ? (res.won ? `<div class="big3" style="color:${COL.gold}">YOU WIN!</div>` : `<div class="big3">YOU LOSE</div>`)
+    const head = S.online ? (res.won ? `<div class="big3" style="color:${COL.gold};font-size:30px">You won the Throwdown!</div>` : `<div class="big3" style="font-size:30px">You lost the Throwdown</div>`)
+      : S.kind === "career" ? (res.won ? `<div class="big3" style="color:${COL.gold}">YOU WIN!</div>` : `<div class="big3">YOU LOSE</div>`)
       : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`;
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
@@ -284,10 +285,10 @@ function renderInningSheet() {
       : !O ? "PLAY AGAIN" + (fee ? ` · <i class="coin"></i> ${short(fee)}` : "")
       : O.gone ? `${who} left`
       : R.me ? `WAITING FOR ${who}…`
-      : R.them ? `${who} WANTS A REMATCH! · <i class="coin"></i> ${short(fee)}`
-      : `REMATCH · <i class="coin"></i> ${short(fee)}`;
+      : R.them ? `${who} WANTS A THROWDOWN REMATCH! · <i class="coin"></i> ${short(fee)}`
+      : `THROWDOWN REMATCH · <i class="coin"></i> ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go green" id="againBtn" ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
+      <button class="btn go green" id="againBtn" ${O || bot ? 'style="font-size:19px"' : ""} ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>

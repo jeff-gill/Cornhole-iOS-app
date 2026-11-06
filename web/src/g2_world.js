@@ -540,7 +540,7 @@ const VENUE_LOOK = {
   carnival: { top: [0.02, 0.02, 0.09], mid: [0.08, 0.06, 0.22], horizon: [0.40, 0.20, 0.38], sunGlow: 0, night: 1, fog: [0x1a1030, 90, 300],
     hemi: [0x7a6ac8, 0x2a2a18, 0.6], sun: [0xffd8a0, 1.6, [-8, 30, -16]], exposure: 1.05, dust: 0xb89a70 },
   stadium: { top: [0.01, 0.02, 0.07], mid: [0.04, 0.07, 0.18], horizon: [0.18, 0.22, 0.38], sunGlow: 0, night: 1, fog: [0x10162a, 140, 420],
-    hemi: [0xbfd4ff, 0x1d3a1f, 0.8], sun: [0xf2f6ff, 3.4, [10, 40, -8]], exposure: 1.1, dust: 0xd8e8d0, wall: [22, 32] },
+    hemi: [0xbfd4ff, 0x1d3a1f, 0.8], sun: [0xf2f6ff, 3.4, [10, 40, -8]], exposure: 1.1, dust: 0xd8e8d0, wall: [12, 32] },
 };
 function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); const m = n.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x.map) x.map.dispose(); x.dispose(); }); }); }
 function buildVenue(id) {
@@ -651,17 +651,35 @@ function buildVenue(id) {
     stringLights(g, [[-11, -40], [11, -40], [-11, -8], [11, -8]], [[[-11, -40], [11, -40]], [[-11, -40], [-11, -8]], [[11, -40], [11, -8]], [[-11, -8], [11, -8]]], 10, 2, 0.7);
     cooler(g, 5, -22, 0.4, 0xff2e88); chair(g, -8, -36, 0.35, 0x2f86ff); chair(g, 8, -37, -0.35, 0xffc93a);
   } else if (id === "lakeside") {
-    setGround(g, "grass", 6);
-    const wt = waterTexture("#2a6a8a", "#4a9ab8"); wt.repeat.set(40, 20);
-    const lake = new THREE.Mesh(new THREE.PlaneGeometry(900, 400), new THREE.MeshStandardMaterial({ map: wt, roughness: 0.2, metalness: 0.15 }));
-    lake.rotation.x = -Math.PI / 2; lake.position.set(0, 0.06, -260); g.add(lake); venueAnim.push({ kind: "water", o: wt });
-    const shore = new THREE.Mesh(new THREE.PlaneGeometry(900, 5), lam(0xc8b88a)); shore.rotation.x = -Math.PI / 2; shore.position.set(0, 0.07, -58); g.add(shore);
-    dock(g, 12, -58, 40, 0); rowboat(g, 22, -80, 0.6);
+    // The court is a long wooden dock running out into the lake; the shore (and the cabin) is behind you.
+    const wt = waterTexture("#2a6a8a", "#4a9ab8"); wt.repeat.set(90, 90);
+    const lake = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshStandardMaterial({ map: wt, roughness: 0.2, metalness: 0.15 }));
+    lake.rotation.x = -Math.PI / 2; lake.position.set(0, -1.4, -15); lake.receiveShadow = true; g.add(lake); venueAnim.push({ kind: "water", o: wt });
+    const shoreTex = groundTexture("grass"); shoreTex.repeat.set(900 / 6, 260 / 6);
+    const shore = new THREE.Mesh(new THREE.PlaneGeometry(900, 260), new THREE.MeshStandardMaterial({ map: shoreTex, roughness: 1 }));
+    shore.rotation.x = -Math.PI / 2; shore.position.set(0, 0, 18 + 130); shore.receiveShadow = true; g.add(shore);
+    const sand = new THREE.Mesh(new THREE.PlaneGeometry(900, 6), lam(0xc8b88a)); sand.rotation.x = -Math.PI / 2; sand.position.set(0, -0.6, 15); g.add(sand);
+    const planks = canvasTex(256, 512, (c, w, h) => {
+      const r = rng(9), bw = w / 8;
+      for (let k = 0; k < 8; k++) { c.fillStyle = `hsl(${26 + r() * 8},${38 + r() * 10}%,${42 + r() * 10}%)`; c.fillRect(k * bw, 0, bw, h); }
+      c.strokeStyle = "rgba(40,24,12,.55)"; c.lineWidth = 3; for (let k = 0; k <= 8; k++) { c.beginPath(); c.moveTo(k * bw, 0); c.lineTo(k * bw, h); c.stroke(); }
+      for (let i = 0; i < 2600; i++) { c.fillStyle = `rgba(60,36,18,${r() * 0.18})`; c.fillRect(r() * w, r() * h, 1, 6 + r() * 14); }
+      for (let k = 0; k < 8; k++) { const y = r() * h; c.fillStyle = "rgba(30,18,8,.6)"; c.fillRect(k * bw + 3, y, bw - 6, 3); }
+    }, [1, 1]);
+    planks.repeat.set(2, 64 / 16);
+    const deck = new THREE.Mesh(new THREE.PlaneGeometry(16, 64), new THREE.MeshStandardMaterial({ map: planks, roughness: 0.9 }));
+    deck.rotation.x = -Math.PI / 2; deck.position.set(0, 0, -15); deck.receiveShadow = true; g.add(deck);
+    const wood = std(0x6a4a2a);
+    add(g, box(16.6, 1.2, 64, wood), 0, -0.62, -15); // the deck's edge, down toward the water
+    for (const sx of [-8.2, 8.2]) { add(g, box(0.5, 0.35, 64, std(0x5a3a1e)), sx, 0.17, -15); for (let z = 16; z >= -46; z -= 6.2) add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 4.5, 8), wood), sx, -1.6, z); }
+    add(g, box(16.6, 0.35, 0.5, std(0x5a3a1e)), 0, 0.17, -47);
+    rowboat(g, 16, -30, 0.5); rowboat(g, -20, -60, -0.3);
     const r = rng(23);
-    for (let k = 0; k < 50; k++) { const a = r() * Math.PI * 2, d = 50 + r() * 50, x = Math.sin(a) * d, z = -15 + Math.cos(a) * d; if (z < -55) continue; pine(g, x, z, 0.9 + r() * 0.6, false); }
+    for (let k = 0; k < 60; k++) { const x = (r() - 0.5) * 220, z = 26 + r() * 90; if (Math.abs(x) < 10 && z < 40) continue; pine(g, x, z, 0.9 + r() * 0.6, false); }
+    for (let k = 0; k < 40; k++) { const a = r() * Math.PI - Math.PI / 2, d = 230 + r() * 40; pine(g, Math.sin(a) * d, -15 - Math.cos(a) * d, 2 + r(), false); } // the far shore
     mountains(g, 31, false, 0x5a7a6a);
-    cabin(g, -26, -40, 0.6); picnicTable(g, 14, 10, 0.2);
-    for (const [x, z] of [[-8, -34], [9, -36]]) chair(g, x, z, x < 0 ? 0.35 : -0.35, x < 0 ? 0x2fbf71 : 0xff8a1f);
+    cabin(g, -22, 40, Math.PI + 0.4); picnicTable(g, 16, 28, 0.2);
+    for (const [x, z] of [[-6, -36], [6, -37]]) chair(g, x, z, x < 0 ? 0.35 : -0.35, x < 0 ? 0x2fbf71 : 0xff8a1f);
     cooler(g, 5, -22, 0.4, 0x2f86ff);
   } else if (id === "canyon") {
     setGround(g, "desert", 12);
@@ -679,13 +697,17 @@ function buildVenue(id) {
     for (const [x, z] of [[-6, -27], [6, -27], [0, 6]]) { const pl = new THREE.PointLight(0xffc27a, 26, 26, 1.6); pl.position.set(x, 9, z); g.add(pl); }
     cooler(g, 5, -22, 0.4, 0xff2e88); chair(g, -8, -36, 0.35, 0xa24bff);
   } else if (id === "stadium") {
-    setGround(g, "turf", 6);
-    // A tight arena: the crowd is right on top of the court on all four sides.
-    stands(g, -52, 64, 12); stands(g, -16, 76, 10, Math.PI / 2, -28); stands(g, -16, 76, 10, -Math.PI / 2, 28); stands(g, 24, 64, 10, Math.PI);
+    // A tight arena: a long rectangle of grass for the court, the crowd right on top of it on all four sides.
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.9 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.z = -30; floor.receiveShadow = true; g.add(floor);
+    const turf = groundTexture("turf"); turf.repeat.set(26 / 6, 72 / 6);
+    const field = new THREE.Mesh(new THREE.PlaneGeometry(26, 72), new THREE.MeshStandardMaterial({ map: turf, roughness: 1 }));
+    field.rotation.x = -Math.PI / 2; field.position.set(0, 0.01, -14); field.receiveShadow = true; g.add(field);
+    stands(g, -52, 34, 12); stands(g, -14, 76, 10, Math.PI / 2, -16); stands(g, -14, 76, 10, -Math.PI / 2, 16); stands(g, 24, 34, 10, Math.PI);
     const pad = std(0x1f3a6e);
-    add(g, box(56, 3, 0.6, pad), 0, 1.5, -50); add(g, box(56, 3, 0.6, pad), 0, 1.5, 22);
-    add(g, box(0.6, 3, 72, pad), -26, 1.5, -14); add(g, box(0.6, 3, 72, pad), 26, 1.5, -14);
-    for (const [x, z] of [[-50, -80], [50, -80], [-50, 45], [50, 45]]) floodlight(g, x, z);
+    add(g, box(30, 3, 0.6, pad), 0, 1.5, -50); add(g, box(30, 3, 0.6, pad), 0, 1.5, 22);
+    add(g, box(0.6, 3, 72, pad), -14.5, 1.5, -14); add(g, box(0.6, 3, 72, pad), 14.5, 1.5, -14);
+    for (const [x, z] of [[-40, -80], [40, -80], [-40, 45], [40, 45]]) floodlight(g, x, z);
     jumbotron(g);
     const pl = new THREE.PointLight(0xffffff, 40, 40, 1.4); pl.position.set(0, 18, -24); g.add(pl);
   }

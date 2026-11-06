@@ -29,7 +29,7 @@ function renderSearch() {
   el.hidden = !search;
   if (!search) return;
   const v = VENUES[search.vi];
-  $("searchText").textContent = search.name ? `Matched with ${search.name}!` : `Looking for a player at ${v.name}…`;
+  $("searchText").textContent = search.name ? `Throwdown with ${search.name}!` : `Looking for a Throwdown at ${v.name}…`;
   $("searchSub").textContent = search.name ? "Getting the boards ready" : `${Math.max(0, Math.ceil(SEARCH_TIME - search.t))}s, then you'll play a CPU opponent`;
 }
 // Messages from the iPhone app: matched / left, and the opponent's own messages (already parsed JSON objects).
