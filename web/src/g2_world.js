@@ -432,7 +432,7 @@ const VENUE_LOOK = {
   brewery: { top: [0.02, 0.03, 0.10], mid: [0.06, 0.08, 0.22], horizon: [0.25, 0.18, 0.30], sunGlow: 0, night: 1, fog: [0x1a1530, 60, 200],
     hemi: [0x5466a8, 0x2a1a12, 0.45], sun: [0xffcf8a, 1.5, [-8, 30, -16]], exposure: 1.0, dust: 0xc8a888 },
   lodge: { top: [0.42, 0.52, 0.66], mid: [0.70, 0.77, 0.86], horizon: [0.88, 0.91, 0.95], sunGlow: 0.25, night: 0, fog: [0xdfe6ef, 70, 330],
-    hemi: [0xeef4ff, 0xb8c8dc, 1.4], sun: [0xf4f6ff, 2.2, [-18, 30, -10]], exposure: 1.0, dust: 0xffffff, orbit: 1 },
+    hemi: [0xeef4ff, 0xb8c8dc, 1.4], sun: [0xf4f6ff, 2.2, [-18, 30, -10]], exposure: 1.0, dust: 0xffffff },
   bonfire: { top: [0.16, 0.10, 0.34], mid: [0.62, 0.30, 0.42], horizon: [1.0, 0.55, 0.25], sunGlow: 1.8, night: 0.6, fog: [0x8a4a5a, 90, 360],
     hemi: [0xffb8a0, 0x6a4a3a, 0.75], sun: [0xff9a50, 2.4, [0, 7, -110]], exposure: 1.05, dust: 0xe0c890 },
   island: { top: [0.08, 0.42, 0.86], mid: [0.40, 0.74, 0.97], horizon: [0.85, 0.95, 1.0], sunGlow: 0.9, night: 0, fog: [0xc8ecff, 140, 460],

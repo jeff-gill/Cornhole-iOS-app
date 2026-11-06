@@ -3,6 +3,9 @@
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);
 const tPos = new THREE.Vector3(), tLook = new THREE.Vector3();
 let tFov = 50;
+// Clubhouse preview: hubYaw is the direction the mid-court camera faces; in "look around" mode you can drag it.
+let hubYaw = 0, hubLook = false, yawDrag = null;
+function setLook(on) { hubLook = on; yawDrag = null; document.body.classList.toggle("looking", on); }
 function camMode() {
   if (S.phase === "hub") return "intro";
   if (S.phase === "aiming") return "aim";
@@ -19,14 +22,14 @@ function updateCamera(dt) {
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   if (mode === "intro") {
-    // A slow 360 around the whole court, both boards in view. It swings wider at the sides, where the court is longest
-    // across the screen, and aims so the court sits in the top half, above the clubhouse card.
-    const a = S.time * 0.16, side = Math.sin(a) ** 2, reach = VENUE_LOOK[venueId]?.orbit ?? 1;
-    const d = (narrow ? 34 + 10 * side : 26 + 6 * side) * reach, h = narrow ? 6 + 8 * side : 10 + 8 * side, cz = -FY / 2 - 1;
-    tPos.set(Math.sin(a) * d, h, cz + Math.cos(a) * d);
-    fov = narrow ? 52 + 30 * side : 44; // wide-angle over the sides so both boards stay on a narrow phone
-    const drop = d * Math.tan(Math.atan2(h, d) + (narrow ? 0.62 * fov / 2 * Math.PI / 180 : 0.16)) - h; // look below the court so it rides high
-    tLook.set(0, -drop, cz);
+    // Standing between the boards at mid-court, near the ground, turning slowly on the spot: one board, the scenery
+    // around the edge, then the other board. In the clubhouse it tilts down so the board shows above the
+    // venue card; "Look around" hides the card and levels out to show the scenery.
+    if (!yawDrag) hubYaw += dt * 0.12;
+    const cz = -FY / 2 - 1, pitch = hubLook ? -0.1 : -0.42;
+    tPos.set(0, 3.2, cz);
+    tLook.set(Math.sin(hubYaw) * -10, 3.2 + Math.tan(pitch) * 10, cz - Math.cos(hubYaw) * 10);
+    fov = narrow ? (hubLook ? 70 : 64) : 55;
     k = 1.5;
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
@@ -309,7 +312,7 @@ function openHub() {
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
-  renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
+  setLook(false); renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   const today = new Date().toDateString();
   if (career.lastDaily !== today) {
     career.lastDaily = today; career.coins += 100; save(); renderHub();
@@ -329,13 +332,23 @@ function renderHub() {
     <div class="lvlno">Level ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
     <div class="facts">${chip("Entry", houseCovers(hubVenue) ? "On the house" : "🪙 " + v.fee.toLocaleString())}${chip("Winner takes", "🪙 " + pot(v).toLocaleString())}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]} mph`)}${chip("Boards", v.speed.replace(" boards", ""))}</div>
     ${prog}
-    ${open ? "" : `<div class="locked">🔒 ${v.stars} ⭐ to unlock</div>`}`;
+    ${open ? "" : `<div class="locked">🔒 ${v.stars} ⭐ to unlock</div>`}
+    <button class="lookbtn" id="lookBtn">👀 Look around</button>`;
+  $("lookBtn").onclick = () => setLook(true);
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
   $("vNext").onclick = () => { hubVenue = Math.min(VENUES.length - 1, hubVenue + 1); renderHub(); };
   const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   play.disabled = !open || !afford;
   play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${v.fee.toLocaleString()}`;
   $("passBtn").disabled = !open;
+}
+$("lookDone").onclick = () => setLook(false);
+{
+  const hub = $("hub");
+  hub.addEventListener("pointerdown", e => { if (!hubLook || e.target.closest("button")) return; yawDrag = { x: e.clientX, yaw: hubYaw }; hub.setPointerCapture(e.pointerId); });
+  hub.addEventListener("pointermove", e => { if (yawDrag) hubYaw = yawDrag.yaw - (e.clientX - yawDrag.x) * 0.008; });
+  const end = () => { yawDrag = null; };
+  hub.addEventListener("pointerup", end); hub.addEventListener("pointercancel", end);
 }
 $("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
@@ -521,4 +534,4 @@ resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { setLook, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };

@@ -186,6 +186,13 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .pill .ico { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 16px; }
 .pill b { font-family: var(--font-display); font-size: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .hubbottom { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 560px; margin: 0 auto; }
+.lookbtn { position: absolute; top: -50px; right: 0; padding: 7px 14px; border-radius: 999px; border: 3px solid #fff; background: linear-gradient(#4b6aa5, #2c4677); color: #fff; font-family: var(--font-display); font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.lookbar { display: none; }
+body.looking #hub { background: none; touch-action: none; cursor: grab; }
+body.looking #hub .hubbottom { display: none; }
+body.looking .lookbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 6px; }
+.lookhint { font-family: var(--font-display); font-size: 17px; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.5); animation: bob 1.6s ease-in-out infinite; }
+.lookbar .btn { min-width: 110px; }
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -355,6 +362,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
     </div>
     <div class="row" style="justify-content:center;gap:22px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button></div>
   </div>
+  <div class="lookbar"><span class="lookhint">👆 Drag to look around</span><button class="btn small" id="lookDone">DONE</button></div>
 </div>
 
 <div class="overlay" id="shop" hidden>
@@ -1012,7 +1020,7 @@ function startMatch(kind, vi) {
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
-  $("hub").hidden = true; document.body.classList.remove("inhub");
+  $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
   showBanner(`${S.names[S.leader] === "You" ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
   S.introT = 0;
   beginTurn();
@@ -1754,7 +1762,7 @@ const VENUE_LOOK = {
   brewery: { top: [0.02, 0.03, 0.10], mid: [0.06, 0.08, 0.22], horizon: [0.25, 0.18, 0.30], sunGlow: 0, night: 1, fog: [0x1a1530, 60, 200],
     hemi: [0x5466a8, 0x2a1a12, 0.45], sun: [0xffcf8a, 1.5, [-8, 30, -16]], exposure: 1.0, dust: 0xc8a888 },
   lodge: { top: [0.42, 0.52, 0.66], mid: [0.70, 0.77, 0.86], horizon: [0.88, 0.91, 0.95], sunGlow: 0.25, night: 0, fog: [0xdfe6ef, 70, 330],
-    hemi: [0xeef4ff, 0xb8c8dc, 1.4], sun: [0xf4f6ff, 2.2, [-18, 30, -10]], exposure: 1.0, dust: 0xffffff, orbit: 1 },
+    hemi: [0xeef4ff, 0xb8c8dc, 1.4], sun: [0xf4f6ff, 2.2, [-18, 30, -10]], exposure: 1.0, dust: 0xffffff },
   bonfire: { top: [0.16, 0.10, 0.34], mid: [0.62, 0.30, 0.42], horizon: [1.0, 0.55, 0.25], sunGlow: 1.8, night: 0.6, fog: [0x8a4a5a, 90, 360],
     hemi: [0xffb8a0, 0x6a4a3a, 0.75], sun: [0xff9a50, 2.4, [0, 7, -110]], exposure: 1.05, dust: 0xe0c890 },
   island: { top: [0.08, 0.42, 0.86], mid: [0.40, 0.74, 0.97], horizon: [0.85, 0.95, 1.0], sunGlow: 0.9, night: 0, fog: [0xc8ecff, 140, 460],
@@ -2574,6 +2582,9 @@ function updateCelebrationFx(f, dt, a) {
 const camPos = new THREE.Vector3(0, 9, 10), camLook = new THREE.Vector3(0, 0, -27);
 const tPos = new THREE.Vector3(), tLook = new THREE.Vector3();
 let tFov = 50;
+// Clubhouse preview: hubYaw is the direction the mid-court camera faces; in "look around" mode you can drag it.
+let hubYaw = 0, hubLook = false, yawDrag = null;
+function setLook(on) { hubLook = on; yawDrag = null; document.body.classList.toggle("looking", on); }
 function camMode() {
   if (S.phase === "hub") return "intro";
   if (S.phase === "aiming") return "aim";
@@ -2590,14 +2601,14 @@ function updateCamera(dt) {
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   if (mode === "intro") {
-    // A slow 360 around the whole court, both boards in view. It swings wider at the sides, where the court is longest
-    // across the screen, and aims so the court sits in the top half, above the clubhouse card.
-    const a = S.time * 0.16, side = Math.sin(a) ** 2, reach = VENUE_LOOK[venueId]?.orbit ?? 1;
-    const d = (narrow ? 34 + 10 * side : 26 + 6 * side) * reach, h = narrow ? 6 + 8 * side : 10 + 8 * side, cz = -FY / 2 - 1;
-    tPos.set(Math.sin(a) * d, h, cz + Math.cos(a) * d);
-    fov = narrow ? 52 + 30 * side : 44; // wide-angle over the sides so both boards stay on a narrow phone
-    const drop = d * Math.tan(Math.atan2(h, d) + (narrow ? 0.62 * fov / 2 * Math.PI / 180 : 0.16)) - h; // look below the court so it rides high
-    tLook.set(0, -drop, cz);
+    // Standing between the boards at mid-court, near the ground, turning slowly on the spot: one board, the scenery
+    // around the edge, then the other board. In the clubhouse it tilts down so the board shows above the
+    // venue card; "Look around" hides the card and levels out to show the scenery.
+    if (!yawDrag) hubYaw += dt * 0.12;
+    const cz = -FY / 2 - 1, pitch = hubLook ? -0.1 : -0.42;
+    tPos.set(0, 3.2, cz);
+    tLook.set(Math.sin(hubYaw) * -10, 3.2 + Math.tan(pitch) * 10, cz - Math.cos(hubYaw) * 10);
+    fov = narrow ? (hubLook ? 70 : 64) : 55;
     k = 1.5;
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
@@ -2880,7 +2891,7 @@ function openHub() {
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
-  renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
+  setLook(false); renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   const today = new Date().toDateString();
   if (career.lastDaily !== today) {
     career.lastDaily = today; career.coins += 100; save(); renderHub();
@@ -2900,13 +2911,23 @@ function renderHub() {
     <div class="lvlno">Level ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
     <div class="facts">${chip("Entry", houseCovers(hubVenue) ? "On the house" : "🪙 " + v.fee.toLocaleString())}${chip("Winner takes", "🪙 " + pot(v).toLocaleString())}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]} mph`)}${chip("Boards", v.speed.replace(" boards", ""))}</div>
     ${prog}
-    ${open ? "" : `<div class="locked">🔒 ${v.stars} ⭐ to unlock</div>`}`;
+    ${open ? "" : `<div class="locked">🔒 ${v.stars} ⭐ to unlock</div>`}
+    <button class="lookbtn" id="lookBtn">👀 Look around</button>`;
+  $("lookBtn").onclick = () => setLook(true);
   $("vPrev").onclick = () => { hubVenue = Math.max(0, hubVenue - 1); renderHub(); };
   $("vNext").onclick = () => { hubVenue = Math.min(VENUES.length - 1, hubVenue + 1); renderHub(); };
   const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   play.disabled = !open || !afford;
   play.textContent = !open ? "LOCKED" : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · 🪙 ${v.fee.toLocaleString()}`;
   $("passBtn").disabled = !open;
+}
+$("lookDone").onclick = () => setLook(false);
+{
+  const hub = $("hub");
+  hub.addEventListener("pointerdown", e => { if (!hubLook || e.target.closest("button")) return; yawDrag = { x: e.clientX, yaw: hubYaw }; hub.setPointerCapture(e.pointerId); });
+  hub.addEventListener("pointermove", e => { if (yawDrag) hubYaw = yawDrag.yaw - (e.clientX - yawDrag.x) * 0.008; });
+  const end = () => { yawDrag = null; };
+  hub.addEventListener("pointerup", end); hub.addEventListener("pointercancel", end);
 }
 $("playBtn").onclick = () => { initAudio(); startMatch("career", hubVenue); };
 $("passBtn").onclick = () => { initAudio(); startMatch("pass", hubVenue); };
@@ -3092,7 +3113,7 @@ resize(); openHub();
 postNative("store", "load"); // ask the iPhone app for real, local prices
 $("loading").hidden = true;
 requestAnimationFrame(frame);
-window.__cornhole = { camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { setLook, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
 </script>
 
 </body>
