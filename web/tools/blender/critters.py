@@ -143,6 +143,7 @@ def build(c):
         for sx in (-1, 1): cone((bx + sx * 0.22, -0.72, bz), 0.22, 0.02, 0.4, bc, rot=(0, math.radians(-90 * sx), 0), verts=4)  # tips meet in the middle
         uv((bx, -0.76, bz), 0.1, bc)
     gear = c.get("gear")
+    gear = None  # no hats, headbands or sunglasses: every critter shows its face
     if gear:
         g = gear[0]
         if g == "cap": cap(hexc(gear[1]), hexc(gear[2]), z=c.get("capz", 0.8))
