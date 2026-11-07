@@ -122,7 +122,10 @@ def build(c):
         if kind == "shell": ico((0, 0.6, 0.4), (0.9, 0.5, 0.7), hexc(ex[1]))
         if kind == "antlers": [cone((sx * 0.45, 0.05, 1.15), 0.06, 0.03, 0.6, hexc(ex[1]), rot=(0, sx * math.radians(-25), 0), verts=6) for sx in (-1, 1)] + [cone((sx * 0.68, 0.05, 1.3), 0.05, 0.02, 0.35, hexc(ex[1]), rot=(0, sx * math.radians(-60), 0), verts=6) for sx in (-1, 1)]
     beak = c.get("beak")
-    if beak: cone((0, -0.95, -0.15), 0.18 if beak == "duck" else 0.13, 0.02 if beak != "duck" else 0.12, 0.38, hexc(c.get("beakc", "#ffb02e")), rot=(math.radians(-95), 0, 0), verts=4 if beak != "duck" else 8)
+    if beak == "swan":  # a long orange bill sticking well out of the face, with the black knob at its base
+        b = cone((0, -1.08, -0.42), 0.19, 0.05, 0.75, hexc(c.get("beakc", "#ff7a1a")), rot=(math.radians(-140), 0, 0), verts=10); b.scale = (1.1, 1, 0.75)
+        ico((0, -0.9, -0.08), (0.2, 0.12, 0.14), BLACK)
+    elif beak: cone((0, -0.95, -0.15), 0.18 if beak == "duck" else 0.13, 0.02 if beak != "duck" else 0.12, 0.38, hexc(c.get("beakc", "#ffb02e")), rot=(math.radians(-95), 0, 0), verts=4 if beak != "duck" else 8)
     else:
         mz = c.get("muzzlesize", (0.48, 0.45, 0.33))
         ico((0, -0.74, -0.28), mz, M)
@@ -172,7 +175,7 @@ CRITTERS = [
     dict(id="monkey", head="#7a4a26", muzzle="#f1c7a5", muzzlesize=(0.62, 0.45, 0.45), ears="round", ear="#7a4a26", earin="#f1c7a5", jersey=(ORANGE, NAVY), gear=("shades", BLACKH)),
     dict(id="cow", fem=True, bow="#ff2e88", head="#ffffff", ears="horns", ear="#ffffff", snout="#ffb8c8", extras=[("spots", "#2a2a2e")], jersey=(GREEN, WHITEH), gear=("cap", NAVY, RED)),
     dict(id="sheep", fem=True, bow="#6a2c91", head="#f6f0e4", muzzle="#3a3036", ears="floppy", ear="#3a3036", extras=[("tuft", "#ffffff")], nose="#1c1c1e", jersey=(PINK, WHITEH), gear=("headband", TEAL)),
-    dict(id="duck", fem=True, bow="#ff2e88", bowpos=(0.6, 0.55), head="#ffd23a", ears="none", beak="duck", beakc="#ff8a1f", jersey=(NAVY, GOLD), gear=("cap", GREEN, WHITEH)),
+    dict(id="swan", fem=True, bow="#ff2e88", bowpos=(0.6, 0.55), head="#ffffff", ears="none", beak="swan", beakc="#ff7a1a", eyes=(-0.8, 0.25, 0.36, 0.17), jersey=(NAVY, GOLD)),
     dict(id="hedgehog", head="#d9b48a", muzzle="#f4e4c8", ears="round", extras=[("spikes", "#6a4a2a")], jersey=(RED, GOLD), gear=("shades", "#ff8a1f")),
     dict(id="gorilla", head="#34343a", muzzle="#8a8490", muzzlesize=(0.72, 0.5, 0.48), ears="none", nose="#1c1c1e", extras=[("brow", "#26262c"), ("tuft", "#34343a")], shape=(1.0, 0.95, 1.08), eyes=(-0.86, 0.12, 0.3, 0.15), jersey=(BLUE, GOLD), gear=("shades", RED)),
     dict(id="wolf", head="#7a828c", muzzle="#e8ecf0", ears="pointy", earin="#e8ecf0", jersey=(BLACKH, RED), gear=("cap", BLACKH, RED)),

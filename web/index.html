@@ -2119,7 +2119,7 @@ function scheduleLivesAlert() {
 // (lion, tiger, wolf) at Court 8. Ids stay a0..a24 so saved avatars carry over.
 const AVATARS = [
   ["fox", "#ffd8a8", 0], ["bear", "#c8e6c9", 0], ["bunny", "#ffd6e2", 0], ["frog", "#d8f0c8", 0],
-  ["pup", "#ffe0b8", 1], ["cat", "#cfe3ff", 1], ["duck", "#d6eaff", 1],
+  ["pup", "#ffe0b8", 1], ["cat", "#cfe3ff", 1], ["swan", "#d6eaff", 1],
   ["pig", "#ffd6de", 2], ["mouse", "#e6dcff", 2], ["chick", "#fff2b8", 2],
   ["raccoon", "#ded6f2", 3], ["owl", "#f2dcc4", 3], ["sheep", "#f8d8ec", 3],
   ["penguin", "#cfe8ff", 4], ["koala", "#d6f2ee", 4], ["gorilla", "#d8e4ff", 4],
@@ -4236,7 +4236,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794094953";
+const BUILD_ID = "1794095139";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
