@@ -269,6 +269,15 @@ if (testing() && career.testBuild !== BUILD_ID) {
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
   save();
 }
+if (testing()) { // Max stars: fill every court's star track, which opens all the courts (and their avatars)
+  $("maxStarsBtn").hidden = false;
+  $("maxStarsBtn").onclick = () => {
+    for (const v of VENUES) career.courtStars[v.id] = v.max;
+    updateUnlocks(); save(); renderHub();
+    const t = document.createElement("div"); t.className = "toast"; t.textContent = `All ${VENUES.length} courts open · ${career.stars.toLocaleString()} ⭐`;
+    $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
+  };
+}
 if (testing()) { // Test cans: also in Xcode debug builds
   $("testCans").hidden = false;
   $("testCans").onclick = () => {

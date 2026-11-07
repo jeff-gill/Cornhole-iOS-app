@@ -591,7 +591,7 @@ s.was { opacity: .6; font-size: .8em; }
       <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button></div>
+    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button></div>
   </div>
 </div>
 
@@ -4065,11 +4065,20 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794008011";
+const BUILD_ID = "1794083455";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
   save();
+}
+if (testing()) { // Max stars: fill every court's star track, which opens all the courts (and their avatars)
+  $("maxStarsBtn").hidden = false;
+  $("maxStarsBtn").onclick = () => {
+    for (const v of VENUES) career.courtStars[v.id] = v.max;
+    updateUnlocks(); save(); renderHub();
+    const t = document.createElement("div"); t.className = "toast"; t.textContent = `All ${VENUES.length} courts open · ${career.stars.toLocaleString()} ⭐`;
+    $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
+  };
 }
 if (testing()) { // Test cans: also in Xcode debug builds
   $("testCans").hidden = false;
