@@ -403,6 +403,9 @@ s.was { opacity: .6; font-size: .8em; }
 .prizegrid .ptile small.new { color: var(--gold); }
 @keyframes tilein { from { transform: scale(.3); opacity: 0; } }
 #canSkip { position: absolute; bottom: 7%; z-index: 3; min-width: 200px; }
+.shopexit { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 20; min-width: 170px;
+  background: linear-gradient(#ff6a5a, #c8102e); border-color: #fff; box-shadow: 0 5px 0 rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.45); }
+#shop .items { padding-bottom: 84px; } /* room so the last item isn't hidden under the exit button */
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
@@ -628,7 +631,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="row"><h2 style="text-align:left;white-space:nowrap;font-size:26px">Pro Shop</h2><span class="spacer"></span><button class="pill cappill" id="shopCoinsBtn"><i class="coin"></i><b id="shopCoins">0</b></button><button class="pill cappill" id="shopCapsBtn"><i class="bcap"></i><b id="shopCaps">0</b></button></div>
     <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="throw">THROW</button><button data-tab="hole">CORNHOLE</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
-    <button class="btn" id="shopClose">DONE</button>
+    <button class="btn shopexit" id="shopClose">✕ EXIT</button>
   </div>
 </div>
 
@@ -4073,7 +4076,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794093181";
+const BUILD_ID = "1794093367";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
