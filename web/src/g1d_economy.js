@@ -168,9 +168,14 @@ function useLife() {
   return true;
 }
 function refundLife() { career.lives++; if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); save(); scheduleLivesAlert(); }
-// A ticket for coins costs a tenth of a buy-in at your highest open court (at least 150): a small top-up next to
-// the match it lets you play.
-const lifePrice = () => Math.max(150, Math.round(VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]).fee / 10));
+// A ticket for coins is priced by your season title (it goes up when you're promoted and down when you're moved down),
+// but never more than a tenth of a buy-in at your highest open court, so a new player is never priced out.
+const TICKET_BY_TITLE = [100, 250, 600, 1500, 4000, 10000, 25000, 60000, 150000];
+const lifePrice = () => {
+  const t = career.season ? career.season.title : 0;
+  const courtCap = Math.round(VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]).fee / 10);
+  return Math.max(100, Math.min(TICKET_BY_TITLE[t], courtCap));
+};
 // iPhone app: a local notification when the lives are full again (if the player turned alerts on).
 function scheduleLivesAlert() {
   if (!career.alerts) { postNative("notify", JSON.stringify({ op: "cancel" })); return; }

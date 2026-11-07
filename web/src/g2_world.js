@@ -788,6 +788,12 @@ function buildVenue(id) {
     for (let x = -22; x <= 22; x += 5.5 + r() * 2) placeModel(g, r() < 0.5 ? "shrub_02" : "shrub_04", x, -43.5 - r(), r() * 6, 0.9 + r() * 0.5);
     for (let z = -38; z <= 4; z += 7 + r() * 3) for (const sx of [-1, 1]) placeModel(g, r() < 0.5 ? "shrub_02" : "shrub_04", sx * (23.5 - r()), z, r() * 6, 0.8 + r() * 0.5);
     placeModel(g, "planter_box_01", -9, 34, 0); placeModel(g, "planter_box_01", 17, 34, 0);
+    // a backyard party: friends by the picnic table and the grill, a couple watching the game from the side
+    grill(g, 15, 4, -0.5);
+    crowd(g, -14, 10, 4, 2.6, 21, -15, 14);
+    crowd(g, 17, 7, 3, 2.2, 23, 15, 4);
+    person(g, -11, -30, 0.9, 25, "drink"); person(g, -12.5, -27, 1.2, 27, "stand");
+    person(g, 11.5, -24, -1.1, 29, "cheer");
     loadSky("garden_nook_2k.hdr").then(sky => {
       if (!sky || venueId !== "backyard") return;
       scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
