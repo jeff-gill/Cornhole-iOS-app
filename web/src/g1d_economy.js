@@ -195,7 +195,12 @@ const AVATARS = [
 ].map(([e, bg, court], i) => ({ id: "a" + i, e, bg, court }));
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 const avatarOpen = a => venueUnlocked(a.court);
-const avatarHTML = (id, cls = "") => { const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}">${a.e}</span>`; };
+// "gc" is your Game Center photo (the default when you have one and haven't picked another avatar).
+let gcPhoto = null;
+const avatarHTML = (id, cls = "") => {
+  if (id === "gc") return gcPhoto ? `<span class="avatar ${cls}" style="background:#fff"><img src="${gcPhoto}" alt=""></span>` : avatarHTML("a0", cls);
+  const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}">${a.e}</span>`;
+};
 
 // ── Seasons: a calendar month (UTC). Each title is a worldwide league (a Game Center leaderboard per title), split
 // into groups of 100 or fewer. Win a match for that court's win stars in season points, or 1 point just for playing.

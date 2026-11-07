@@ -213,6 +213,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubleft { display: flex; align-items: center; gap: 6px; }
 .avatarbtn { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; padding: 0; background: none; box-shadow: 0 4px 0 rgba(0,0,0,.3); overflow: hidden; }
 .avatar { display: inline-grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; font-size: 24px; line-height: 1; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 .avatar.sm { width: 22px; height: 22px; font-size: 13px; vertical-align: -4px; margin-right: 5px; border: 2px solid rgba(255,255,255,.8); }
 .livespill { color: #fff; font: inherit; }
 .livespill b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
@@ -1815,7 +1816,7 @@ window.__net = m => {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
     settleReel({ name: search.name, avatar: "a0" }, () => { if (search) { search.landed = true; tryStartOnline(); } });
-    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar, handle: myHandle() });
+    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar === "gc" ? "a0" : career.avatar, handle: myHandle() });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
       netSend({ t: "setup", ...search.setup });
@@ -2127,7 +2128,12 @@ const AVATARS = [
 ].map(([e, bg, court], i) => ({ id: "a" + i, e, bg, court }));
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 const avatarOpen = a => venueUnlocked(a.court);
-const avatarHTML = (id, cls = "") => { const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}">${a.e}</span>`; };
+// "gc" is your Game Center photo (the default when you have one and haven't picked another avatar).
+let gcPhoto = null;
+const avatarHTML = (id, cls = "") => {
+  if (id === "gc") return gcPhoto ? `<span class="avatar ${cls}" style="background:#fff"><img src="${gcPhoto}" alt=""></span>` : avatarHTML("a0", cls);
+  const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}">${a.e}</span>`;
+};
 
 // ── Seasons: a calendar month (UTC). Each title is a worldwide league (a Game Center leaderboard per title), split
 // into groups of 100 or fewer. Win a match for that court's win stars in season points, or 1 point just for playing.
@@ -4070,11 +4076,18 @@ function renderProfile() {
   $("ptabAvatar").hidden = ptab !== "avatar"; $("ptabProfile").hidden = ptab !== "profile"; $("ptabSettings").hidden = ptab !== "settings";
   if (ptab === "avatar") {
     const grid = $("avatarGrid"); grid.innerHTML = "";
+    if (gcPhoto) { // your Game Center picture
+      const b = document.createElement("button"); b.className = "avpick" + (career.avatar === "gc" ? " on" : "");
+      b.innerHTML = avatarHTML("gc");
+      b.title = "Your Game Center picture";
+      b.onclick = () => { career.avatar = "gc"; career.avatarSet = true; save(); renderProfile(); renderHubExtras(); };
+      grid.appendChild(b);
+    }
     for (const a of AVATARS) {
       const open = avatarOpen(a), b = document.createElement("button");
       b.className = "avpick" + (career.avatar === a.id ? " on" : "") + (open ? "" : " avlock");
       b.innerHTML = avatarHTML(a.id) + (open ? "" : `<small>🔒 Court ${a.court + 1}</small>`);
-      b.onclick = () => { if (!open) return; career.avatar = a.id; save(); renderProfile(); renderHubExtras(); };
+      b.onclick = () => { if (!open) return; career.avatar = a.id; career.avatarSet = true; save(); renderProfile(); renderHubExtras(); };
       grid.appendChild(b);
     }
   } else if (ptab === "profile") {
@@ -4227,7 +4240,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794094086";
+const BUILD_ID = "1794094385";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -4849,6 +4862,12 @@ function renderHub() {
 window.__gcPlayer = p => {
   if (p && p.name && !career.handleSet) { career.handle = String(p.name).slice(0, 24); save(); }
   if (p) postScores();
+};
+window.__gcPhoto = url => {
+  if (typeof url !== "string" || !url.startsWith("data:image/png;base64,")) return;
+  gcPhoto = url;
+  if (!career.avatarSet) { career.avatar = "gc"; save(); } // default to your Game Center picture
+  renderHubExtras();
 };
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };

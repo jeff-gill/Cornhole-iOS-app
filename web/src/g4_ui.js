@@ -395,6 +395,12 @@ window.__gcPlayer = p => {
   if (p && p.name && !career.handleSet) { career.handle = String(p.name).slice(0, 24); save(); }
   if (p) postScores();
 };
+window.__gcPhoto = url => {
+  if (typeof url !== "string" || !url.startsWith("data:image/png;base64,")) return;
+  gcPhoto = url;
+  if (!career.avatarSet) { career.avatar = "gc"; save(); } // default to your Game Center picture
+  renderHubExtras();
+};
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 // Swiping the court card left or right moves to the next or previous court.

@@ -190,6 +190,12 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
         let info = ["name": player.displayName, "id": player.gamePlayerID]
         guard let data = try? JSONSerialization.data(withJSONObject: info), let json = String(data: data, encoding: .utf8) else { return }
         callJS("window.__gcPlayer && window.__gcPlayer(\(json))")
+        // The player's Game Center photo, if they have one: sent as a small PNG data URL for their default avatar.
+        player.loadPhoto(for: .small) { [weak self] image, _ in
+            guard let image, let png = image.pngData(), png.count < 400_000 else { return }
+            let url = "data:image/png;base64," + png.base64EncodedString()
+            self?.callJS("window.__gcPhoto && window.__gcPhoto('\(url)')")
+        }
     }
 
     private func callJS(_ script: String) {

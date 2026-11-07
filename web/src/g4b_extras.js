@@ -106,11 +106,18 @@ function renderProfile() {
   $("ptabAvatar").hidden = ptab !== "avatar"; $("ptabProfile").hidden = ptab !== "profile"; $("ptabSettings").hidden = ptab !== "settings";
   if (ptab === "avatar") {
     const grid = $("avatarGrid"); grid.innerHTML = "";
+    if (gcPhoto) { // your Game Center picture
+      const b = document.createElement("button"); b.className = "avpick" + (career.avatar === "gc" ? " on" : "");
+      b.innerHTML = avatarHTML("gc");
+      b.title = "Your Game Center picture";
+      b.onclick = () => { career.avatar = "gc"; career.avatarSet = true; save(); renderProfile(); renderHubExtras(); };
+      grid.appendChild(b);
+    }
     for (const a of AVATARS) {
       const open = avatarOpen(a), b = document.createElement("button");
       b.className = "avpick" + (career.avatar === a.id ? " on" : "") + (open ? "" : " avlock");
       b.innerHTML = avatarHTML(a.id) + (open ? "" : `<small>🔒 Court ${a.court + 1}</small>`);
-      b.onclick = () => { if (!open) return; career.avatar = a.id; save(); renderProfile(); renderHubExtras(); };
+      b.onclick = () => { if (!open) return; career.avatar = a.id; career.avatarSet = true; save(); renderProfile(); renderHubExtras(); };
       grid.appendChild(b);
     }
   } else if (ptab === "profile") {

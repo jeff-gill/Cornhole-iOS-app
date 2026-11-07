@@ -76,7 +76,7 @@ window.__net = m => {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
     settleReel({ name: search.name, avatar: "a0" }, () => { if (search) { search.landed = true; tryStartOnline(); } });
-    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar, handle: myHandle() });
+    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar === "gc" ? "a0" : career.avatar, handle: myHandle() });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
       netSend({ t: "setup", ...search.setup });
