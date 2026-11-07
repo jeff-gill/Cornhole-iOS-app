@@ -641,6 +641,8 @@ function buildVenue(id) {
   if (id === venueId) return;
   if (venueGroup) { scene.remove(venueGroup); disposeTree(venueGroup); }
   venueId = id; glowSprites = []; venueAnim = []; clearPhotoSky();
+  // Glow (bloom) only where there are real lights at night; in daylight it hazes the whole picture.
+  glowOn = VENUE_LOOK[id].night >= 0.5;
   const g = new THREE.Group(), L = VENUE_LOOK[id];
   skyU.top.value.set(...L.top); skyU.mid.value.set(...L.mid); skyU.horizon.value.set(...L.horizon); skyU.sunGlow.value = L.sunGlow; skyU.night.value = L.night;
   scene.fog.color.setHex(L.fog[0]); scene.fog.near = L.fog[1]; scene.fog.far = L.fog[2];
@@ -668,7 +670,8 @@ function buildVenue(id) {
     loadSky("garden_nook_2k.hdr").then(sky => {
       if (!sky || venueId !== "backyard") return;
       scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
-      hemi.intensity = 0.95; renderer.toneMappingExposure = 1.4; scene.fog.near = 140; scene.fog.far = 420;
+      hemi.intensity = 0.85; renderer.toneMappingExposure = 1.12;
+      scene.fog.color.setHex(0xc9dcef); scene.fog.near = 220; scene.fog.far = 640; // light sky-coloured, far off
     });
   } else if (id === "tailgate") {
     setGround(g, "asphalt", 18);

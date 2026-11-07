@@ -1072,23 +1072,23 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 }
 
 // ───────────────────────── Career content
-// Twelve courts, each a new location. Higher courts: stronger steady wind, faster arrow, smaller sweet spot, slicker boards,
-// better opponents. Each court has its own star track: win stars there until it's full (max) to open the next court.
+// Twelve courts, each a new location. Higher courts: stronger steady wind, smaller sweet spot, slicker boards,
+// better opponents (the aim arrow swings at the same speed on every court). Each court has its own star track: win stars there until it's full (max) to open the next court.
 // A win pays the pot (both buy-ins). Tuned with simulated throws: a good player sinks about 40% at the Backyard and
 // about 20% on the last courts with the starter bag.
 const VENUES = [
   { id: "backyard", name: "Backyard", sub: "Where it all starts", max: 30, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 3], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 75, fee: 200, win: 6, loss: 4, swing: 0.62, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
-  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 150, fee: 800, win: 9, loss: 6, swing: 0.70, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
-  { id: "brewery", name: "Pizza Patio", sub: "League night under the lights", max: 300, fee: 3000, win: 12, loss: 8, swing: 0.77, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
-  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 450, fee: 10000, win: 15, loss: 10, swing: 0.83, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [6, 13], speed: "Icy boards" },
-  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 750, fee: 30000, win: 18, loss: 13, swing: 0.88, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
-  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 900, fee: 100000, win: 20, loss: 16, swing: 0.92, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
-  { id: "rooftop", name: "City Rooftop", sub: "Skyline lights and swirling wind", max: 1050, fee: 300000, win: 22, loss: 19, swing: 0.96, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [9, 17], speed: "Slick boards" },
-  { id: "lakeside", name: "Lakeside Dock", sub: "Morning mist on the lake", max: 1200, fee: 1000000, win: 25, loss: 25, swing: 1.0, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [8, 15], speed: "Dewy boards" },
-  { id: "canyon", name: "Desert Canyon", sub: "Red rock, hot gusts", max: 1350, fee: 3000000, win: 30, loss: 32, swing: 1.03, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [10, 19], speed: "Dusty boards" },
-  { id: "carnival", name: "County Fair", sub: "Ferris wheel and midway lights", max: 1500, fee: 10000000, win: 38, loss: 42, swing: 1.06, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [9, 17], speed: "Fast boards" },
-  { id: "stadium", name: "Stadium Finals", sub: "The big show", max: 1650, fee: 30000000, win: 48, loss: 54, swing: 1.09, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [10, 18], speed: "Fast pro boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 75, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [2, 6], speed: "Normal boards" },
+  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 150, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [4, 10], speed: "Grippy boards" },
+  { id: "brewery", name: "Pizza Patio", sub: "League night under the lights", max: 300, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [5, 11], speed: "Slick boards" },
+  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 450, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [6, 13], speed: "Icy boards" },
+  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 750, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [7, 14], speed: "Damp boards" },
+  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 900, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [9, 18], speed: "Sandy boards" },
+  { id: "rooftop", name: "City Rooftop", sub: "Skyline lights and swirling wind", max: 1050, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [9, 17], speed: "Slick boards" },
+  { id: "lakeside", name: "Lakeside Dock", sub: "Morning mist on the lake", max: 1200, fee: 1000000, win: 25, loss: 25, swing: 0.55, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [8, 15], speed: "Dewy boards" },
+  { id: "canyon", name: "Desert Canyon", sub: "Red rock, hot gusts", max: 1350, fee: 3000000, win: 30, loss: 32, swing: 0.55, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [10, 19], speed: "Dusty boards" },
+  { id: "carnival", name: "County Fair", sub: "Ferris wheel and midway lights", max: 1500, fee: 10000000, win: 38, loss: 42, swing: 0.55, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [9, 17], speed: "Fast boards" },
+  { id: "stadium", name: "Stadium Finals", sub: "The big show", max: 1650, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [10, 18], speed: "Fast pro boards" },
 ];
 const pot = v => v.fee * 2;
 const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
@@ -2868,6 +2868,8 @@ function buildVenue(id) {
   if (id === venueId) return;
   if (venueGroup) { scene.remove(venueGroup); disposeTree(venueGroup); }
   venueId = id; glowSprites = []; venueAnim = []; clearPhotoSky();
+  // Glow (bloom) only where there are real lights at night; in daylight it hazes the whole picture.
+  glowOn = VENUE_LOOK[id].night >= 0.5;
   const g = new THREE.Group(), L = VENUE_LOOK[id];
   skyU.top.value.set(...L.top); skyU.mid.value.set(...L.mid); skyU.horizon.value.set(...L.horizon); skyU.sunGlow.value = L.sunGlow; skyU.night.value = L.night;
   scene.fog.color.setHex(L.fog[0]); scene.fog.near = L.fog[1]; scene.fog.far = L.fog[2];
@@ -2895,7 +2897,8 @@ function buildVenue(id) {
     loadSky("garden_nook_2k.hdr").then(sky => {
       if (!sky || venueId !== "backyard") return;
       scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
-      hemi.intensity = 0.95; renderer.toneMappingExposure = 1.4; scene.fog.near = 140; scene.fog.far = 420;
+      hemi.intensity = 0.85; renderer.toneMappingExposure = 1.12;
+      scene.fog.color.setHex(0xc9dcef); scene.fog.near = 220; scene.fog.far = 640; // light sky-coloured, far off
     });
   } else if (id === "tailgate") {
     setGround(g, "asphalt", 18);
@@ -4065,7 +4068,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794083581";
+const BUILD_ID = "1794093084";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
