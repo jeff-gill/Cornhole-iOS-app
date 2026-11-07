@@ -104,7 +104,7 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Loss | Buy-in, stars and a life |
 | 4-bagger | Half a buy-in |
 | Daily | A free can (mostly Black or White) |
-| Ticket (life) for coins | 3 buy-ins at your highest open court |
+| Ticket (life) for coins | A tenth of a buy-in at your highest open court (at least 150) |
 | Ticket (life) for caps | 15 caps |
 | Open a can now | 1 cap per 10 minutes left |
 | Caps from cans | chance 8% (Black) to 57% (Diamond); 1–3 caps (Black) to 15–29 (Diamond) |

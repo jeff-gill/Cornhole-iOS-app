@@ -168,8 +168,9 @@ function useLife() {
   return true;
 }
 function refundLife() { career.lives++; if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); save(); scheduleLivesAlert(); }
-// A life for coins costs 3 buy-ins at your highest open court: possible, never cheap.
-const lifePrice = () => 3 * VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]).fee;
+// A ticket for coins costs a tenth of a buy-in at your highest open court (at least 150): a small top-up next to
+// the match it lets you play.
+const lifePrice = () => Math.max(150, Math.round(VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]).fee / 10));
 // iPhone app: a local notification when the lives are full again (if the player turned alerts on).
 function scheduleLivesAlert() {
   if (!career.alerts) { postNative("notify", JSON.stringify({ op: "cancel" })); return; }
