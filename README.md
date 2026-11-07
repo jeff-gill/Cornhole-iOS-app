@@ -109,7 +109,7 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Open a can now | 1 cap per 10 minutes left |
 | Caps from cans | chance 8% (Black) to 57% (Diamond); 1–3 caps (Black) to 15–29 (Diamond) |
 | Caps per 4-bagger | 3 |
-| Duplicate card | 0.25% of the item's price per card |
+| Duplicate card | 0.1% of the item's price per card |
 
 At an even win rate, coins barely grow, and a court's winnings buy the shop tier or two that match it.
 
@@ -117,15 +117,15 @@ At an even win rate, coins barely grow, and a court's winnings buy the shop tier
 
 | Can | Chance | Prizes | Coins | Cards | Life chance per prize | Time to open |
 |---|---|---|---|---|---|---|
-| Backyard Black | 40% | 2 | 0.2–0.5 | 2–4 | 1% | 15 min |
-| Picnic White | 25% | 3 | 0.3–0.8 | 4–7 | 1.5% | 1 h |
-| Bronze Fizz | 15% | 3 | 0.5–1.2 | 6–10 | 2% | 2 h |
-| Silver Splash | 10.5% | 4 | 0.8–2 | 10–16 | 3% | 3 h |
-| Golden Pop | 6% | 5 | 1.5–3.5 | 16–26 | 4% | 5 h |
-| Royal Purple | 2.4% | 6 | 2.5–5 | 26–40 | 5% | 8 h |
-| Platinum Sparkle | 0.9% | 7 | 4–8 | 40–60 | 6% | 12 h |
-| Diamond Dazzle | 0.2% | 8 | 6–12 | 60–90 | 8% | 24 h |
-| Express Pop | 3% | 3 | 0.5–1.5 | 6–12 | 3% | Instant |
+| Backyard Black | 40% | 2 | 0.05–0.15 | 2–4 | 1% | 15 min |
+| Picnic White | 25% | 3 | 0.08–0.2 | 4–7 | 1.5% | 1 h |
+| Bronze Fizz | 15% | 3 | 0.12–0.3 | 6–10 | 2% | 2 h |
+| Silver Splash | 10.5% | 4 | 0.2–0.4 | 10–16 | 3% | 3 h |
+| Golden Pop | 6% | 5 | 0.3–0.6 | 16–26 | 4% | 5 h |
+| Royal Purple | 2.4% | 6 | 0.45–0.8 | 26–40 | 5% | 8 h |
+| Platinum Sparkle | 0.9% | 7 | 0.6–1.1 | 40–60 | 6% | 12 h |
+| Diamond Dazzle | 0.2% | 8 | 0.8–1.5 | 60–90 | 8% | 24 h |
+| Express Pop | 3% | 3 | 0.12–0.3 | 6–12 | 3% | Instant |
 
 Rolls are skewed toward the low end of each range, so a rare can is usually good but not always. Each of your cornholes in the match (up to 30) multiplies a tier's chance by 1.012 per rank above Black: 20 cornholes make a Diamond about 4.5 times as likely.
 

@@ -5,19 +5,20 @@
 // or two that match it. Cans are the treat: mostly small, now and then big. See README "Economy" for the numbers.
 
 // ── Cans (the game's chests). Rarer cans hold more prizes and better ones, but any can can be a dud.
-// pulls: how many prizes pop out; coins: range in buy-ins of the court the can came from; cards: total item cards;
+// pulls: how many prizes pop out; coins: range in buy-ins of the court the can came from (kept close together, so even
+// the best can pays only about a win's worth); cards: total item cards;
 // bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🎟️ life.
 const CANS = [
-  { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.2, 0.5], cards: [2, 4], bias: 5, life: 0.01 },
-  { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.3, 0.8], cards: [4, 7], bias: 4.5, life: 0.015 },
-  { id: "bronze", name: "Bronze Fizz", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.5, 1.2], cards: [6, 10], bias: 4, life: 0.02 },
-  { id: "silver", name: "Silver Splash", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.8, 2], cards: [10, 16], bias: 3.4, life: 0.03 },
-  { id: "gold", name: "Golden Pop", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [1.5, 3.5], cards: [16, 26], bias: 2.8, life: 0.04 },
-  { id: "purple", name: "Royal Purple", color: "#7a3ad6", rim: "#d8b8ff", odds: 2.4, pulls: 6, coins: [2.5, 5], cards: [26, 40], bias: 2.3, life: 0.05 },
-  { id: "platinum", name: "Platinum Sparkle", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [4, 8], cards: [40, 60], bias: 1.8, life: 0.06 },
-  { id: "diamond", name: "Diamond Dazzle", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [6, 12], cards: [60, 90], bias: 1.3, life: 0.08 },
+  { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.05, 0.15], cards: [2, 4], bias: 5, life: 0.01 },
+  { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.08, 0.2], cards: [4, 7], bias: 4.5, life: 0.015 },
+  { id: "bronze", name: "Bronze Fizz", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.12, 0.3], cards: [6, 10], bias: 4, life: 0.02 },
+  { id: "silver", name: "Silver Splash", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.2, 0.4], cards: [10, 16], bias: 3.4, life: 0.03 },
+  { id: "gold", name: "Golden Pop", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [0.3, 0.6], cards: [16, 26], bias: 2.8, life: 0.04 },
+  { id: "purple", name: "Royal Purple", color: "#7a3ad6", rim: "#d8b8ff", odds: 2.4, pulls: 6, coins: [0.45, 0.8], cards: [26, 40], bias: 2.3, life: 0.05 },
+  { id: "platinum", name: "Platinum Sparkle", color: "#d8e4ec", rim: "#ffffff", odds: 0.9, pulls: 7, coins: [0.6, 1.1], cards: [40, 60], bias: 1.8, life: 0.06 },
+  { id: "diamond", name: "Diamond Dazzle", color: "#5ad8ff", rim: "#e8fbff", odds: 0.2, pulls: 8, coins: [0.8, 1.5], cards: [60, 90], bias: 1.3, life: 0.08 },
   // Express: rare, middling contents, but it opens right away.
-  { id: "express", name: "Express Pop", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.5, 1.5], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
+  { id: "express", name: "Express Pop", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.12, 0.3], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
 ];
 // How long a can takes to open once you start it (one at a time). The better the can, the longer the wait.
 const OPEN_MIN = { black: 15, white: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
@@ -82,8 +83,8 @@ function cardsNeeded(cat, it) {
 }
 const cardKey = (cat, it) => `${cat.key}:${it.id}`;
 const catByKey = k => CARD_CATS.find(c => c.key === k);
-// A duplicate card (the item is already yours) pays a little: 0.25% of the item's price.
-const dupCoins = it => Math.max(2, Math.round(it.price * 0.0025));
+// A duplicate card (the item is already yours) pays a little: 0.1% of the item's price.
+const dupCoins = it => Math.max(1, Math.round(it.price * 0.001));
 // Pick an item for a card stack: cheap items are common; a can's bias decides how often rare ones show up.
 function pickCardItem(bias) {
   let x = Math.random() * CARD_CATS.reduce((t, c) => t + c.weight, 0), cat = CARD_CATS[0];
