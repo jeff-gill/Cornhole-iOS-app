@@ -202,6 +202,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .avatarbtn { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; padding: 0; background: none; box-shadow: 0 4px 0 rgba(0,0,0,.3); overflow: hidden; }
 .avatar { display: inline-grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; font-size: 24px; line-height: 1; }
 .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+.avpick .avatar img, .avatarbtn .avatar img, .avatar.sm img { object-fit: contain; }
 .avatar.sm { width: 22px; height: 22px; font-size: 13px; vertical-align: -4px; margin-right: 5px; border: 2px solid rgba(255,255,255,.8); }
 .livespill { color: #fff; font: inherit; }
 .livespill b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
@@ -332,7 +333,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .tabs button .nbadge { top: -6px; right: -4px; min-width: 18px; height: 18px; font-size: 10px; line-height: 14px; padding: 0 4px; }
 .item { position: relative; }
 .item .nbadge.item-badge { top: -8px; right: 8px; height: 22px; line-height: 18px; font-size: 11px; }
-.ptabs { grid-template-columns: repeat(3, 1fr); }
+.tabs.ptabs { grid-template-columns: repeat(3, 1fr); }
+#useGcPhoto { width: 100%; margin-bottom: 10px; }
 .handlebox { display: grid; gap: 8px; }
 .handlebox input { font: 900 20px Nunito, system-ui, sans-serif; padding: 10px 12px; border-radius: 14px; border: 3px solid rgba(255,255,255,.5); background: rgba(0,0,0,.3); color: #fff; width: 100%; box-sizing: border-box; }
 .handlebox input:focus { outline: none; border-color: var(--gold); }
@@ -594,7 +596,7 @@ s.was { opacity: .6; font-size: .8em; }
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
 <div class="overlay" id="avatarSheet" hidden><div class="sheet">
   <div class="tabs ptabs"><button data-ptab="avatar" class="on">AVATAR</button><button data-ptab="profile">PROFILE</button><button data-ptab="settings">SETTINGS</button></div>
-  <div id="ptabAvatar"><h2>Choose your avatar</h2><div class="avgrid" id="avatarGrid"></div></div>
+  <div id="ptabAvatar"><h2>Choose your avatar</h2><button class="btn ghost" id="useGcPhoto" hidden>Use my Game Center picture</button><div class="avgrid" id="avatarGrid"></div></div>
   <div id="ptabProfile" hidden></div>
   <div id="ptabSettings" hidden></div>
   <button class="btn" id="avatarClose">DONE</button>

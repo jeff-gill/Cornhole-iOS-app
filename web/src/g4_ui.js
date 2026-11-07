@@ -366,7 +366,7 @@ function openHub() {
 function short(n) { if (n >= 1e6) return +(n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M"; if (n >= 1e4) return +(n / 1e3).toFixed(n % 1e3 ? 1 : 0) + "K"; return n.toLocaleString(); }
 function renderHub() {
   $("coins").textContent = bigNum(career.coins);
-  $("stars").textContent = career.stars;
+  $("stars").textContent = bigNum(career.stars);
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
   buildVenue(v.id); setBoardDesign(career.board);
   venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));

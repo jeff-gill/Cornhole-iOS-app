@@ -184,22 +184,25 @@ function scheduleLivesAlert() {
 }
 
 // ── Avatars: 4 to start, 2 more with every court you open.
+// Critters made in Blender (web/tools/blender/critters.py): 4 to start, 3 more with each court you open, the rarest
+// (lion, tiger, wolf) at Court 8. Ids stay a0..a24 so saved avatars carry over.
 const AVATARS = [
-  ["😎", "#2f86ff", 0], ["🤠", "#ff8a1f", 0], ["🥳", "#ff2e88", 0], ["🙂", "#2fbf71", 0],
-  ["😺", "#ffc93a", 1], ["🐶", "#8a5a32", 1], ["🦊", "#ff6a1a", 2], ["🐻", "#6a4a2a", 2],
-  ["🐼", "#3a3a44", 3], ["🐨", "#8a9aa8", 3], ["🐯", "#ff9a1f", 4], ["🦁", "#e8a020", 4],
-  ["🐸", "#3fae4a", 5], ["🐵", "#a0704a", 5], ["🦄", "#c86aff", 6], ["🐲", "#2fbf71", 6],
-  ["👽", "#5ad86a", 7], ["🤖", "#7a8aa8", 7], ["🧙", "#5b3bd6", 8], ["🧛", "#8a1020", 8],
-  ["🥷", "#1c1c22", 9], ["🧑‍🚀", "#2a4a8a", 9], ["🦸", "#c8102e", 10], ["🧜", "#0fb5a5", 10],
-  ["👑", "#f2b705", 11], ["🏆", "#e8b020", 11],
-].map(([e, bg, court], i) => ({ id: "a" + i, e, bg, court }));
+  ["fox", "#ffd8a8", 0], ["bear", "#c8e6c9", 0], ["bunny", "#ffd6e2", 0], ["frog", "#d8f0c8", 0],
+  ["pup", "#ffe0b8", 1], ["cat", "#cfe3ff", 1], ["duck", "#d6eaff", 1],
+  ["pig", "#ffd6de", 2], ["mouse", "#e6dcff", 2], ["chick", "#fff2b8", 2],
+  ["raccoon", "#ded6f2", 3], ["owl", "#f2dcc4", 3], ["sheep", "#f8d8ec", 3],
+  ["penguin", "#cfe8ff", 4], ["koala", "#d6f2ee", 4], ["gorilla", "#d8e4ff", 4],
+  ["monkey", "#ffe2c8", 5], ["cow", "#d8f2d8", 5], ["turtle", "#fff0c0", 5],
+  ["panda", "#e0f5e0", 6], ["deer", "#f0e2cc", 6], ["hedgehog", "#ffe0d8", 6],
+  ["lion", "#fff0b8", 7], ["tiger", "#ffe0c4", 7], ["wolf", "#e2e6ee", 7],
+].map(([name, bg, court], i) => ({ id: "a" + i, name, bg, court }));
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 const avatarOpen = a => venueUnlocked(a.court);
 // "gc" is your Game Center photo (the default when you have one and haven't picked another avatar).
 let gcPhoto = null;
 const avatarHTML = (id, cls = "") => {
   if (id === "gc") return gcPhoto ? `<span class="avatar ${cls}" style="background:#fff"><img src="${gcPhoto}" alt=""></span>` : avatarHTML("a0", cls);
-  const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}">${a.e}</span>`;
+  const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}"><img src="assets/critters/${a.name}.png" alt="${a.name}"></span>`;
 };
 
 // ── Seasons: a calendar month (UTC). Each title is a worldwide league (a Game Center leaderboard per title), split
