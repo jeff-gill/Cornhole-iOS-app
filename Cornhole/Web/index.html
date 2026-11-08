@@ -734,7 +734,7 @@ const REL_H = 3, REL_Y = 0.5, REL_X = 1.8;
 // Which pitcher's box each player throws from this match (-1 = left, +1 = right). Randomized per match.
 const SIDES = [-1, 1];
 const SLOPE = Math.atan2(BH - FH, BY - FY), SS = Math.sin(SLOPE), SC = Math.cos(SLOPE);
-const T = { mu: 0.35, rBase: 0.75, rSteep: 0.6, rest: 0.35, cap: 0.2, luckSpeed: 0.08, luckDir: 0.07, grab: 0.08, stop: 0.08, dt: 1 / 240, carry: 1,
+const T = { mu: 0.35, rBase: 0.75, rSteep: 0.6, rest: 0.35, luckSpeed: 0.08, luckDir: 0.07, grab: 0.08, stop: 0.08, dt: 1 / 240, carry: 1,
   minEl: 10 * Math.PI / 180, maxEl: 65 * Math.PI / 180, defEl: 32 * Math.PI / 180 };
 // Gear for the throw being planned: bag spin strength and how far the bag slides.
 const CUR = { spinMul: 1, slideMul: 1 };
@@ -747,6 +747,20 @@ const onBoard = p => Math.abs(p.x) <= HW && p.y >= FY && p.y <= BY;
 const plane = y => FH + (y - FY) * (BH - FH) / (BY - FY);
 const surf = p => onBoard(p) ? plane(p.y) : 0;
 const overHole = (p, r = HR) => dist(p, HOLE) < r;
+// How much of a bag (a BAG-wide square, turned by its angle) is over the hole, 0..1. More than half and it falls in.
+const COVER_N = 12;
+function holeCover(b) {
+  const dx = b.x - HOLE.x, dy = b.y - HOLE.y;
+  if (Math.hypot(dx, dy) > HR + BAG * 0.71) return 0;
+  const c = Math.cos(b.angle || 0), s = Math.sin(b.angle || 0);
+  let n = 0;
+  for (let i = 0; i < COVER_N; i++) for (let j = 0; j < COVER_N; j++) {
+    const u = ((i + 0.5) / COVER_N - 0.5) * BAG, v = ((j + 0.5) / COVER_N - 0.5) * BAG;
+    const x = dx + u * c - v * s, y = dy + u * s + v * c;
+    if (x * x + y * y < HR * HR) n++;
+  }
+  return n / (COVER_N * COVER_N);
+}
 const release = pl => ({ x: SIDES[pl] * REL_X, y: REL_Y, z: REL_H });
 
 // ───────────────────────── Flight
@@ -860,7 +874,8 @@ class World {
   }
   bounds(b) {
     if (!onSurface(b)) return;
-    if (overHole(b, T.cap)) { b.state = "inHole"; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "drop", bag: b }); }
+    // more than half of the bag over the hole: in it goes
+    if (holeCover(b) > 0.5) { b.state = "inHole"; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "drop", bag: b }); }
     else if (!onBoard(b)) {
       if (b.y > BY) b.y += BR; if (b.y < FY) b.y -= BR; if (Math.abs(b.x) > HW) b.x += Math.sign(b.x) * BR;
       b.state = "ground"; b.z = 0; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "off", bag: b });
@@ -5030,7 +5045,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794149358";
+const BUILD_ID = "1794149792";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
