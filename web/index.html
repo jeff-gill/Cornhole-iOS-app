@@ -2991,11 +2991,125 @@ function stadiumNextDoor(g, cx, cz) {
   st.position.set(cx, 0, cz); g.add(st);
 }
 
+// A whole lot of parked cars, drawn as a few instanced meshes (one per part) so hundreds of them stay cheap on a phone.
+// Each car is [x, z, rotY, color, "sedan" | "suv"].
+function carLot(g, cars) {
+  const m4 = new THREE.Matrix4(), part = new THREE.Matrix4(), q = new THREE.Quaternion(), col = new THREE.Color(), up = new THREE.Vector3(0, 1, 0);
+  for (const kind of ["sedan", "suv"]) {
+    const list = cars.filter(c => c[4] === kind); if (!list.length) continue;
+    const L = kind === "suv" ? 15 : 14, H = kind === "suv" ? 2.4 : 1.8, roofH = kind === "suv" ? 2.2 : 1.7, cabZ = kind === "suv" ? -0.8 : 0.2, cabL = kind === "suv" ? L * 0.62 : L * 0.5;
+    const paint = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3, metalness: 0.35 });
+    const parts = [ // geometry, material, offset, painted
+      [new RoundedBoxGeometry(6, H, L, 3, 0.45), paint, [[0, 1.0 + H / 2, 0]], true],
+      [new RoundedBoxGeometry(5.4, roofH, cabL, 3, 0.5), std(0x8fb4d0, { roughness: 0.1, metalness: 0.5 }), [[0, 1.0 + H + roofH / 2 - 0.1, cabZ]], false],
+      [new RoundedBoxGeometry(5.5, 0.25, cabL * 0.97, 2, 0.1), paint, [[0, 1.0 + H + roofH - 0.15, cabZ]], true],
+      [new THREE.CylinderGeometry(1.15, 1.15, 0.9, 14).rotateZ(Math.PI / 2), std(0x1c1f24), [[-2.9, 1.15, -L * 0.32], [2.9, 1.15, -L * 0.32], [-2.9, 1.15, L * 0.32], [2.9, 1.15, L * 0.32]], false],
+    ];
+    for (const [geo, mat, offs, painted] of parts) {
+      const im = new THREE.InstancedMesh(geo, mat, list.length * offs.length); let i = 0;
+      for (const [x, z, rot, color] of list) {
+        m4.compose(new THREE.Vector3(x, 0, z), q.setFromAxisAngle(up, rot), new THREE.Vector3(1, 1, 1));
+        for (const o of offs) {
+          im.setMatrixAt(i, part.copy(m4).multiply(new THREE.Matrix4().makeTranslation(...o)));
+          if (painted) im.setColorAt(i, col.setHex(color));
+          i++;
+        }
+      }
+      im.castShadow = im.receiveShadow = true; g.add(im);
+    }
+  }
+}
+// The university around the stadium: red-brick halls with white trim and rows of windows, a clock tower,
+// a domed library and a chapel spire, with big leafy trees between them.
+function campus(g) {
+  const brickTex = canvasTex(256, 256, (c, w, h) => {
+    c.fillStyle = "#a34f36"; c.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 4) for (let x = (y / 4 % 2) * 4; x < w; x += 8) { c.fillStyle = `rgba(${90 + Math.random() * 60},${30 + Math.random() * 25},20,.25)`; c.fillRect(x, y, 7, 3); }
+    c.fillStyle = "#f2efe6"; c.fillRect(0, 0, w, 6); // trim band between floors
+    for (const x of [24, 88, 152, 216]) { // two windows per tile, white frame, glass with a sky glint
+      c.fillStyle = "#f2efe6"; c.fillRect(x - 4, 60, 28, 140);
+      const gr = c.createLinearGradient(0, 64, 0, 196); gr.addColorStop(0, "#9cc2e0"); gr.addColorStop(1, "#33495e");
+      c.fillStyle = gr; c.fillRect(x, 64, 20, 132);
+      c.fillStyle = "#f2efe6"; c.fillRect(x, 126, 20, 4); c.fillRect(x + 8, 64, 4, 132);
+    }
+  });
+  const stone = std(0xeee8da), slate = std(0x4a5560, { flatShading: true }), copper = std(0x5fa58a, { roughness: 0.5, metalness: 0.2 });
+  const brickFor = (w, h, d) => { // brick that keeps its scale on every face
+    const front = brickTex.clone(), side = brickTex.clone();
+    for (const [t, a] of [[front, w], [side, d]]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(Math.max(1, Math.round(a / 16)), Math.max(1, Math.round(h / 11))); t.needsUpdate = true; }
+    const f = new THREE.MeshLambertMaterial({ map: front }), s = new THREE.MeshLambertMaterial({ map: side });
+    return [s, s, stone, stone, f, f];
+  };
+  const hall = (x, z, w, h, d, rotY, roof = "gable") => {
+    const b = new THREE.Group();
+    add(b, box(w, h, d, brickFor(w, h, d)), 0, h / 2, 0, false);
+    add(b, box(w + 1.2, 1.6, d + 1.2, stone), 0, h + 0.8, 0, false); // cornice
+    if (roof === "gable") {
+      const rad = d * 0.64, r = new THREE.Mesh(new THREE.CylinderGeometry(rad, rad, w + 1, 3, 1), slate);
+      r.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); r.scale.set(1, 1, 0.6); // a triangular prism along x, ridge up
+      add(b, r, 0, h + 1.6 + rad * 0.3, 0, false);
+    } else if (roof === "cupola") {
+      add(b, box(8, 6, 8, stone), 0, h + 4.6, 0, false);
+      add(b, new THREE.Mesh(new THREE.ConeGeometry(6, 10, 8), copper), 0, h + 12.6, 0, false);
+    }
+    b.position.set(x, 0, z); b.rotation.y = rotY; g.add(b);
+  };
+  const clockTex = canvasTex(128, 128, (c, w) => {
+    c.fillStyle = "#f6f2e6"; c.beginPath(); c.arc(64, 64, 60, 0, 7); c.fill();
+    c.strokeStyle = "#222"; c.lineWidth = 5; c.stroke();
+    for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; c.fillStyle = "#222"; c.fillRect(64 + Math.cos(a) * 48 - 3, 64 + Math.sin(a) * 48 - 3, 6, 6); }
+    c.lineWidth = 6; c.beginPath(); c.moveTo(64, 64); c.lineTo(64, 26); c.moveTo(64, 64); c.lineTo(92, 64); c.stroke();
+  });
+  const tower = (x, z, h, w = 14) => {
+    const t = new THREE.Group();
+    add(t, box(w, h, w, brickFor(w, h, w)), 0, h / 2, 0, false);
+    add(t, box(w + 1.5, 2, w + 1.5, stone), 0, h + 1, 0, false);
+    add(t, box(w - 2, 12, w - 2, stone), 0, h + 8, 0, false); // belfry
+    for (let k = 0; k < 4; k++) { const f = new THREE.Mesh(new THREE.CircleGeometry(w * 0.34, 32), new THREE.MeshBasicMaterial({ map: clockTex })); const a = k * Math.PI / 2; f.position.set(Math.sin(a) * (w / 2 - 0.9), h + 8, Math.cos(a) * (w / 2 - 0.9)); f.rotation.y = a; t.add(f); }
+    add(t, new THREE.Mesh(new THREE.ConeGeometry(w * 0.62, 30, 4), copper).rotateY(Math.PI / 4), 0, h + 29, 0, false);
+    t.position.set(x, 0, z); g.add(t);
+  };
+  const library = (x, z, rotY) => {
+    const l = new THREE.Group();
+    add(l, box(70, 26, 34, brickFor(70, 26, 34)), 0, 13, 0, false);
+    add(l, box(30, 3, 8, stone), 0, 27.5, 18, false); // portico roof
+    for (let k = -3; k <= 3; k++) add(l, new THREE.Mesh(new THREE.CylinderGeometry(1, 1.1, 26, 10), stone), k * 4.4, 13, 20, false);
+    add(l, new THREE.Mesh(new THREE.CylinderGeometry(13, 13, 8, 24), stone), 0, 30, 0, false);
+    add(l, new THREE.Mesh(new THREE.SphereGeometry(13, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), copper), 0, 34, 0, false);
+    add(l, new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 6, 10), stone), 0, 49, 0, false);
+    l.position.set(x, 0, z); l.rotation.y = rotY; g.add(l);
+  };
+  // Far side, behind the stadium: the towers and dome rise over its rim.
+  const H = Math.PI / 2; // side halls run along the lot
+  tower(-62, -390, 92); library(95, -410, 0.15); tower(165, -330, 70, 12);
+  for (const [x, z, w, h, d, rot, roof] of [
+    [-250, -360, 80, 34, 30, 0.2, "gable"], [-170, -400, 60, 40, 30, 0.05, "cupola"], [-120, -330, 50, 28, 24, 0, "gable"],
+    [10, -430, 90, 36, 30, 0, "gable"], [190, -400, 70, 32, 28, -0.1, "gable"], [270, -340, 60, 30, 26, -0.3, "cupola"],
+    // left and right of the lot, past the parked cars
+    [-205, -230, 70, 30, 34, H, "gable"], [-215, -140, 60, 26, 30, H, "cupola"], [-210, -40, 74, 32, 32, H, "gable"], [-230, 60, 60, 28, 30, H, "gable"],
+    [205, -230, 70, 32, 34, H, "cupola"], [215, -130, 62, 26, 30, H, "gable"], [210, -30, 70, 30, 32, H, "gable"], [225, 70, 60, 28, 30, H, "cupola"],
+  ]) hall(x, z, w, h, d, rot, roof);
+  tower(-200, 10, 60, 11);
+  // Big trees: a row along each side between the lot and the halls, and clumps around the far buildings.
+  const r = rng(51), kinds = ["tree_oak", "tree_maple", "tree_oak", "tree_pine"], spots = [];
+  for (let z = -300; z <= 90; z += 11 + r() * 8) for (const sx of [-1, 1]) spots.push([sx * (162 + r() * 14), z, 1.5 + r() * 0.7]);
+  for (let x = -330; x <= 330; x += 14 + r() * 12) { const z = -290 - r() * 30; if (Math.abs(x) > 105 || r() < 0.5) spots.push([x, z, 1.6 + r() * 0.9]); }
+  for (let x = -330; x <= 330; x += 20 + r() * 16) spots.push([x, -450 - r() * 30, 2 + r()]);
+  for (const [x, z, s] of spots) {
+    const kind = kinds[Math.floor(r() * kinds.length)], rot = r() * 6.28;
+    loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(s); g.add(t); });
+  }
+  // Grass and walks around the halls, beyond the asphalt.
+  const lawn = lam(0x5e9a40);
+  const field = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), lawn); field.rotation.x = -Math.PI / 2; field.position.set(0, -0.2, -200); g.add(field);
+  for (const sx of [-1, 1]) { const m = new THREE.Mesh(new THREE.PlaneGeometry(110, 520), lawn); m.rotation.x = -Math.PI / 2; m.position.set(sx * 220, 0.15, -30); m.receiveShadow = true; g.add(m); }
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
-  tailgate: { top: [0.20, 0.30, 0.62], mid: [0.75, 0.55, 0.62], horizon: [1.0, 0.62, 0.38], sunGlow: 1.3, night: 0, fog: [0xe8a878, 160, 520],
-    hemi: [0xffd9c0, 0x4d4a48, 1.1], sun: [0xffb070, 3.0, [-30, 14, -10]], exposure: 1.05, dust: 0xbfbcb4 },
+  tailgate: { top: [0.10, 0.38, 0.82], mid: [0.48, 0.70, 0.94], horizon: [0.84, 0.91, 0.98], sunGlow: 0.6, night: 0, fog: [0xd4e3f2, 260, 690],
+    hemi: [0xe6f2ff, 0x5a5c58, 1.3], sun: [0xfff4e2, 3.1, [-20, 38, -6]], exposure: 1.02, dust: 0xbfbcb4 },
   beach: { top: [0.10, 0.48, 0.88], mid: [0.45, 0.78, 0.98], horizon: [0.88, 0.95, 1.0], sunGlow: 0.8, night: 0, fog: [0xcfeaff, 120, 400],
     hemi: [0xe6f6ff, 0xd8c08a, 1.35], sun: [0xfff4dc, 3.3, [-14, 34, -6]], exposure: 1.0, dust: 0xf0dca8 },
   brewery: { top: [0.02, 0.03, 0.10], mid: [0.06, 0.08, 0.22], horizon: [0.25, 0.18, 0.30], sunGlow: 0, night: 1, fog: [0x1a1530, 60, 200],
@@ -3064,15 +3178,19 @@ function buildVenue(id) {
     // Game day: a packed lot right outside the stadium, with fans, grills and tailgates down.
     setGround(g, "asphalt", 18);
     stadiumNextDoor(g, 0, -205);
-    trees(g, 5, [0x3c7a3a, 0x4c8a3a], { back: -330, sides: false });
+    campus(g);
     truck(g, -16, -24, 0.15, 0xc8102e); truck(g, 17, -30, -0.2, 0x2f6fd9); truck(g, -18, -52, 0.1, 0xf2f2f2); truck(g, 16, -2, -0.1, 0x222222); truck(g, -17, 20, -0.1, 0xffc93a); truck(g, 15, 26, 0.15, 0x2fbf71);
-    // rows of parked cars out to the sides and behind
-    const r = rng(19), CARS = [0xc8102e, 0x1f3a6e, 0xf2f2f2, 0x222222, 0x9aa4b2, 0x2f86ff, 0x6a6a70, 0x8a1020, 0x2fbf71];
-    for (const sx of [-1, 1]) for (let row = 0; row < 3; row++) for (let z = -90; z <= 40; z += 8 + r() * 2) {
-      const x = sx * (36 + row * 17 + r() * 1.5); if (r() < 0.12) continue;
-      car(g, x, z, Math.PI / 2 + (r() - 0.5) * 0.08 + (row % 2 ? Math.PI : 0), CARS[Math.floor(r() * CARS.length)], r() < 0.4 ? "suv" : "sedan");
+    // a packed lot: rows of parked cars out to both sides, behind the boards and around the stadium
+    const r = rng(19), CARS = [0xc8102e, 0x1f3a6e, 0xf2f2f2, 0x222222, 0x9aa4b2, 0x2f86ff, 0x6a6a70, 0x8a1020, 0x2fbf71, 0xb8b8bc, 0xffc93a], lot = [];
+    const park = (x, z, rot) => lot.push([x, z, rot + (r() - 0.5) * 0.08, CARS[Math.floor(r() * CARS.length)], r() < 0.4 ? "suv" : "sedan"]);
+    for (const sx of [-1, 1]) for (let row = 0; row < 7; row++) for (let z = -150; z <= 120; z += 7.4 + r() * 0.8) {
+      if (r() < 0.06) continue;
+      park(sx * (34 + row * 17 + r() * 0.8), z, Math.PI / 2 + (row % 2 ? Math.PI : 0));
     }
-    for (let x = -60; x <= 60; x += 9 + r() * 3) if (Math.abs(x) > 14) car(g, x, -105 - r() * 4, (r() - 0.5) * 0.1, CARS[Math.floor(r() * CARS.length)], r() < 0.4 ? "suv" : "sedan");
+    for (const zr of [-104, -121, -138]) for (let x = -64; x <= 64; x += 7.4 + r() * 0.8) if (Math.abs(x) > 14 && r() > 0.06) park(x, zr - r(), zr % 2 ? Math.PI : 0);
+    for (const zr of [56, 73, 90]) for (let x = -26; x <= 26; x += 7.4 + r() * 0.8) if (r() > 0.1) park(x, zr, zr === 73 ? Math.PI : 0);
+    for (const sx of [-1, 1]) for (let row = 0; row < 3; row++) for (let z = -270; z <= -160; z += 7.4 + r() * 0.8) if (r() > 0.08) park(sx * (118 + row * 15), z, Math.PI / 2 + (row % 2 ? Math.PI : 0));
+    carLot(g, lot);
     for (const [x, z] of [[-30, -70], [30, -70], [-30, 0], [30, 0], [-30, 50], [30, 50]]) lotLight(g, x, z);
     tent(g, 0, 34, 0xd62828); tent(g, -10, -50, 0xff8a1f); tent(g, 11, -52, 0x2f86ff); tent(g, -24, 34, 0x1f3a6e);
     // grills with smoke, and fans gathered around them and the tents
@@ -4247,7 +4365,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794103033";
+const BUILD_ID = "1794103415";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
