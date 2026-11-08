@@ -93,6 +93,13 @@ function canTapped(i) {
   };
 }
 // ── A small info sheet (can odds), reusing the lives sheet frame
+// The How to Play / Game Rules sheet: two tabs.
+function showHelpTab(tab) {
+  for (const b of document.querySelectorAll(".htabs button")) b.classList.toggle("on", b.dataset.htab === tab);
+  $("helpPlay").hidden = tab !== "play"; $("helpRules").hidden = tab !== "rules"; $("helpRegs").hidden = tab !== "regs";
+  if (tab === "regs") $("helpRegs").innerHTML = rulesHTML().replace("<h2>Rules & Regulations</h2>", "<h2>App rules</h2><p class=\"muted\">How matches work in this game: the clock, pausing, leaving the app and refunds.</p>");
+}
+for (const b of document.querySelectorAll(".htabs button")) b.onclick = () => showHelpTab(b.dataset.htab);
 // ── Rules & Regulations: everything about how matches are scored, timed and settled, in one place.
 function rulesHTML() {
   const sec = (icon, title, items) => `<div class="rulesec"><h3>${icon} ${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
@@ -199,9 +206,7 @@ function renderProfile() {
       <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
-      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to play</button>
-      <button class="btn ghost" id="setRules" style="width:100%;margin-top:8px;font-size:17px;padding:12px">📜 Rules & Regulations</button>`;
-    $("setRules").onclick = () => { $("avatarSheet").hidden = true; showInfo(rulesHTML()); };
+      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>`;
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
     $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
     $("setSfx").onclick = () => { toggleSfx(); renderProfile(); };

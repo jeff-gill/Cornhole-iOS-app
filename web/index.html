@@ -384,6 +384,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .item { position: relative; }
 .item .nbadge.item-badge { top: -8px; right: 8px; height: 22px; line-height: 18px; font-size: 11px; }
 .tabs.ptabs { grid-template-columns: repeat(3, 1fr); }
+.tabs.htabs { grid-template-columns: repeat(3, 1fr); } .tabs.htabs button { font-size: 13px; padding-left: 2px; padding-right: 2px; }
 #useGcPhoto { width: 100%; margin-bottom: 10px; }
 .handlebox { display: grid; gap: 8px; }
 .handlebox input { font: 900 20px Nunito, system-ui, sans-serif; padding: 10px 12px; border-radius: 14px; border: 3px solid rgba(255,255,255,.5); background: rgba(0,0,0,.3); color: #fff; width: 100%; box-sizing: border-box; }
@@ -708,17 +709,46 @@ s.was { opacity: .6; font-size: .8em; }
 
 <div class="overlay" id="helpSheet" hidden>
   <div class="sheet">
+    <div class="tabs htabs"><button data-htab="play" class="on">HOW TO PLAY</button><button data-htab="rules">CORNHOLE RULES</button><button data-htab="regs">APP RULES</button></div>
+    <div class="help" id="helpPlay">
     <h2>How to play</h2>
-    <div class="help">
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
       <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
-      <p><b>Career.</b> Both players put in the entry and the <b>winner takes the pot</b>. A win at the Backyard is <b>+2 stars</b> and a loss is <b>−1</b>; each venue up adds one to both. Quitting a match counts as a loss. Stars unlock new venues with bigger pots, slicker boards, more wind and tougher opponents. Spend coins on bags with better accuracy, control and spin, and on board designs. Short on coins? The Backyard entry is on the house.</p>
+      <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>
     </div>
+    <div class="help rules" id="helpRules" hidden>
+      <h2>Cornhole rules</h2>
+      <p class="muted">The standard rules of cornhole, as played in leagues and tournaments.</p>
+      <div class="rulesec"><h3>🪵 The court</h3><ul>
+        <li>Two boards face each other, 27 feet apart, measured between their front edges.</li>
+        <li>Each board is 2 feet wide and 4 feet long, with a 6-inch hole centred 9 inches from the top.</li>
+        <li>The front of the board sits about 3 to 4 inches off the ground and the back about 12 inches.</li></ul></div>
+      <div class="rulesec"><h3>🎒 The bags</h3><ul>
+        <li>Each side has four bags of its own colour.</li>
+        <li>A bag is 6 inches square and weighs about a pound.</li></ul></div>
+      <div class="rulesec"><h3>👟 Throwing</h3><ul>
+        <li>You throw from the pitcher's box, the area to the left or right of the board.</li>
+        <li>Stay in your box and behind the front edge of the board (the foul line) until the bag leaves your hand.</li>
+        <li>Throw underhand. Players take turns, one bag at a time, until all eight bags are thrown. That's one inning.</li>
+        <li>In singles both players throw from the same end. In doubles, partners stand at opposite ends.</li>
+        <li>Whoever scored in the last inning throws first in the next. After a wash, the same side throws first again.</li></ul></div>
+      <div class="rulesec"><h3>🎯 Scoring</h3><ul>
+        <li>A bag in the hole (a "cornhole") is worth 3 points. That includes a bag knocked in by another bag.</li>
+        <li>A bag resting on the board is worth 1 point. A bag hanging over the edge of the hole is still 1 point until it falls in.</li>
+        <li>A bag that touches the ground, or hits the ground and bounces onto the board, scores nothing and is taken off.</li>
+        <li>Points cancel out: only the difference between the two sides counts each inning. Equal scores are a wash.</li></ul></div>
+      <div class="rulesec"><h3>🏆 Winning</h3><ul>
+        <li>The first side to reach 21 points at the end of an inning wins.</li></ul></div>
+      <div class="rulesec"><h3>🚫 Fouls</h3><ul>
+        <li>Stepping past the foul line, throwing from outside your box or throwing out of turn is a foul. A fouled bag scores nothing and is taken off the board.</li>
+        <li>Taking too long to throw can also be called as a foul in leagues.</li></ul></div>
+    </div>
+    <div class="help rules" id="helpRegs" hidden></div>
     <button class="btn green go" id="helpClose">GOT IT</button>
     <button class="linkbtn" id="replayTut">Show the tutorial again in my next match</button>
   </div>
@@ -4897,6 +4927,13 @@ function canTapped(i) {
   };
 }
 // ── A small info sheet (can odds), reusing the lives sheet frame
+// The How to Play / Game Rules sheet: two tabs.
+function showHelpTab(tab) {
+  for (const b of document.querySelectorAll(".htabs button")) b.classList.toggle("on", b.dataset.htab === tab);
+  $("helpPlay").hidden = tab !== "play"; $("helpRules").hidden = tab !== "rules"; $("helpRegs").hidden = tab !== "regs";
+  if (tab === "regs") $("helpRegs").innerHTML = rulesHTML().replace("<h2>Rules & Regulations</h2>", "<h2>App rules</h2><p class=\"muted\">How matches work in this game: the clock, pausing, leaving the app and refunds.</p>");
+}
+for (const b of document.querySelectorAll(".htabs button")) b.onclick = () => showHelpTab(b.dataset.htab);
 // ── Rules & Regulations: everything about how matches are scored, timed and settled, in one place.
 function rulesHTML() {
   const sec = (icon, title, items) => `<div class="rulesec"><h3>${icon} ${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
@@ -5003,9 +5040,7 @@ function renderProfile() {
       <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
-      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to play</button>
-      <button class="btn ghost" id="setRules" style="width:100%;margin-top:8px;font-size:17px;padding:12px">📜 Rules & Regulations</button>`;
-    $("setRules").onclick = () => { $("avatarSheet").hidden = true; showInfo(rulesHTML()); };
+      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>`;
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
     $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
     $("setSfx").onclick = () => { toggleSfx(); renderProfile(); };
@@ -5149,7 +5184,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794151081";
+const BUILD_ID = "1794151348";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
