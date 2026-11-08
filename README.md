@@ -137,8 +137,12 @@ The odds are not shown in the game. The App Store requires the odds for paid loo
 - A career match is remembered from the buy-in until it ends. If the game freezes (a bag that never lands, a throw
   clock that stops counting, a CPU that never throws, or the game loop dying) the watchdog stops the match and refunds
   the buy-in and the ticket; no stars are lost.
-- If the game crashes while it's on screen, the next launch refunds the match the same way. If the app was sent to the
-  background mid-match and closed before you came back (force quit, power off), it counts as a quit: a loss.
+- Leaving the app mid-match (switching apps, locking the phone) doesn't end it: the throw clock keeps running while
+  you're away, and when you come back the time is taken off your turns (each turn that runs out loses that bag).
+  Four of your bags lost to the clock in one inning loses the match.
+- If the app is closed while you're out of it (force quit, iPhone closing it to free memory, power off), the next
+  launch counts the match as a quit: a loss. The Backyard forgives this 3 times, with a warning each time.
+- If the game crashes or freezes while it's on screen, the match is refunded (buy-in and ticket back, no stars lost).
 - Quitting from the pause menu is still a loss.
 - Pausing on your throw: the first pause of a match stops the throw clock for 5 seconds, then it runs again; later
   pauses leave it running, with a warning on the pause screen. A bag lost to the clock shows as a red ✕ in your tile.

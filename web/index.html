@@ -1474,7 +1474,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
-  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
+  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
@@ -1608,6 +1608,15 @@ function timeUp() {
   sfx.thud(); haptic("thud");
   if (S.online && S.player === 0) netSend({ t: "timeout" });
   ui();
+  // four of your bags lost to the clock in one inning loses the match
+  if (S.kind === "career" && S.player === 0 && S.lost[0].length >= 4) setTimeout(() => clockForfeit(), 1200);
+}
+// Lost on the clock: the same as quitting from the pause menu (a loss), with a note saying why.
+function clockForfeit() {
+  if (S.kind !== "career" || !career.activeMatch) return;
+  career.activeMatch = null; addCourtStars(S.venue, -starsForLoss(S.venue)); career.losses++; save();
+  const stars = starsForLoss(S.venue); openHub();
+  showInfo(`<div class="lifebig">⏱</div><h2>Match lost</h2><div class="muted">All four of your bags ran out of time in one inning, so the match goes to your opponent (−${stars} ⭐).</div>`);
 }
 function endTurn() {
   if (S.kind === "career" && !career.tutorialDone && S.tut.thrown) { career.tutorialDone = true; save(); }
@@ -2006,6 +2015,18 @@ function tryRematch() {
 function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net", JSON.stringify({ op: "leave" })); } }
 
 // Per frame: the search countdown, the throw clock, and the opponent's queued messages.
+// Time spent out of the app during a match still runs your throw clock: when you come back it's taken off your turns,
+// one after another (each turn that runs out loses that bag), as if the game had kept going while you were away.
+function takeAwayTime(left) {
+  if (!(S.awayDebt > 0) || left <= 0) return 0;
+  const t = Math.min(S.awayDebt, left); S.awayDebt -= t; return t;
+}
+document.addEventListener("visibilitychange", () => {
+  const live = S.kind && !["hub", "over"].includes(S.phase);
+  if (document.hidden) { if (live) S.awayAt = Date.now(); return; }
+  if (S.awayAt && live) S.awayDebt = (S.awayDebt || 0) + (Date.now() - S.awayAt) / 1000;
+  S.awayAt = null;
+});
 function updateOnline(dt) {
   if (search) {
     updateReel(dt);
@@ -2014,7 +2035,7 @@ function updateOnline(dt) {
   }
   if (S.clock != null && (S.phase === "aiming" || S.phase === "throw")) {
     const before = Math.ceil(S.clock);
-    S.clock -= dt;
+    S.clock -= dt + takeAwayTime(S.clock - dt);
     if (Math.ceil(S.clock) !== before) { renderClock(); if (S.clock <= 5 && S.clock > 0) sfx.tick(); }
     if (S.clock <= 0) timeUp();
   }
@@ -2234,9 +2255,15 @@ function useLife() {
 // If it never ends properly while the game was on screen (it crashed or froze), the buy-in and the ticket come back and
 // no stars are lost. If the app had gone to the background (career.activeMatch.bg) and never came back, that's treated
 // as a quit: a loss, like quitting from the pause menu.
+const QUIT_WARNINGS = 3;
 function refundMatch() {
   const m = career.activeMatch; if (!m) return null;
   career.activeMatch = null;
+  if (m.bg && m.vi === 0 && (career.quitWarnings || 0) < QUIT_WARNINGS) { // the Backyard forgives it 3 times, with a warning
+    career.quitWarnings = (career.quitWarnings || 0) + 1;
+    career.coins += m.fee; refundLife(); save();
+    return { refunded: true, warning: career.quitWarnings, fee: m.fee, court: VENUES[m.vi].name };
+  }
   if (m.bg) { // left the app mid-match and it was closed
     addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
     return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };
@@ -5061,7 +5088,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794150448";
+const BUILD_ID = "1794150834";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6000,7 +6027,7 @@ function renderPauseClock() {
 function tickPausedClock(dt) {
   if (S.phase !== "paused" || !S.pauseClocked) return;
   const before = [Math.ceil(S.pauseGrace), Math.ceil(S.clock)];
-  if (S.pauseGrace > 0) S.pauseGrace = Math.max(0, S.pauseGrace - dt); else S.clock -= dt;
+  if (S.pauseGrace > 0) S.pauseGrace = Math.max(0, S.pauseGrace - dt); else S.clock -= dt + takeAwayTime(S.clock - dt);
   if (before[0] !== Math.ceil(S.pauseGrace) || before[1] !== Math.ceil(S.clock)) { renderPauseClock(); renderClock(); }
   if (S.clock <= 0) { $("pause").hidden = true; S.pauseClocked = false; S.phase = pausedPhase; timeUp(); }
 }
@@ -6122,8 +6149,10 @@ function glitchOut() {
 function settleInterruptedMatch() {
   const r = refundMatch(); if (!r) return;
   showInfo(r.refunded
-    ? `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
-    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">You left the app during your last match at ${esc(r.court)} and it was closed before you came back, so it counts as a loss (−${r.stars} ⭐).</div>`);
+    ? r.warning
+      ? `<div class="lifebig">⚠️</div><h2>Warning ${r.warning} of ${QUIT_WARNINGS}</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app. This time your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back and no stars were lost, but closing the app mid-match counts as a quit${r.warning < QUIT_WARNINGS ? "" : " from now on"}.</div>`
+      : `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
+    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app, so it counts as a loss (−${r.stars} ⭐).</div>`);
 }
 
 resize(); openHub(); settleInterruptedMatch();

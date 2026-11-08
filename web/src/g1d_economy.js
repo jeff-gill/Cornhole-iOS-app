@@ -176,9 +176,15 @@ function useLife() {
 // If it never ends properly while the game was on screen (it crashed or froze), the buy-in and the ticket come back and
 // no stars are lost. If the app had gone to the background (career.activeMatch.bg) and never came back, that's treated
 // as a quit: a loss, like quitting from the pause menu.
+const QUIT_WARNINGS = 3;
 function refundMatch() {
   const m = career.activeMatch; if (!m) return null;
   career.activeMatch = null;
+  if (m.bg && m.vi === 0 && (career.quitWarnings || 0) < QUIT_WARNINGS) { // the Backyard forgives it 3 times, with a warning
+    career.quitWarnings = (career.quitWarnings || 0) + 1;
+    career.coins += m.fee; refundLife(); save();
+    return { refunded: true, warning: career.quitWarnings, fee: m.fee, court: VENUES[m.vi].name };
+  }
   if (m.bg) { // left the app mid-match and it was closed
     addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
     return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };

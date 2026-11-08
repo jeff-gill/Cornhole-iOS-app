@@ -675,7 +675,7 @@ function renderPauseClock() {
 function tickPausedClock(dt) {
   if (S.phase !== "paused" || !S.pauseClocked) return;
   const before = [Math.ceil(S.pauseGrace), Math.ceil(S.clock)];
-  if (S.pauseGrace > 0) S.pauseGrace = Math.max(0, S.pauseGrace - dt); else S.clock -= dt;
+  if (S.pauseGrace > 0) S.pauseGrace = Math.max(0, S.pauseGrace - dt); else S.clock -= dt + takeAwayTime(S.clock - dt);
   if (before[0] !== Math.ceil(S.pauseGrace) || before[1] !== Math.ceil(S.clock)) { renderPauseClock(); renderClock(); }
   if (S.clock <= 0) { $("pause").hidden = true; S.pauseClocked = false; S.phase = pausedPhase; timeUp(); }
 }
@@ -797,8 +797,10 @@ function glitchOut() {
 function settleInterruptedMatch() {
   const r = refundMatch(); if (!r) return;
   showInfo(r.refunded
-    ? `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
-    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">You left the app during your last match at ${esc(r.court)} and it was closed before you came back, so it counts as a loss (−${r.stars} ⭐).</div>`);
+    ? r.warning
+      ? `<div class="lifebig">⚠️</div><h2>Warning ${r.warning} of ${QUIT_WARNINGS}</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app. This time your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back and no stars were lost, but closing the app mid-match counts as a quit${r.warning < QUIT_WARNINGS ? "" : " from now on"}.</div>`
+      : `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
+    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app, so it counts as a loss (−${r.stars} ⭐).</div>`);
 }
 
 resize(); openHub(); settleInterruptedMatch();

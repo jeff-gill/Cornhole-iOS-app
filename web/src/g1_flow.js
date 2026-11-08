@@ -341,7 +341,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
-  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
+  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
@@ -475,6 +475,15 @@ function timeUp() {
   sfx.thud(); haptic("thud");
   if (S.online && S.player === 0) netSend({ t: "timeout" });
   ui();
+  // four of your bags lost to the clock in one inning loses the match
+  if (S.kind === "career" && S.player === 0 && S.lost[0].length >= 4) setTimeout(() => clockForfeit(), 1200);
+}
+// Lost on the clock: the same as quitting from the pause menu (a loss), with a note saying why.
+function clockForfeit() {
+  if (S.kind !== "career" || !career.activeMatch) return;
+  career.activeMatch = null; addCourtStars(S.venue, -starsForLoss(S.venue)); career.losses++; save();
+  const stars = starsForLoss(S.venue); openHub();
+  showInfo(`<div class="lifebig">⏱</div><h2>Match lost</h2><div class="muted">All four of your bags ran out of time in one inning, so the match goes to your opponent (−${stars} ⭐).</div>`);
 }
 function endTurn() {
   if (S.kind === "career" && !career.tutorialDone && S.tut.thrown) { career.tutorialDone = true; save(); }

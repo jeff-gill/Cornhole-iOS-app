@@ -147,6 +147,18 @@ function tryRematch() {
 function leaveOnline() { if (S.online) { netSend({ t: "quit" }); postNative("net", JSON.stringify({ op: "leave" })); } }
 
 // Per frame: the search countdown, the throw clock, and the opponent's queued messages.
+// Time spent out of the app during a match still runs your throw clock: when you come back it's taken off your turns,
+// one after another (each turn that runs out loses that bag), as if the game had kept going while you were away.
+function takeAwayTime(left) {
+  if (!(S.awayDebt > 0) || left <= 0) return 0;
+  const t = Math.min(S.awayDebt, left); S.awayDebt -= t; return t;
+}
+document.addEventListener("visibilitychange", () => {
+  const live = S.kind && !["hub", "over"].includes(S.phase);
+  if (document.hidden) { if (live) S.awayAt = Date.now(); return; }
+  if (S.awayAt && live) S.awayDebt = (S.awayDebt || 0) + (Date.now() - S.awayAt) / 1000;
+  S.awayAt = null;
+});
 function updateOnline(dt) {
   if (search) {
     updateReel(dt);
@@ -155,7 +167,7 @@ function updateOnline(dt) {
   }
   if (S.clock != null && (S.phase === "aiming" || S.phase === "throw")) {
     const before = Math.ceil(S.clock);
-    S.clock -= dt;
+    S.clock -= dt + takeAwayTime(S.clock - dt);
     if (Math.ceil(S.clock) !== before) { renderClock(); if (S.clock <= 5 && S.clock > 0) sfx.tick(); }
     if (S.clock <= 0) timeUp();
   }
