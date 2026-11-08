@@ -131,8 +131,8 @@ function renderProfile() {
       <div class="handlebox"><div class="label">Your handle</div><input id="handleIn" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(myHandle())}">
         <div class="err" id="handleErr"></div><button class="btn green" id="handleSave">SAVE HANDLE</button>
         <div class="muted">3 to 16 letters, numbers, dots, dashes or underscores. Other players see this in Throwdowns.</div></div>
-      <div class="pstats"><div><b>${career.wins}</b><small>Wins</small></div><div><b>${career.losses}</b><small>Losses</small></div><div><b>${career.stars}</b><small>Stars</small></div>
-        <div><b>${opened}/${VENUES.length}</b><small>Courts</small></div><div><b>${career.fourBaggers || 0}</b><small>4-baggers</small></div><div><b>${career.wins + career.losses ? Math.round(career.wins / (career.wins + career.losses) * 100) : 0}%</b><small>Win rate</small></div></div>`;
+      <div class="pstats"><div><b>${bigNum(career.stars)}</b><small>Stars</small></div><div><b>${opened}/${VENUES.length}</b><small>Courts</small></div><div><b>${career.fourBaggers || 0}</b><small>4-baggers</small></div>
+        <div><b>${career.wins}</b><small>Wins</small></div><div><b>${career.losses}</b><small>Losses</small></div><div><b>${career.wins + career.losses ? Math.round(career.wins / (career.wins + career.losses) * 100) : 0}%</b><small>Win rate</small></div></div>`;
     $("handleSave").onclick = () => {
       const v = $("handleIn").value.trim();
       if (!setHandle(v)) { $("handleErr").textContent = "Use 3–16 letters, numbers, dots, dashes or underscores."; return; }
