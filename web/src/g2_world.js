@@ -1294,7 +1294,7 @@ function buildVenue(id) {
     for (let i = 0; i < 10; i++) { const p = person(g, SHORE_X + 8 + wr() * 22, 20 - wr() * 220, wr() * 6.28, 60 + i, wr() < 0.4 ? "cheer" : "stand"); venueAnim[venueAnim.length - 1].y0 = -2.9 - wr() * 0.6; p.position.y = -3; }
     // out on the water: the cruise ship far off, a sailboat nearer in and clear of it; gulls overhead
     cruiseShip(g, 760, -900, 300); // way out on the horizon
-    sailboat(g, 70, -190, 0xffffff, 0.4); sailboat(g, 120, -330, 0xff6a3d, 2.1);
+    sailboat(g, 200, -380, 0xffffff, 0.4); sailboat(g, 380, -640, 0xff6a3d, 2.1); // well offshore, clear of the ship from the court
     beachDistance(g);
     gulls(g, 6, 10, -60, 7);
     loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
