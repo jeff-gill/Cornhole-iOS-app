@@ -2134,13 +2134,13 @@ function scheduleLivesAlert() {
 // rarest (crown, astronaut, beret) at Court 8. About half are feminine picks. Ids stay a0..a24 so saves carry over.
 const AVATARS = [
   ["ballcap", "#cfe3ff", 0], ["flowercrown", "#ffe0ee", 0], ["beanie", "#d8f2d8", 0], ["sunhat", "#fff2c8", 0],
-  ["cowboy", "#ffe6c8", 1], ["bowband", "#ffd6e6", 1], ["bucket", "#e6eef8", 1],
+  ["cowboy", "#ffe6c8", 1], ["police", "#dbe6ff", 1], ["bucket", "#e6eef8", 1],
   ["catears", "#f0e6ff", 2], ["trucker", "#dbe6ff", 2], ["pinkberet", "#ffe0ec", 2],
-  ["football", "#e0ecff", 3], ["party", "#fff0c8", 3], ["hardhat", "#e6eef8", 3],
-  ["tiara", "#ece6ff", 4], ["chef", "#e6f2ff", 4], ["cowgirl", "#fff0f6", 4],
+  ["fireman", "#ffe0d8", 3], ["party", "#fff0c8", 3], ["hardhat", "#e6eef8", 3],
+  ["tiara", "#ece6ff", 4], ["chef", "#4a6fa5", 4], ["cowgirl", "#fff0f6", 4],
   ["tophat", "#e8e8f0", 5], ["propeller", "#fff6d8", 5], ["fedora", "#e6eef8", 5],
   ["viking", "#e6f0f8", 6], ["grad", "#fff2c8", 6], ["wizard", "#e6e0ff", 6],
-  ["crown", "#fff4c0", 7], ["astronaut", "#d6e4ff", 7], ["beret", "#ffe0e0", 7],
+  ["crown", "#fff4c0", 7], ["astronaut", "#3a5a8a", 7], ["beret", "#ffe0e0", 7],
 ].map(([name, bg, court], i) => ({ id: "a" + i, name, bg, court }));
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 const avatarOpen = a => venueUnlocked(a.court);
@@ -4251,7 +4251,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794102310";
+const BUILD_ID = "1794102705";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));

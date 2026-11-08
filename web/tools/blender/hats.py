@@ -214,7 +214,28 @@ def pinkberet():
     sphere((0.75, -0.5, 0.25), (0.14, 0.14, 0.14), WHITE, rough=0.1); render("pinkberet")
 
 
-HATS = [ball_cap, flowercrown, beanie, sunhat, cowboy, bowband, bucket, catears, trucker, pinkberet, football, party, hardhat, tiara,
+def fireman():
+    setup(); sphere((0, 0.1, 0.05), (0.95, 1.05, 0.85), RED, half=True, rough=0.3)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=1.0, depth=0.06, location=(0, 0.25, 0.08)); br = bpy.context.active_object; br.scale = (1.25, 1.55, 1)
+    bpy.ops.object.transform_apply(scale=True)
+    for v in br.data.vertices: v.co.z -= 0.35 * max(0.0, v.co.y - 0.4) ** 2  # the long brim slopes down at the back
+    fin(br, RED, 0.3)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.86, minor_radius=0.09, location=(0, 0.1, 0.05), rotation=(0, math.radians(90), 0), major_segments=48, minor_segments=12)
+    rg = bpy.context.active_object; bm = bmesh.new(); bm.from_mesh(rg.data)
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if v.co.x > 0.02], context="VERTS"); bm.to_mesh(rg.data); bm.free()  # keep only the arch over the top
+    rg.scale = (1, 1.22, 1); fin(rg, RED, 0.3)  # the ridge front to back
+    box((0, -0.88, 0.45), (0.62, 0.08, 0.7), GOLD, bevel=0.12, rough=0.25, metal=0.8)  # front shield
+    box((0, -0.93, 0.45), (0.36, 0.04, 0.4), BLACK, bevel=0.05); render("fireman")
+def police():
+    setup(); cyl((0, 0, 0.32), 0.9, 0.55, NAVY, r2=1.05, rough=0.6)  # the crown flares out to the top
+    s = cyl((0, -0.02, 0.62), 1.1, 0.12, NAVY, rough=0.6); s.scale = (1.0, 1.04, 1)
+    cyl((0, 0, 0.12), 0.92, 0.2, BLACK, rough=0.3)  # band
+    b = cyl((0, -0.95, 0.02), 0.7, 0.06, BLACK, rot=(math.radians(-28), 0, 0), rough=0.12); b.scale = (1.0, 0.8, 1)  # glossy peak
+    box((0, -1.02, 0.44), (0.42, 0.08, 0.46), GOLD, bevel=0.16, metal=0.85, rough=0.25)  # badge
+    cyl((0, -0.96, 0.24), 0.02, 1.4, GOLD, rot=(0, math.radians(90), 0), metal=0.85)  # gold cord above the peak
+    render("police")
+
+HATS = [ball_cap, flowercrown, beanie, sunhat, cowboy, police, bucket, catears, trucker, pinkberet, fireman, party, hardhat, tiara,
         chef, cowgirl, tophat, propeller, fedora, viking, grad, wizard, crown, astronaut, beret]
 only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 for f in HATS:
