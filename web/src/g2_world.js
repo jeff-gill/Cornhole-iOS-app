@@ -20,7 +20,7 @@ function canvasTex(w, h, paint, repeat) {
 
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xf2cfa0, 90, 260);
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1300);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 2200);
 // Glow: a soft bloom over bright things (string lights, fire, effects), then tone mapping.
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
@@ -1000,13 +1000,44 @@ function beachShack(g, x, z, rotY) {
   return s;
 }
 function sailboat(g, x, z, color, seed) {
-  const b = new THREE.Group();
-  const hull = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 0.6, 12, 10, 1, false, 0, Math.PI), std(0xffffff)); hull.rotation.set(Math.PI / 2, 0, Math.PI / 2); hull.scale.set(1, 1, 0.9); add(b, hull, 0, 0.9, 0, false);
-  add(b, new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 14, 5), std(0xdddddd)), 0, 8, 0, false);
-  const sail = new THREE.BufferGeometry(); sail.setAttribute("position", new THREE.Float32BufferAttribute([0, 2, 0.1, 0, 14.5, 0.1, 5.5, 2, 0.1], 3)); sail.computeVertexNormals();
+  const b = new THREE.Group(), white = std(0xffffff, { roughness: 0.4 });
+  // hull: a boat-shaped outline extruded upward, sitting up on the water
+  const outline = new THREE.Shape(); outline.moveTo(-6, -1.6); outline.lineTo(3, -1.7); outline.quadraticCurveTo(6.5, -1.2, 7.5, 0); outline.quadraticCurveTo(6.5, 1.2, 3, 1.7); outline.lineTo(-6, 1.6); outline.closePath();
+  const hull = new THREE.Mesh(new THREE.ExtrudeGeometry(outline, { depth: 2.2, bevelEnabled: true, bevelSize: 0.3, bevelThickness: 0.3, bevelSegments: 2 }), white);
+  hull.rotation.x = -Math.PI / 2; add(b, hull, 0, 0.1, 0, false);
+  add(b, box(13, 0.35, 3.6, std(0x1f3a6e)), 0.4, 0.45, 0, false); // waterline stripe
+  add(b, box(4, 1.2, 2.2, white), -1.5, 3.0, 0, false); // cabin
+  add(b, new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 18, 6), std(0xdddddd)), 0.5, 11.4, 0, false);
+  const sail = new THREE.BufferGeometry(); sail.setAttribute("position", new THREE.Float32BufferAttribute([0.6, 3.4, 0, 0.6, 20, 0, -6.5, 3.4, 0, 0.6, 18, 0, 0.6, 3.4, 0, 6.2, 3.0, 0], 3)); sail.computeVertexNormals();
   b.add(new THREE.Mesh(sail, std(color, { side: THREE.DoubleSide })));
   b.position.set(x, 0, z); b.rotation.y = seed; g.add(b);
-  venueAnim.push({ kind: "bob", o: b, phase: seed, y: 0 });
+  venueAnim.push({ kind: "bob", o: b, phase: seed, y: 0.3 });
+}
+// Far off down the beach: a pier, a green headland with a lighthouse, and hills across the end of the bay.
+function beachDistance(g) {
+  // the pier
+  const deck = photoMat("weathered_brown_planks", 2, 40, { fallback: 0x8a6a4a });
+  add(g, box(150, 1, 12, deck), SHORE_X + 70, 4.5, -430, false);
+  const piles = [], m = new THREE.Matrix4();
+  for (let x = SHORE_X; x <= SHORE_X + 145; x += 10) for (const dz of [-5.5, 5.5]) piles.push(m.clone().makeTranslation(x, 2, -430 + dz));
+  const pim = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.5, 0.5, 8, 6), std(0x5a4632), piles.length); piles.forEach((p, i) => pim.setMatrixAt(i, p)); g.add(pim);
+  for (const dz of [-6, 6]) add(g, box(150, 1.4, 0.3, std(0xf2efe6)), SHORE_X + 70, 6, -430 + dz, false);
+  add(g, box(20, 9, 14, lam(0xf2f2ea)), SHORE_X + 140, 9.5, -430, false);
+  add(g, new THREE.Mesh(new THREE.ConeGeometry(14, 6, 4), lam(0xd62828)).rotateY(Math.PI / 4), SHORE_X + 140, 17, -430, false);
+  for (let i = 0; i < 6; i++) { person(g, SHORE_X + 20 + i * 20, -430 + (i % 2 ? 3 : -3), i, 90 + i, "stand"); venueAnim[venueAnim.length - 1].y0 = 5; } // up on the pier
+  // the headland: soft green hills where the beach curves round, and a lighthouse on the point
+  const grass = lam(0x6f9a4e, { flatShading: true }), rock = lam(0x9a8a74, { flatShading: true });
+  const r = rng(77);
+  for (let k = 0; k < 16; k++) {
+    const x = -420 + k * 60 + r() * 30, z = -1150 - r() * 120 + (x > 100 ? -(x - 100) * 0.15 : 0), rad = 70 + r() * 60;
+    const hill = new THREE.Mesh(new THREE.IcosahedronGeometry(rad, 1), k > 9 ? rock : grass); hill.scale.set(1, 0.32 + r() * 0.2, 0.7); hill.position.set(x, -rad * 0.08, z); g.add(hill);
+  }
+  for (let k = 0; k < 5; k++) { const hill = new THREE.Mesh(new THREE.IcosahedronGeometry(60 + r() * 40, 1), grass); hill.scale.set(1, 0.4, 0.8); hill.position.set(330 + k * 70, -5, -1050 - k * 50); g.add(hill); }
+  const lh = new THREE.Group();
+  for (let i = 0; i < 6; i++) add(lh, new THREE.Mesh(new THREE.CylinderGeometry(4.6 - i * 0.35, 5 - i * 0.35, 8, 14), lam(i % 2 ? 0xd62828 : 0xffffff)), 0, 4 + i * 8, 0, false);
+  add(lh, new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 5, 12), new THREE.MeshBasicMaterial({ color: 0xfff6d0 })), 0, 50.5, 0, false);
+  add(lh, new THREE.Mesh(new THREE.ConeGeometry(3.8, 5, 12), lam(0x222222)), 0, 55.5, 0, false);
+  lh.position.set(360, 18, -1060); g.add(lh);
 }
 function gulls(g, n, cx, cz, seed) {
   const r = rng(seed), wing = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
@@ -1085,12 +1116,43 @@ function cruiseShip(g, x, z, len) {
   venueAnim.push({ kind: "bob", o: s, phase: 0.5, y: 0, slow: true });
 }
 
+// Beachside homes: 2-3 floors of pastel lap siding, white trim, a deck on every floor facing the sea, gabled roofs.
+function sidingTex() {
+  return canvasTex(256, 256, (c, w, h) => {
+    c.fillStyle = "#ffffff"; c.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 10) { c.fillStyle = "rgba(0,0,0,.10)"; c.fillRect(0, y + 8, w, 2); }
+    for (const x of [40, 152]) { // a window with white frame and shutters
+      c.fillStyle = "#ffffff"; c.fillRect(x - 6, 70, 76, 116);
+      const gr = c.createLinearGradient(0, 76, 0, 180); gr.addColorStop(0, "#a8d4ee"); gr.addColorStop(1, "#46708e");
+      c.fillStyle = gr; c.fillRect(x, 76, 64, 104); c.fillStyle = "#ffffff"; c.fillRect(x + 30, 76, 4, 104); c.fillRect(x, 126, 64, 4);
+    }
+  });
+}
+function beachHouse(g, x, z, w, floors, color, roofColor, tex) {
+  const h = floors * 11, d = 30, front = tex.clone(), side = tex.clone();
+  for (const [t, a] of [[front, w], [side, d]]) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(Math.max(1, Math.round(a / 13)), floors); t.needsUpdate = true; }
+  const tint = new THREE.Color(color), f = new THREE.MeshLambertMaterial({ map: front, color: tint }), sm = new THREE.MeshLambertMaterial({ map: side, color: tint }), trim = lam(0xffffff);
+  const hs = new THREE.Group();
+  add(hs, box(d, h, w, [f, sm, trim, trim, sm, sm]), 0, h / 2 + 1, 0, false);
+  add(hs, box(d + 1, 1, w + 1, trim), 0, 1, 0, false);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(d * 0.62, d * 0.62, w + 3, 3, 1), lam(roofColor, { flatShading: true }));
+  roof.rotation.set(Math.PI / 2, Math.PI / 2, 0); roof.rotation.order = "YXZ"; roof.rotation.set(Math.PI / 2, 0, 0); roof.scale.set(1, 1, 1);
+  const rg = new THREE.Group(); roof.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); roof.scale.set(1, 1, 0.55); rg.add(roof); rg.rotation.y = Math.PI / 2; rg.position.y = h + 1 + d * 0.62 * 0.3; hs.add(rg);
+  for (let k = 0; k < floors; k++) { // decks facing the water
+    const y = 1 + k * 11;
+    add(hs, box(8, 0.6, w - 4, lam(0xdcc7a4)), d / 2 + 4, y + (k ? 0 : 1.5), 0, false);
+    add(hs, box(0.3, 3.4, w - 4, trim), d / 2 + 7.8, y + 2 + (k ? 0 : 1.5), 0, false);
+    if (k === 0) for (const sz of [-1, 1]) add(hs, box(0.6, 2.5, 0.6, trim), d / 2 + 7.6, 1.2, sz * (w / 2 - 2.5), false);
+  }
+  hs.position.set(x, 0, z); g.add(hs);
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
   tailgate: { top: [0.10, 0.38, 0.82], mid: [0.48, 0.70, 0.94], horizon: [0.84, 0.91, 0.98], sunGlow: 0.6, night: 0, fog: [0xd4e3f2, 260, 690],
     hemi: [0xe6f2ff, 0x5a5c58, 1.3], sun: [0xfff4e2, 3.1, [-20, 38, -6]], exposure: 1.02, dust: 0xbfbcb4 },
-  beach: { top: [0.10, 0.48, 0.88], mid: [0.45, 0.78, 0.98], horizon: [0.88, 0.95, 1.0], sunGlow: 0.8, night: 0, fog: [0xcfeaff, 120, 400],
+  beach: { top: [0.10, 0.48, 0.88], mid: [0.45, 0.78, 0.98], horizon: [0.88, 0.95, 1.0], sunGlow: 0.8, night: 0, fog: [0xd6e6f2, 350, 1900],
     hemi: [0xe6f6ff, 0xd8c08a, 1.35], sun: [0xfff4dc, 3.3, [-14, 34, -6]], exposure: 1.0, dust: 0xf0dca8 },
   brewery: { top: [0.02, 0.03, 0.10], mid: [0.06, 0.08, 0.22], horizon: [0.25, 0.18, 0.30], sunGlow: 0, night: 1, fog: [0x1a1530, 60, 200],
     hemi: [0x5466a8, 0x2a1a12, 0.45], sun: [0xffcf8a, 1.5, [-8, 30, -16]], exposure: 1.0, dust: 0xc8a888 },
@@ -1195,13 +1257,18 @@ function buildVenue(id) {
     // the promenade, palms where the sand ends, and the hotels behind them
     const walk = new THREE.Mesh(new THREE.PlaneGeometry(10, 1400), lam(0xd8cdb8)); walk.rotation.x = -Math.PI / 2; walk.position.set(-52, 0.06, -500); g.add(walk);
     const pr = rng(31), kinds = ["palm_a", "palm_b", "palm_c"];
-    for (let z = 60; z > -620; z -= 13 + pr() * 3) for (const px of [-45, -59]) {
+    for (let z = 60; z > -1000; z -= 13 + pr() * 3) for (const px of [-45, -59]) {
       const kind = kinds[Math.floor(pr() * 3)], rot = pr() * 6.28, sc = 0.95 + pr() * 0.3, pz = z + (px < -50 ? 6 : 0);
       loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(px, 0, pz); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); });
     }
-    const ht = hotelTex(), HCOL = [0xffffff, 0xffe2c8, 0xd8f0ec, 0xfff1c4, 0xf6d6d6, 0xe2ecff];
+    // beach homes along the front, with a resort tower every so often
+    const ht = hotelTex(), st = sidingTex(), HCOL = [0xffffff, 0xffe2c8, 0xd8f0ec, 0xfff1c4, 0xf6d6d6, 0xe2ecff];
+    const HOUSE = [0x9fd8e8, 0xffd7a8, 0xc8e8c0, 0xfff0a8, 0xf4c2c8, 0xd6d0f4, 0xffffff, 0xa8c8f0], ROOF = [0x5a6470, 0x8a4a3a, 0x3f5f7a, 0x6a6a60];
     let hz = 70;
-    for (let i = 0; hz > -680; i++) { const w = 46 + pr() * 34, h = 60 + pr() * 90, d = 34 + pr() * 14; hotel(g, -92 - pr() * 12, hz - w / 2, w, h, d, HCOL[i % HCOL.length], ht); hz -= w + 10 + pr() * 14; }
+    for (let i = 0; hz > -1000; i++) {
+      if (i % 6 === 5) { const w = 50 + pr() * 30, h = 70 + pr() * 70, d = 38; hotel(g, -100 - pr() * 8, hz - w / 2, w, h, d, HCOL[i % HCOL.length], ht); hz -= w + 12; }
+      else { const w = 26 + pr() * 10; beachHouse(g, -84, hz - w / 2, w, 2 + Math.floor(pr() * 2), HOUSE[Math.floor(pr() * HOUSE.length)], ROOF[Math.floor(pr() * ROOF.length)], st); hz -= w + 7 + pr() * 5; }
+    }
     // rows of umbrellas with a pair of loungers each, facing the water (kept clear of the court and the shack)
     const SETS = [["#ff4b3a", "#ffffff"], ["#2f86ff", "#ffffff"], ["#ffc93a", "#ff6a3d"], ["#2fbf71", "#ffffff"]];
     const rowsAt = [[-15, 1], [-27, 2], [-38, 3]], ur = rng(71); // the water side stays open so you can watch the waves
@@ -1218,24 +1285,23 @@ function buildVenue(id) {
     beachShack(g, -31, -40, Math.PI / 2);
     surfboard(g, -24, -55, 1.2, 0xff6a3d, 0xffffff); surfboard(g, -23, -57.5, 1.5, 0x2fd0c8, 0xffc93a);
     lifeguardTower(g, 12, -95, Math.PI / 2); lifeguardTower(g, 11, -330, Math.PI / 2); // one close by, one down the beach
-    volleyNet(g, -24, 24, 0);
     cooler(g, 5, -22, 0.5, 0x00b8c8);
     towel(g, 8, -6, 0.1, ["#ff7ac0", "#ffffff"]); towel(g, -9, -14, -0.2, ["#2f86ff", "#ffffff", "#ffc93a"]);
     // people: at the shack, playing volleyball, sunbathing, watching the game and out in the waves
     crowd(g, -21, -36, 4, 2.6, 41, -31, -40);
-    person(g, -30, 20, 0, 43, "cheer"); person(g, -18, 19, 0.2, 44, "stand"); person(g, -28, 29, Math.PI, 50, "stand"); person(g, -19, 30, Math.PI - 0.2, 51, "cheer");
     person(g, 9, -36, -1.2, 45, "stand"); person(g, -10, -42, 1.0, 46, "cheer"); person(g, 10, 10, 2.6, 47, "drink"); person(g, 13, -80, 1.6, 48, "stand");
     const wr = rng(53);
     for (let i = 0; i < 10; i++) { const p = person(g, SHORE_X + 8 + wr() * 22, 20 - wr() * 220, wr() * 6.28, 60 + i, wr() < 0.4 ? "cheer" : "stand"); venueAnim[venueAnim.length - 1].y0 = -2.9 - wr() * 0.6; p.position.y = -3; }
     // out on the water: the cruise ship far off, a sailboat nearer in and clear of it; gulls overhead
-    cruiseShip(g, 380, -620, 230);
-    sailboat(g, 70, -250, 0xffffff, 0.4); sailboat(g, 140, -120, 0xff6a3d, 2.1);
+    cruiseShip(g, 760, -900, 300); // way out on the horizon
+    sailboat(g, 70, -190, 0xffffff, 0.4); sailboat(g, 120, -330, 0xff6a3d, 2.1);
+    beachDistance(g);
     gulls(g, 6, 10, -60, 7);
     loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
       if (!sky || venueId !== "beach") return;
       scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
       hemi.intensity = 0.9; renderer.toneMappingExposure = 1.05;
-      scene.fog.color.setHex(0xd6e6f2); scene.fog.near = 300; scene.fog.far = 1100;
+      scene.fog.color.setHex(0xd6e6f2); scene.fog.near = 350; scene.fog.far = 1900;
     });
   } else if (id === "brewery") {
     setGround(g, "brick", 8);
