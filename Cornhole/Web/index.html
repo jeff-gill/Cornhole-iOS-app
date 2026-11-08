@@ -2131,16 +2131,16 @@ function scheduleLivesAlert() {
 
 // ── Avatars: 4 to start, 2 more with every court you open.
 // Headgear avatars made in Blender (web/tools/blender/hats.py): 4 to start, 3 more with each court you open, the
-// rarest (crown, astronaut, beret) at Court 8. About half are feminine picks. Ids stay a0..a24 so saves carry over.
+// rarest (crown, astronaut, beret) at Court 8. Each tile colour avoids the hat's own colours and their opposites. Ids stay a0..a24 so saves carry over.
 const AVATARS = [
-  ["ballcap", "#cfe3ff", 0], ["devil", "#ffe0d8", 0], ["beanie", "#d8f2d8", 0], ["sunhat", "#fff2c8", 0],
-  ["cowboy", "#ffe6c8", 1], ["police", "#dbe6ff", 1], ["bucket", "#e6eef8", 1],
-  ["catears", "#f0e6ff", 2], ["trucker", "#dbe6ff", 2], ["pinkberet", "#ffe0ec", 2],
-  ["fireman", "#ffe0d8", 3], ["party", "#fff0c8", 3], ["hardhat", "#e6eef8", 3],
-  ["tiara", "#ece6ff", 4], ["chef", "#4a6fa5", 4], ["cowgirl", "#fff0f6", 4],
-  ["tophat", "#e8e8f0", 5], ["propeller", "#fff6d8", 5], ["fedora", "#e6eef8", 5],
-  ["viking", "#e6f0f8", 6], ["grad", "#fff2c8", 6], ["wizard", "#e6e0ff", 6],
-  ["crown", "#fff4c0", 7], ["astronaut", "#3a5a8a", 7], ["beret", "#ffe0e0", 7],
+  ["ballcap", "#ffe38a", 0], ["devil", "#d6c8f5", 0], ["beanie", "#ffd2b0", 0], ["sunhat", "#c9d4ff", 0],
+  ["cowboy", "#c6efd6", 1], ["police", "#c6efd6", 1], ["bucket", "#d6c8f5", 1],
+  ["catears", "#ffe38a", 2], ["trucker", "#ffe38a", 2], ["pinkberet", "#bfe3ff", 2],
+  ["fireman", "#bfe3ff", 3], ["party", "#bfe3ff", 3], ["hardhat", "#ffc2b0", 3],
+  ["tiara", "#ffe38a", 4], ["chef", "#6f8fb8", 4], ["cowgirl", "#d6c8f5", 4],
+  ["tophat", "#ffe38a", 5], ["propeller", "#d6c8f5", 5], ["fedora", "#ffd2b0", 5],
+  ["viking", "#ffb8a8", 6], ["grad", "#bfe3ff", 6], ["wizard", "#c6efd6", 6],
+  ["crown", "#ffd2b0", 7], ["astronaut", "#e98a74", 7], ["beret", "#ffe38a", 7],
 ].map(([name, bg, court], i) => ({ id: "a" + i, name, bg, court }));
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 const avatarOpen = a => venueUnlocked(a.court);
@@ -4251,7 +4251,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794102889";
+const BUILD_ID = "1794103033";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
