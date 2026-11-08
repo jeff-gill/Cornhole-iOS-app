@@ -1083,21 +1083,21 @@ function kitRow(g, parts, spots) {
     im.castShadow = im.receiveShadow = true; g.add(im);
   }
 }
-const T = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z);
+const at = (x, y, z) => new THREE.Matrix4().makeTranslation(x, y, z); // (not "T": that's the physics settings)
 function umbrellaRow(g, spots, colors) {
   kitRow(g, [
-    [new THREE.CylinderGeometry(0.09, 0.09, 8.4, 6), std(0xf2f2f2, { metalness: 0.3 }), T(0, 4.2, 0)],
-    [new THREE.ConeGeometry(4.6, 1.5, 16, 1, true), std(0xffffff, { map: stripeTex(colors, 16), side: THREE.DoubleSide, roughness: 0.85 }), T(0, 8.2, 0)],
+    [new THREE.CylinderGeometry(0.09, 0.09, 8.4, 6), std(0xf2f2f2, { metalness: 0.3 }), at(0, 4.2, 0)],
+    [new THREE.ConeGeometry(4.6, 1.5, 16, 1, true), std(0xffffff, { map: stripeTex(colors, 16), side: THREE.DoubleSide, roughness: 0.85 }), at(0, 8.2, 0)],
   ], spots);
 }
 function loungerRow(g, spots, color) { // facing +z before rotY
   const cloth = std(color, { roughness: 0.9 }), frame = std(0xf4f4f4, { metalness: 0.4, roughness: 0.4 });
-  const back = new THREE.Matrix4().makeRotationX(0.75).premultiply(T(0, 2.0, -2.0));
+  const back = new THREE.Matrix4().makeRotationX(0.75).premultiply(at(0, 2.0, -2.0));
   kitRow(g, [
-    [new THREE.BoxGeometry(2.4, 0.2, 4.4), cloth, T(0, 1.2, 0.9)],
+    [new THREE.BoxGeometry(2.4, 0.2, 4.4), cloth, at(0, 1.2, 0.9)],
     [new THREE.BoxGeometry(2.4, 0.2, 2.6), cloth, back],
-    [new THREE.BoxGeometry(2.2, 1.1, 0.12), frame, T(0, 0.6, 2.9)],
-    [new THREE.BoxGeometry(2.2, 1.1, 0.12), frame, T(0, 0.6, -1.4)],
+    [new THREE.BoxGeometry(2.2, 1.1, 0.12), frame, at(0, 0.6, 2.9)],
+    [new THREE.BoxGeometry(2.2, 1.1, 0.12), frame, at(0, 0.6, -1.4)],
   ], spots);
 }
 // A big cruise ship, broadside, far out on the water.
