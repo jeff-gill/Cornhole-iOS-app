@@ -140,7 +140,14 @@ function renderScore() {
     : `<b>${esc(S.opponent.name)}</b>⭐ ${bigNum(S.opponent.stars || 0)}`;
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
-  renderInOn();
+  renderInOn(); renderBoardInfo();
+}
+// The board in play and its traits, while you pick your spots (hidden once you start the throw).
+function renderBoardInfo() {
+  const el = $("boardInfo"), show = S.board && S.phase === "aiming" && !isCPU(S.player) && !isRemote(S.player);
+  el.hidden = !show; if (!show) return;
+  const d = boardById(S.board);
+  el.innerHTML = `<b>🪵 ${esc(d.name)}${S.boardMine ? " (yours)" : ""}</b>Surface <i>${SURF_NAMES[d.surf || 0]}</i> · Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i>`;
 }
 // The bottom-corner tables: how many bags each side has in the hole and on the board this inning.
 function renderInOn() {
@@ -371,7 +378,7 @@ function dismissScorecard(dx, dy) {
 let hubVenue = career.venue || 0;
 function openHub() {
   $("timeupMsg").hidden = true;
-  $("io0").hidden = $("io1").hidden = true;
+  $("io0").hidden = $("io1").hidden = true; $("boardInfo").hidden = true;
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
@@ -396,7 +403,7 @@ function renderHub() {
   $("coins").textContent = bigNum(career.coins);
   $("stars").textContent = bigNum(career.stars);
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
-  buildVenue(v.id); setBoardDesign(career.board);
+  buildVenue(v.id); setBoardDesign(career.board); // the clubhouse shows your own board
   venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
   const prev = hubVenue ? VENUES[hubVenue - 1] : null;
   const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? (VENUES[hubVenue + 1].soon ? "Court " + (hubVenue + 2) + " coming soon" : "to open Court " + (hubVenue + 2)) : "to finish the tour"}</span></div>`;
@@ -758,6 +765,7 @@ function step(now) {
   updateAimRig(dt);
   updateOnline(dt);
   tickPausedClock(dt);
+  tickBagPick(dt);
   // The between-innings card moves on by itself after a few seconds (in live play the other player is waiting).
   if (S.phase === "inning" && !$("inningSheet").hidden) {
     const before = Math.ceil(INNING_CARD_SECS - S.innT); S.innT += dt;

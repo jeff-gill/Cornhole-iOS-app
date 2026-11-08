@@ -53,7 +53,7 @@ const BAGS = [
   { id: "backyard", name: "Backyard Pro", price: 100, acc: 2, ctrl: 1, spin: 1, feel: "neutral", c: "#ff8a1f", pattern: "stripe" },
   { id: "picnic", name: "Picnic Plaid", price: 220, acc: 1, ctrl: 2, spin: 2, feel: "sticky", c: "#d62828", pattern: "plaid" },
   { id: "lemonade", name: "Lemonade", price: 460, acc: 2, ctrl: 2, spin: 1, feel: "neutral", c: "#f2c230", pattern: "dots" },
-  { id: "camo", name: "Camo Crew", price: 1000, acc: 2, ctrl: 2, spin: 2, feel: "sticky", c: "#5b7a3a", pattern: "camo" },
+  { id: "camo", surf: -1, bounce: -1, name: "Camo Crew", price: 1000, acc: 2, ctrl: 2, spin: 2, feel: "sticky", c: "#5b7a3a", pattern: "camo" },
   { id: "skychev", name: "Sky Chevron", price: 2200, acc: 2, ctrl: 3, spin: 2, feel: "neutral", c: "#2f86ff", pattern: "chevron" },
   { id: "zigzag", name: "Zigzag", price: 4600, acc: 3, ctrl: 2, spin: 2, feel: "fast", c: "#0fb5a5", pattern: "zigzag" },
   { id: "twotone", name: "Two-Tone", price: 10000, acc: 3, ctrl: 3, spin: 2, feel: "neutral", c: "#8a3ffc", pattern: "split" },
@@ -121,23 +121,27 @@ const RIVAL_BAGS = [
   { id: "rival3", name: "Teal Twist", acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#0f9fb5", pattern: "swirl" },
 ];
 // Twenty coin boards (looks only), on a similar but gentler climb, plus the exclusive Store boards.
+// Board traits (different, not better): surf -2 sticky .. +2 slick (how far bags slide), bounce -1 soft .. +1 lively.
+const SURF_NAMES = { "-2": "Sticky", "-1": "Grippy", "0": "Normal", "1": "Fast", "2": "Slick" }, BOUNCE_NAMES = { "-1": "Soft", "0": "Normal", "1": "Lively" };
+const BASE_R = 0.75;
+function applyBoardTraits(d) { T.mu = venue().mu * (1 - 0.09 * (d.surf || 0)); T.rBase = BASE_R + 0.06 * (d.bounce || 0); }
 const BOARDS = [
-  { id: "classic", name: "Classic Navy", price: 0, paint: "band", a: "#1f3a6e", b: "#ffc93a" },
-  { id: "redband", name: "Red Band", price: 80, paint: "band", a: "#c8102e", b: "#ffffff" },
-  { id: "lake", name: "Lake Blue", price: 180, paint: "fade", a: "#2f86ff", b: "#0fb5a5" },
-  { id: "polka", name: "Polka Party", price: 380, paint: "polka", a: "#ff2e88", b: "#ffffff" },
-  { id: "sunburst", name: "Sunburst", price: 800, paint: "sunburst", a: "#ff8a1f", b: "#ffd84a" },
-  { id: "stripes", name: "Stars & Stripes", price: 1700, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
-  { id: "diag", name: "Diagonal Rush", price: 3600, paint: "diag", a: "#2f86ff", b: "#ffffff" },
-  { id: "plaid", name: "Picnic Plaid", price: 8000, paint: "plaid", a: "#c8102e", b: "#1f3a6e" },
-  { id: "sunset", name: "Sunset Fade", price: 17000, paint: "fade", a: "#ff7a3a", b: "#a83279" },
+  { id: "classic", surf: 0, bounce: 0, name: "Classic Navy", price: 0, paint: "band", a: "#1f3a6e", b: "#ffc93a" },
+  { id: "redband", surf: 1, bounce: 0, name: "Red Band", price: 80, paint: "band", a: "#c8102e", b: "#ffffff" },
+  { id: "lake", surf: -1, bounce: 1, name: "Lake Blue", price: 180, paint: "fade", a: "#2f86ff", b: "#0fb5a5" },
+  { id: "polka", surf: 0, bounce: -1, name: "Polka Party", price: 380, paint: "polka", a: "#ff2e88", b: "#ffffff" },
+  { id: "sunburst", surf: 2, bounce: -1, name: "Sunburst", price: 800, paint: "sunburst", a: "#ff8a1f", b: "#ffd84a" },
+  { id: "stripes", surf: -1, bounce: 0, name: "Stars & Stripes", price: 1700, paint: "stripes", a: "#c8102e", b: "#ffffff", c: "#1f3a6e" },
+  { id: "diag", surf: 1, bounce: 1, name: "Diagonal Rush", price: 3600, paint: "diag", a: "#2f86ff", b: "#ffffff" },
+  { id: "plaid", surf: -2, bounce: 0, name: "Picnic Plaid", price: 8000, paint: "plaid", a: "#c8102e", b: "#1f3a6e" },
+  { id: "sunset", surf: 0, bounce: 1, name: "Sunset Fade", price: 17000, paint: "fade", a: "#ff7a3a", b: "#a83279" },
   { id: "camo", name: "Camo", price: 36000, paint: "camo", a: "#5b7a3a", b: "#3d5229" },
-  { id: "checker", name: "Checkered Flag", price: 80000, paint: "checker", a: "#111111", b: "#ffffff" },
-  { id: "chev", name: "Chevron Charge", price: 170000, paint: "chev", a: "#ffc93a", b: "#1f3a6e" },
-  { id: "waves", name: "Ocean Waves", price: 360000, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
-  { id: "target", name: "Bullseye", price: 800000, paint: "target", a: "#e8392b", b: "#ffffff" },
-  { id: "split", name: "Split Decision", price: 1700000, paint: "split", a: "#8a3ffc", b: "#ffc93a" },
-  { id: "retro", name: "Retro Rays", price: 3600000, paint: "sunburst", a: "#a83279", b: "#ff7a3a" },
+  { id: "checker", surf: 2, bounce: 0, name: "Checkered Flag", price: 80000, paint: "checker", a: "#111111", b: "#ffffff" },
+  { id: "chev", surf: 1, bounce: -1, name: "Chevron Charge", price: 170000, paint: "chev", a: "#ffc93a", b: "#1f3a6e" },
+  { id: "waves", surf: -2, bounce: 1, name: "Ocean Waves", price: 360000, paint: "waves", a: "#0b74c9", b: "#7fd8ff" },
+  { id: "target", surf: 0, bounce: -1, name: "Bullseye", price: 800000, paint: "target", a: "#e8392b", b: "#ffffff" },
+  { id: "split", surf: 1, bounce: 1, name: "Split Decision", price: 1700000, paint: "split", a: "#8a3ffc", b: "#ffc93a" },
+  { id: "retro", surf: -1, bounce: 1, name: "Retro Rays", price: 3600000, paint: "sunburst", a: "#a83279", b: "#ff7a3a" },
   { id: "midband", name: "Midnight Band", price: 8000000, paint: "band", a: "#0d1430", b: "#9aa4b2" },
   { id: "tropic", name: "Tropical", price: 17000000, paint: "waves", a: "#ff2e88", b: "#ffd84a" },
   { id: "racing", name: "Racing Checker", price: 36000000, paint: "checker", a: "#c8102e", b: "#111111" },
@@ -281,6 +285,49 @@ function setGear(pl) {
   CUR.slideMul = FEEL[g.feel].slide;
 }
 
+// ───────────────────────── Board check: before the first throw, the board in play and its traits, and 10 seconds for
+// each player to pick the bag that suits it (the throw clock doesn't start until this is done).
+const BAG_PICK_SECS = 10;
+function bagFit(bag, board) { // a warning when the bag and board pull the same way
+  const f = bag.feel, s = board.surf || 0;
+  if (f === "fast" && s > 0) return "⚠️ Fast bag on a fast board: it'll slide a long way.";
+  if (f === "sticky" && s < 0) return "⚠️ Sticky bag on a grippy board: it'll stop short.";
+  if (f === "fast" && s < 0 || f === "sticky" && s > 0) return "👍 Good match for this board.";
+  return "";
+}
+function openBagPick() {
+  S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
+  renderBagPick(); $("bagPick").hidden = false;
+}
+function renderBagPick() {
+  const d = boardById(S.board), cur = S.gear[0];
+  const tex = document.createElement("canvas"); tex.width = 96; tex.height = 192; paintBoard(tex.getContext("2d"), 96, 192, d);
+  $("bagPickBody").innerHTML = `<h2>Board check</h2>
+    <div class="bpboard"><img src="${tex.toDataURL()}" alt=""><div><b>${esc(d.name)}</b><small>${S.boardMine ? "Your board" : S.online ? esc(S.names[1]) + "'s board" : "Your opponent's board"}</small>
+      <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i></div></div></div>
+    <div class="label">Pick your bag</div>
+    <div class="bplist">${career.bags.map(id => { const b = bagById(id); return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}"><canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label}</small></button>`; }).join("")}</div>
+    <div class="bpfit">${bagFit(cur, d)}</div>
+    <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
+    <button class="btn green" id="bagPickGo">${S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
+  for (const c of $("bagPickBody").querySelectorAll(".bpbag")) {
+    paintBag(c.querySelector("canvas").getContext("2d"), 48, 48, bagById(c.dataset.bag));
+    c.onclick = () => { S.gear[0] = bagById(c.dataset.bag); career.bag = c.dataset.bag; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: c.dataset.bag }); renderBagPick(); };
+  }
+  $("bagPickGo").onclick = () => { if (!S.online) closeBagPick(); else { S.pickReady = true; $("bagPickGo").textContent = "WAITING…"; } };
+}
+function tickBagPick(dt) {
+  if (S.phase !== "bagpick") return;
+  const before = Math.ceil(S.pickT); S.pickT -= dt;
+  const bar = document.querySelector("#bagPick .bptimer i"); if (bar) bar.style.width = Math.max(0, S.pickT / BAG_PICK_SECS * 100) + "%";
+  if (Math.ceil(S.pickT) !== before && !S.pickReady) { const b = $("bagPickGo"); if (b) b.textContent = `${S.online ? "READY" : "PLAY"} · ${Math.max(0, Math.ceil(S.pickT))}`; }
+  if (S.pickT <= 0) closeBagPick();
+}
+function closeBagPick() {
+  if (S.phase !== "bagpick") return;
+  $("bagPick").hidden = true; S.pickReady = false; beginTurn();
+}
+
 // ───────────────────────── Match flow
 function newWind() {
   const [lo, hi] = venue().wind;
@@ -342,15 +389,21 @@ function startMatch(kind, vi, online = null, pick = null) {
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
+  // whose board: yours or your opponent's, at random (live matches agree through the shared seed)
+  const oppBoard = online ? (BOARDS.some(b => b.id === online.board) ? online.board : "classic")
+    : kind === "career" ? BOARDS[Math.floor(Math.random() * Math.min(BOARDS.length, 3 + vi * 2))].id : career.board;
+  const hostBoard = online && online.host ? career.board : oppBoard, guestBoard = online && online.host ? oppBoard : career.board;
+  S.board = online ? (online.seed & 1 ? hostBoard : guestBoard) : Math.random() < 0.5 ? career.board : oppBoard;
+  S.boardMine = S.board === career.board;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
-  setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
+  setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(S.board); applyBoardTraits(boardById(S.board)); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
   showBanner(`${S.kind === "career" && S.leader === 0 ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
   S.introT = 0;
-  beginTurn();
+  if (kind === "career") openBagPick(); else beginTurn();
   const side = SIDES[0] < 0 ? "LEFT" : "RIGHT";
   setTimeout(() => { if (S.phase !== "hub") showBanner(S.kind === "career" ? `You're in the ${side} box` : `Player 1: ${side} box`, 0); }, 1700);
 }

@@ -133,6 +133,14 @@ Rolls are skewed toward the low end of each range, so a rare can is usually good
 
 The odds are not shown in the game. The App Store requires the odds for paid loot boxes to be shown before purchase. Before submitting, either show the odds next to the paid cans in the Store, or remove the paid cans.
 
+### Boards in play
+- Each match is played on either your board or your opponent's, picked at random (live matches agree through the
+  shared seed). Every board has two traits, different rather than better: surface (Sticky, Grippy, Normal, Fast, Slick:
+  how far bags slide) and bounce (Soft, Normal, Lively).
+- Before the first throw, a Board check splash shows the board and gives each player 10 seconds to pick a bag (the
+  throw clock hasn't started yet). It warns about pairings that pull the same way, like a fast bag on a fast board.
+- While you pick your finish and landing spots, a small card shows the board and its traits.
+
 ### Glitch protection
 - A career match is remembered from the buy-in until it ends. If the game freezes (a bag that never lands, a throw
   clock that stops counting, a CPU that never throws, or the game loop dying) the watchdog stops the match and refunds
