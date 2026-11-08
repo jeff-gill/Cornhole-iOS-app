@@ -369,8 +369,12 @@ const METERS = [
 const MAX_DIR = rad(6), MAX_POW = 0.14, MAX_HT = rad(9);
 const needleAt = (time, lv) => -Math.cos(2 * Math.PI * lv.freq * time);
 const eff = (e, lv) => Math.abs(e) <= lv.zone ? 0 : clamp(e, -1, 1);
+// Even a perfect release isn't a machine's: every throw wanders a little (about 2 inches at the Backyard, more at
+// later courts), so a "perfect" airmail drops in about half the time rather than every time.
+const SCATTER_AZ = 0.39 * Math.PI / 180, SCATTER_SPEED = 0.0035;
 function applyErrors(e, ideal, lv) {
-  return { ...ideal, az: ideal.az + eff(e.dir, lv) * MAX_DIR, speed: ideal.speed * (1 + eff(e.pow, lv) * MAX_POW),
+  const sc = lv.scatter || 0, ga = gaussRand(Math.random) * SCATTER_AZ * sc, gs = gaussRand(Math.random) * SCATTER_SPEED * sc;
+  return { ...ideal, az: ideal.az + eff(e.dir, lv) * MAX_DIR + ga, speed: ideal.speed * (1 + eff(e.pow, lv) * MAX_POW + gs),
     spin: clamp((ideal.spin || 0) + eff(e.dir, lv) * 0.35, -1, 1),
     el: clamp(ideal.el + eff(e.ht, lv) * MAX_HT, rad(4), rad(78)) };
 }

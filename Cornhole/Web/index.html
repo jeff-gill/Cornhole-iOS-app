@@ -1147,8 +1147,12 @@ const METERS = [
 const MAX_DIR = rad(6), MAX_POW = 0.14, MAX_HT = rad(9);
 const needleAt = (time, lv) => -Math.cos(2 * Math.PI * lv.freq * time);
 const eff = (e, lv) => Math.abs(e) <= lv.zone ? 0 : clamp(e, -1, 1);
+// Even a perfect release isn't a machine's: every throw wanders a little (about 2 inches at the Backyard, more at
+// later courts), so a "perfect" airmail drops in about half the time rather than every time.
+const SCATTER_AZ = 0.39 * Math.PI / 180, SCATTER_SPEED = 0.0035;
 function applyErrors(e, ideal, lv) {
-  return { ...ideal, az: ideal.az + eff(e.dir, lv) * MAX_DIR, speed: ideal.speed * (1 + eff(e.pow, lv) * MAX_POW),
+  const sc = lv.scatter || 0, ga = gaussRand(Math.random) * SCATTER_AZ * sc, gs = gaussRand(Math.random) * SCATTER_SPEED * sc;
+  return { ...ideal, az: ideal.az + eff(e.dir, lv) * MAX_DIR + ga, speed: ideal.speed * (1 + eff(e.pow, lv) * MAX_POW + gs),
     spin: clamp((ideal.spin || 0) + eff(e.dir, lv) * 0.35, -1, 1),
     el: clamp(ideal.el + eff(e.ht, lv) * MAX_HT, rad(4), rad(78)) };
 }
@@ -1454,6 +1458,7 @@ function lv() {
     wobble: v.wob * (1 - 0.15 * (g.ctrl - 1)),
     cpu: S.opponent ? S.opponent.skill : 0.25,
     preview: true,
+    scatter: 1 + VENUES.indexOf(v) * 0.06, // the natural wander on every throw (see applyErrors)
   };
 }
 function setGear(pl) {
@@ -5344,7 +5349,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794152635";
+const BUILD_ID = "1794152929";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));

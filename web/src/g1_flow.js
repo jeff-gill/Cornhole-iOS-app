@@ -272,6 +272,7 @@ function lv() {
     wobble: v.wob * (1 - 0.15 * (g.ctrl - 1)),
     cpu: S.opponent ? S.opponent.skill : 0.25,
     preview: true,
+    scatter: 1 + VENUES.indexOf(v) * 0.06, // the natural wander on every throw (see applyErrors)
   };
 }
 function setGear(pl) {
