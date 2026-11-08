@@ -277,8 +277,8 @@ function setGear(pl) {
 // ───────────────────────── Match flow
 function newWind() {
   const [lo, hi] = venue().wind;
-  const r = S.online ? rng(S.online.seed + S.inning * 7919) : Math.random; // online: both phones get the same wind
-  S.wind = { mph: Math.round(lo + r() * (hi - lo)), dir: r() * Math.PI * 2 }; // steady for the whole inning, any direction
+  const r = S.online ? rng(S.online.seed + 7919) : Math.random; // online: both phones get the same wind
+  S.wind = { mph: Math.round(lo + r() * (hi - lo)), dir: r() * Math.PI * 2 }; // set once per match and steady for all of it, any direction
   if (S.practice && S.practice.wind != null) S.wind.mph = S.practice.wind; // practice: the wind speed you picked
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
@@ -306,7 +306,10 @@ function startMatch(kind, vi, online = null, pick = null) {
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!useLife()) return;
-    if (!houseCovers(vi)) career.coins -= v.fee;
+    const fee = houseCovers(vi) ? 0 : v.fee;
+    career.coins -= fee;
+    // Remember the match until it ends properly, so a crash or a quit app can be refunded (see refundMatch).
+    career.activeMatch = { vi, fee, at: Date.now() };
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
       S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
@@ -329,7 +332,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
-  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
+  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
@@ -457,6 +460,7 @@ function launchBag(actual) {
 // Out of time: that bag is lost.
 function timeUp() {
   S.clock = null; S.pull.active = false; S.feedback = [];
+  (S.lost ||= [[], []])[S.player].push(S.thrown[S.player]); // this bag shows as a red X in the player's tile
   S.thrown[S.player]++; S.settleT = -1.7; S.acc = 0; S.phase = "flight"; S.lastId = null; // hold 3 s before the next throw
   const m = $("timeupMsg"); m.hidden = false; clearTimeout(timeUp.t); timeUp.t = setTimeout(() => { m.hidden = true; }, 3000);
   sfx.thud(); haptic("thud");
@@ -485,6 +489,7 @@ function finishInning() {
   ui();
 }
 function finishMatch() {
+  career.activeMatch = null; // it ended properly: nothing to refund
   if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
   const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
@@ -504,8 +509,8 @@ function finishMatch() {
 // A court's stars stay between 0 and its max.
 function addCourtStars(vi, n) { const v = VENUES[vi]; career.courtStars[v.id] = clamp(courtStars(vi) + n, 0, v.max); updateUnlocks(); }
 function nextInning() {
-  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = soloThrown(); S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
-  newWind(); venueAmbience(); beginTurn();
+  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = soloThrown(); S.lost = [[], []]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
+  venueAmbience(); beginTurn(); // same wind as the rest of the match
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.7; renderBanner(); }
 function checkFourBagger() {

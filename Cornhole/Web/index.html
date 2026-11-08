@@ -66,6 +66,10 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card .dots { display: flex; gap: 3px; margin-top: 3px; }
 .card .dots i { width: 9px; height: 9px; border-radius: 3px; background: rgba(0,0,0,.25); }
 .card .dots i.on { background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.card .dots i.x { background: #fff; position: relative; box-shadow: 0 1px 0 rgba(0,0,0,.3); } /* a bag lost to the throw clock */
+.card .dots i.x::before { content: "✕"; position: absolute; inset: 0; display: grid; place-items: center; color: #e0201a; font: 900 9px/1 Arial, sans-serif; }
+.pauseclock { margin: -4px 0 12px; padding: 8px 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 14px; background: rgba(255,255,255,.1); }
+.pauseclock.running { background: rgba(255,59,48,.18); color: #ffb3ad; }
 .card .live { font-size: 11px; min-height: 14px; white-space: nowrap; margin-top: 2px; }
 .card .live b { font-family: var(--font-display); font-size: 16px; font-weight: 400; vertical-align: -1px; letter-spacing: 0; }
 .card .live span { opacity: .85; font-size: 10px; }
@@ -659,6 +663,7 @@ s.was { opacity: .6; font-size: .8em; }
 <div class="overlay" id="pause" hidden>
   <div class="sheet">
     <h2>Paused</h2>
+    <div class="pauseclock" id="pauseClock" hidden></div>
     <div class="toggles">
       <button class="toggle" id="pauseMusic"><span>🎵 Music</span><i></i></button>
       <button class="toggle" id="pauseSound"><span>🔊 Sound effects</span><i></i></button>
@@ -1346,8 +1351,8 @@ function setGear(pl) {
 // ───────────────────────── Match flow
 function newWind() {
   const [lo, hi] = venue().wind;
-  const r = S.online ? rng(S.online.seed + S.inning * 7919) : Math.random; // online: both phones get the same wind
-  S.wind = { mph: Math.round(lo + r() * (hi - lo)), dir: r() * Math.PI * 2 }; // steady for the whole inning, any direction
+  const r = S.online ? rng(S.online.seed + 7919) : Math.random; // online: both phones get the same wind
+  S.wind = { mph: Math.round(lo + r() * (hi - lo)), dir: r() * Math.PI * 2 }; // set once per match and steady for all of it, any direction
   if (S.practice && S.practice.wind != null) S.wind.mph = S.practice.wind; // practice: the wind speed you picked
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
@@ -1375,7 +1380,10 @@ function startMatch(kind, vi, online = null, pick = null) {
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!useLife()) return;
-    if (!houseCovers(vi)) career.coins -= v.fee;
+    const fee = houseCovers(vi) ? 0 : v.fee;
+    career.coins -= fee;
+    // Remember the match until it ends properly, so a crash or a quit app can be refunded (see refundMatch).
+    career.activeMatch = { vi, fee, at: Date.now() };
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
       S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
@@ -1398,7 +1406,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
   T.mu = v.mu;
-  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
+  S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(career.board); buildVenue(v.id); newWind(); venueAmbience();
@@ -1526,6 +1534,7 @@ function launchBag(actual) {
 // Out of time: that bag is lost.
 function timeUp() {
   S.clock = null; S.pull.active = false; S.feedback = [];
+  (S.lost ||= [[], []])[S.player].push(S.thrown[S.player]); // this bag shows as a red X in the player's tile
   S.thrown[S.player]++; S.settleT = -1.7; S.acc = 0; S.phase = "flight"; S.lastId = null; // hold 3 s before the next throw
   const m = $("timeupMsg"); m.hidden = false; clearTimeout(timeUp.t); timeUp.t = setTimeout(() => { m.hidden = true; }, 3000);
   sfx.thud(); haptic("thud");
@@ -1554,6 +1563,7 @@ function finishInning() {
   ui();
 }
 function finishMatch() {
+  career.activeMatch = null; // it ended properly: nothing to refund
   if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
   const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
@@ -1573,8 +1583,8 @@ function finishMatch() {
 // A court's stars stay between 0 and its max.
 function addCourtStars(vi, n) { const v = VENUES[vi]; career.courtStars[v.id] = clamp(courtStars(vi) + n, 0, v.max); updateUnlocks(); }
 function nextInning() {
-  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = soloThrown(); S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
-  newWind(); venueAmbience(); beginTurn();
+  S.world.clear(); clearBagMeshes(); setHoleHalo(0); S.inning++; S.thrown = soloThrown(); S.lost = [[], []]; S.player = S.leader; S.feedback = []; S.fourBagger = [false, false];
+  venueAmbience(); beginTurn(); // same wind as the rest of the match
 }
 function showBanner(text, pl) { S.banner = { text, pl }; S.bannerT = 1.7; renderBanner(); }
 function checkFourBagger() {
@@ -2124,6 +2134,24 @@ function useLife() {
   if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); // the refill clock starts when you drop below full
   career.lives--; save(); scheduleLivesAlert();
   return true;
+}
+// ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends. If it never
+// ends properly (the app quit or crashed, or the game froze), the buy-in and the ticket come back and no stars are lost.
+// A frozen game is always refunded. A match cut off by the app closing is refunded up to REFUNDS_PER_DAY times a day;
+// past that it counts as a quit (a loss), so closing the app can't be used to dodge losing.
+const REFUNDS_PER_DAY = 3;
+function refundMatch(frozen) {
+  const m = career.activeMatch; if (!m) return null;
+  career.activeMatch = null;
+  const day = new Date().toDateString();
+  if (career.refundDay !== day) { career.refundDay = day; career.refunds = 0; }
+  if (!frozen && career.refunds >= REFUNDS_PER_DAY) {
+    addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
+    return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };
+  }
+  if (!frozen) career.refunds++;
+  career.coins += m.fee; refundLife(); save();
+  return { refunded: true, fee: m.fee, court: VENUES[m.vi].name };
 }
 function refundLife() { career.lives++; if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); save(); scheduleLivesAlert(); }
 // A ticket for coins is priced by your season title (it goes up when you're promoted and down when you're moved down),
@@ -4748,7 +4776,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794110014";
+const BUILD_ID = "1794110562";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -5138,7 +5166,8 @@ function renderScore() {
     $("name" + p).innerHTML = (S.kind === "career" ? avatarHTML(av, "sm") : "") + esc(S.names[p]);
     $("pts" + p).textContent = S.scores[p];
     $("live" + p).innerHTML = S.phase === "hub" ? "" : `Inning <b>${ir.raw[p]}</b>`;
-    $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : ""}"></i>`).join("");
+    const lost = (S.lost || [[], []])[p]; // bag k (0-based) empties dot 3-k
+    $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
   $("inningNum").textContent = S.inning;
@@ -5365,6 +5394,7 @@ function dismissScorecard(dx, dy) {
 let hubVenue = career.venue || 0;
 function openHub() {
   $("timeupMsg").hidden = true;
+  if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
@@ -5642,16 +5672,37 @@ function seenTab(tab) {
 $("shopClose").onclick = () => { seenTab(shopTab); $("shop").hidden = true; renderHub(); };
 for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { if (b.dataset.tab !== shopTab) seenTab(shopTab); shopTab = b.dataset.tab; renderShop(); };
 let pausedPhase = null;
+// Pausing during your throw: the first pause of a match stops the throw clock for 5 seconds, then it runs again; any
+// later pause leaves the clock running, with a warning. (Pausing when no clock is running stops the game as before.)
+const PAUSE_GRACE = 5;
 $("menuBtn").onclick = () => {
   if (S.phase === "hub") return;
-  pausedPhase = S.phase; S.phase = "paused";
+  const clocked = S.clock != null && (S.phase === "aiming" || S.phase === "throw");
+  S.pauseGrace = clocked ? (S.pauses ? 0 : PAUSE_GRACE) : 0;
+  if (clocked) S.pauses = (S.pauses || 0) + 1;
+  S.pauseClocked = clocked;
+  pausedPhase = S.phase; S.phase = "paused"; renderPauseClock();
   renderSoundButtons();
   $("forfeitNote").textContent = S.kind === "career" ? `Quitting counts as a loss: −${starsForLoss(S.venue)} ⭐ and your opponent keeps the pot.` : "";
   $("pause").hidden = false;
 };
-$("resumeBtn").onclick = () => { $("pause").hidden = true; S.phase = pausedPhase || "aiming"; ui(); };
+$("resumeBtn").onclick = () => { $("pause").hidden = true; S.phase = pausedPhase || "aiming"; S.pauseClocked = false; ui(); };
+function renderPauseClock() {
+  const el = $("pauseClock"); el.hidden = !S.pauseClocked; if (!S.pauseClocked) return;
+  const left = Math.max(0, Math.ceil(S.clock));
+  if (S.pauseGrace > 0) { el.className = "pauseclock"; el.textContent = `⏸ Throw clock stopped for ${Math.ceil(S.pauseGrace)}s (${left}s left)`; }
+  else { el.className = "pauseclock running"; el.textContent = `⚠️ The throw clock is still running: ${left}s left`; }
+}
+// While paused on your throw: use up the grace, then keep the clock counting; at zero the bag is lost as usual.
+function tickPausedClock(dt) {
+  if (S.phase !== "paused" || !S.pauseClocked) return;
+  const before = [Math.ceil(S.pauseGrace), Math.ceil(S.clock)];
+  if (S.pauseGrace > 0) S.pauseGrace = Math.max(0, S.pauseGrace - dt); else S.clock -= dt;
+  if (before[0] !== Math.ceil(S.pauseGrace) || before[1] !== Math.ceil(S.clock)) { renderPauseClock(); renderClock(); }
+  if (S.clock <= 0) { $("pause").hidden = true; S.pauseClocked = false; S.phase = pausedPhase; timeUp(); }
+}
 $("forfeitBtn").onclick = () => {
-  if (S.kind === "career") { addCourtStars(S.venue, -starsForLoss(S.venue)); career.losses++; save(); }
+  if (S.kind === "career") { career.activeMatch = null; addCourtStars(S.venue, -starsForLoss(S.venue)); career.losses++; save(); }
   openHub();
 };
 function renderSoundButtons() {
@@ -5684,8 +5735,17 @@ for (const [id, close] of [
 }
 
 // ───────────────────────── Loop
-let lastT = 0;
+let lastT = 0, lastFrameAt = performance.now(), frameErrors = 0;
 function frame(now) {
+  lastFrameAt = performance.now();
+  try { step(now); frameErrors = 0; }
+  catch (err) { // one bad frame shouldn't freeze the game; a run of them means it's stuck
+    console.error(err);
+    if (++frameErrors >= 30 && inMatch()) { frameErrors = 0; glitchOut(); }
+  }
+  requestAnimationFrame(frame);
+}
+function step(now) {
   // __timeScale / __skipRender are test hooks for automated playthroughs; unused in normal play.
   const dt = (lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60) * (window.__timeScale || 1); lastT = now;
   S.time += dt; S.relT += dt;
@@ -5712,6 +5772,7 @@ function frame(now) {
   updateBags(dt);
   updateAimRig(dt);
   updateOnline(dt);
+  tickPausedClock(dt);
   // The between-innings card moves on by itself after a few seconds (in live play the other player is waiting).
   if (S.phase === "inning" && !$("inningSheet").hidden) {
     const before = Math.ceil(INNING_CARD_SECS - S.innT); S.innT += dt;
@@ -5725,10 +5786,45 @@ function frame(now) {
   venueTick(dt, S.time);
   updateCamera(dt);
   if (!window.__skipRender) renderScene();
-  requestAnimationFrame(frame);
 }
 
-resize(); openHub();
+// ───────────────────────── Glitch watchdog
+// Notices when a match has stopped moving: a bag that never lands, a throw clock that stopped counting, a CPU that
+// never throws, or the game loop dying. Then it ends the match and refunds it (refundMatch) rather than leave you stuck.
+const inMatch = () => S.kind && !["hub", "over", "paused"].includes(S.phase) && $("hub").hidden;
+const STALL = { flight: 15, cpu: 14, clock: 6 };
+const watch = { phase: null, since: 0, clock: null, clockAt: 0 };
+document.addEventListener("visibilitychange", () => { lastFrameAt = performance.now(); watch.phase = null; watch.clock = null; }); // back from the background: start counting afresh
+setInterval(() => {
+  const now = performance.now();
+  if (document.hidden || !inMatch() || window.__timeScale) { watch.phase = null; watch.clock = null; return; } // paused or in the background: not a glitch
+  if (now - lastFrameAt > 6000) { lastFrameAt = now; glitchOut(); requestAnimationFrame(frame); return; } // the loop died
+  // Measured in game time (S.time), so a slow phone never looks stuck: only a game that's running but not moving does.
+  if (S.phase !== watch.phase) { watch.phase = S.phase; watch.since = S.time; }
+  const stuck = S.time - watch.since;
+  if ((S.phase === "flight" && stuck > STALL.flight) || (S.phase === "cpu" && stuck > STALL.cpu)) { glitchOut(); return; }
+  if (S.clock != null && (S.phase === "aiming" || S.phase === "throw")) {
+    if (watch.clock !== S.clock) { watch.clock = S.clock; watch.clockAt = S.time; }
+    else if (S.time - watch.clockAt > STALL.clock) { glitchOut(); return; }
+  } else watch.clock = null;
+}, 1000);
+let glitching = false;
+function glitchOut() {
+  watch.phase = null; watch.clock = null;
+  const career_ = S.kind === "career", r = career_ ? refundMatch(true) : null;
+  glitching = true; try { openHub(); } finally { glitching = false; }
+  showInfo(`<div class="lifebig">🛠️</div><h2>Sorry about that!</h2><div class="muted">Something went wrong and the ${career_ ? "match" : "game"} got stuck, so we stopped it.${
+    r ? ` Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.` : ""}</div>`);
+}
+// A match that never finished last time (the app was closed or crashed in the middle of it).
+function settleInterruptedMatch() {
+  const r = refundMatch(false); if (!r) return;
+  showInfo(r.refunded
+    ? `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
+    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. You've already had ${REFUNDS_PER_DAY} interrupted matches refunded today, so this one counts as a loss (−${r.stars} ⭐).</div>`);
+}
+
+resize(); openHub(); settleInterruptedMatch();
 postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 // Splash: hold the title for a few seconds, then fade into the clubhouse.

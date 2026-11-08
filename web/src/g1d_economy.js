@@ -172,6 +172,24 @@ function useLife() {
   career.lives--; save(); scheduleLivesAlert();
   return true;
 }
+// ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends. If it never
+// ends properly (the app quit or crashed, or the game froze), the buy-in and the ticket come back and no stars are lost.
+// A frozen game is always refunded. A match cut off by the app closing is refunded up to REFUNDS_PER_DAY times a day;
+// past that it counts as a quit (a loss), so closing the app can't be used to dodge losing.
+const REFUNDS_PER_DAY = 3;
+function refundMatch(frozen) {
+  const m = career.activeMatch; if (!m) return null;
+  career.activeMatch = null;
+  const day = new Date().toDateString();
+  if (career.refundDay !== day) { career.refundDay = day; career.refunds = 0; }
+  if (!frozen && career.refunds >= REFUNDS_PER_DAY) {
+    addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
+    return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };
+  }
+  if (!frozen) career.refunds++;
+  career.coins += m.fee; refundLife(); save();
+  return { refunded: true, fee: m.fee, court: VENUES[m.vi].name };
+}
 function refundLife() { career.lives++; if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); save(); scheduleLivesAlert(); }
 // A ticket for coins is priced by your season title (it goes up when you're promoted and down when you're moved down),
 // but never more than a tenth of a buy-in at your highest open court, so a new player is never priced out.

@@ -54,6 +54,10 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card .dots { display: flex; gap: 3px; margin-top: 3px; }
 .card .dots i { width: 9px; height: 9px; border-radius: 3px; background: rgba(0,0,0,.25); }
 .card .dots i.on { background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.card .dots i.x { background: #fff; position: relative; box-shadow: 0 1px 0 rgba(0,0,0,.3); } /* a bag lost to the throw clock */
+.card .dots i.x::before { content: "✕"; position: absolute; inset: 0; display: grid; place-items: center; color: #e0201a; font: 900 9px/1 Arial, sans-serif; }
+.pauseclock { margin: -4px 0 12px; padding: 8px 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 14px; background: rgba(255,255,255,.1); }
+.pauseclock.running { background: rgba(255,59,48,.18); color: #ffb3ad; }
 .card .live { font-size: 11px; min-height: 14px; white-space: nowrap; margin-top: 2px; }
 .card .live b { font-family: var(--font-display); font-size: 16px; font-weight: 400; vertical-align: -1px; letter-spacing: 0; }
 .card .live span { opacity: .85; font-size: 10px; }
@@ -647,6 +651,7 @@ s.was { opacity: .6; font-size: .8em; }
 <div class="overlay" id="pause" hidden>
   <div class="sheet">
     <h2>Paused</h2>
+    <div class="pauseclock" id="pauseClock" hidden></div>
     <div class="toggles">
       <button class="toggle" id="pauseMusic"><span>🎵 Music</span><i></i></button>
       <button class="toggle" id="pauseSound"><span>🔊 Sound effects</span><i></i></button>

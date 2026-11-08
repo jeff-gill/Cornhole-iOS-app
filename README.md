@@ -22,7 +22,7 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 - **Card discount:** cards collected toward an item take up to 30% off its coin price, growing slowly (squared), so half the cards is only 7.5% off.
 - **Aiming:** tap where the bag should finish, then drag the landing ring around the gold zone. Near the finish it sticks, farther back it slides, and off to the side it adds spin.
 - **Throwing:** one move. Pull back for power, and the arrow swings faster the harder you pull. Let go in the gold band with the arrow straight. Pulling into overdrive makes the throw wild.
-- **Wind:** steady for each inning, from any direction, and stronger at higher venues. The aiming guide ignores it.
+- **Wind:** set at the start of each match and steady for the whole match, from any direction, and stronger at higher venues. The aiming guide ignores it.
 - **Other rules:**
   - Pitcher's boxes are assigned by coin flip each match.
   - If one of your own bags is in the way, a push shot shoves it along your line.
@@ -132,6 +132,16 @@ Rolls are skewed toward the low end of each range, so a rare can is usually good
 **Cards needed** to unlock an item go from 3 (the cheapest item in its tab) to 90 (the most expensive), and the steps get bigger near the top. Cards for cheap items are common; rarer cans reach further up the list.
 
 The odds are not shown in the game. The App Store requires the odds for paid loot boxes to be shown before purchase. Before submitting, either show the odds next to the paid cans in the Store, or remove the paid cans.
+
+### Glitch protection
+- A career match is remembered from the buy-in until it ends. If the game freezes (a bag that never lands, a throw
+  clock that stops counting, a CPU that never throws, or the game loop dying) the watchdog stops the match and refunds
+  the buy-in and the ticket; no stars are lost.
+- If the app is closed or crashes mid-match, the next launch refunds it the same way, up to 3 times a day. Past that
+  it counts as a quit (a loss), so closing the app can't be used to dodge losing.
+- Quitting from the pause menu is still a loss.
+- Pausing on your throw: the first pause of a match stops the throw clock for 5 seconds, then it runs again; later
+  pauses leave it running, with a warning on the pause screen. A bag lost to the clock shows as a red ✕ in your tile.
 
 ## Blender pipeline
 
