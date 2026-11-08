@@ -138,4 +138,5 @@ def pine(seed):
         paint(c, leaves((0.12, 0.36, 0.20), 0.06)); parts.append(c)
     o = join(parts, "pine"); bake_ao(o); export(o, "tree_pine")
 
-oak(3); maple(7); pine(11)
+if __name__ == "__main__":
+    oak(3); maple(7); pine(11)
