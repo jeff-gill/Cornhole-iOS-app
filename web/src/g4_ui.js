@@ -136,8 +136,10 @@ function renderScore() {
   }
   $("inningNum").textContent = S.inning;
   if (S.opponent) $("opp").innerHTML = S.opponent.live
-    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>⭐ ${bigNum(S.opponent.stars || 0)} · ${esc(venue().name)}`
-    : `<b>${esc(S.opponent.name)}</b>⭐ ${bigNum(S.opponent.stars || 0)} · ${esc(venue().name)}`;
+    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>⭐ ${bigNum(S.opponent.stars || 0)}`
+    : `<b>${esc(S.opponent.name)}</b>⭐ ${bigNum(S.opponent.stars || 0)}`;
+  const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
+  $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
   renderInOn();
 }
 // The bottom-corner tables: how many bags each side has in the hole and on the board this inning.
@@ -147,8 +149,8 @@ function renderInOn() {
     const el = $("io" + p); el.hidden = !show; if (!show) continue;
     let hole = 0, on = 0;
     for (const b of S.world.bags) if (b.owner === p) { const pts = bagPoints(b); if (pts === 3) hole++; else if (pts === 1) on++; }
-    el.style.borderColor = COL.p[p];
-    el.innerHTML = `<div class="ion" style="background:${COL.p[p]}">${esc(S.names[p] || "")}</div><table><tr><td>IN<b>${hole}</b></td></tr><tr><td>ON<b>${on}</b></td></tr></table>`;
+    el.style.borderColor = COL.p[p]; el.style.setProperty("--line", COL.p[p]);
+    el.innerHTML = `<table><tr><th>IN</th><th>ON</th></tr><tr><td>${hole}</td><td>${on}</td></tr></table>`;
   }
 }
 function renderBanner() {
@@ -682,17 +684,15 @@ $("forfeitBtn").onclick = () => {
   openHub();
 };
 function renderSoundButtons() {
-  $("musicBtn").textContent = `Music: ${musicOn ? "on" : "off"}`; $("soundBtn").textContent = `Effects: ${sfxOn ? "on" : "off"}`;
   $("pauseMusic").classList.toggle("on", musicOn); $("pauseSound").classList.toggle("on", sfxOn);
 }
 const toggleMusic = () => { initAudio(); setMusic(!musicOn); renderSoundButtons(); };
 const toggleSfx = () => { initAudio(); setSfx(!sfxOn); renderSoundButtons(); };
-$("musicBtn").onclick = toggleMusic; $("pauseMusic").onclick = toggleMusic;
-$("soundBtn").onclick = toggleSfx; $("pauseSound").onclick = toggleSfx;
+$("pauseMusic").onclick = toggleMusic;
+$("pauseSound").onclick = toggleSfx;
 $("replayTut").onclick = () => { career.tutorialDone = false; save(); $("replayTut").textContent = "Tutorial will show in your next match"; };
 renderSoundButtons();
 $("helpBtn").onclick = () => { $("helpSheet").hidden = false; };
-$("menuHelp").onclick = () => { $("helpSheet").hidden = false; };
 $("helpClose").onclick = () => { $("helpSheet").hidden = true; };
 
 // Popups close when you tap outside them (on the dimmed background), the same as their DONE button.

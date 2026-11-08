@@ -95,12 +95,14 @@ body.inhub .score, body.inhub #panel { display: none; }
 #aim svg { width: 100%; height: 100%; overflow: visible; }
 /* Wind */
 /* In / On for each player this inning, in the bottom corners of the court view */
-.iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; min-width: 74px; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
+.iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
-.iobox .ion { padding: 2px 8px; color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 96px; }
-.iobox table { width: 100%; border-collapse: collapse; } .iobox td { padding: 2px 8px; color: var(--ink-dim); font-size: 11px; letter-spacing: .06em; }
-.iobox td b { color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 17px; float: right; }
+.iobox table { border-collapse: collapse; } /* IN | ON over the two counts, split by a + of grid lines */
+.iobox th, .iobox td { width: 36px; padding: 2px 4px; text-align: center; }
+.iobox th { color: var(--ink-dim); font-size: 11px; letter-spacing: .06em; border-bottom: 2px solid var(--line); }
+.iobox td { color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.iobox th + th, .iobox td + td { border-left: 2px solid var(--line); }
 #wind { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; display: flex; align-items: center; gap: 8px; pointer-events: none;
   background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8); border-radius: 999px; padding: 4px 12px 4px 4px; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
 #wind .dial { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(#2b4a80, #12203a); display: grid; place-items: center; }
@@ -289,6 +291,9 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubhead { width: 100%; max-width: 560px; margin: 0 auto; }
 .hubtitle { margin-top: 10px; font-family: var(--font-display); text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .9; font-size: min(11vw, 50px); text-shadow: 0 4px 0 rgba(0,0,0,.4); letter-spacing: .01em; }
 .hubtitle span { display: block; color: var(--gold); font-size: 1.12em; }
+/* the court's name above the inning count, in the same style as the game title (white over gold) */
+.courtname { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .9; font-size: 12px; text-shadow: 0 2px 0 rgba(0,0,0,.4); margin-bottom: 3px; }
+.courtname span { display: block; color: var(--gold); font-size: 1.12em; }
 .hubhead .gcname { text-align: center; margin: 2px 0 0; }
 .hubhead .hubtop { margin-top: 0; }
 .hubright { display: flex; align-items: center; gap: 6px; }
@@ -576,7 +581,7 @@ s.was { opacity: .6; font-size: .8em; }
   <header class="score">
     <button class="roundbtn" id="menuBtn" aria-label="Pause"><span class="pausebars"><i></i><i></i></span></button>
     <div class="card p0" id="card0"><div class="name" id="name0">You</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div></div>
-    <div class="inning"><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
+    <div class="inning"><div class="courtname" id="courtName"></div><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
     <div class="card p1" id="card1"><div class="name" id="name1">CPU</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div></div>
     <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
   </header>
@@ -625,16 +630,16 @@ s.was { opacity: .6; font-size: .8em; }
       <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="menuHelp">How to play</button><button class="linkbtn" id="musicBtn">Music: on</button><button class="linkbtn" id="soundBtn">Effects: on</button><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button></div>
+    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button></div>
   </div>
 </div>
 
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
 <div class="overlay" id="avatarSheet" hidden><div class="sheet">
-  <div class="tabs ptabs"><button data-ptab="avatar" class="on">AVATAR</button><button data-ptab="profile">PROFILE</button><button data-ptab="settings">SETTINGS</button></div>
-  <div id="ptabAvatar"><h2>Choose your avatar</h2><button class="btn ghost" id="useGcPhoto" hidden>Use my Game Center picture</button><div class="avgrid" id="avatarGrid"></div></div>
+  <div class="tabs ptabs"><button data-ptab="settings" class="on">SETTINGS</button><button data-ptab="avatar">AVATAR</button><button data-ptab="profile">PROFILE</button></div>
+  <div id="ptabAvatar" hidden><h2>Choose your avatar</h2><button class="btn ghost" id="useGcPhoto" hidden>Use my Game Center picture</button><div class="avgrid" id="avatarGrid"></div></div>
   <div id="ptabProfile" hidden></div>
-  <div id="ptabSettings" hidden></div>
+  <div id="ptabSettings"></div>
   <button class="btn" id="avatarClose">DONE</button>
 </div></div>
 <div class="overlay" id="canSheet" hidden>

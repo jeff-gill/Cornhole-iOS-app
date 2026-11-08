@@ -109,7 +109,7 @@ function cansInfoHTML() {
 
 
 // ── Your profile (tap your avatar): Avatar, Profile (handle and stats) and Settings (volume, haptics, alerts).
-let ptab = "avatar";
+let ptab = "settings";
 function openAvatars(tab) { if (tab) ptab = tab; renderProfile(); $("avatarSheet").hidden = false; }
 function renderProfile() {
   for (const b of document.querySelectorAll(".ptabs button")) b.classList.toggle("on", b.dataset.ptab === ptab);
@@ -143,7 +143,9 @@ function renderProfile() {
       <div class="setrow vol"><span>🎵 Music</span><input type="range" id="musicVolIn" min="0" max="100" value="${Math.round(musicVol * 100)}" aria-label="Music volume"><button class="btn small" id="setMusic">${musicOn ? "ON" : "OFF"}</button></div>
       <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
-      <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>`;
+      <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
+      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to play</button>`;
+    $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
     $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
     $("setSfx").onclick = () => { toggleSfx(); renderProfile(); };
     $("musicVolIn").oninput = e => { initAudio(); setVolume("music", e.target.value / 100); };
@@ -154,7 +156,7 @@ function renderProfile() {
   }
 }
 for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
-$("avatarBtn").onclick = () => openAvatars();
+$("avatarBtn").onclick = () => openAvatars("settings"); // settings first
 $("avatarClose").onclick = () => { $("avatarSheet").hidden = true; renderHub(); };
 
 // ── Opening a can: tap, it shakes, the tab pops, a mist sprays out and the prizes come out one at a time.
