@@ -187,7 +187,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 /* Overlays */
 .overlay {
   position: fixed; inset: 0; z-index: 20; background: rgba(6,12,24,.55); display: flex; align-items: center; justify-content: center;
-  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 .sheet {
@@ -351,6 +351,10 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .seasonbadge { display: block; margin: 6px auto 0; padding: 4px 12px; border-radius: 999px; border: 2px solid rgba(255,255,255,.7); background: rgba(10,20,38,.7); color: #fff; font: 900 13px/1.2 Nunito, system-ui, sans-serif; }
 .seasonbadge b { font-family: var(--font-display); font-weight: 400; font-size: 15px; color: var(--gold); }
 .ladder { display: grid; gap: 5px; text-align: left; }
+.rules { text-align: left; display: grid; gap: 12px; }
+.rulesec h3 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 400; font-size: 19px; }
+.rulesec ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.rulesec li { font-size: 14px; line-height: 1.35; color: #dfe8f6; }
 .ladder div { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,.06); font-weight: 900; }
 .ladder div.me { background: linear-gradient(90deg, rgba(255,201,58,.35), rgba(255,201,58,.1)); border: 2px solid var(--gold); }
 .ladder div > span:first-child { font-size: 20px; text-align: center; }

@@ -93,6 +93,61 @@ function canTapped(i) {
   };
 }
 // ── A small info sheet (can odds), reusing the lives sheet frame
+// ── Rules & Regulations: everything about how matches are scored, timed and settled, in one place.
+function rulesHTML() {
+  const sec = (icon, title, items) => `<div class="rulesec"><h3>${icon} ${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
+  return `<h2>Rules & Regulations</h2><div class="rules">
+  ${sec("🎯", "Scoring", [
+    "A bag in the hole is 3 points. A bag on the board is 1 point.",
+    "If more than half of a bag is over the hole, it falls in.",
+    "Each inning, the points cancel out: only the difference counts, and it goes to the side that scored more.",
+    "If both sides score the same, it's a <b>wash</b>: no points.",
+    "First to 21 at the end of an inning wins.",
+  ])}
+  ${sec("⏱", "The throw clock", [
+    `You have ${THROW_TIME} seconds for each throw. If time runs out, that bag is lost (a red ✕ by your score).`,
+    "Lose all four of your bags to the clock in one inning and you lose the match.",
+  ])}
+  ${sec("⏸", "Pausing", [
+    "The first pause of a match stops your throw clock for 5 seconds. After that it keeps running.",
+    "Later pauses don't stop the clock, and the pause screen shows how long you have left.",
+    "Quitting from the pause menu counts as a loss.",
+  ])}
+  ${sec("📱", "Leaving the app", [
+    "Switching to another app, taking a call or locking your phone doesn't end the match.",
+    "The throw clock keeps counting while you're away. When you come back, that time comes off your turns, and each turn that runs out loses that bag.",
+    "If the app is closed while you're away (you close it, your iPhone closes it to save memory, or the phone turns off), the match counts as a loss.",
+    `At the Backyard, the first ${QUIT_WARNINGS} times this happens you get a warning and a refund instead.`,
+  ])}
+  ${sec("🛟", "Glitches and refunds", [
+    "If the game freezes or crashes while it's on your screen, the match is stopped and refunded: your buy-in and ticket come back and no stars are lost.",
+    "If you were out of the app when it closed, there's no refund (see Leaving the app).",
+  ])}
+  ${sec("🌬️", "Wind", [
+    "The wind is set at the start of each match and stays the same for the whole match.",
+    "There's no wind at the Backyard. It builds a little at every court after that, up to 10 mph.",
+    "Faint streaks drift across the court in the wind's direction. The aiming guide doesn't allow for wind.",
+  ])}
+  ${sec("⭐", "Stars and courts", [
+    "A win earns stars at that court and the buy-in prize. A loss costs some stars.",
+    "Fill a court's star track to open the next court.",
+  ])}
+  ${sec("🎟️", "Tickets", [
+    `Every match uses a ticket. You can hold ${MAX_LIVES}, and one comes back every hour.`,
+    "Win and you get your ticket back.",
+  ])}
+  ${sec("🥫", "Prize cans", [
+    `Win a match to get a prize can. Your Prize Cooler holds ${COOLER_SIZE}.`,
+    `If your cooler is full, a win doesn't give a new can, and you're warned before the match starts.`,
+    "Cans you buy, or win at the end of a season, wait outside the cooler until a slot opens.",
+  ])}
+  ${sec("🏆", "Seasons", [
+    "Each season is a calendar month. Every title is a league split into groups of up to 100.",
+    "The top of your group moves up and the bottom moves down (the lines on the ladder show where).",
+    `You need at least ${MIN_MATCHES_TO_PROMOTE} matches in a season to be promoted.`,
+  ])}
+  </div>`;
+}
 // A yes/no sheet: the main button runs onYes; the second just closes it.
 function showChoice(html, yes, onYes, no = "CANCEL") {
   $("livesBody").innerHTML = html + `<div class="row" style="gap:10px;justify-content:center;margin-top:14px"><button class="btn ghost" id="choiceNo" style="font-size:17px;padding:12px 18px">${no}</button><button class="btn green" id="choiceYes">${yes}</button></div>`;
@@ -144,7 +199,9 @@ function renderProfile() {
       <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
-      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to play</button>`;
+      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to play</button>
+      <button class="btn ghost" id="setRules" style="width:100%;margin-top:8px;font-size:17px;padding:12px">📜 Rules & Regulations</button>`;
+    $("setRules").onclick = () => { $("avatarSheet").hidden = true; showInfo(rulesHTML()); };
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
     $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
     $("setSfx").onclick = () => { toggleSfx(); renderProfile(); };
