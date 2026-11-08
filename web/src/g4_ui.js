@@ -464,7 +464,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "can" ? `${item.title} is in your cooler!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
   renderShop(); renderHub();
 };

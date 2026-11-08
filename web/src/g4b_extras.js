@@ -25,8 +25,11 @@ function renderHubExtras() {
   $("lives").textContent = career.lives;
   $("caps").textContent = bigNum(career.caps);
   $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : "";
+  fillCooler();
   const cooler = $("cooler"); cooler.innerHTML = "";
-  const slots = Math.max(COOLER_SIZE, career.cans.length);
+  const slots = COOLER_SIZE;
+  const waiting = career.canBacklog?.length || 0;
+  $("coolerHead").textContent = waiting ? `PRIZE COOLER · ${waiting} waiting` : "PRIZE COOLER";
   for (let i = 0; i < slots; i++) {
     const c = career.cans[i], b = document.createElement("button");
     if (c) {
@@ -90,6 +93,13 @@ function canTapped(i) {
   };
 }
 // ── A small info sheet (can odds), reusing the lives sheet frame
+// A yes/no sheet: the main button runs onYes; the second just closes it.
+function showChoice(html, yes, onYes, no = "CANCEL") {
+  $("livesBody").innerHTML = html + `<div class="row" style="gap:10px;justify-content:center;margin-top:14px"><button class="btn ghost" id="choiceNo" style="font-size:17px;padding:12px 18px">${no}</button><button class="btn green" id="choiceYes">${yes}</button></div>`;
+  $("choiceNo").onclick = () => { $("livesSheet").hidden = true; };
+  $("choiceYes").onclick = () => { $("livesSheet").hidden = true; onYes(); };
+  $("livesSheet").hidden = false;
+}
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
   return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Open one at a time: the better the can, the longer it takes, and Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
@@ -348,7 +358,7 @@ $("dailyBtn").onclick = () => {
   career.lastDaily = new Date().toDateString(); career.coins += DAILY_COINS;
   // The free can skips the cooler limit and opens on the spot.
   const id = rollCan(DAILY_ODDS);
-  career.cans.push({ id, court: topCourt(), instant: true });
+  career.cans.push({ id, court: topCourt(), instant: true }); // opens on the spot below, so it never sits in a full cooler
   save(); renderHub(); sfx.win(); haptic("success");
   const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${DAILY_COINS} coins and a free can!`;
   $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);

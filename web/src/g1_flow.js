@@ -210,8 +210,8 @@ function grantPurchase(id, restored) {
   if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
   if (item.kind === "caps") { if (!restored) career.caps += item.caps; save(); return item; }
   if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
-  if (item.kind === "can") { // bought cans skip the cooler limit
-    if (!restored) career.cans.push({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
+  if (item.kind === "can") { // a bought can waits outside the cooler if it's full
+    if (!restored) stashCan({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
     save(); return item;
   }
   if (career.purchases.includes(id)) return item;

@@ -387,7 +387,7 @@ s.was { opacity: .6; font-size: .8em; }
 .prize.show::after { content: ""; position: absolute; inset: -50% auto -50% -60%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: rotate(20deg); animation: shine .9s .35s ease-out both; pointer-events: none; }
 @keyframes cardflip { from { transform: perspective(700px) rotateY(100deg) scale(.6); } to { transform: perspective(700px) rotateY(0) scale(1); } }
 @keyframes shine { from { left: -60%; } to { left: 130%; } }
-.seg { display: grid; grid-auto-flow: column; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 14px; }
+.seg { display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 14px; }
 .seg button { border: 0; border-radius: 10px; padding: 9px 4px; background: none; color: var(--ink-dim); font-family: var(--font-display); font-size: 17px; }
 .seg button.on { background: #fff; color: var(--deck); }
 .pnames { display: grid; gap: 8px; }
@@ -598,7 +598,7 @@ s.was { opacity: .6; font-size: .8em; }
     <button class="dailybtn" id="dailyBtn" hidden><span class="gift">🎁</span><span><b>Daily reward</b><small><i class="coin"></i> 100 + a free can</small></span></button>
   </div>
   <div class="hubbottom">
-    <div class="coolerhead">PRIZE COOLER</div>
+    <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
     <div class="cooler" id="cooler"></div>
     <div class="vcarousel" id="venueCard"></div>
     <div class="hubrow">
@@ -1275,8 +1275,8 @@ function grantPurchase(id, restored) {
   if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
   if (item.kind === "caps") { if (!restored) career.caps += item.caps; save(); return item; }
   if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
-  if (item.kind === "can") { // bought cans skip the cooler limit
-    if (!restored) career.cans.push({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
+  if (item.kind === "can") { // a bought can waits outside the cooler if it's full
+    if (!restored) stashCan({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
     save(); return item;
   }
   if (career.purchases.includes(id)) return item;
@@ -1762,10 +1762,15 @@ const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutoria
 // player who has reached the Stadium never meets a beginner, even back at the Backyard.
 const bracket = vi => (vi + 1) * 100 + VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 const randomPick = () => ({ name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id });
-function playCourt(vi) {
+function playCourt(vi, confirmed = false) {
   tickLives(); if (career.lives <= 0) { openLives(); return; }
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
+  if (coolerFull() && !confirmed) { // a full cooler means a win can't drop a new can: say so first
+    showChoice(`<h2>Prize Cooler full</h2><div class="muted">Your Prize Cooler already has ${COOLER_SIZE} cans, so you won't get a new Prize Can if you win this match. Open a can first to make room.</div>`,
+      "PROCEED", () => playCourt(vi, true), "CANCEL");
+    return;
+  }
   const online = canGoOnline();
   search = { vi, t: 0, online, limit: online ? SEARCH_TIME : 2 + Math.random() * 1.5, reel: buildReel() };
   if (online) postNative("net", JSON.stringify({ op: "find", group: bracket(vi) }));
@@ -2004,6 +2009,11 @@ function rollCan(odds, boost = 0) {
   for (const c of list) { x -= w(c); if (x <= 0) return c.id; }
   return list[0].id;
 }
+// The cooler never holds more than COOLER_SIZE cans. Cans you're owed while it's full (a store purchase, a season prize)
+// wait in career.canBacklog and drop in as soon as a slot opens.
+function stashCan(can) { if (career.cans.length < COOLER_SIZE) career.cans.push(can); else (career.canBacklog ||= []).push(can); }
+function fillCooler() { const b = career.canBacklog; while (b && b.length && career.cans.length < COOLER_SIZE) career.cans.push(b.shift()); }
+const coolerFull = () => career.cans.length >= COOLER_SIZE;
 // Put a can in the cooler; returns false if the cooler is full.
 function giveCan(id, court, instant = false) {
   if (career.cans.length >= COOLER_SIZE) return false;
@@ -2255,7 +2265,7 @@ function settleSeason(rank, size) {
   } else move = p.points >= offlinePromoteAt(p.title) && p.played >= MIN_MATCHES_TO_PROMOTE ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
   const title = clamp(p.title + move, 0, TITLES.length - 1);
   const reward = p.played && rank && size ? seasonRewardCan(p.title, rank, size) : null;
-  if (reward) career.cans.push({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // skips the cooler limit
+  if (reward) stashCan({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // waits if the cooler is full
   Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
   save();
   if (typeof showSeasonResult === "function") showSeasonResult();
@@ -4407,8 +4417,11 @@ function renderHubExtras() {
   $("lives").textContent = career.lives;
   $("caps").textContent = bigNum(career.caps);
   $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : "";
+  fillCooler();
   const cooler = $("cooler"); cooler.innerHTML = "";
-  const slots = Math.max(COOLER_SIZE, career.cans.length);
+  const slots = COOLER_SIZE;
+  const waiting = career.canBacklog?.length || 0;
+  $("coolerHead").textContent = waiting ? `PRIZE COOLER · ${waiting} waiting` : "PRIZE COOLER";
   for (let i = 0; i < slots; i++) {
     const c = career.cans[i], b = document.createElement("button");
     if (c) {
@@ -4472,6 +4485,13 @@ function canTapped(i) {
   };
 }
 // ── A small info sheet (can odds), reusing the lives sheet frame
+// A yes/no sheet: the main button runs onYes; the second just closes it.
+function showChoice(html, yes, onYes, no = "CANCEL") {
+  $("livesBody").innerHTML = html + `<div class="row" style="gap:10px;justify-content:center;margin-top:14px"><button class="btn ghost" id="choiceNo" style="font-size:17px;padding:12px 18px">${no}</button><button class="btn green" id="choiceYes">${yes}</button></div>`;
+  $("choiceNo").onclick = () => { $("livesSheet").hidden = true; };
+  $("choiceYes").onclick = () => { $("livesSheet").hidden = true; onYes(); };
+  $("livesSheet").hidden = false;
+}
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
   return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Open one at a time: the better the can, the longer it takes, and Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
@@ -4658,7 +4678,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794109009";
+const BUILD_ID = "1794109089";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -4730,7 +4750,7 @@ $("dailyBtn").onclick = () => {
   career.lastDaily = new Date().toDateString(); career.coins += DAILY_COINS;
   // The free can skips the cooler limit and opens on the spot.
   const id = rollCan(DAILY_ODDS);
-  career.cans.push({ id, court: topCourt(), instant: true });
+  career.cans.push({ id, court: topCourt(), instant: true }); // opens on the spot below, so it never sits in a full cooler
   save(); renderHub(); sfx.win(); haptic("success");
   const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${DAILY_COINS} coins and a free can!`;
   $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
@@ -5382,7 +5402,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "can" ? `${item.title} is in your cooler!` : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
   renderShop(); renderHub();
 };

@@ -60,6 +60,11 @@ function rollCan(odds, boost = 0) {
   for (const c of list) { x -= w(c); if (x <= 0) return c.id; }
   return list[0].id;
 }
+// The cooler never holds more than COOLER_SIZE cans. Cans you're owed while it's full (a store purchase, a season prize)
+// wait in career.canBacklog and drop in as soon as a slot opens.
+function stashCan(can) { if (career.cans.length < COOLER_SIZE) career.cans.push(can); else (career.canBacklog ||= []).push(can); }
+function fillCooler() { const b = career.canBacklog; while (b && b.length && career.cans.length < COOLER_SIZE) career.cans.push(b.shift()); }
+const coolerFull = () => career.cans.length >= COOLER_SIZE;
 // Put a can in the cooler; returns false if the cooler is full.
 function giveCan(id, court, instant = false) {
   if (career.cans.length >= COOLER_SIZE) return false;
@@ -311,7 +316,7 @@ function settleSeason(rank, size) {
   } else move = p.points >= offlinePromoteAt(p.title) && p.played >= MIN_MATCHES_TO_PROMOTE ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
   const title = clamp(p.title + move, 0, TITLES.length - 1);
   const reward = p.played && rank && size ? seasonRewardCan(p.title, rank, size) : null;
-  if (reward) career.cans.push({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // skips the cooler limit
+  if (reward) stashCan({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // waits if the cooler is full
   Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
   save();
   if (typeof showSeasonResult === "function") showSeasonResult();

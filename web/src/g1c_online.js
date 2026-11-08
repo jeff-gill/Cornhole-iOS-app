@@ -12,10 +12,15 @@ const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutoria
 // player who has reached the Stadium never meets a beginner, even back at the Backyard.
 const bracket = vi => (vi + 1) * 100 + VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 const randomPick = () => ({ name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id });
-function playCourt(vi) {
+function playCourt(vi, confirmed = false) {
   tickLives(); if (career.lives <= 0) { openLives(); return; }
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
+  if (coolerFull() && !confirmed) { // a full cooler means a win can't drop a new can: say so first
+    showChoice(`<h2>Prize Cooler full</h2><div class="muted">Your Prize Cooler already has ${COOLER_SIZE} cans, so you won't get a new Prize Can if you win this match. Open a can first to make room.</div>`,
+      "PROCEED", () => playCourt(vi, true), "CANCEL");
+    return;
+  }
   const online = canGoOnline();
   search = { vi, t: 0, online, limit: online ? SEARCH_TIME : 2 + Math.random() * 1.5, reel: buildReel() };
   if (online) postNative("net", JSON.stringify({ op: "find", group: bracket(vi) }));

@@ -379,7 +379,7 @@ s.was { opacity: .6; font-size: .8em; }
 .prize.show::after { content: ""; position: absolute; inset: -50% auto -50% -60%; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: rotate(20deg); animation: shine .9s .35s ease-out both; pointer-events: none; }
 @keyframes cardflip { from { transform: perspective(700px) rotateY(100deg) scale(.6); } to { transform: perspective(700px) rotateY(0) scale(1); } }
 @keyframes shine { from { left: -60%; } to { left: 130%; } }
-.seg { display: grid; grid-auto-flow: column; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 14px; }
+.seg { display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; background: rgba(0,0,0,.25); padding: 5px; border-radius: 14px; }
 .seg button { border: 0; border-radius: 10px; padding: 9px 4px; background: none; color: var(--ink-dim); font-family: var(--font-display); font-size: 17px; }
 .seg button.on { background: #fff; color: var(--deck); }
 .pnames { display: grid; gap: 8px; }
@@ -590,7 +590,7 @@ s.was { opacity: .6; font-size: .8em; }
     <button class="dailybtn" id="dailyBtn" hidden><span class="gift">🎁</span><span><b>Daily reward</b><small><i class="coin"></i> 100 + a free can</small></span></button>
   </div>
   <div class="hubbottom">
-    <div class="coolerhead">PRIZE COOLER</div>
+    <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
     <div class="cooler" id="cooler"></div>
     <div class="vcarousel" id="venueCard"></div>
     <div class="hubrow">
