@@ -330,12 +330,16 @@ function openSeason() {
     const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
     const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
     const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
-    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => row(e, i + 1)).join("")}${G.rank > 10 ? row([G.me, s.points, myHandle()], G.rank) : ""}</div>
+    // the whole group, scrolling, with a line under the promotion places and one above the relegation places
+    const list = G.list.map((e, i) => (i === G.size - down && down ? `<div class="zoneline down">▼ RELEGATION LINE ▼</div>` : "") + row(e, i + 1) + (i + 1 === up ? `<div class="zoneline up">▲ PROMOTION LINE ▲</div>` : "")).join("");
+    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder group" id="groupList">${list}</div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
   showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
     <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
     <div class="ladder">${rows}</div>`);
+  const me = document.querySelector("#groupList .me"); // start the list at your own row
+  if (me) { const gl = $("groupList"); gl.scrollTop = me.offsetTop - gl.offsetTop - gl.clientHeight / 2 + me.clientHeight / 2; }
 }
 function showSeasonResult() {
   const L = seasonState().last; if (!L || L.shown) return;

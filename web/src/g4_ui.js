@@ -796,7 +796,9 @@ function glitchOut() {
 // A match that never finished last time (the app was closed or crashed in the middle of it).
 function settleInterruptedMatch() {
   const r = refundMatch(); if (!r) return;
-  showInfo(`<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`);
+  showInfo(r.refunded
+    ? `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
+    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">You left the app during your last match at ${esc(r.court)} and it was closed before you came back, so it counts as a loss (−${r.stars} ⭐).</div>`);
 }
 
 resize(); openHub(); settleInterruptedMatch();

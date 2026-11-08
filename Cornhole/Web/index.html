@@ -371,6 +371,10 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .ladder div.locked2 { opacity: .55; }
 .ladder div.up { box-shadow: inset 4px 0 0 #2fbf71; background: rgba(47,191,113,.16); }
 .ladder div.down { box-shadow: inset 4px 0 0 #e8392b; background: rgba(232,57,43,.16); }
+.ladder.group { max-height: 44vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-right: 2px; position: relative; }
+.ladder div.zoneline { display: block; padding: 3px 0; border-radius: 0; background: none; text-align: center; font-size: 11px; letter-spacing: .12em; font-weight: 900; }
+.ladder div.zoneline.up { color: #3ee07a; border-bottom: 3px solid #2fbf71; }
+.ladder div.zoneline.down { color: #ff6a5a; border-top: 3px solid #e8392b; }
 .exacttip { position: fixed; z-index: 60; transform: translate(-50%, 8px); padding: 6px 12px; border-radius: 12px; border: 2px solid #fff; background: #12203a; color: #fff; font: 900 15px/1.2 Nunito, system-ui, sans-serif; white-space: nowrap; box-shadow: 0 4px 0 rgba(0,0,0,.35); pointer-events: none; animation: tipin .15s ease-out; }
 @keyframes tipin { from { opacity: 0; transform: translate(-50%, 0); } }
 .nbadge { position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px; background: #e8392b; border: 2px solid #fff; color: #fff; font: 900 12px/18px Nunito, system-ui, sans-serif; font-style: normal; text-align: center; box-shadow: 0 2px 0 rgba(0,0,0,.35); animation: badgepop .35s cubic-bezier(.3,2,.5,1); pointer-events: none; }
@@ -2230,15 +2234,25 @@ function useLife() {
   career.lives--; save(); scheduleLivesAlert();
   return true;
 }
-// ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends. If it never
-// ends properly (the app quit or crashed, the phone powered off, or the game froze), the buy-in and the ticket come
-// back and no stars are lost, every time.
+// ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends.
+// If it never ends properly while the game was on screen (it crashed or froze), the buy-in and the ticket come back and
+// no stars are lost. If the app had gone to the background (career.activeMatch.bg) and never came back, that's treated
+// as a quit: a loss, like quitting from the pause menu.
 function refundMatch() {
   const m = career.activeMatch; if (!m) return null;
   career.activeMatch = null;
+  if (m.bg) { // left the app mid-match and it was closed
+    addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
+    return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };
+  }
   career.coins += m.fee; refundLife(); save();
   return { refunded: true, fee: m.fee, court: VENUES[m.vi].name };
 }
+// Going to the background mid-match marks it; coming back clears the mark.
+document.addEventListener("visibilitychange", () => {
+  if (!career.activeMatch) return;
+  career.activeMatch.bg = document.hidden; save();
+});
 function refundLife() { career.lives++; if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); save(); scheduleLivesAlert(); }
 // A ticket for coins is priced by your season title (it goes up when you're promoted and down when you're moved down),
 // but never more than a tenth of a buy-in at your highest open court, so a new player is never priced out.
@@ -5051,7 +5065,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794150247";
+const BUILD_ID = "1794150448";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -5093,12 +5107,16 @@ function openSeason() {
     const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
     const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
     const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
-    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder">${G.list.slice(0, 10).map((e, i) => row(e, i + 1)).join("")}${G.rank > 10 ? row([G.me, s.points, myHandle()], G.rank) : ""}</div>
+    // the whole group, scrolling, with a line under the promotion places and one above the relegation places
+    const list = G.list.map((e, i) => (i === G.size - down && down ? `<div class="zoneline down">▼ RELEGATION LINE ▼</div>` : "") + row(e, i + 1) + (i + 1 === up ? `<div class="zoneline up">▲ PROMOTION LINE ▲</div>` : "")).join("");
+    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder group" id="groupList">${list}</div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
   showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
     <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
     <div class="ladder">${rows}</div>`);
+  const me = document.querySelector("#groupList .me"); // start the list at your own row
+  if (me) { const gl = $("groupList"); gl.scrollTop = me.offsetTop - gl.offsetTop - gl.clientHeight / 2 + me.clientHeight / 2; }
 }
 function showSeasonResult() {
   const L = seasonState().last; if (!L || L.shown) return;
@@ -6107,7 +6125,9 @@ function glitchOut() {
 // A match that never finished last time (the app was closed or crashed in the middle of it).
 function settleInterruptedMatch() {
   const r = refundMatch(); if (!r) return;
-  showInfo(`<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`);
+  showInfo(r.refunded
+    ? `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
+    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">You left the app during your last match at ${esc(r.court)} and it was closed before you came back, so it counts as a loss (−${r.stars} ⭐).</div>`);
 }
 
 resize(); openHub(); settleInterruptedMatch();

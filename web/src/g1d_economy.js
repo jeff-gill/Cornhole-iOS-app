@@ -172,15 +172,25 @@ function useLife() {
   career.lives--; save(); scheduleLivesAlert();
   return true;
 }
-// ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends. If it never
-// ends properly (the app quit or crashed, the phone powered off, or the game froze), the buy-in and the ticket come
-// back and no stars are lost, every time.
+// ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends.
+// If it never ends properly while the game was on screen (it crashed or froze), the buy-in and the ticket come back and
+// no stars are lost. If the app had gone to the background (career.activeMatch.bg) and never came back, that's treated
+// as a quit: a loss, like quitting from the pause menu.
 function refundMatch() {
   const m = career.activeMatch; if (!m) return null;
   career.activeMatch = null;
+  if (m.bg) { // left the app mid-match and it was closed
+    addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
+    return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };
+  }
   career.coins += m.fee; refundLife(); save();
   return { refunded: true, fee: m.fee, court: VENUES[m.vi].name };
 }
+// Going to the background mid-match marks it; coming back clears the mark.
+document.addEventListener("visibilitychange", () => {
+  if (!career.activeMatch) return;
+  career.activeMatch.bg = document.hidden; save();
+});
 function refundLife() { career.lives++; if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); save(); scheduleLivesAlert(); }
 // A ticket for coins is priced by your season title (it goes up when you're promoted and down when you're moved down),
 // but never more than a tenth of a buy-in at your highest open court, so a new player is never priced out.
