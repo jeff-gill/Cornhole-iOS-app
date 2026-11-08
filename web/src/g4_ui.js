@@ -365,7 +365,7 @@ function openHub() {
 
 }
 // 1,500 → 1.5K, 2,000,000 → 2M
-function short(n) { if (n >= 1e6) return +(n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "M"; if (n >= 1e4) return +(n / 1e3).toFixed(n % 1e3 ? 1 : 0) + "K"; return n.toLocaleString(); }
+function short(n) { return bigNum(n); } // 1.5K, 2.3M ... one decimal
 function renderHub() {
   $("coins").textContent = bigNum(career.coins);
   $("stars").textContent = bigNum(career.stars);

@@ -5,7 +5,7 @@
 function bigNum(n) {
   n = Math.max(0, Math.floor(n));
   if (n < 1000) return String(n);
-  const units = [[1e12, "T", 2], [1e9, "B", 2], [1e6, "M", 2], [1e3, "K", 1]];
+  const units = [[1e12, "T", 1], [1e9, "B", 1], [1e6, "M", 1], [1e3, "K", 1]];
   for (const [v, u, d] of units) if (n >= v) { const f = 10 ** d; return (Math.floor(n / v * f) / f).toFixed(d) + u; }
   return String(n);
 }
@@ -251,10 +251,15 @@ function nextPrize() {
 $("canDone").onclick = () => { $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub(); };
 
 // ── Testing tools: the browser preview and Xcode debug builds (the app sets window.__debugBuild), never the App Store.
-// Tester mode keeps coins and bottle caps topped up so everything can be tried; it's on until switched off.
+// Tester mode keeps coins and bottle caps topped up and the stars maxed so everything can be tried; it's on until switched off.
 const TEST_BANK = 99999999;
 const testing = () => !nativeBridge || !!window.__debugBuild;
-function testerTopUp() { if (testing() && career.tester !== false) { career.coins = TEST_BANK; career.caps = TEST_BANK; } }
+function testerTopUp() {
+  if (!testing() || career.tester === false) return;
+  career.coins = TEST_BANK; career.caps = TEST_BANK;
+  // and every court's star track full, so every court (and its avatars) is open
+  if (VENUES.some(v => (career.courtStars[v.id] || 0) < v.max)) { for (const v of VENUES) career.courtStars[v.id] = v.max; updateUnlocks(); }
+}
 if (testing()) {
   const b = $("testerBtn"); b.hidden = false;
   const label = () => { b.textContent = `🧪 Tester mode: ${career.tester !== false ? "on" : "off"}`; };
