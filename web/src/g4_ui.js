@@ -260,6 +260,7 @@ function animateTotals() {
     requestAnimationFrame(step);
   }
 }
+const INNING_CARD_SECS = 5;
 function renderInningSheet() {
   const sheet = $("inningSheet");
   if (!((S.phase === "inning" || S.phase === "over") && S.lastInning)) { sheet.hidden = true; return; }
@@ -295,7 +296,7 @@ function renderInningSheet() {
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
-      <button class="swipehint" id="nextBtn">Tap or swipe up for inning ${S.inning + 1} <span>⇡</span></button>`;
+      <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
   }
   $("inningBody").innerHTML = body;
   const wrap = $("inningBody").querySelector(".card-wrap");
@@ -691,6 +692,13 @@ function frame(now) {
   updateBags(dt);
   updateAimRig(dt);
   updateOnline(dt);
+  // The between-innings card moves on by itself after a few seconds (in live play the other player is waiting).
+  if (S.phase === "inning" && !$("inningSheet").hidden) {
+    const before = Math.ceil(INNING_CARD_SECS - S.innT); S.innT += dt;
+    const left = Math.ceil(INNING_CARD_SECS - S.innT);
+    if (left !== before && $("innCount")) $("innCount").textContent = Math.max(0, left);
+    if (S.innT >= INNING_CARD_SECS) { S.innT = 0; dismissScorecard(0, -1); }
+  } else S.innT = 0;
   if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); if (career.lives <= 0) renderHub(); }
   updatePreview(dt);
   updateFx(dt);

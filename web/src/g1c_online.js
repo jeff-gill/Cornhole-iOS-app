@@ -155,8 +155,6 @@ function updateOnline(dt) {
     if (S.clock <= 0) timeUp();
   }
   const O = S.online; if (!O) return;
-  // Live matches don't wait forever on the between-innings card.
-  if (S.phase === "inning") { O.innT = (O.innT || 0) + dt; if (O.innT > 10) { O.innT = 0; dismissScorecard(0, -1); } } else O.innT = 0;
   if (S.phase === "remote") {
     O.waitT += dt;
     const i = O.queue.findIndex(m => m.t === "throw" || m.t === "timeout");
