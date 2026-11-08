@@ -22,7 +22,7 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 - **Card discount:** cards collected toward an item take up to 30% off its coin price, growing slowly (squared), so half the cards is only 7.5% off.
 - **Aiming:** tap where the bag should finish, then drag the landing ring around the gold zone. Near the finish it sticks, farther back it slides, and off to the side it adds spin.
 - **Throwing:** one move. Pull back for power, and the arrow swings faster the harder you pull. Let go in the gold band with the arrow straight. Pulling into overdrive makes the throw wild.
-- **Wind:** set at the start of each match and steady for the whole match (never more than 10 mph), from any direction, and stronger at higher venues. The aiming guide ignores it.
+- **Wind:** set at the start of each match and steady for the whole match (never more than 10 mph), and you can see it: faint streaks drift across the court in its direction, more and faster the stronger it blows, from any direction, and stronger at higher venues. The aiming guide ignores it.
 - **Other rules:**
   - Pitcher's boxes are assigned by coin flip each match.
   - If one of your own bags is in the way, a push shot shoves it along your line.

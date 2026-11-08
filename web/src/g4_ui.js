@@ -747,6 +747,7 @@ function step(now) {
   if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); if (career.lives <= 0) renderHub(); }
   updatePreview(dt);
   updateFx(dt);
+  updateWindStreaks(dt);
   venueTick(dt, S.time);
   updateCamera(dt);
   if (!window.__skipRender) renderScene();
