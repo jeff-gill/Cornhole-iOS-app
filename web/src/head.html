@@ -111,6 +111,18 @@ body.inhub .score, body.inhub #panel { display: none; }
   background: linear-gradient(#ff6a5a, #c8102e); box-shadow: 0 6px 0 rgba(0,0,0,.35); font-family: var(--font-display); font-size: 34px; line-height: 1.05; animation: timeupin .35s cubic-bezier(.3,1.8,.5,1); white-space: nowrap; }
 #timeupMsg small { display: block; font-family: var(--font-body, inherit); font-weight: 900; font-size: 15px; margin-top: 4px; }
 @keyframes timeupin { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } }
+/* A wash: both sides scored the same, so nobody gets points. Big WASH with bubbles floating up around it. */
+#washFx { position: fixed; inset: 0; z-index: 400; pointer-events: none; display: grid; place-items: center; }
+#washFx .card { position: relative; text-align: center; padding: 18px 34px 16px; border-radius: 28px; border: 5px solid #fff; background: linear-gradient(#4fc3f7, #1e7fd0);
+  box-shadow: 0 8px 0 rgba(0,0,0,.35), 0 0 40px rgba(120,210,255,.6); animation: washin .45s cubic-bezier(.3,1.8,.5,1); transition: transform .5s cubic-bezier(.5,0,.3,1), opacity .5s; }
+#washFx .card.shrink small, #washFx .card.shrink i { opacity: 0; transition: opacity .2s; }
+#washFx b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 64px; line-height: 1; letter-spacing: .04em; color: #fff; text-shadow: 0 4px 0 rgba(0,0,0,.25); }
+#washFx small { display: block; font-weight: 900; font-size: 16px; margin-top: 4px; color: #e8f7ff; }
+#washFx i { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,.85); background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(180,230,255,.25) 40%, rgba(120,200,255,.1) 70%);
+  animation: bubble 2.4s ease-out forwards; opacity: 0; }
+@keyframes washin { from { transform: scale(.3) rotate(-6deg); opacity: 0; } }
+@keyframes washout { to { transform: scale(.85); opacity: 0; } }
+@keyframes bubble { 0% { opacity: 0; transform: translate(0, 20px) scale(.4); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), -150px) scale(1); } }
 .searchsheet { display: grid; gap: 12px; justify-items: center; padding: 26px 20px; }
 .oppspin { width: 100%; justify-self: stretch; height: 76px; box-sizing: border-box; overflow: hidden; border-radius: 18px; border: 4px solid #fff; background: linear-gradient(#12203a, #1b2f52); box-shadow: 0 6px 0 rgba(0,0,0,.35), inset 0 10px 14px rgba(0,0,0,.4), inset 0 -10px 14px rgba(0,0,0,.4); }
 .oppreel { will-change: transform; }
@@ -480,12 +492,15 @@ s.was { opacity: .6; font-size: .8em; }
 .mini .pts { display: inline-block; min-width: 44px; padding: 1px 8px; border-radius: 999px; font-family: var(--font-display); font-size: 15px; color: #12203a; background: var(--c); }
 .mini .pts.wash { background: rgba(255,255,255,.12); color: var(--ink-dim); }
 .hero .vs { position: absolute; bottom: 0; z-index: 2; width: 60px; height: 60px; font-size: 20px; }
-/* The points bubble lands on the bottom inside corner of the winning tile, falling in at an angle from the opposite top corner. */
-.hero .vs.left { left: calc(50% - 5px - 44px); animation: dropL .55s .35s cubic-bezier(.55,0,.9,.6) backwards, thudsq .3s .9s ease-out; }
-.hero .vs.right { left: calc(50% + 5px - 16px); animation: dropR .55s .35s cubic-bezier(.55,0,.9,.6) backwards, thudsq .3s .9s ease-out; }
-.hero .vs.wash { left: calc(50% - 30px); animation: vspop .6s .25s cubic-bezier(.2,2,.4,1) backwards; }
-@keyframes dropL { from { transform: translate(-150px, -190px) rotate(-200deg) scale(.7); opacity: 0; } 20% { opacity: 1; } to { transform: none; } }
-@keyframes dropR { from { transform: translate(150px, -190px) rotate(200deg) scale(.7); opacity: 0; } 20% { opacity: 1; } to { transform: none; } }
+/* The points bubble lands on the outer bottom corner of the winning tile (well away from the middle, so it's plain
+   whose points they are), falling in at an angle from above. */
+.hero .vs.left { left: -14px; bottom: -12px; animation: dropL .55s .35s cubic-bezier(.55,0,.9,.6) backwards, thudsq .3s .9s ease-out; }
+.hero .vs.right { right: -14px; left: auto; bottom: -12px; animation: dropR .55s .35s cubic-bezier(.55,0,.9,.6) backwards, thudsq .3s .9s ease-out; }
+.hero .vs.wash { left: 50%; bottom: 2px; width: auto; height: 42px; padding: 0 20px; border-radius: 999px; transform: translateX(-50%); font-size: 20px; color: #fff;
+  background: linear-gradient(#4fc3f7, #1e7fd0); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); opacity: 0; transition: opacity .15s; }
+.hero .vs.wash.shown { opacity: 1; } /* appears as the big WASH card shrinks down onto it */
+@keyframes dropL { from { transform: translate(40px, -220px) rotate(-200deg) scale(.7); opacity: 0; } 20% { opacity: 1; } to { transform: none; } }
+@keyframes dropR { from { transform: translate(-40px, -220px) rotate(200deg) scale(.7); opacity: 0; } 20% { opacity: 1; } to { transform: none; } }
 @keyframes thudsq { 0% { transform: scale(1.25, .7); } 45% { transform: scale(.9, 1.12); } 100% { transform: none; } }
 .hero.landed { animation: heroshake .3s ease-out; }
 @keyframes heroshake { 0%,100% { transform: none; } 30% { transform: translateY(5px); } 60% { transform: translateY(-2px); } }
@@ -683,3 +698,4 @@ s.was { opacity: .6; font-size: .8em; }
 <div class="overlay" id="inningSheet" hidden>
   <div class="sheet" id="inningBody"></div>
 </div>
+<div id="washFx" hidden><div class="card" id="washCard"><b>WASH</b><small>No Points Scored</small></div></div>

@@ -487,6 +487,33 @@ function finishInning() {
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
   if (S.scores[best] >= 21) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
+  if (r.winner === null) showWash();
+}
+// Both sides scored the same this inning (a "wash"): nobody gets points. A big WASH with bubbles floating up.
+function showWash() {
+  const fx = $("washFx"), card = $("washCard");
+  card.querySelectorAll("i").forEach(b => b.remove());
+  for (let k = 0; k < 16; k++) {
+    const b = document.createElement("i"), s = 10 + Math.random() * 26;
+    Object.assign(b.style, { width: s + "px", height: s + "px", left: (-15 + Math.random() * 130) + "%", top: (20 + Math.random() * 90) + "%", animationDelay: (Math.random() * 0.9) + "s" });
+    b.style.setProperty("--dx", ((Math.random() - 0.5) * 60) + "px");
+    card.appendChild(b);
+  }
+  card.classList.remove("shrink"); card.style.transform = ""; card.style.opacity = "";
+  fx.hidden = false; card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
+  sfx.whoosh(); haptic("light");
+  // after a moment it shrinks down onto the small WASH pill between the two tiles on the inning card
+  clearTimeout(showWash.t); clearTimeout(showWash.t2);
+  showWash.t = setTimeout(() => {
+    const pill = document.querySelector("#inningSheet:not([hidden]) .hero .vs.wash");
+    card.classList.add("shrink");
+    if (pill) {
+      const a = card.getBoundingClientRect(), b = pill.getBoundingClientRect();
+      const k = b.height / a.height;
+      card.style.transform = `translate(${b.left + b.width / 2 - (a.left + a.width / 2)}px, ${b.top + b.height / 2 - (a.top + a.height / 2)}px) scale(${k})`;
+    } else card.style.opacity = "0";
+    showWash.t2 = setTimeout(() => { fx.hidden = true; if (pill) pill.classList.add("shown"); }, 520);
+  }, 1700);
 }
 function finishMatch() {
   career.activeMatch = null; // it ended properly: nothing to refund

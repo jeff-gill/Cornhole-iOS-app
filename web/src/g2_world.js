@@ -1410,20 +1410,20 @@ function buildVenue(id) {
       const walk = new THREE.Mesh(new THREE.PlaneGeometry(14, 140), lam(0x8c8a84)); walk.rotation.x = -Math.PI / 2; walk.position.set(sx * 35, 0.01, -14); g.add(walk);
     }
     pizzeria(g, 0, -80);
-    // trees in clumps past the ends of the street and behind the rooftops, so the view never runs out into empty sky
+    // a tree line all the way round, with low hedges in front of it, so the view always ends in green, not sky
     const trr = rng(97), tk = ["tree_oak", "tree_maple", "tree_oak"], tspots = [];
-    for (let x = -110; x <= 110; x += 16 + trr() * 14) if (trr() < 0.7) tspots.push([x, 72 + trr() * 30, 1.6 + trr() * 0.8]);   // past the near end
-    for (let x = -120; x <= 120; x += 18 + trr() * 14) if (Math.abs(x) > 44 || trr() < 0.5) tspots.push([x, -112 - trr() * 30, 1.8 + trr() * 0.9]); // behind the pizzeria
-    for (const sx of [-1, 1]) for (let z = 50; z > -110; z -= 20 + trr() * 16) if (trr() < 0.6) tspots.push([sx * (82 + trr() * 25), z, 1.8 + trr() * 0.9]); // behind the shops
-    for (const [x, z, sc] of tspots) { const kind = tk[Math.floor(trr() * tk.length)], rot = trr() * 6.28; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); }); }
+    for (let x = -130; x <= 130; x += 8 + trr() * 5) { tspots.push([x, 112 + trr() * 8]); tspots.push([x, -150 - trr() * 8]); }
+    for (const sx of [-1, 1]) for (let z = 110; z > -150; z -= 8 + trr() * 5) tspots.push([sx * (122 + trr() * 8), z]);
+    for (const [x, z] of tspots) { const kind = tk[Math.floor(trr() * tk.length)], rot = trr() * 6.28, sc = 1.7 + trr() * 0.7; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); }); }
+    const hedge = lam(0x3f6e2e, { flatShading: true });
+    for (const [x, z, w, d] of [[0, 104, 250, 5], [0, -142, 250, 5], [-114, -20, 5, 250], [114, -20, 5, 250]]) add(g, box(w, 4.5, d, hedge), x, 2.25, z, false);
     const grass = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), lam(0x6a8a48)); grass.rotation.x = -Math.PI / 2; grass.position.set(0, -0.12, -30); g.add(grass);
     shopRow(g, -56, 60, -110, -1); shopRow(g, 56, 60, -110, 1);
     // a low brick wall with planters around the patio, open at the back toward the pizzeria
     const wallMat = photoMat("red_brick_03", 10, 0.4, { fallback: 0x8a3a2a });
     for (const sx of [-1, 1]) { add(g, box(1.4, 3, 96, wallMat), sx * 28, 1.5, -10, false); add(g, box(2, 0.4, 96, lam(0xd8ccb4)), sx * 28, 3.2, -10, false); }
     for (const sx of [-1, 1]) for (let z = 30; z > -56; z -= 18) placeModel(g, "potted_plant_02", sx * 25.5, z, z, 1.4);
-    // picnic tables down both sides, running with the lane, with groups sitting at most of them (nobody sits with
-    // their back to the game: they face across their table, side-on to the boards)
+    // picnic tables down both sides, set across the lane, with groups of 2 to 4 sitting at most of them
     const tr = rng(17), wood = std(0x9c6a3a, { roughness: 0.8 });
     for (const sx of [-1, 1]) for (let z = 22; z > -56; z -= 12.5) {
       if (sx < 0 && z < -36 && z > -46) continue; // room for the chalkboard
@@ -1431,15 +1431,15 @@ function buildVenue(id) {
       add(tab, box(3.4, 0.25, 8, wood), 0, 2.5, 0);
       for (const bx of [-2.4, 2.4]) add(tab, box(1.1, 0.2, 8, wood), bx, 1.5, 0);
       for (const lz of [-3.2, 3.2]) { add(tab, box(5.6, 0.3, 0.3, wood), 0, 1.3, lz, false); for (const lx of [-1, 1]) { const leg = add(tab, box(0.3, 2.6, 0.3, wood), lx * 1.2, 1.25, lz); leg.rotation.z = lx * 0.35; } }
-      tab.position.set(tx, 0, z); g.add(tab);
+      tab.position.set(tx, 0, z); tab.rotation.y = Math.PI / 2; g.add(tab); // turned across the lane
       if (tr() < 0.4) pizzaBox(g, tx, 2.75, z + (tr() - 0.5) * 3, tr() * 3);
       if (tr() < 0.35) beachUmbrella(g, tx, z, tr() < 0.5 ? ["#1f7a3a", "#ffffff"] : ["#c8202a", "#ffffff"], 0, tr() * 6);
       if (tr() < 0.15) continue; // the odd empty table
       const n = 2 + Math.floor(tr() * 3); // a group of 2 to 4
       for (let k = 0; k < n; k++) {
-        const side = k % 2 ? 1 : -1, pz = z + (k < 2 ? -1.6 : 1.6) + (tr() - 0.5) * 0.6;
+        const side = k % 2 ? 1 : -1, px = tx + (k < 2 ? -1.8 : 1.8) + (tr() - 0.5) * 0.6;
         // on the bench, knees under the table, facing across it
-        person(g, tx + side * 2.75, pz, side > 0 ? -Math.PI / 2 : Math.PI / 2, 300 + Math.round(z * 7) + k * 13 + sx, "sit");
+        person(g, px, z + side * 2.75, side > 0 ? Math.PI : 0, 300 + Math.round(z * 7) + k * 13 + sx, "sit");
       }
     }
     for (const [x, z] of [[-23, 16], [23, 3], [-23, -22], [23, -34], [-12, -60], [12, -60]]) patioHeater(g, x, z); // between the tables
