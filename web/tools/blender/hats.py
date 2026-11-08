@@ -243,7 +243,19 @@ def police():
     cyl((0, -0.96, 0.24), 0.02, 1.4, GOLD, rot=(0, math.radians(90), 0), metal=0.85)  # gold cord above the peak
     render("police")
 
-HATS = [ball_cap, flowercrown, beanie, sunhat, cowboy, police, bucket, catears, trucker, pinkberet, fireman, party, hardhat, tiara,
+def devil():
+    setup(); sphere((0, 0, 0), (1, 1.05, 0.95), "#d01818", half=True, rough=0.25)   # glossy red helmet
+    torus((0, 0, 0.04), 1.0, 0.08, BLACK, scale=(1, 1.05, 1), rough=0.3)
+    for sx in (-1, 1):  # smooth horns that curve outward toward their tips
+        bpy.ops.mesh.primitive_cone_add(vertices=24, radius1=0.24, radius2=0.0, depth=0.95, end_fill_type="NOTHING", location=(0, 0, 0))
+        h = bpy.context.active_object
+        for v in h.data.vertices:
+            t = (v.co.z + 0.475) / 0.95; v.co.x += sx * 0.32 * t * t; v.co.z += 0.0
+        bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.subdivide(number_cuts=3); bpy.ops.object.mode_set(mode="OBJECT")
+        h.location = (sx * 0.45, -0.1, 1.15); h.rotation_euler = (0, sx * math.radians(-18), 0); fin(h, "#d01818", 0.25)
+    render("devil")
+
+HATS = [ball_cap, devil, beanie, sunhat, cowboy, police, bucket, catears, trucker, pinkberet, fireman, party, hardhat, tiara,
         chef, cowgirl, tophat, propeller, fedora, viking, grad, wizard, crown, astronaut, beret]
 only = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 for f in HATS:

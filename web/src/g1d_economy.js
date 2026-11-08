@@ -187,7 +187,7 @@ function scheduleLivesAlert() {
 // Headgear avatars made in Blender (web/tools/blender/hats.py): 4 to start, 3 more with each court you open, the
 // rarest (crown, astronaut, beret) at Court 8. About half are feminine picks. Ids stay a0..a24 so saves carry over.
 const AVATARS = [
-  ["ballcap", "#cfe3ff", 0], ["flowercrown", "#ffe0ee", 0], ["beanie", "#d8f2d8", 0], ["sunhat", "#fff2c8", 0],
+  ["ballcap", "#cfe3ff", 0], ["devil", "#ffe0d8", 0], ["beanie", "#d8f2d8", 0], ["sunhat", "#fff2c8", 0],
   ["cowboy", "#ffe6c8", 1], ["police", "#dbe6ff", 1], ["bucket", "#e6eef8", 1],
   ["catears", "#f0e6ff", 2], ["trucker", "#dbe6ff", 2], ["pinkberet", "#ffe0ec", 2],
   ["fireman", "#ffe0d8", 3], ["party", "#fff0c8", 3], ["hardhat", "#e6eef8", 3],
