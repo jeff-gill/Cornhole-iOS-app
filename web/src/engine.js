@@ -123,7 +123,7 @@ class World {
   }
   land(b, c) {
     b.x = c.p.x; b.y = c.p.y; b.z = c.p.z; b.trail.push({ ...c.p });
-    if (c.kind === "hole") { b.state = "inHole"; b.vx = b.vy = 0; this.events.push({ type: "swish", bag: b }); }
+    if (c.kind === "hole") { b.state = "inHole"; b.vx = b.vy = 0; this.events.push({ type: "swish", bag: b }); this.brush(c.v); }
     else if (c.kind === "ground") { b.state = "ground"; b.z = 0; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "ground", bag: b }); }
     else {
       const sm = b.t.spinMul || 1;
@@ -135,6 +135,21 @@ class World {
       b.state = "sliding"; b.vx = lv.x; b.vy = lv.y;
       b.curve = (b.t.spin || 0) * SPIN_CURVE * sm; b.spin *= 0.6;
       this.events.push({ type: "land", bag: b }); this.bounds(b);
+    }
+  }
+  // A bag dropping through the hole brushes any bag hanging over its edge: that one slides a little the way the
+  // incoming bag was travelling, dragged a touch toward the hole. If that leaves more than half of it over the hole,
+  // bounds() drops it in as well.
+  brush(v) {
+    const sp = Math.hypot(v.x, v.y) || 1, hx = v.x / sp, hy = v.y / sp;
+    for (const o of this.bags) {
+      if (!onSurface(o)) continue;
+      const cov = holeCover(o); if (cov <= 0) continue;
+      const tx = HOLE.x - o.x, ty = HOLE.y - o.y, td = Math.hypot(tx, ty) || 1;
+      const k = 1.1 + cov * 2.2 + (this.random ? this.rand() * 0.6 : 0.3); // ft/s: the more it covers, the more it gets hit
+      o.vx = hx * k + (tx / td) * k * 0.45; o.vy = hy * k + (ty / td) * k * 0.45;
+      o.state = "sliding"; o.spin += (this.random ? this.rand() * 2 - 1 : 0.5) * 2;
+      this.events.push({ type: "hit", a: o, b: o });
     }
   }
   slide(b, dt) {
