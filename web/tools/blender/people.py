@@ -9,7 +9,7 @@ import bpy, os, sys, math, json, base64, zipfile, tempfile, colorsys
 
 ROOT = os.getcwd()
 SRC = os.path.join(ROOT, "web/tools/blender/quaternius")
-OUT_M = os.path.join(ROOT, "web/assets/people"); OUT_A = os.path.join(ROOT, "web/assets/avatars")
+OUT_M = os.path.join(ROOT, "web/tools/blender/quaternius/converted"); OUT_A = os.path.join(ROOT, "web/assets/avatars")
 mode = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else ["models", "avatars"]
 TMP = tempfile.mkdtemp()
 for z in ("men-fbx.zip", "women-fbx.zip"):

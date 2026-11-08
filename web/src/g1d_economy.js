@@ -184,17 +184,17 @@ function scheduleLivesAlert() {
 }
 
 // ── Avatars: 4 to start, 2 more with every court you open.
-// Critters made in Blender (web/tools/blender/critters.py): 4 to start, 3 more with each court you open, the rarest
-// (lion, tiger, wolf) at Court 8. Ids stay a0..a24 so saved avatars carry over.
+// Headgear avatars made in Blender (web/tools/blender/hats.py): 4 to start, 3 more with each court you open, the
+// rarest (crown, astronaut, beret) at Court 8. About half are feminine picks. Ids stay a0..a24 so saves carry over.
 const AVATARS = [
-  ["fox", "#ffd8a8", 0], ["bear", "#c8e6c9", 0], ["bunny", "#ffd6e2", 0], ["frog", "#d8f0c8", 0],
-  ["pup", "#ffe0b8", 1], ["cat", "#cfe3ff", 1], ["swan", "#d6eaff", 1],
-  ["pig", "#ffd6de", 2], ["mouse", "#e6dcff", 2], ["chick", "#fff2b8", 2],
-  ["raccoon", "#ded6f2", 3], ["owl", "#f2dcc4", 3], ["sheep", "#f8d8ec", 3],
-  ["penguin", "#cfe8ff", 4], ["koala", "#d6f2ee", 4], ["gorilla", "#d8e4ff", 4],
-  ["monkey", "#ffe2c8", 5], ["cow", "#d8f2d8", 5], ["turtle", "#fff0c0", 5],
-  ["panda", "#e0f5e0", 6], ["deer", "#f0e2cc", 6], ["hedgehog", "#ffe0d8", 6],
-  ["lion", "#fff0b8", 7], ["tiger", "#ffe0c4", 7], ["wolf", "#e2e6ee", 7],
+  ["ballcap", "#cfe3ff", 0], ["flowercrown", "#ffe0ee", 0], ["beanie", "#d8f2d8", 0], ["sunhat", "#fff2c8", 0],
+  ["cowboy", "#ffe6c8", 1], ["bowband", "#ffd6e6", 1], ["bucket", "#e6eef8", 1],
+  ["catears", "#f0e6ff", 2], ["trucker", "#dbe6ff", 2], ["pinkberet", "#ffe0ec", 2],
+  ["football", "#e0ecff", 3], ["party", "#fff0c8", 3], ["hardhat", "#e6eef8", 3],
+  ["tiara", "#ece6ff", 4], ["chef", "#e6f2ff", 4], ["cowgirl", "#fff0f6", 4],
+  ["tophat", "#e8e8f0", 5], ["propeller", "#fff6d8", 5], ["fedora", "#e6eef8", 5],
+  ["viking", "#e6f0f8", 6], ["grad", "#fff2c8", 6], ["wizard", "#e6e0ff", 6],
+  ["crown", "#fff4c0", 7], ["astronaut", "#d6e4ff", 7], ["beret", "#ffe0e0", 7],
 ].map(([name, bg, court], i) => ({ id: "a" + i, name, bg, court }));
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 const avatarOpen = a => venueUnlocked(a.court);
@@ -202,7 +202,7 @@ const avatarOpen = a => venueUnlocked(a.court);
 let gcPhoto = null;
 const avatarHTML = (id, cls = "") => {
   if (id === "gc") return gcPhoto ? `<span class="avatar ${cls}" style="background:#fff"><img src="${gcPhoto}" alt=""></span>` : avatarHTML("a0", cls);
-  const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}"><img src="assets/critters/${a.name}.png" alt="${a.name}"></span>`;
+  const a = avatarById(id); return `<span class="avatar ${cls}" style="background:${a.bg}"><img src="assets/hats/${a.name}.png" alt="${a.name}"></span>`;
 };
 
 // ── Seasons: a calendar month (UTC). Each title is a worldwide league (a Game Center leaderboard per title), split

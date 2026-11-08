@@ -14,7 +14,7 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 - **Lives (🎟️ raffle tickets):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra tickets come from the Store, from coins (at a steep price), from 15 bottle caps, or rarely from a can. The iPhone app can notify you when they're full.
 - **Bottle caps:** the premium currency (a red cap with a star). Use them to open a can now (1 cap for every 10 minutes left) or to buy a ticket. You start with 20, get some from cans (more often from rare ones) and 3 per 4-bagger, and can buy packs in the Store.
 - **Profile (tap your avatar):** three tabs.
-  - **Avatar:** 25 low-poly critters in team jerseys (13 female, 12 male), made in Blender (`web/tools/blender/critters.py`). 4 to start, 3 more with each court you open through Court 8. Your Game Center picture is the default when you have one.
+  - **Avatar:** 25 hats and helmets on their own (ball cap, flower crown, cowboy hat, tiara, football helmet, crown, astronaut helmet and more; about half feminine picks), made in Blender (`web/tools/blender/hats.py`). 4 to start, 3 more with each court you open through Court 8. Your Game Center picture is the default when you have one.
   - **Profile:** your handle and stats. New players are "guest-" plus 10 digits, or their Game Center name, until they choose a handle (3–16 letters, numbers, dots, dashes or underscores). Live opponents see your handle.
   - **Settings:** music and sound effects on/off and volume, haptics, and alerts.
 - **Computer opponents** and the CPU players in season groups use player-style handles (for example SliderSam22) and aren't labeled; How to play mentions that you play a computer opponent when no one is available.
@@ -138,7 +138,8 @@ The odds are not shown in the game. The App Store requires the odds for paid loo
 Custom 3D art is made with Blender scripts in `web/tools/blender/`, so it can be regenerated or tweaked at any time. Each script builds models, bakes soft shading (ambient occlusion) into their vertex colors with Cycles, and exports them to `web/assets/blender/` as single `.json` glTF files.
 
 - `trees.py`: the stylized oak, maple and pine trees used in the Backyard.
-- `critters.py`: the 25 critter avatars, rendered to transparent PNGs in `web/assets/critters/`. Pass names after `--` to re-render only some.
+- `hats.py`: the 25 headgear avatars, rendered to transparent PNGs in `web/assets/hats/`. Pass names after `--` to re-render only some.
+- `people.py`: converts the Quaternius character packs (`quaternius/`) into animated glTF people (not used in the game yet).
 - `board.py`: the board's frame (rounded 2x4 rails, brace, bolt heads) and splayed legs with a cross brace. The frame takes each board design's color. The painted top stays in the game and gets Poly Haven plywood grain.
 
 Run from the repo root (needs Blender 4 with numpy for the glTF exporter), then rebuild:
