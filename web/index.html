@@ -2227,20 +2227,11 @@ function useLife() {
   return true;
 }
 // ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends. If it never
-// ends properly (the app quit or crashed, or the game froze), the buy-in and the ticket come back and no stars are lost.
-// A frozen game is always refunded. A match cut off by the app closing is refunded up to REFUNDS_PER_DAY times a day;
-// past that it counts as a quit (a loss), so closing the app can't be used to dodge losing.
-const REFUNDS_PER_DAY = 3;
-function refundMatch(frozen) {
+// ends properly (the app quit or crashed, the phone powered off, or the game froze), the buy-in and the ticket come
+// back and no stars are lost, every time.
+function refundMatch() {
   const m = career.activeMatch; if (!m) return null;
   career.activeMatch = null;
-  const day = new Date().toDateString();
-  if (career.refundDay !== day) { career.refundDay = day; career.refunds = 0; }
-  if (!frozen && career.refunds >= REFUNDS_PER_DAY) {
-    addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
-    return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };
-  }
-  if (!frozen) career.refunds++;
   career.coins += m.fee; refundLife(); save();
   return { refunded: true, fee: m.fee, court: VENUES[m.vi].name };
 }
@@ -5056,7 +5047,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794150155";
+const BUILD_ID = "1794150247";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6104,17 +6095,15 @@ setInterval(() => {
 let glitching = false;
 function glitchOut() {
   watch.phase = null; watch.clock = null;
-  const career_ = S.kind === "career", r = career_ ? refundMatch(true) : null;
+  const career_ = S.kind === "career", r = career_ ? refundMatch() : null;
   glitching = true; try { openHub(); } finally { glitching = false; }
   showInfo(`<div class="lifebig">🛠️</div><h2>Sorry about that!</h2><div class="muted">Something went wrong and the ${career_ ? "match" : "game"} got stuck, so we stopped it.${
     r ? ` Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.` : ""}</div>`);
 }
 // A match that never finished last time (the app was closed or crashed in the middle of it).
 function settleInterruptedMatch() {
-  const r = refundMatch(false); if (!r) return;
-  showInfo(r.refunded
-    ? `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
-    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. You've already had ${REFUNDS_PER_DAY} interrupted matches refunded today, so this one counts as a loss (−${r.stars} ⭐).</div>`);
+  const r = refundMatch(); if (!r) return;
+  showInfo(`<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`);
 }
 
 resize(); openHub(); settleInterruptedMatch();

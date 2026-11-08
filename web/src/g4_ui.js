@@ -788,17 +788,15 @@ setInterval(() => {
 let glitching = false;
 function glitchOut() {
   watch.phase = null; watch.clock = null;
-  const career_ = S.kind === "career", r = career_ ? refundMatch(true) : null;
+  const career_ = S.kind === "career", r = career_ ? refundMatch() : null;
   glitching = true; try { openHub(); } finally { glitching = false; }
   showInfo(`<div class="lifebig">🛠️</div><h2>Sorry about that!</h2><div class="muted">Something went wrong and the ${career_ ? "match" : "game"} got stuck, so we stopped it.${
     r ? ` Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.` : ""}</div>`);
 }
 // A match that never finished last time (the app was closed or crashed in the middle of it).
 function settleInterruptedMatch() {
-  const r = refundMatch(false); if (!r) return;
-  showInfo(r.refunded
-    ? `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
-    : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. You've already had ${REFUNDS_PER_DAY} interrupted matches refunded today, so this one counts as a loss (−${r.stars} ⭐).</div>`);
+  const r = refundMatch(); if (!r) return;
+  showInfo(`<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off before it finished. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`);
 }
 
 resize(); openHub(); settleInterruptedMatch();
