@@ -1284,8 +1284,8 @@ function skiRack(g, x, z, rotY, seed) {
   rk.position.set(x, 0, z); rk.rotation.y = rotY; g.add(rk);
 }
 // the slope falls away to the left of the court (x < SLOPE_X)
-const SLOPE_X = -40, SLOPE = 0.3;
-const slopeY = x => (x < SLOPE_X ? (x - SLOPE_X) * SLOPE : 0);
+const SLOPE_X = -40, SKI_GRADE = 0.3; // (not "SLOPE": that's the board's tilt)
+const slopeY = x => (x < SLOPE_X ? (x - SLOPE_X) * SKI_GRADE : 0);
 function skiers(g, n, seed) {
   const r = rng(seed);
   for (let i = 0; i < n; i++) {

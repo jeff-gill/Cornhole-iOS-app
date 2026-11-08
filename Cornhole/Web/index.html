@@ -3835,8 +3835,8 @@ function skiRack(g, x, z, rotY, seed) {
   rk.position.set(x, 0, z); rk.rotation.y = rotY; g.add(rk);
 }
 // the slope falls away to the left of the court (x < SLOPE_X)
-const SLOPE_X = -40, SLOPE = 0.3;
-const slopeY = x => (x < SLOPE_X ? (x - SLOPE_X) * SLOPE : 0);
+const SLOPE_X = -40, SKI_GRADE = 0.3; // (not "SLOPE": that's the board's tilt)
+const slopeY = x => (x < SLOPE_X ? (x - SLOPE_X) * SKI_GRADE : 0);
 function skiers(g, n, seed) {
   const r = rng(seed);
   for (let i = 0; i < n; i++) {
@@ -5419,7 +5419,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794153186";
+const BUILD_ID = "1794179756";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
