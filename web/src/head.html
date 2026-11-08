@@ -388,7 +388,9 @@ s.was { opacity: .6; font-size: .8em; }
 .pnames input { font: 900 17px Nunito, system-ui, sans-serif; padding: 8px 10px; border-radius: 12px; border: 2px solid rgba(255,255,255,.4); background: rgba(0,0,0,.3); color: #fff; min-width: 0; }
 .windset { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; font-weight: 900; }
 .windset input[type=range] { width: 100%; accent-color: var(--gold); }
-.prizegrid { position: absolute; top: 18%; left: 16px; right: 16px; bottom: 20%; z-index: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); align-content: center; gap: 10px; overflow-y: auto; }
+.prizegrid { position: absolute; top: 18%; left: 16px; right: 16px; bottom: 20%; z-index: 3; display: flex; flex-direction: column; justify-content: center; gap: 10px; overflow-y: auto; --cols: 3; }
+.prizegrid .prow { display: flex; justify-content: center; gap: 10px; }
+.prizegrid .ptile { box-sizing: border-box; width: min(118px, calc((100% - (var(--cols) - 1) * 10px) / var(--cols))); }
 .prizegrid .ptile { border-radius: 16px; border: 3px solid #fff; background: linear-gradient(135deg, #1b2f52, #12203a); box-shadow: 0 5px 0 rgba(0,0,0,.35); padding: 8px 6px; text-align: center; animation: tilein .4s cubic-bezier(.2,1.6,.4,1) backwards; }
 .prizegrid .ptile.new { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,201,58,.45), 0 5px 0 rgba(0,0,0,.35); }
 .prizegrid .ptile .pic { font-size: 34px; line-height: 1.1; }
@@ -619,7 +621,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="prizes" id="prizeList"></div>
     <div class="canhint" id="canHint">Tap to open</div>
     <div class="prizegrid" id="prizeGrid" hidden></div>
-    <button class="btn ghost" id="canSkip" hidden>COLLECT ALL</button>
+    <button class="btn green" id="canSkip" hidden>COLLECT ALL</button>
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>

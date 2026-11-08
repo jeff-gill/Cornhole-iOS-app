@@ -171,7 +171,7 @@ $("canStage").onclick = e => {
   initAudio();
   if (canRun.step === "closed") {
     canRun.step = "shaking"; $("canBody").classList.add("shake"); can3dShake(); $("canHint").hidden = true; sfx.tick(); haptic("light");
-    setTimeout(popCan, 900);
+    setTimeout(popCan, 900 / (window.__canSlow || 1));
   } else if (canRun.step === "prizes") nextPrize();
 };
 function popCan() {
@@ -179,7 +179,7 @@ function popCan() {
   const body = $("canBody"); body.classList.remove("shake"); body.classList.add("open"); can3dPop();
   sfx.whoosh(); haptic("big"); if (R.can.pulls >= 5) sfx.boom();
   // The spray is the 3D fizz (g4c_can3d.js); prizes start once it has burst.
-  setTimeout(() => { body.classList.add("gone"); R.step = "prizes"; nextPrize(); }, 1100);
+  setTimeout(() => { body.classList.add("gone"); R.step = "prizes"; nextPrize(); }, 1800 / (window.__canSlow || 1));
 }
 function mistFrame(now) {
   const R = canRun; if (!R) return;
@@ -209,6 +209,12 @@ function showPrizeSummary() {
   R.step = "done"; R.shown = R.prizes.length;
   $("prize").className = "prize"; $("canHint").hidden = true; $("canSkip").hidden = true; $("prizeList").innerHTML = "";
   const grid = $("prizeGrid"); grid.innerHTML = "";
+  // Rows as even as possible: 4 → 2+2, 5 → 3+2, 6 → 3+3, 7 → 3+2+2, 8 → 3+3+2, 10 → 4+3+3 ...
+  const n = R.prizes.length, rows = n === 4 ? 2 : Math.ceil(n / (n > 9 ? 4 : 3)), cols = Math.ceil(n / rows);
+  grid.style.setProperty("--cols", cols);
+  const rowEls = [];
+  for (let k = 0; k < rows; k++) { const row = document.createElement("div"); row.className = "prow"; grid.appendChild(row); rowEls.push(row); }
+  const rowOf = i => { let start = 0; for (let k = 0; k < rows; k++) { const c = Math.floor(n / rows) + (k < n % rows ? 1 : 0); if (i < start + c) return rowEls[k]; start += c; } return rowEls[rows - 1]; };
   R.prizes.forEach((p, i) => {
     const t = document.createElement("div"); t.className = "ptile" + (p.unlocked ? " new" : ""); t.style.animationDelay = `${i * 0.06}s`;
     if (p.kind === "coins") t.innerHTML = `<div class="pic"><i class="coin big"></i></div><b>+${short(p.n)}</b><small>coins</small>`;
@@ -220,7 +226,7 @@ function showPrizeSummary() {
       const cv = t.querySelector("canvas");
       if (cv) { const ctx = cv.getContext("2d"); if (cv.dataset.cat === "bag") paintBag(ctx, 96, 96, bagById(cv.dataset.id)); else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(cv.dataset.id)); ctx.drawImage(tmp, 24, 0, 48, 96); } }
     }
-    grid.appendChild(t);
+    rowOf(i).appendChild(t);
   });
   grid.hidden = false; $("canDone").hidden = false; $("canTitle").textContent = `${R.prizes.length} prizes!`;
   sfx.win(); haptic("success");
