@@ -715,10 +715,10 @@ s.was { opacity: .6; font-size: .8em; }
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
-      <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
-      <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
-      <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins.</p>
+      <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
+      <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
+      <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>
     </div>
     <div class="help rules" id="helpRules" hidden>
@@ -5177,7 +5177,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794151518";
+const BUILD_ID = "1794151627";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
