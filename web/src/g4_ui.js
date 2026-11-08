@@ -365,6 +365,16 @@ function openHub() {
 
 }
 // 1,500 → 1.5K, 2,000,000 → 2M
+// Shrink a number in a court-card bubble until it fits (big buy-ins on narrow phones).
+function fitChips(root) {
+  const bs = [...root.querySelectorAll(".venue.cur .facts .chip b")]; let min = 99;
+  for (const b of bs) {
+    b.style.fontSize = ""; let size = parseFloat(getComputedStyle(b).fontSize);
+    while (b.getBoundingClientRect().width > b.parentElement.clientWidth - 10 && size > 9) b.style.fontSize = (size -= 0.5) + "px";
+    min = Math.min(min, size);
+  }
+  for (const b of bs) b.style.fontSize = min + "px"; // the whole row at one size
+}
 function short(n) { return bigNum(n); } // 1.5K, 2.3M ... one decimal
 function renderHub() {
   $("coins").textContent = bigNum(career.coins);
@@ -377,11 +387,12 @@ function renderHub() {
   // A carousel: this court in the middle, the previous and next ones peeking in at the sides. Swipe to move.
   const peek = (i, cls) => i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3><div class="muted">${VENUES[i].soon ? "Coming soon" : esc(VENUES[i].sub)}</div></div>`;
   $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)} / −${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : v.soon ? `<div class="locked">🚧 Coming soon</div>` : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
     <div class="vdots">${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
+  fitChips($("venueCard")); document.fonts?.ready.then(() => fitChips($("venueCard")));
   $("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily();
