@@ -295,6 +295,9 @@ function bagFit(bag, board) { // a warning when the bag and board pull the same 
   if (f === "fast" && s < 0 || f === "sticky" && s > 0) return "👍 Good match for this board.";
   return "";
 }
+// How far bags slide on this board with this bag: the board's surface plus the bag's feel.
+const SLIDE_RESULT = { "-3": "Very short", "-2": "Very short", "-1": "Short", "0": "Normal", "1": "Long", "2": "Very long", "3": "Very long" };
+const slideWith = (bag, board) => SLIDE_RESULT[(board.surf || 0) + (bag.feel === "fast" ? 1 : bag.feel === "sticky" ? -1 : 0)];
 function openBagPick() {
   S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
   renderBagPick(); $("bagPick").hidden = false;
@@ -304,10 +307,12 @@ function renderBagPick() {
   const tex = document.createElement("canvas"); tex.width = 96; tex.height = 192; paintBoard(tex.getContext("2d"), 96, 192, d);
   $("bagPickBody").innerHTML = `<h2>Board check</h2>
     <div class="bpboard"><img src="${tex.toDataURL()}" alt=""><div><b>${esc(d.name)}</b><small>${S.boardMine ? "Your board" : S.online ? esc(S.names[1]) + "'s board" : "Your opponent's board"}</small>
-      <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i></div></div></div>
+      <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
     <div class="label">Pick your bag</div>
-    <div class="bplist">${career.bags.map(id => { const b = bagById(id); return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}"><canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label}</small></button>`; }).join("")}</div>
-    <div class="bpfit">${bagFit(cur, d)}</div>
+    <div class="bplist">${career.bags.map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
+      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}"><canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
+        <div class="bpstats"><em>Acc</em>${dots("acc")}<em>Ctl</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
+    <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
     <button class="btn green" id="bagPickGo">${S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
   for (const c of $("bagPickBody").querySelectorAll(".bpbag")) {

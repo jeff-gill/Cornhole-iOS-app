@@ -592,7 +592,7 @@ function renderShop() {
     const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
     row.insertAdjacentHTML("beforeend", itemBadge(shopTab === "bags" ? "bag" : "board", it.id));
     row.appendChild(swatch(it, shopTab));
-    const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<div class="muted">Board design</div>`;
+    const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<span class="tagfeel">Surface: ${SURF_NAMES[it.surf || 0]}</span> <span class="tagfeel">Bounce: ${BOUNCE_NAMES[it.bounce || 0]}</span>`;
     const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}${owned ? "" : cardProgress(catByKey(shopTab === "bags" ? "bag" : "board"), it)}`;
     row.appendChild(info);
     const btn = document.createElement("button");

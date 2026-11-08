@@ -124,10 +124,14 @@ body.inhub .score, body.inhub #panel { display: none; }
 .bpboard img { width: 48px; height: 96px; border-radius: 6px; border: 2px solid #fff; }
 .bpboard b { font-family: var(--font-display); font-weight: 400; font-size: 22px; display: block; } .bpboard small { color: var(--ink-dim); font-weight: 900; display: block; margin-bottom: 4px; }
 .bpboard i, .bpfit i { font-style: normal; color: var(--gold); font-weight: 900; }
-.bplist { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; max-height: 34vh; overflow-y: auto; }
+.bplist { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; max-height: 34vh; overflow-y: auto; }
 .bpbag { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border-radius: 14px; border: 2px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #fff; font-weight: 900; font-size: 12px; }
 .bpbag.on { border-color: var(--gold); background: rgba(255,201,58,.18); }
 .bpbag small { color: var(--ink-dim); font-size: 11px; }
+.bpstats { display: grid; grid-template-columns: auto repeat(5, 6px); gap: 2px 2px; align-items: center; margin-top: 2px; }
+.bpstats em { font-style: normal; font-size: 9px; color: var(--ink-dim); text-align: right; padding-right: 3px; }
+.bpstats i { width: 6px; height: 6px; border-radius: 2px; background: rgba(255,255,255,.18); } .bpstats i.on { background: var(--gold); }
+.bpres { font-size: 11px; color: #3ee07a; }
 .bpfit { min-height: 18px; font-weight: 900; font-size: 13px; }
 .bptimer { height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; } .bptimer i { display: block; height: 100%; background: var(--gold); transition: width .2s linear; }
 #boardInfo { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 74px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.78); border: 2px solid rgba(255,255,255,.6);
@@ -1497,6 +1501,9 @@ function bagFit(bag, board) { // a warning when the bag and board pull the same 
   if (f === "fast" && s < 0 || f === "sticky" && s > 0) return "👍 Good match for this board.";
   return "";
 }
+// How far bags slide on this board with this bag: the board's surface plus the bag's feel.
+const SLIDE_RESULT = { "-3": "Very short", "-2": "Very short", "-1": "Short", "0": "Normal", "1": "Long", "2": "Very long", "3": "Very long" };
+const slideWith = (bag, board) => SLIDE_RESULT[(board.surf || 0) + (bag.feel === "fast" ? 1 : bag.feel === "sticky" ? -1 : 0)];
 function openBagPick() {
   S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
   renderBagPick(); $("bagPick").hidden = false;
@@ -1506,10 +1513,12 @@ function renderBagPick() {
   const tex = document.createElement("canvas"); tex.width = 96; tex.height = 192; paintBoard(tex.getContext("2d"), 96, 192, d);
   $("bagPickBody").innerHTML = `<h2>Board check</h2>
     <div class="bpboard"><img src="${tex.toDataURL()}" alt=""><div><b>${esc(d.name)}</b><small>${S.boardMine ? "Your board" : S.online ? esc(S.names[1]) + "'s board" : "Your opponent's board"}</small>
-      <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i></div></div></div>
+      <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
     <div class="label">Pick your bag</div>
-    <div class="bplist">${career.bags.map(id => { const b = bagById(id); return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}"><canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label}</small></button>`; }).join("")}</div>
-    <div class="bpfit">${bagFit(cur, d)}</div>
+    <div class="bplist">${career.bags.map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
+      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}"><canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
+        <div class="bpstats"><em>Acc</em>${dots("acc")}<em>Ctl</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
+    <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
     <button class="btn green" id="bagPickGo">${S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
   for (const c of $("bagPickBody").querySelectorAll(".bpbag")) {
@@ -5419,7 +5428,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794180320";
+const BUILD_ID = "1794180381";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6328,7 +6337,7 @@ function renderShop() {
     const row = document.createElement("div"); row.className = "item" + (equipped ? " eq" : "");
     row.insertAdjacentHTML("beforeend", itemBadge(shopTab === "bags" ? "bag" : "board", it.id));
     row.appendChild(swatch(it, shopTab));
-    const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<div class="muted">Board design</div>`;
+    const stats = shopTab === "bags" ? ["acc", "ctrl", "spin"].map((k, i) => `<div class="stat"><span>${["Accuracy", "Control", "Spin"][i]}</span>${[1, 2, 3, 4, 5].map(n => `<i class="${n <= it[k] ? "on" : ""}"></i>`).join("")}</div>`).join("") + `<span class="tagfeel">${FEEL[it.feel].label} slide</span>` : `<span class="tagfeel">Surface: ${SURF_NAMES[it.surf || 0]}</span> <span class="tagfeel">Bounce: ${BOUNCE_NAMES[it.bounce || 0]}</span>`;
     const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}${owned ? "" : cardProgress(catByKey(shopTab === "bags" ? "bag" : "board"), it)}`;
     row.appendChild(info);
     const btn = document.createElement("button");
