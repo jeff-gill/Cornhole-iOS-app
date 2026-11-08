@@ -136,8 +136,20 @@ function renderScore() {
   }
   $("inningNum").textContent = S.inning;
   if (S.opponent) $("opp").innerHTML = S.opponent.live
-    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>Live · ${esc(venue().name)}`
-    : `<b>${esc(S.opponent.name)}</b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
+    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>⭐ ${bigNum(S.opponent.stars || 0)} · ${esc(venue().name)}`
+    : `<b>${esc(S.opponent.name)}</b>⭐ ${bigNum(S.opponent.stars || 0)} · ${esc(venue().name)}`;
+  renderInOn();
+}
+// The bottom-corner tables: how many bags each side has in the hole and on the board this inning.
+function renderInOn() {
+  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden;
+  for (const p of [0, 1]) {
+    const el = $("io" + p); el.hidden = !show; if (!show) continue;
+    let hole = 0, on = 0;
+    for (const b of S.world.bags) if (b.owner === p) { const pts = bagPoints(b); if (pts === 3) hole++; else if (pts === 1) on++; }
+    el.style.borderColor = COL.p[p];
+    el.innerHTML = `<div class="ion" style="background:${COL.p[p]}">${esc(S.names[p] || "")}</div><table><tr><td>IN<b>${hole}</b></td></tr><tr><td>ON<b>${on}</b></td></tr></table>`;
+  }
 }
 function renderBanner() {
   const el = $("banner");
@@ -173,7 +185,6 @@ function ui() {
         ${chip("Slide", S.landD < 0.15 ? "Sticks" : S.landD.toFixed(1) + " ft")}
         ${chip("Spin", spin)}
         ${S.push ? chip("Push shot", "+" + Math.round(S.push.extra * 100) + "%", "gold") : ""}
-        ${S.prev ? chip("No wind", outcomeText(S.prev)) : ""}
       </div>`;
     }
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">${side} · Bag ${S.thrown[S.player] + 1} of 4</span></div>
@@ -236,7 +247,7 @@ function scorecardHTML() {
     </div>`;
   // The points bubble sits on the bottom inside corner of the winner's tile (it drops in; see head.html).
   const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
-    : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${c}"><span class="flipin">+${h.awarded}</span></div>`;
+    : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${COL.bubble}"><span class="flipin">+${h.awarded}</span></div>`; // always green: no player tile is ever green
   const rows = S.history.slice(0, -1).map((r, n) => {
     const rc = ROW_COLORS[n % ROW_COLORS.length];
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
@@ -358,6 +369,7 @@ function dismissScorecard(dx, dy) {
 let hubVenue = career.venue || 0;
 function openHub() {
   $("timeupMsg").hidden = true;
+  $("io0").hidden = $("io1").hidden = true;
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;

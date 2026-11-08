@@ -81,7 +81,7 @@ window.__net = m => {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
     settleReel({ name: search.name, avatar: "a0" }, () => { if (search) { search.landed = true; tryStartOnline(); } });
-    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar === "gc" ? "a0" : career.avatar, handle: myHandle() });
+    netSend({ t: "hello", stars: career.stars | 0, bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar === "gc" ? "a0" : career.avatar, handle: myHandle() });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
       netSend({ t: "setup", ...search.setup });
@@ -109,7 +109,7 @@ function tryStartOnline() {
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
   const handle = typeof h.handle === "string" && /^[A-Za-z0-9_.-]{3,24}$/.test(h.handle) ? h.handle : s.name; // their chosen handle
   startMatch("career", s.vi, {
-    ...s.setup, name: handle, host: s.host,
+    ...s.setup, name: handle, host: s.host, stars: Math.max(0, Math.min(1e7, h.stars | 0)),
     bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"), avatar: known(AVATARS, h.avatar, "a0"),
   });
 }

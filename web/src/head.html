@@ -79,7 +79,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 }
 #banner.show { transform: translateX(-50%) scale(1) rotate(-3deg); opacity: 1; }
 #hint {
-  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+  position: absolute; left: 50%; bottom: 86px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
   font-size: 14px; background: rgba(10,20,38,.72); padding: 7px 14px; border-radius: 999px; border: 2px solid rgba(255,255,255,.25);
 }
 
@@ -94,6 +94,13 @@ body.inhub .score, body.inhub #panel { display: none; }
 #aim { position: absolute; left: 50%; bottom: 0; width: 240px; height: 72%; transform: translateX(-50%); pointer-events: none; }
 #aim svg { width: 100%; height: 100%; overflow: visible; }
 /* Wind */
+/* In / On for each player this inning, in the bottom corners of the court view */
+.iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; min-width: 74px; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
+  background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
+.iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
+.iobox .ion { padding: 2px 8px; color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 96px; }
+.iobox table { width: 100%; border-collapse: collapse; } .iobox td { padding: 2px 8px; color: var(--ink-dim); font-size: 11px; letter-spacing: .06em; }
+.iobox td b { color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 17px; float: right; }
 #wind { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; display: flex; align-items: center; gap: 8px; pointer-events: none;
   background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8); border-radius: 999px; padding: 4px 12px 4px 4px; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
 #wind .dial { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(#2b4a80, #12203a); display: grid; place-items: center; }
@@ -578,6 +585,7 @@ s.was { opacity: .6; font-size: .8em; }
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
+    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>

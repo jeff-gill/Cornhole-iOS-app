@@ -244,9 +244,15 @@ const THROW_TIME = 25;
 const timedTurn = () => S.kind === "career" && career.tutorialDone && !isCPU(S.player) && !isRemote(S.player);
 const venue = () => VENUES[S.venue];
 const POWER_TARGET = 0.75;
-const COL = { p: ["#ff4b3a", "#2f86ff"], pd: [], pl: [], gold: "#ffc93a", go: "#3ee07a" };
+const COL = { p: ["#ff4b3a", "#2f86ff"], pd: [], pl: [], gold: "#ffc93a", go: "#3ee07a", bubble: "#2fd06a" };
+// Player colours come from their bags, except green, which is kept for the points bubble: a green bag's player shows in
+// purple (or orange, if the other player is already purple) instead.
+function hueOf(hex) { const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  if (d < 0.12) return -1; const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return (h * 60 + 360) % 360; }
+const isGreen = hex => { const h = hueOf(hex); return h >= 75 && h <= 170; };
 function setTeamColors() {
   COL.p = [S.gear[0].c, S.gear[1].c];
+  for (const p of [0, 1]) if (isGreen(COL.p[p])) { const o = COL.p[1 - p]; COL.p[p] = Math.abs(hueOf(o) - 270) < 40 ? "#ff8a1f" : "#8a4dff"; }
   COL.pd = COL.p.map(c => shade(c, -0.35));
   COL.pl = COL.p.map(c => shade(c, 0.35));
   for (const p of [0, 1]) {
@@ -313,11 +319,14 @@ function startMatch(kind, vi, online = null, pick = null) {
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
       S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
-      S.opponent = { name: online.name, live: true, skill: 0, rating: 0, avatar: online.avatar || "a0" };
+      S.opponent = { name: online.name, live: true, skill: 0, rating: 0, stars: online.stars || 0, avatar: online.avatar || "a0" };
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
       const [hi, lo] = v.cpu, skill = rand(lo, hi);
       S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      // a CPU's career stars: everything before this court, plus part of this one (more for the tougher ones)
+      const before = VENUES.slice(0, vi).reduce((t, x) => t + x.max, 0), k = (hi - skill) / Math.max(1e-6, hi - lo);
+      S.opponent.stars = before + Math.round(v.max * (0.15 + 0.8 * k * Math.random()));
       S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
     }
     S.names = [myHandle(), S.opponent.name];

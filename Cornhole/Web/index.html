@@ -91,7 +91,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 }
 #banner.show { transform: translateX(-50%) scale(1) rotate(-3deg); opacity: 1; }
 #hint {
-  position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+  position: absolute; left: 50%; bottom: 86px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
   font-size: 14px; background: rgba(10,20,38,.72); padding: 7px 14px; border-radius: 999px; border: 2px solid rgba(255,255,255,.25);
 }
 
@@ -106,6 +106,13 @@ body.inhub .score, body.inhub #panel { display: none; }
 #aim { position: absolute; left: 50%; bottom: 0; width: 240px; height: 72%; transform: translateX(-50%); pointer-events: none; }
 #aim svg { width: 100%; height: 100%; overflow: visible; }
 /* Wind */
+/* In / On for each player this inning, in the bottom corners of the court view */
+.iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; min-width: 74px; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
+  background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
+.iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
+.iobox .ion { padding: 2px 8px; color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 96px; }
+.iobox table { width: 100%; border-collapse: collapse; } .iobox td { padding: 2px 8px; color: var(--ink-dim); font-size: 11px; letter-spacing: .06em; }
+.iobox td b { color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 17px; float: right; }
 #wind { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; display: flex; align-items: center; gap: 8px; pointer-events: none;
   background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8); border-radius: 999px; padding: 4px 12px 4px 4px; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
 #wind .dial { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(#2b4a80, #12203a); display: grid; place-items: center; }
@@ -590,6 +597,7 @@ s.was { opacity: .6; font-size: .8em; }
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
+    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
@@ -1334,9 +1342,15 @@ const THROW_TIME = 25;
 const timedTurn = () => S.kind === "career" && career.tutorialDone && !isCPU(S.player) && !isRemote(S.player);
 const venue = () => VENUES[S.venue];
 const POWER_TARGET = 0.75;
-const COL = { p: ["#ff4b3a", "#2f86ff"], pd: [], pl: [], gold: "#ffc93a", go: "#3ee07a" };
+const COL = { p: ["#ff4b3a", "#2f86ff"], pd: [], pl: [], gold: "#ffc93a", go: "#3ee07a", bubble: "#2fd06a" };
+// Player colours come from their bags, except green, which is kept for the points bubble: a green bag's player shows in
+// purple (or orange, if the other player is already purple) instead.
+function hueOf(hex) { const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  if (d < 0.12) return -1; const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return (h * 60 + 360) % 360; }
+const isGreen = hex => { const h = hueOf(hex); return h >= 75 && h <= 170; };
 function setTeamColors() {
   COL.p = [S.gear[0].c, S.gear[1].c];
+  for (const p of [0, 1]) if (isGreen(COL.p[p])) { const o = COL.p[1 - p]; COL.p[p] = Math.abs(hueOf(o) - 270) < 40 ? "#ff8a1f" : "#8a4dff"; }
   COL.pd = COL.p.map(c => shade(c, -0.35));
   COL.pl = COL.p.map(c => shade(c, 0.35));
   for (const p of [0, 1]) {
@@ -1403,11 +1417,14 @@ function startMatch(kind, vi, online = null, pick = null) {
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
       S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
-      S.opponent = { name: online.name, live: true, skill: 0, rating: 0, avatar: online.avatar || "a0" };
+      S.opponent = { name: online.name, live: true, skill: 0, rating: 0, stars: online.stars || 0, avatar: online.avatar || "a0" };
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
       const [hi, lo] = v.cpu, skill = rand(lo, hi);
       S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      // a CPU's career stars: everything before this court, plus part of this one (more for the tougher ones)
+      const before = VENUES.slice(0, vi).reduce((t, x) => t + x.max, 0), k = (hi - skill) / Math.max(1e-6, hi - lo);
+      S.opponent.stars = before + Math.round(v.max * (0.15 + 0.8 * k * Math.random()));
       S.gear = [bagById(career.bag), RIVAL_BAGS[Math.min(2, Math.floor(vi / 4))]];
     }
     S.names = [myHandle(), S.opponent.name];
@@ -1888,7 +1905,7 @@ window.__net = m => {
     if (!search) { postNative("net", JSON.stringify({ op: "leave" })); return; }
     search.host = !!m.host; search.name = String(m.name || "Opponent").slice(0, 24);
     settleReel({ name: search.name, avatar: "a0" }, () => { if (search) { search.landed = true; tryStartOnline(); } });
-    netSend({ t: "hello", bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar === "gc" ? "a0" : career.avatar, handle: myHandle() });
+    netSend({ t: "hello", stars: career.stars | 0, bag: career.bag, trail: career.trail, effect: career.effect, avatar: career.avatar === "gc" ? "a0" : career.avatar, handle: myHandle() });
     if (search.host) {
       search.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
       netSend({ t: "setup", ...search.setup });
@@ -1916,7 +1933,7 @@ function tryStartOnline() {
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
   const handle = typeof h.handle === "string" && /^[A-Za-z0-9_.-]{3,24}$/.test(h.handle) ? h.handle : s.name; // their chosen handle
   startMatch("career", s.vi, {
-    ...s.setup, name: handle, host: s.host,
+    ...s.setup, name: handle, host: s.host, stars: Math.max(0, Math.min(1e7, h.stars | 0)),
     bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"), avatar: known(AVATARS, h.avatar, "a0"),
   });
 }
@@ -5006,7 +5023,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794148217";
+const BUILD_ID = "1794149158";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -5402,8 +5419,20 @@ function renderScore() {
   }
   $("inningNum").textContent = S.inning;
   if (S.opponent) $("opp").innerHTML = S.opponent.live
-    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>Live · ${esc(venue().name)}`
-    : `<b>${esc(S.opponent.name)}</b>${"★".repeat(S.opponent.rating)}${"☆".repeat(3 - S.opponent.rating)} · ${esc(venue().name)}`;
+    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>⭐ ${bigNum(S.opponent.stars || 0)} · ${esc(venue().name)}`
+    : `<b>${esc(S.opponent.name)}</b>⭐ ${bigNum(S.opponent.stars || 0)} · ${esc(venue().name)}`;
+  renderInOn();
+}
+// The bottom-corner tables: how many bags each side has in the hole and on the board this inning.
+function renderInOn() {
+  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden;
+  for (const p of [0, 1]) {
+    const el = $("io" + p); el.hidden = !show; if (!show) continue;
+    let hole = 0, on = 0;
+    for (const b of S.world.bags) if (b.owner === p) { const pts = bagPoints(b); if (pts === 3) hole++; else if (pts === 1) on++; }
+    el.style.borderColor = COL.p[p];
+    el.innerHTML = `<div class="ion" style="background:${COL.p[p]}">${esc(S.names[p] || "")}</div><table><tr><td>IN<b>${hole}</b></td></tr><tr><td>ON<b>${on}</b></td></tr></table>`;
+  }
 }
 function renderBanner() {
   const el = $("banner");
@@ -5439,7 +5468,6 @@ function ui() {
         ${chip("Slide", S.landD < 0.15 ? "Sticks" : S.landD.toFixed(1) + " ft")}
         ${chip("Spin", spin)}
         ${S.push ? chip("Push shot", "+" + Math.round(S.push.extra * 100) + "%", "gold") : ""}
-        ${S.prev ? chip("No wind", outcomeText(S.prev)) : ""}
       </div>`;
     }
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">${side} · Bag ${S.thrown[S.player] + 1} of 4</span></div>
@@ -5502,7 +5530,7 @@ function scorecardHTML() {
     </div>`;
   // The points bubble sits on the bottom inside corner of the winner's tile (it drops in; see head.html).
   const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
-    : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${c}"><span class="flipin">+${h.awarded}</span></div>`;
+    : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${COL.bubble}"><span class="flipin">+${h.awarded}</span></div>`; // always green: no player tile is ever green
   const rows = S.history.slice(0, -1).map((r, n) => {
     const rc = ROW_COLORS[n % ROW_COLORS.length];
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
@@ -5624,6 +5652,7 @@ function dismissScorecard(dx, dy) {
 let hubVenue = career.venue || 0;
 function openHub() {
   $("timeupMsg").hidden = true;
+  $("io0").hidden = $("io1").hidden = true;
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
