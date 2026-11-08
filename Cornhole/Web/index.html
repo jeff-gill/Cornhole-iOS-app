@@ -743,7 +743,7 @@ s.was { opacity: .6; font-size: .8em; }
         <li>Whoever scored in the last inning throws first in the next. After a wash, the same side throws first again.</li></ul></div>
       <div class="rulesec"><h3>🎯 Scoring</h3><ul>
         <li>A bag in the hole (a "cornhole") is worth 3 points. That includes a bag knocked in by another bag.</li>
-        <li>A bag resting on the board is worth 1 point. A bag hanging over the edge of the hole is still 1 point until it falls in.</li>
+        <li>A bag resting on the board is worth 1 point. A bag hanging over the edge of the hole is still 1 point until it falls in. In this game, a bag that's more than half over the hole falls in.</li>
         <li>A bag that touches the ground, or hits the ground and bounces onto the board, scores nothing and is taken off.</li>
         <li>Points cancel out: only the difference between the two sides counts each inning. Equal scores are a wash.</li></ul></div>
       <div class="rulesec"><h3>🏆 Winning</h3><ul>
@@ -4942,13 +4942,6 @@ for (const b of document.querySelectorAll(".htabs button")) b.onclick = () => sh
 function rulesHTML() {
   const sec = (icon, title, items) => `<div class="rulesec"><h3>${icon} ${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
   return `<h2>Rules & Regulations</h2><div class="rules">
-  ${sec("🎯", "Scoring", [
-    "A bag in the hole is 3 points. A bag on the board is 1 point.",
-    "If more than half of a bag is over the hole, it falls in.",
-    "Each inning, the points cancel out: only the difference counts, and it goes to the side that scored more.",
-    "If both sides score the same, it's a <b>wash</b>: no points.",
-    "First to 21 at the end of an inning wins.",
-  ])}
   ${sec("⏱", "The throw clock", [
     `You have ${THROW_TIME} seconds for each throw. If time runs out, that bag is lost (a red ✕ by your score).`,
     "Lose all four of your bags to the clock in one inning and you lose the match.",
@@ -5188,7 +5181,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794151348";
+const BUILD_ID = "1794151518";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));

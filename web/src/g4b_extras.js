@@ -104,13 +104,6 @@ for (const b of document.querySelectorAll(".htabs button")) b.onclick = () => sh
 function rulesHTML() {
   const sec = (icon, title, items) => `<div class="rulesec"><h3>${icon} ${title}</h3><ul>${items.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
   return `<h2>Rules & Regulations</h2><div class="rules">
-  ${sec("🎯", "Scoring", [
-    "A bag in the hole is 3 points. A bag on the board is 1 point.",
-    "If more than half of a bag is over the hole, it falls in.",
-    "Each inning, the points cancel out: only the difference counts, and it goes to the side that scored more.",
-    "If both sides score the same, it's a <b>wash</b>: no points.",
-    "First to 21 at the end of an inning wins.",
-  ])}
   ${sec("⏱", "The throw clock", [
     `You have ${THROW_TIME} seconds for each throw. If time runs out, that bag is lost (a red ✕ by your score).`,
     "Lose all four of your bags to the clock in one inning and you lose the match.",
