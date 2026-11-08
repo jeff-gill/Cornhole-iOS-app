@@ -149,9 +149,9 @@ function rulesHTML() {
   </div>`;
 }
 // A yes/no sheet: the main button runs onYes; the second just closes it.
-function showChoice(html, yes, onYes, no = "CANCEL") {
-  $("livesBody").innerHTML = html + `<div class="row" style="gap:10px;justify-content:center;margin-top:14px"><button class="btn ghost" id="choiceNo" style="font-size:17px;padding:12px 18px">${no}</button><button class="btn green" id="choiceYes">${yes}</button></div>`;
-  $("choiceNo").onclick = () => { $("livesSheet").hidden = true; };
+function showChoice(html, yes, onYes, no = "CANCEL", onNo = null, yesClass = "green") {
+  $("livesBody").innerHTML = html + `<div class="row" style="gap:10px;justify-content:center;margin-top:14px"><button class="btn ghost" id="choiceNo" style="font-size:17px;padding:12px 18px">${no}</button><button class="btn ${yesClass}" id="choiceYes">${yes}</button></div>`;
+  $("choiceNo").onclick = () => { $("livesSheet").hidden = true; if (onNo) onNo(); };
   $("choiceYes").onclick = () => { $("livesSheet").hidden = true; onYes(); };
   $("livesSheet").hidden = false;
 }
@@ -199,7 +199,9 @@ function renderProfile() {
       <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
-      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>`;
+      <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
+      <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>`;
+    $("setTour").onclick = () => { $("avatarSheet").hidden = true; startTour(true); };
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
     $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
     $("setSfx").onclick = () => { toggleSfx(); renderProfile(); };
@@ -456,3 +458,56 @@ function renderPractice() {
     $("practiceSheet").hidden = true; initAudio(); startMatch("pass", hubVenue);
   };
 }
+
+// ───────────────────────── Clubhouse tour
+// Runs once, the first time someone opens the game: a spotlight on each part of the clubhouse with a line about it.
+// It can be skipped at any step; either way it ends by saying where to find How to Play & Rules and the tour again.
+const TOUR = [
+  [null, "👋 Welcome!", "Here's a quick look around the clubhouse. You can skip it any time."],
+  ["#avatarBtn", "Your avatar", "Tap it for <b>Settings</b>, your avatar and your profile. How to Play & Rules is in Settings."],
+  ["#livesBtn", "Tickets", "Every match uses a ticket. You can hold 5, and one comes back every hour. Win and you get yours back."],
+  ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot. Spend them in the shop."],
+  ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away or to buy a ticket."],
+  ["#starsPill", "Stars", "Win matches to earn stars. Fill a court's stars to open the next court."],
+  ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
+  ["#dailyBtn", "Daily reward", "Coins and a free can, once a day."],
+  ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most. Tap one to start opening it."],
+  ["#venueCard .venue.cur", "Courts", "Swipe to see each court: its buy-in, payout, stars and wind."],
+  ["#playBtn", "Play", "Find an opponent at this court and start a match."],
+  ["#shopBtn", "Shop", "Bags, boards, throw effects and more."],
+  ["#passBtn", "Practice", "Play for free, alone or with friends on one phone."],
+  ["#rankBtn", "Rankings", "See how you stack up on the leaderboards."],
+];
+let tourAt = -1;
+function startTour(again) {
+  if (!again && career.tourDone) return;
+  tourAt = 0; $("tour").hidden = false; showTourStep();
+}
+function endTour() {
+  career.tourDone = true; save(); tourAt = -1;
+  $("tourSpot").style.display = "none"; $("tour").classList.add("dim");
+  const card = $("tourCard"); card.style.left = card.style.top = ""; card.classList.add("mid");
+  card.innerHTML = `<h3>You're all set!</h3><p>You can find <b>How to Play & Rules</b> and this tour any time in <b>Settings</b>: tap your avatar in the top-left corner.</p><button class="btn green" id="tourDone">LET'S PLAY</button>`;
+  $("tourDone").onclick = () => { $("tour").hidden = true; };
+}
+function showTourStep() {
+  // skip anything that isn't on screen right now (e.g. the daily reward when it's already been claimed)
+  while (tourAt < TOUR.length && TOUR[tourAt][0] && !visibleEl(TOUR[tourAt][0])) tourAt++;
+  if (tourAt >= TOUR.length) { endTour(); return; }
+  const [sel, title, text] = TOUR[tourAt], spot = $("tourSpot"), card = $("tourCard");
+  const n = TOUR.filter(t => !t[0] || visibleEl(t[0])).length, k = TOUR.slice(0, tourAt + 1).filter(t => !t[0] || visibleEl(t[0])).length;
+  card.classList.toggle("mid", !sel);
+  card.innerHTML = `<div class="tstep">${k} of ${n}</div><h3>${title}</h3><p>${text}</p>
+    <div class="row" style="gap:10px;justify-content:space-between"><button class="btn ghost" id="tourSkip">SKIP</button><button class="btn green" id="tourNext">${k === n ? "DONE" : "NEXT"}</button></div>`;
+  $("tourSkip").onclick = endTour;
+  $("tourNext").onclick = () => { tourAt++; showTourStep(); };
+  $("tour").classList.toggle("dim", !sel);
+  if (!sel) { spot.style.display = "none"; card.style.left = card.style.top = ""; return; }
+  const el = document.querySelector(sel); el.scrollIntoView({ block: "nearest" });
+  const r = el.getBoundingClientRect(), pad = 6;
+  Object.assign(spot.style, { display: "block", left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
+  const cw = Math.min(320, innerWidth - 32), below = r.top + r.height / 2 < innerHeight / 2;
+  card.style.left = Math.max(16, Math.min(innerWidth - cw - 16, r.left + r.width / 2 - cw / 2)) + "px";
+  card.style.top = below ? r.bottom + 16 + "px" : Math.max(16, r.top - 16 - card.offsetHeight) + "px";
+}
+function visibleEl(sel) { const el = document.querySelector(sel); if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.closest("[hidden]"); }

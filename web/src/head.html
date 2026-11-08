@@ -352,6 +352,16 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .seasonbadge b { font-family: var(--font-display); font-weight: 400; font-size: 15px; color: var(--gold); }
 .ladder { display: grid; gap: 5px; text-align: left; }
 .rules { text-align: left; display: grid; gap: 12px; }
+/* clubhouse tour: a spotlight on one thing at a time, with a card beside it */
+#tour { position: fixed; inset: 0; z-index: 600; transition: background .3s; } #tour.dim { background: rgba(4,10,22,.72); }
+#tourSpot { position: absolute; border-radius: 16px; border: 3px solid var(--gold); box-shadow: 0 0 0 9999px rgba(4,10,22,.72), 0 0 18px rgba(255,201,58,.6); transition: all .3s; pointer-events: none; }
+#tourCard { position: absolute; width: min(320px, calc(100vw - 32px)); background: linear-gradient(var(--deck-2), var(--deck)); border: 3px solid #fff; border-radius: 20px; padding: 14px 16px; box-shadow: 0 6px 0 rgba(0,0,0,.35); transition: top .3s, left .3s; }
+#tourCard.mid { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%); }
+#tourCard h3 { margin: 0 0 6px; font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+#tourCard p { margin: 0 0 12px; font-size: 15px; line-height: 1.35; color: #dfe8f6; }
+#tourCard .tstep { font-size: 11px; font-weight: 900; letter-spacing: .1em; color: var(--gold); margin-bottom: 2px; }
+#tourCard .btn { font-size: 17px; padding: 10px 18px; }
+.quitlist { text-align: left; margin: 6px 0 0; padding-left: 20px; display: grid; gap: 6px; font-weight: 900; }
 .rulesec h3 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 400; font-size: 19px; }
 .rulesec ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 .rulesec li { font-size: 14px; line-height: 1.35; color: #dfe8f6; }
@@ -623,7 +633,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="hubhead">
     <div class="hubtop">
       <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill" id="livesBtn"><i class="tkt"></i><b id="lives">5</b><small id="livesTimer"></small></button></div>
-      <div class="hubright"><button class="pill cappill" id="coinsBtn"><i class="coin"></i><b id="coins">0</b></button><button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button><div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
+      <div class="hubright"><button class="pill cappill" id="coinsBtn"><i class="coin"></i><b id="coins">0</b></button><button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button><div class="pill" id="starsPill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
     </div>
     <div class="hubtitle" id="hubTitle">__GAME_TITLE_HTML__</div>
     <div class="gcname" id="gcName" hidden></div>
@@ -643,6 +653,7 @@ s.was { opacity: .6; font-size: .8em; }
   </div>
 </div>
 
+<div id="tour" hidden><div id="tourSpot"></div><div id="tourCard"></div></div>
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
 <div class="overlay" id="avatarSheet" hidden><div class="sheet">
   <div class="tabs ptabs"><button data-ptab="settings" class="on">SETTINGS</button><button data-ptab="avatar">AVATAR</button><button data-ptab="profile">PROFILE</button></div>

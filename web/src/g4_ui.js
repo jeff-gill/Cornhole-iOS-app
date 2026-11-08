@@ -679,9 +679,18 @@ function tickPausedClock(dt) {
   if (before[0] !== Math.ceil(S.pauseGrace) || before[1] !== Math.ceil(S.clock)) { renderPauseClock(); renderClock(); }
   if (S.clock <= 0) { $("pause").hidden = true; S.pauseClocked = false; S.phase = pausedPhase; timeUp(); }
 }
+// Quitting asks first, and spells out what you'd lose.
 $("forfeitBtn").onclick = () => {
-  if (S.kind === "career") { career.activeMatch = null; addCourtStars(S.venue, -starsForLoss(S.venue)); career.losses++; save(); }
-  openHub();
+  const careerMatch = S.kind === "career", fee = career.activeMatch ? career.activeMatch.fee : 0;
+  const lose = careerMatch
+    ? [`−${starsForLoss(S.venue)} ⭐ at ${esc(venue().name)}`, fee ? `Your buy-in: <i class="coin"></i> ${short(fee)} (your opponent takes the pot)` : null, "The ticket you used for this match"].filter(Boolean)
+    : ["Nothing: practice games are free. This one just ends."];
+  $("pause").hidden = true;
+  showChoice(`<h2>Quit this match?</h2><div class="muted">${careerMatch ? "It counts as a loss. You'll lose:" : ""}</div><ul class="quitlist">${lose.map(l => `<li>${l}</li>`).join("")}</ul>`,
+    "QUIT", () => {
+      if (S.kind === "career") { career.activeMatch = null; addCourtStars(S.venue, -starsForLoss(S.venue)); career.losses++; save(); }
+      openHub();
+    }, "KEEP PLAYING", () => { $("pause").hidden = false; }, "red");
 };
 function renderSoundButtons() {
   $("pauseMusic").classList.toggle("on", musicOn); $("pauseSound").classList.toggle("on", sfxOn);
@@ -804,6 +813,8 @@ function settleInterruptedMatch() {
 }
 
 resize(); openHub(); settleInterruptedMatch();
+// the first time the game is opened: the clubhouse tour, once the title has faded out
+setTimeout(() => { if ($("livesSheet").hidden && S.phase === "hub") startTour(false); }, 3400);
 postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 // Splash: hold the title for a few seconds, then fade into the clubhouse.
