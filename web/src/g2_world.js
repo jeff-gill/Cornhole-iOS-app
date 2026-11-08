@@ -1312,7 +1312,7 @@ function lodgeBuilding(g, x, z) {
   const gable = new THREE.Mesh(new THREE.CylinderGeometry(22, 22, 8, 3, 1), wood); gable.rotation.set(-Math.PI / 2, 0, 0); add(b, gable, 0, H + 3, D / 2 + 2, false);
   add(b, box(14, 20, 0.3, glass), 0, 16, D / 2 + 6.2, false);
   add(b, box(7, 22, 7, stone), 30, H + 6, -6, false); // stone chimney
-  const sign = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#3a2414"; c.fillRect(0, 0, w, h); c.strokeStyle = "#f2d9a0"; c.lineWidth = 8; c.strokeRect(8, 8, w - 16, h - 16); c.fillStyle = "#fff4dc"; c.font = "bold 66px Georgia, serif"; c.textAlign = "center"; c.fillText("SUMMIT LODGE", w / 2, 88); });
+  const sign = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#3a2414"; c.fillRect(0, 0, w, h); c.strokeStyle = "#f2d9a0"; c.lineWidth = 8; c.strokeRect(8, 8, w - 16, h - 16); c.fillStyle = "#fff4dc"; c.textAlign = "center"; let fs = 66; do { c.font = `bold ${fs}px Georgia, serif`; fs -= 2; } while (c.measureText("SUMMIT LODGE").width > w - 50); c.fillText("SUMMIT LODGE", w / 2, 86); }); // shrinks to fit
   add(b, new THREE.Mesh(new THREE.PlaneGeometry(28, 7), new THREE.MeshBasicMaterial({ map: sign })), 0, 8.5, D / 2 + 6.4, false);
   b.position.set(x, 0, z); g.add(b);
 }
