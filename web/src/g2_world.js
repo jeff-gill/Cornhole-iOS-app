@@ -636,7 +636,7 @@ function loadSky(file) {
   }).catch(() => null));
   skyCache.set(file, p); return p;
 }
-function clearPhotoSky() { scene.environment = null; scene.background = null; skyMesh.visible = true; }
+function clearPhotoSky() { scene.environment = null; scene.background = null; skyMesh.visible = true; scene.environmentIntensity = 1; scene.backgroundIntensity = 1; }
 function plankFence(g) {
   const post = std(0x4a3420, { roughness: 0.9 });
   const wall = (len, x, z, rot) => {
@@ -1147,6 +1147,94 @@ function beachHouse(g, x, z, w, floors, color, roofColor, tex) {
   hs.position.set(x, 0, z); g.add(hs);
 }
 
+// ── Pizza Patio: a brick courtyard behind a corner pizzeria on league night.
+// Windows lit from inside: warm glass with a hint of what's in the room.
+function litWindowTex(kind) {
+  return canvasTex(128, 192, (c, w, h) => {
+    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#ffd890"); g.addColorStop(0.6, "#ffb05a"); g.addColorStop(1, "#c8642a");
+    c.fillStyle = g; c.fillRect(0, 0, w, h);
+    if (kind === "shop") { c.fillStyle = "rgba(80,40,20,.35)"; for (let k = 0; k < 4; k++) c.fillRect(8 + k * 30, 120, 22, 60); } // shelves and people inside
+    c.fillStyle = "rgba(255,255,255,.25)"; c.fillRect(10, 8, 18, h - 16);
+    c.strokeStyle = "#2a1a10"; c.lineWidth = 6; c.strokeRect(3, 3, w - 6, h - 6); c.beginPath(); c.moveTo(w / 2, 0); c.lineTo(w / 2, h); c.moveTo(0, h * 0.45); c.lineTo(w, h * 0.45); c.stroke();
+  });
+}
+function pizzeria(g, x, z) {
+  const b = new THREE.Group(), W = 76, D = 26;
+  const brick = photoMat("red_brick_03", W / 10, 1.4, { fallback: 0x8a3a2a }), stucco = photoMat("white_stucco", W / 12, 1.4, { fallback: 0xf0e4cc, tint: 0xfff0d8 });
+  add(b, box(W, 13, D, brick), 0, 6.5, 0, false);
+  add(b, box(W, 12, D, stucco), 0, 19, 0, false);
+  add(b, box(W + 2, 1.4, D + 2, lam(0xe8dcc4)), 0, 13.4, 0, false); // ledge between floors
+  add(b, box(W + 3, 2, D + 3, lam(0x5a3020)), 0, 26, 0, false);      // cornice
+  const shop = new THREE.MeshBasicMaterial({ map: litWindowTex("shop") }), room = new THREE.MeshBasicMaterial({ map: litWindowTex("room") });
+  for (const wx of [-28, -18, 18, 28]) add(b, box(7, 8.5, 0.3, shop), wx, 6, D / 2 + 0.05, false);   // big ground-floor windows
+  for (let wx = -30; wx <= 30; wx += 10) { add(b, box(4.4, 6.4, 0.3, room), wx, 19.5, D / 2 + 0.05, false); for (const sx of [-1, 1]) add(b, box(1.6, 6.8, 0.25, lam(0x2f6a3a)), wx + sx * 3.1, 19.5, D / 2 + 0.2, false); } // shuttered upstairs
+  // the oven window: a brick dome with the wood fire glowing in its mouth, seen through the glass
+  const ovenTex = canvasTex(256, 168, (c, w, h) => {
+    c.fillStyle = "#3a1e10"; c.fillRect(0, 0, w, h);
+    const back = c.createRadialGradient(w / 2, h * 0.75, 10, w / 2, h * 0.75, w * 0.6); back.addColorStop(0, "rgba(255,150,60,.55)"); back.addColorStop(1, "rgba(255,120,40,0)");
+    c.fillStyle = back; c.fillRect(0, 0, w, h);
+    c.fillStyle = "#8a5a3a"; c.beginPath(); c.ellipse(w / 2, h * 0.9, w * 0.38, h * 0.62, 0, Math.PI, 0); c.fill(); // the dome
+    c.strokeStyle = "#5a3424"; c.lineWidth = 3; for (let k = 1; k < 6; k++) { c.beginPath(); c.ellipse(w / 2, h * 0.9, w * 0.38, h * 0.62 * k / 6, 0, Math.PI, 0); c.stroke(); }
+    const fire = c.createRadialGradient(w / 2, h * 0.86, 4, w / 2, h * 0.86, 44); fire.addColorStop(0, "#fff2b0"); fire.addColorStop(0.4, "#ffa030"); fire.addColorStop(1, "#7a2a08");
+    c.fillStyle = fire; c.beginPath(); c.ellipse(w / 2, h * 0.9, 46, 34, 0, Math.PI, 0); c.fill(); // the glowing mouth
+    c.fillStyle = "#2a1408"; c.fillRect(0, h * 0.9, w, h * 0.1);
+    c.strokeStyle = "#2a1a10"; c.lineWidth = 8; c.strokeRect(4, 4, w - 8, h - 8);
+  });
+  add(b, box(14, 9.2, 0.3, new THREE.MeshBasicMaterial({ map: ovenTex })), 0, 6.2, D / 2 + 0.05, false);
+  flame(b, -0.8, 2.3, D / 2 + 0.25, 1.2); flame(b, 0.6, 2.3, D / 2 + 0.25, 1.0);
+  const ovenLight = new THREE.PointLight(0xff8a3a, 40, 30, 1.6); ovenLight.position.set(0, 4, D / 2 + 3); b.add(ovenLight);
+  venueAnim.push({ kind: "firelight", o: ovenLight, base: 40 });
+  // awning over the door, and the sign
+  const awn = new THREE.Mesh(new THREE.BoxGeometry(18, 0.3, 5), std(0xffffff, { map: stripeTex(["#1f7a3a", "#ffffff", "#c8202a", "#ffffff"], 12) })); awn.rotation.x = 0.35; add(b, awn, 0, 11.2, D / 2 + 2.2, false);
+  const signTex = canvasTex(512, 128, (c, w, h) => {
+    c.fillStyle = "#1a0e08"; c.fillRect(0, 0, w, h); c.strokeStyle = "#ffcf7a"; c.lineWidth = 6; c.strokeRect(8, 8, w - 16, h - 16);
+    c.shadowColor = "#ff9a3a"; c.shadowBlur = 24; c.fillStyle = "#ffe2a8"; c.font = "bold 76px Georgia, serif"; c.textAlign = "center"; c.fillText("Nonna's Pizza", w / 2, 92);
+  });
+  add(b, new THREE.Mesh(new THREE.PlaneGeometry(26, 6.5), new THREE.MeshBasicMaterial({ map: signTex })), 0, 15.8, D / 2 + 0.6, false);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffb060, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.35 }));
+  glow.position.set(0, 15.8, D / 2 + 1.5); glow.scale.set(34, 12, 1); b.add(glow);
+  add(b, box(5, 1.2, 4, lam(0x8a8a8a)), 0, 30, -2, false); // chimney
+  add(b, new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 8, 10), lam(0x6a3a2a)), 0, 30, -6, false);
+  b.position.set(x, 0, z); g.add(b);
+}
+// Two-storey shop buildings along the street, each a different colour, with lit windows.
+function shopRow(g, x, z0, z1, side) {
+  const r = rng(Math.abs(x) * 7), COLS = [0xe8c8a0, 0xd8a890, 0xc8d8c0, 0xf0e0b0, 0xb8c8d8, 0xe0b8b8];
+  const lit = new THREE.MeshBasicMaterial({ map: litWindowTex("shop") }), dark = lam(0x2a3442);
+  for (let z = z0; z > z1;) {
+    const w = 22 + r() * 10, h = 22 + r() * 10, c = lam(COLS[Math.floor(r() * COLS.length)]);
+    add(g, box(20, h, w - 0.6, c), x, h / 2, z - w / 2, false);
+    add(g, box(21, 1.2, w, lam(0x4a3426)), x, h + 0.6, z - w / 2, false);
+    for (const fz of [-w * 0.27, w * 0.27]) for (const fy of [6, 16]) if (fy < h - 4) add(g, box(0.3, 6, 5, r() < 0.7 ? lit : dark), x - side * 10.1, fy, z - w / 2 + fz, false);
+    z -= w;
+  }
+}
+function patioHeater(g, x, z) {
+  const h = new THREE.Group(), steel = std(0x9aa0a8, { metalness: 0.8, roughness: 0.3 });
+  add(h, new THREE.Mesh(new THREE.CylinderGeometry(1, 1.2, 0.5, 14), steel), 0, 0.25, 0, false);
+  add(h, new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 7.5, 8), steel), 0, 4, 0, false);
+  add(h, new THREE.Mesh(new THREE.ConeGeometry(2.2, 1, 16, 1, true), steel), 0, 8.3, 0, false);
+  add(h, new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.2, 12), new THREE.MeshBasicMaterial({ color: 0xff6a20 })), 0, 7.3, 0, false);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff7a30, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.6 }));
+  s.position.set(0, 7.3, 0); s.scale.setScalar(3.4); h.add(s); glowSprites.push(s);
+  h.position.set(x, 0, z); g.add(h);
+}
+function pizzaBox(g, x, y, z, rot) {
+  const t = canvasTex(64, 64, (c, w, h) => { c.fillStyle = "#f4ecdc"; c.fillRect(0, 0, w, h); c.fillStyle = "#c8202a"; c.beginPath(); c.arc(32, 32, 16, 0, 7); c.fill(); c.fillStyle = "#fff"; c.font = "bold 14px Arial"; c.textAlign = "center"; c.fillText("PIZZA", 32, 37); });
+  const m = add(g, box(1.6, 0.25, 1.6, [lam(0xe8dcc4), lam(0xe8dcc4), new THREE.MeshLambertMaterial({ map: t }), lam(0xe8dcc4), lam(0xe8dcc4), lam(0xe8dcc4)]), x, y, z, false);
+  m.rotation.y = rot;
+}
+function chalkboard(g, x, z, rotY) {
+  const t = canvasTex(256, 320, (c, w, h) => {
+    c.fillStyle = "#24302a"; c.fillRect(0, 0, w, h); c.strokeStyle = "#8a6038"; c.lineWidth = 14; c.strokeRect(0, 0, w, h);
+    c.fillStyle = "#fff6e0"; c.textAlign = "center"; c.font = "bold 34px Georgia, serif"; c.fillText("LEAGUE", w / 2, 60); c.fillText("NIGHT", w / 2, 98);
+    c.font = "24px Georgia, serif"; ["Cornhole 7 pm", "Slice + soda $5", "Garlic knots", "Cannoli"].forEach((s, i) => c.fillText(s, w / 2, 150 + i * 38));
+  });
+  const a = new THREE.Group(), face = new THREE.MeshLambertMaterial({ map: t });
+  for (const sgn of [-1, 1]) { const p = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.6, 0.12), [lam(0x8a6038), lam(0x8a6038), lam(0x8a6038), lam(0x8a6038), face, face]); p.position.set(0, 1.75, sgn * 0.55); p.rotation.x = sgn * 0.28; a.add(p); }
+  a.position.set(x, 0, z); a.rotation.y = rotY; g.add(a);
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -1154,7 +1242,7 @@ const VENUE_LOOK = {
     hemi: [0xe6f2ff, 0x5a5c58, 1.3], sun: [0xfff4e2, 3.1, [-20, 38, -6]], exposure: 1.02, dust: 0xbfbcb4 },
   beach: { top: [0.10, 0.48, 0.88], mid: [0.45, 0.78, 0.98], horizon: [0.88, 0.95, 1.0], sunGlow: 0.8, night: 0, fog: [0xd6e6f2, 350, 1900],
     hemi: [0xe6f6ff, 0xd8c08a, 1.35], sun: [0xfff4dc, 3.3, [-14, 34, -6]], exposure: 1.0, dust: 0xf0dca8 },
-  brewery: { top: [0.02, 0.03, 0.10], mid: [0.06, 0.08, 0.22], horizon: [0.25, 0.18, 0.30], sunGlow: 0, night: 1, fog: [0x1a1530, 60, 200],
+  brewery: { top: [0.04, 0.07, 0.20], mid: [0.12, 0.16, 0.36], horizon: [0.45, 0.30, 0.38], sunGlow: 0, night: 0.8, fog: [0x2a3048, 120, 420],
     hemi: [0x5466a8, 0x2a1a12, 0.45], sun: [0xffcf8a, 1.5, [-8, 30, -16]], exposure: 1.0, dust: 0xc8a888 },
   lodge: { top: [0.42, 0.52, 0.66], mid: [0.70, 0.77, 0.86], horizon: [0.88, 0.91, 0.95], sunGlow: 0.25, night: 0, fog: [0xdfe6ef, 70, 330],
     hemi: [0xeef4ff, 0xb8c8dc, 1.4], sun: [0xf4f6ff, 2.2, [-18, 30, -10]], exposure: 1.0, dust: 0xffffff },
@@ -1304,21 +1392,44 @@ function buildVenue(id) {
       scene.fog.color.setHex(0xd6e6f2); scene.fog.near = 350; scene.fog.far = 1900;
     });
   } else if (id === "brewery") {
-    setGround(g, "brick", 8);
-    const bricks = wallTexture("brick"); bricks.repeat.set(4, 1);
-    const wall = new THREE.Mesh(new THREE.PlaneGeometry(60, 16), new THREE.MeshLambertMaterial({ map: bricks })); wall.position.set(0, 8, -48); g.add(wall);
-    for (const x of [-24, 24]) { const sw = new THREE.Mesh(new THREE.PlaneGeometry(60, 16), new THREE.MeshLambertMaterial({ map: bricks })); sw.position.set(x, 8, -18); sw.rotation.y = x < 0 ? Math.PI / 2 : -Math.PI / 2; g.add(sw); }
-    const signTex = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#1a0f08"; c.fillRect(0, 0, w, h); c.fillStyle = "#ffb347"; c.font = "bold 58px Georgia, serif"; c.textAlign = "center"; c.fillText("PIZZERIA", w / 2, h / 2 + 20); });
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(16, 4), new THREE.MeshBasicMaterial({ map: signTex })); sign.position.set(0, 12, -47.8); g.add(sign);
-    const front = new THREE.Mesh(new THREE.PlaneGeometry(70, 16), new THREE.MeshLambertMaterial({ map: bricks })); front.position.set(0, 8, 32); front.rotation.y = Math.PI; g.add(front); // the brewhouse behind you
-    for (const wx of [-16, 16]) add(g, box(7, 4, 0.2, new THREE.MeshBasicMaterial({ color: 0xffc27a })), wx, 6, 31.8, false);
-    add(g, box(5, 8, 0.2, std(0x3a2414)), 0, 4, 31.8, false);
-    for (const x of [-24, 24]) { const sw = new THREE.Mesh(new THREE.PlaneGeometry(22, 16), new THREE.MeshLambertMaterial({ map: bricks })); sw.position.set(x, 8, 21); sw.rotation.y = x < 0 ? Math.PI / 2 : -Math.PI / 2; g.add(sw); }
-    const poles = [[-10, -40], [10, -40], [-10, -24], [10, -24], [-10, -8], [10, -8]];
-    stringLights(g, poles, [[[-10, -40], [10, -40]], [[-10, -24], [10, -24]], [[-10, -8], [10, -8]], [[-10, -40], [-10, -8]], [[10, -40], [10, -8]], [[-10, -40], [10, -24]], [[10, -40], [-10, -24]], [[-10, -24], [10, -8]], [[10, -24], [-10, -8]]], 11.5, 2, 0.8);
-    barrel(g, -7, -38); barrel(g, -9.5, -36); barrel(g, 8, -40);
-    picnicTable(g, 12, -26, 0.1); picnicTable(g, -13, -20, -0.1);
-    for (const [x, z] of [[-6, -27], [6, -27]]) { const pl = new THREE.PointLight(0xffc27a, 30, 26, 1.6); pl.position.set(x, 9, z); g.add(pl); }
+    // League night on the brick patio behind Nonna's Pizza: the pizzeria with its wood fire glowing, café tables full
+    // of people, patio heaters, planters and string lights, and the shops along the street on both sides.
+    const street = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), lam(0x2a2a2e)); street.rotation.x = -Math.PI / 2; street.position.set(0, -0.05, -30); g.add(street);
+    const patio = new THREE.Mesh(new THREE.PlaneGeometry(56, 104), photoMat("herringbone_brick", 56 / 8, 104 / 8, { fallback: 0x8a4a34, bump: 0.8 }));
+    patio.rotation.x = -Math.PI / 2; patio.position.set(0, 0.02, -14); patio.receiveShadow = true; g.add(patio);
+    for (const sx of [-1, 1]) { // sidewalks
+      const walk = new THREE.Mesh(new THREE.PlaneGeometry(14, 140), lam(0x8c8a84)); walk.rotation.x = -Math.PI / 2; walk.position.set(sx * 35, 0.01, -14); g.add(walk);
+    }
+    pizzeria(g, 0, -80);
+    shopRow(g, -56, 60, -110, -1); shopRow(g, 56, 60, -110, 1);
+    // a low brick wall with planters around the patio, open at the back toward the pizzeria
+    const wallMat = photoMat("red_brick_03", 10, 0.4, { fallback: 0x8a3a2a });
+    for (const sx of [-1, 1]) { add(g, box(1.4, 3, 96, wallMat), sx * 28, 1.5, -10, false); add(g, box(2, 0.4, 96, lam(0xd8ccb4)), sx * 28, 3.2, -10, false); }
+    for (const sx of [-1, 1]) for (let z = 30; z > -56; z -= 18) placeModel(g, "potted_plant_02", sx * 25.5, z, z, 1.4);
+    // café tables with diners, a few pizza boxes, and the heaters between them
+    const tr = rng(17);
+    for (const sx of [-1, 1]) for (let z = 22; z > -54; z -= 13) {
+      if (sx < 0 && z < -30 && z > -46) continue; // room for the chalkboard
+      const tx = sx * (17 + tr() * 2);
+      placeModel(g, "outdoor_table_chair_set_01", tx, z, tr() * 6.28, 1);
+      if (tr() < 0.5) pizzaBox(g, tx, 2.55, z, tr() * 3);
+      if (tr() < 0.75) person(g, tx + (tr() - 0.5) * 3, z + 3, Math.atan2(-tx, -z), 200 + z * 3 + sx, tr() < 0.3 ? "cheer" : "stand");
+    }
+    for (const [x, z] of [[-21, 8], [21, -4], [-21, -24], [21, -36], [-12, -58], [12, -58]]) patioHeater(g, x, z);
+    chalkboard(g, -10, -40, 0.5);
+    crowd(g, -9, -62, 5, 3, 211, 0, -27); crowd(g, 9, -62, 5, 3, 213, 0, -27); // watching from by the door
+    for (const [x, z, r] of [[-24, 30, 0.4], [24, 30, -0.4], [-24, -66, 2.6], [24, -66, -2.6]]) placeModel(g, "street_lamp_01", x, z, r, 1);
+    for (const [x, z] of [[-24, 30], [24, 30], [-24, -66], [24, -66]]) { const l = new THREE.PointLight(0xffd8a0, 26, 40, 1.6); l.position.set(x, 13, z); g.add(l); }
+    // string lights criss-crossing the patio
+    const poles = [[-24, -50], [24, -50], [-24, -26], [24, -26], [-24, -2], [24, -2], [-24, 22], [24, 22]];
+    stringLights(g, poles, [[[-24, -50], [24, -26]], [[24, -50], [-24, -26]], [[-24, -26], [24, -2]], [[24, -26], [-24, -2]], [[-24, -2], [24, 22]], [[24, -2], [-24, 22]], [[-24, -50], [24, -50]], [[-24, 22], [24, 22]]], 13, 2, 0.32);
+    for (const [x, z] of [[-6, -27], [6, -27], [0, 0]]) { const pl = new THREE.PointLight(0xffd090, 22, 30, 1.6); pl.position.set(x, 11, z); g.add(pl); }
+    loadSky("qwantani_dusk_2_puresky_1k.hdr").then(sky => {
+      if (!sky || venueId !== "brewery") return;
+      // just the sky behind the buildings, dimmed to blue hour; the lights on the patio do the lighting
+      scene.background = sky.bg; scene.backgroundIntensity = 0.32; skyMesh.visible = false;
+      scene.fog.color.setHex(0x232a40); scene.fog.near = 140; scene.fog.far = 460;
+    });
   } else if (id === "lodge") {
     setGround(g, "snow", 12);
     mountains(g, 8, true);
