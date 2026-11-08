@@ -2860,6 +2860,19 @@ function venueTick(dt, t) {
       a.o.position.set(a.cx + Math.cos(ang) * a.rad, a.h + Math.sin(t * 0.5 + a.phase) * 2, a.cz + Math.sin(ang) * a.rad);
       a.o.rotation.y = -ang + (a.speed > 0 ? 0 : Math.PI); a.o.rotation.z = Math.sign(a.speed) * 0.25;
       const f = Math.sin(t * 7 + a.phase) * 0.5; a.wings[0].rotation.z = f; a.wings[1].rotation.z = -f;
+    } else if (a.kind === "skier") { // carving down the slope to the left, then back to the top
+      a.t = (a.t + dt * a.speed) % 1;
+      const x = SLOPE_X - 6 - a.t * 260, z = a.z0 + Math.sin(a.t * 18 + a.ph) * a.wig, dz = Math.cos(a.t * 18 + a.ph) * a.wig * 18 * a.speed;
+      a.o.position.set(x, slopeY(x), z); a.o.rotation.set(0, Math.atan2(-260 * a.speed, dz), -dz * 0.02);
+      a.o.visible = a.t > 0.02;
+    } else if (a.kind === "lift") { // chairs go up one side and come down the other
+      const L = a.A.distanceTo(a.B);
+      for (const c of a.chairs) {
+        c.t = (c.t + dt * 0.012) % 1;
+        const up = c.t < 0.5, u = up ? c.t * 2 : 2 - c.t * 2;
+        const p = a.A.clone().addScaledVector(a.dir, L * u).addScaledVector(a.side, up ? 4.5 : -4.5);
+        c.o.position.set(p.x, p.y + a.H + 1 - 7, p.z); c.o.rotation.y = Math.atan2(a.dir.x, a.dir.z) + (up ? 0 : Math.PI);
+      }
     } else if (a.kind === "water") {
       a.o.offset.x = (a.o.offset.x + dt * 0.006) % 1; a.o.offset.y = Math.sin(t * 0.4) * 0.02;
     }
@@ -3716,6 +3729,112 @@ function chalkboard(g, x, z, rotY) {
   a.position.set(x, 0, z); a.rotation.y = rotY; g.add(a);
 }
 
+// ── Mountain Lodge: the top of the ski slope, outside a big timber lodge.
+const SKI_COLS = [0xd62828, 0x2f86ff, 0xffc93a, 0x2fbf71, 0xff7ac0, 0x222222, 0xff8a1f, 0xffffff];
+const skiGeo = new THREE.BoxGeometry(0.28, 0.1, 5.6), poleGeo = new THREE.CylinderGeometry(0.05, 0.04, 3.9, 5);
+// skis on a person's feet (and poles in their hands); p is the group person() returns, facing +z
+function wearSkis(p, color) {
+  const m = lam(color), pm = std(0xcccccc, { metalness: 0.6 });
+  for (const sx of [-0.25, 0.25]) { const s = new THREE.Mesh(skiGeo, m); s.position.set(sx, 0.05, 0.5); p.add(s); }
+  for (const sx of [-0.85, 0.85]) { const pl = new THREE.Mesh(poleGeo, pm); pl.position.set(sx, 1.9, -0.2); pl.rotation.x = -0.25; p.add(pl); }
+}
+// a pair of skis held upright beside someone, tails on the snow
+function heldSkis(g, x, z, rotY, color) {
+  const s = new THREE.Group(), m = lam(color);
+  for (const dx of [-0.12, 0.12]) { const k = new THREE.Mesh(skiGeo, m); k.rotation.x = Math.PI / 2; k.position.set(dx, 2.8, 0); s.add(k); }
+  s.position.set(x, 0, z); s.rotation.set(0, rotY, 0.06); g.add(s);
+}
+function skiRack(g, x, z, rotY, seed) {
+  const r = rng(seed), rk = new THREE.Group(), wood = lam(0x6a4628);
+  for (const dx of [-5, 5]) add(rk, box(0.4, 3.6, 0.4, wood), dx, 1.8, 0, false);
+  add(rk, box(10.6, 0.35, 0.5, wood), 0, 3.4, 0, false);
+  for (let k = 0; k < 7; k++) { // pairs leaning against the bar
+    const pair = new THREE.Group(), m = lam(SKI_COLS[Math.floor(r() * SKI_COLS.length)]);
+    for (const dx of [-0.12, 0.12]) { const s = new THREE.Mesh(skiGeo, m); s.rotation.x = Math.PI / 2; s.position.set(dx, 2.75, 0); pair.add(s); }
+    pair.position.set(-4.3 + k * 1.4, 0, 0.75); pair.rotation.x = -0.24; rk.add(pair);
+  }
+  rk.position.set(x, 0, z); rk.rotation.y = rotY; g.add(rk);
+}
+// the slope falls away to the left of the court (x < SLOPE_X)
+const SLOPE_X = -40, SLOPE = 0.3;
+const slopeY = x => (x < SLOPE_X ? (x - SLOPE_X) * SLOPE : 0);
+function skiers(g, n, seed) {
+  const r = rng(seed);
+  for (let i = 0; i < n; i++) {
+    const p = person(g, 0, 0, 0, 500 + i, "stand"); venueAnim.pop(); // they move along the slope instead
+    wearSkis(p, SKI_COLS[Math.floor(r() * SKI_COLS.length)]);
+    venueAnim.push({ kind: "skier", o: p, t: r(), z0: -150 + r() * 200, speed: 0.045 + r() * 0.04, wig: 6 + r() * 10, ph: r() * 6 });
+  }
+}
+function lodgeBuilding(g, x, z) {
+  const b = new THREE.Group(), W = 100, D = 40, H = 30;
+  const wood = photoMat("weathered_brown_planks", W / 6, 2, { rotate: Math.PI / 2, fallback: 0x7a5232, tint: 0xd8b890 });
+  const stone = lam(0x8a8a90, { flatShading: true }), snow = lam(0xf6f9ff, { flatShading: true }), glass = std(0xffffff, { map: dayWindowTex(), roughness: 0.15, metalness: 0.2 });
+  add(b, box(W + 2, 6, D + 2, stone), 0, 3, 0, false);
+  add(b, box(W, H - 6, D, wood), 0, 6 + (H - 6) / 2, 0, false);
+  for (let wx = -40; wx <= 40; wx += 10) { add(b, box(6, 9, 0.3, glass), wx, 13, D / 2 + 0.05, false); add(b, box(6, 7, 0.3, glass), wx, 24, D / 2 + 0.05, false); }
+  add(b, box(W + 4, 0.6, 7, lam(0x5a3a22)), 0, 18.5, D / 2 + 3.5, false); // balcony
+  add(b, box(W + 4, 2.6, 0.3, lam(0x5a3a22)), 0, 20, D / 2 + 6.8, false);
+  // steep gable roof running along the front, with snow on it
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(D * 0.75, D * 0.75, W + 8, 3, 1), lam(0x4a2e1c, { flatShading: true }));
+  roof.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); roof.scale.set(1, 1, 1.1); add(b, roof, 0, H + D * 0.75 * 0.55, 0, false);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(D * 0.77, D * 0.77, W + 8.5, 3, 1), snow);
+  cap.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); cap.scale.set(1, 1, 1.1); add(b, cap, 0, H + D * 0.75 * 0.55 + 1.2, 0, false);
+  // big front gable (A-frame entrance) with a glass wall
+  const gable = new THREE.Mesh(new THREE.CylinderGeometry(22, 22, 8, 3, 1), wood); gable.rotation.set(-Math.PI / 2, 0, 0); add(b, gable, 0, H + 3, D / 2 + 2, false);
+  add(b, box(14, 20, 0.3, glass), 0, 16, D / 2 + 6.2, false);
+  add(b, box(7, 22, 7, stone), 30, H + 6, -6, false); // stone chimney
+  const sign = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#3a2414"; c.fillRect(0, 0, w, h); c.strokeStyle = "#f2d9a0"; c.lineWidth = 8; c.strokeRect(8, 8, w - 16, h - 16); c.fillStyle = "#fff4dc"; c.font = "bold 66px Georgia, serif"; c.textAlign = "center"; c.fillText("SUMMIT LODGE", w / 2, 88); });
+  add(b, new THREE.Mesh(new THREE.PlaneGeometry(28, 7), new THREE.MeshBasicMaterial({ map: sign })), 0, 8.5, D / 2 + 6.4, false);
+  b.position.set(x, 0, z); g.add(b);
+}
+function chairLift(g) {
+  // from the bottom of the slope up to the top station beside the lodge
+  const A = new THREE.Vector3(-300, slopeY(-300) - 2, -230), B = new THREE.Vector3(-58, 0, -70), dir = B.clone().sub(A), L = dir.length(); dir.normalize();
+  const side = new THREE.Vector3(-dir.z, 0, dir.x).normalize(), steel = std(0x7a8290, { metalness: 0.6 }), H = 30;
+  const n = 7;
+  for (let i = 0; i <= n; i++) {
+    const p = A.clone().addScaledVector(dir, L * i / n);
+    add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.9, H + 2, 8), steel), p.x, p.y + H / 2, p.z, false);
+    const arm = add(g, box(9, 0.6, 0.6, steel), p.x, p.y + H + 1, p.z, false); arm.rotation.y = Math.atan2(side.x, side.z) + Math.PI / 2;
+  }
+  // top station: a shed and the big wheel
+  add(g, box(14, 10, 14, lam(0x6a4a30)), B.x - 6, 5, B.z, false);
+  const wheel = add(g, new THREE.Mesh(new THREE.TorusGeometry(4.5, 0.4, 8, 24), steel), B.x, H + 1, B.z, false); wheel.rotation.x = Math.PI / 2;
+  const cable = new THREE.LineBasicMaterial({ color: 0x222222 });
+  for (const s of [-1, 1]) {
+    const a = A.clone().addScaledVector(side, s * 4.5), b2 = B.clone().addScaledVector(side, s * 4.5);
+    a.y += H + 1; b2.y += H + 1;
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([a, b2]), cable));
+  }
+  const chairs = [], r = rng(41), seatMat = lam(0x2a3a5a);
+  for (let k = 0; k < 18; k++) {
+    const c = new THREE.Group();
+    add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 7, 5), steel), 0, 3.5, 0, false);
+    add(c, box(4.6, 0.3, 1.8, seatMat), 0, 0, 0.4, false); add(c, box(4.6, 2.2, 0.25, seatMat), 0, 1.1, -0.5, false);
+    if (r() < 0.75) for (const dx of r() < 0.5 ? [-1.1] : [-1.1, 1.1]) { // riders, skis dangling
+      const p = person(c, dx, 0.35, 0, 600 + k * 3 + (dx > 0 ? 1 : 0), "sit"); venueAnim.pop();
+      p.position.y = -1.45; wearSkis(p, SKI_COLS[Math.floor(r() * SKI_COLS.length)]);
+      p.children.slice(-4, -2).forEach(s => { s.position.set(s.position.x, 0.2, 1.4); s.rotation.x = 0.5; });
+    }
+    g.add(c); chairs.push({ o: c, t: k / 18 });
+  }
+  venueAnim.push({ kind: "lift", chairs, A, B, side, dir, H });
+}
+function deckTable(g, x, z, seed) { // a round table with chairs, people sitting on most
+  const r = rng(seed), wood = std(0x8a5a34, { roughness: 0.8 }), dark = std(0x3a2a1c);
+  add(g, new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 0.2, 18), wood), x, 2.9, z);
+  add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.4, 2.8, 8), dark), x, 1.5, z, false);
+  for (let k = 0; k < 4; k++) {
+    const a = k * Math.PI / 2 + 0.3, cx = x + Math.sin(a) * 2.7, cz = z + Math.cos(a) * 2.7, face = a + Math.PI;
+    const ch = new THREE.Group(); add(ch, box(1.4, 0.2, 1.4, wood), 0, 1.5, 0); add(ch, box(1.4, 1.8, 0.2, wood), 0, 2.4, -0.65);
+    for (const [lx, lz] of [[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]]) add(ch, box(0.15, 1.5, 0.15, dark), lx, 0.75, lz, false);
+    ch.position.set(cx, 0, cz); ch.rotation.y = face; g.add(ch);
+    if (r() < 0.7) person(g, cx - Math.sin(face) * 0.25, cz - Math.cos(face) * 0.25, face, seed * 7 + k, "sit");
+  }
+  if (r() < 0.6) add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.2, 0.5, 10), lam(0xffffff)), x + 0.4, 3.25, z - 0.3, false); // hot cocoa
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -3928,15 +4047,46 @@ function buildVenue(id) {
       scene.fog.color.setHex(0xd2e2f0); scene.fog.near = 200; scene.fog.far = 700;
     });
   } else if (id === "lodge") {
-    setGround(g, "snow", 12);
+    // The top of the ski slope outside Summit Lodge: a deck beside the lane, skiers heading down the slope to the
+    // left, a chairlift bringing people up, ski racks, and light snow the whole time.
+    // the snowfield: flat around the court and the lodge, falling away down the slope to the left
+    const stex = groundTexture("snow"); stex.repeat.set(760 / 12, 700 / 12);
+    const slope = new THREE.Mesh(new THREE.PlaneGeometry(760, 700, 80, 1), new THREE.MeshStandardMaterial({ map: stex, roughness: 1 }));
+    slope.rotation.x = -Math.PI / 2;
+    const sp = slope.geometry.attributes.position;
+    for (let i = 0; i < sp.count; i++) { const x = sp.getX(i) - 80; sp.setX(i, x); sp.setZ(i, slopeY(x)); }
+    slope.geometry.computeVertexNormals(); slope.position.set(0, -0.05, -100); slope.receiveShadow = true; g.add(slope);
     mountains(g, 8, true);
+    lodgeBuilding(g, 6, -100);
+    // the deck beside the lane, with tables, a railing and a ski rack
+    const deck = photoMat("weathered_brown_planks", 4, 10, { fallback: 0x8a6a4a, tint: 0xd8c4a8 });
+    add(g, box(22, 0.8, 70, deck), 25, 0.4, -24, false);
+    for (const [x, z, w, d] of [[14.2, -24, 0.3, 70], [25, 11, 22, 0.3]]) add(g, box(w, 3, d, lam(0x5a3a22)), x, 2.4, z, false);
+    let seed = 71;
+    for (const z of [2, -12, -26, -40, -54]) deckTable(g, 26 + (seed % 2 ? 2 : -1), z, seed++);
+    patioHeater(g, 33, -5); patioHeater(g, 33, -33);
+    skiRack(g, 10, -64, 0.15, 3); skiRack(g, -16, -70, -0.2, 5);
+    // people standing around, some holding their skis upright
+    const pr = rng(77);
+    for (const [x, z] of [[-14, -58], [-10, -62], [8, -70], [12, -58], [-20, -30], [-22, -12], [-18, 6], [-24, -44]]) {
+      const face = Math.atan2(-x, -15 - z) + (pr() - 0.5) * 0.6;
+      person(g, x, z, face, 700 + Math.round(x * 3 - z), pr() < 0.2 ? "cheer" : "stand");
+      if (pr() < 0.6) heldSkis(g, x + Math.cos(face) * 0.9, z - Math.sin(face) * 0.9, face, SKI_COLS[Math.floor(pr() * SKI_COLS.length)]);
+    }
+    for (const [x, z] of [[-30, -20], [-31, 4], [-29, -52]]) { const p = person(g, x, z, -Math.PI / 2 + (pr() - 0.5) * 0.5, 800 + Math.round(z), "stand"); wearSkis(p, SKI_COLS[Math.floor(pr() * SKI_COLS.length)]); } // ready to go
+    skiers(g, 9, 13);
+    chairLift(g);
+    // snowy pines down the slope and around the back
     const r = rng(17);
-    for (let k = 0; k < 70; k++) { const a = r() * Math.PI * 2, d = 46 + r() * 60; pine(g, Math.sin(a) * d, -15 + Math.cos(a) * d, 0.9 + r() * 0.7, true); }
-    cabin(g, -26, -62, 0.5); cabin(g, 30, 30, Math.PI + 0.6);
-    snowman(g, 9, -38, -0.3); snowman(g, -11, 10, Math.PI + 0.4);
-    stringLights(g, [[-9, -38], [9, -38], [-9, -14], [9, -14]], [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]]], 10.6, 2, 0.5);
-    cooler(g, 5, -22, 0.4, 0x2f86ff); chair(g, -7.5, -36, 0.35, 0xd62828);
-    snowfall(g);
+    for (let k = 0; k < 90; k++) {
+      const a = r(), x = k < 45 ? -60 - r() * 200 : (r() - 0.5) * 300, z = k < 45 ? (r() < 0.5 ? 40 + r() * 60 : -180 - r() * 120) : -140 - r() * 120;
+      if (k >= 45 && Math.abs(x) < 70 && z > -150) continue;
+      pine(g, x, z, 1.1 + r() * 0.9, true); g.children[g.children.length - 1].position.y = slopeY(x);
+    }
+    for (let k = 0; k < 16; k++) pine(g, 40 + r() * 60, 30 - r() * 160, 1 + r() * 0.8, true);
+    snowman(g, -9, 12, Math.PI + 0.4);
+    cooler(g, 5, -22, 0.4, 0x2f86ff);
+    snowfall(g, 1300);
   } else if (id === "bonfire") {
     setGround(g, "sand", 10);
     ocean(g);
@@ -5190,7 +5340,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794152134";
+const BUILD_ID = "1794152635";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
