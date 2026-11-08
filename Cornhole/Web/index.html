@@ -111,8 +111,14 @@ body.inhub .score, body.inhub #panel { display: none; }
   border-radius: 14px; padding: 4px 10px; font-size: 12px; box-shadow: 0 4px 0 rgba(0,0,0,.25); text-align: right; }
 #clock { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 64px; pointer-events: none; background: rgba(10,20,38,.75); border: 3px solid #fff; border-radius: 999px; padding: 3px 14px; font-family: var(--font-display); font-size: 17px; }
 #clock b { font-weight: 400; font-size: 20px; font-variant-numeric: tabular-nums; }
-#clock.hurry { background: linear-gradient(#ff6a5a, #c8102e); animation: pulse .5s ease-in-out infinite alternate; }
-@keyframes pulse { to { transform: scale(1.12); } }
+#clock { transform-origin: left center; transition: transform .25s cubic-bezier(.3,1.6,.5,1), background .25s; }
+#clock.warn { background: linear-gradient(#ffe27a, #ffc93a); color: #3a2600; transform: scale(1.3); }
+#clock.hurry { background: linear-gradient(#ff6a5a, #c8102e); color: #fff; transform: scale(1.6); animation: pulse .5s ease-in-out infinite alternate; }
+@keyframes pulse { from { transform: scale(1.6); } to { transform: scale(1.78); } }
+#timeupMsg { position: absolute; left: 50%; top: 38%; transform: translate(-50%, -50%); z-index: 6; pointer-events: none; text-align: center; padding: 16px 26px; border-radius: 22px; border: 4px solid #fff;
+  background: linear-gradient(#ff6a5a, #c8102e); box-shadow: 0 6px 0 rgba(0,0,0,.35); font-family: var(--font-display); font-size: 34px; line-height: 1.05; animation: timeupin .35s cubic-bezier(.3,1.8,.5,1); white-space: nowrap; }
+#timeupMsg small { display: block; font-family: var(--font-body, inherit); font-weight: 900; font-size: 15px; margin-top: 4px; }
+@keyframes timeupin { from { transform: translate(-50%, -50%) scale(.4); opacity: 0; } }
 .searchsheet { display: grid; gap: 12px; justify-items: center; padding: 26px 20px; }
 .oppspin { width: 100%; justify-self: stretch; height: 76px; box-sizing: border-box; overflow: hidden; border-radius: 18px; border: 4px solid #fff; background: linear-gradient(#12203a, #1b2f52); box-shadow: 0 6px 0 rgba(0,0,0,.35), inset 0 10px 14px rgba(0,0,0,.4), inset 0 -10px 14px rgba(0,0,0,.4); }
 .oppreel { will-change: transform; }
@@ -567,6 +573,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
     <div id="clock" hidden>⏱ <b>25</b></div>
+    <div id="timeupMsg" hidden>⏱ TIME'S UP!<small>That bag is lost</small></div>
     <div id="aim" hidden></div>
     <div id="gauge" hidden><div class="tube"><div class="od"></div><div class="fill" id="gaugeFill"></div></div><div class="target" id="gaugeTarget"></div><div class="label" style="top:-22px">OVERDRIVE</div></div>
   </div>
@@ -1314,13 +1321,15 @@ function setTeamColors() {
     card.style.background = `linear-gradient(${COL.pl[p]}, ${COL.p[p]} 55%, ${COL.pd[p]})`;
   }
 }
-// Difficulty for whoever is throwing: venue sets the base, their bag improves it.
+// Difficulty for whoever is throwing: venue sets the base, their bag improves it. SWEET widens the sweet spot
+// (the straight-arrow window and the gold power band) on every court.
+const SWEET = 2;
 function lv() {
   const v = venue(), g = S.gear[S.player];
   return {
     freq: v.swing * (1 - 0.06 * (g.acc - 1)),
-    zone: v.zone * (1 + 0.15 * (g.acc - 1)),
-    powZone: v.zone * (1 + 0.15 * (g.ctrl - 1)),
+    zone: SWEET * v.zone * (1 + 0.15 * (g.acc - 1)),
+    powZone: SWEET * v.zone * (1 + 0.15 * (g.ctrl - 1)),
     wobble: v.wob * (1 - 0.15 * (g.ctrl - 1)),
     cpu: S.opponent ? S.opponent.skill : 0.25,
     preview: true,
@@ -1515,8 +1524,9 @@ function launchBag(actual) {
 // Out of time: that bag is lost.
 function timeUp() {
   S.clock = null; S.pull.active = false; S.feedback = [];
-  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.phase = "flight"; S.lastId = null;
-  showBanner("Time's up! Bag lost", S.player); sfx.thud(); haptic("thud");
+  S.thrown[S.player]++; S.settleT = -1.7; S.acc = 0; S.phase = "flight"; S.lastId = null; // hold 3 s before the next throw
+  const m = $("timeupMsg"); m.hidden = false; clearTimeout(timeUp.t); timeUp.t = setTimeout(() => { m.hidden = true; }, 3000);
+  sfx.thud(); haptic("thud");
   if (S.online && S.player === 0) netSend({ t: "timeout" });
   ui();
 }
@@ -1928,7 +1938,10 @@ function flightSettled() {
 function renderClock() {
   const el = $("clock"), on = S.clock != null && (S.phase === "aiming" || S.phase === "throw");
   el.hidden = !on;
-  if (on) { el.querySelector("b").textContent = Math.max(0, Math.ceil(S.clock)); el.classList.toggle("hurry", S.clock <= 5); }
+  if (on) {
+    el.querySelector("b").textContent = Math.max(0, Math.ceil(S.clock));
+    el.classList.toggle("hurry", S.clock <= 5); el.classList.toggle("warn", S.clock > 5 && S.clock <= 10); // yellow and bigger at 10, red and bigger still at 5
+  }
 }
 $("searchCancel").onclick = () => { if (!search) return; if (search.online) postNative("net", JSON.stringify({ op: "cancel" })); search = null; $("searching").hidden = true; renderHub(); };
 
@@ -4238,7 +4251,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794101261";
+const BUILD_ID = "1794101418";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -4822,6 +4835,7 @@ function dismissScorecard(dx, dy) {
 // ───────────────────────── Clubhouse (career hub) and shop
 let hubVenue = career.venue || 0;
 function openHub() {
+  $("timeupMsg").hidden = true;
   leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;

@@ -186,6 +186,9 @@ function flightSettled() {
 function renderClock() {
   const el = $("clock"), on = S.clock != null && (S.phase === "aiming" || S.phase === "throw");
   el.hidden = !on;
-  if (on) { el.querySelector("b").textContent = Math.max(0, Math.ceil(S.clock)); el.classList.toggle("hurry", S.clock <= 5); }
+  if (on) {
+    el.querySelector("b").textContent = Math.max(0, Math.ceil(S.clock));
+    el.classList.toggle("hurry", S.clock <= 5); el.classList.toggle("warn", S.clock > 5 && S.clock <= 10); // yellow and bigger at 10, red and bigger still at 5
+  }
 }
 $("searchCancel").onclick = () => { if (!search) return; if (search.online) postNative("net", JSON.stringify({ op: "cancel" })); search = null; $("searching").hidden = true; renderHub(); };

@@ -254,13 +254,15 @@ function setTeamColors() {
     card.style.background = `linear-gradient(${COL.pl[p]}, ${COL.p[p]} 55%, ${COL.pd[p]})`;
   }
 }
-// Difficulty for whoever is throwing: venue sets the base, their bag improves it.
+// Difficulty for whoever is throwing: venue sets the base, their bag improves it. SWEET widens the sweet spot
+// (the straight-arrow window and the gold power band) on every court.
+const SWEET = 2;
 function lv() {
   const v = venue(), g = S.gear[S.player];
   return {
     freq: v.swing * (1 - 0.06 * (g.acc - 1)),
-    zone: v.zone * (1 + 0.15 * (g.acc - 1)),
-    powZone: v.zone * (1 + 0.15 * (g.ctrl - 1)),
+    zone: SWEET * v.zone * (1 + 0.15 * (g.acc - 1)),
+    powZone: SWEET * v.zone * (1 + 0.15 * (g.ctrl - 1)),
     wobble: v.wob * (1 - 0.15 * (g.ctrl - 1)),
     cpu: S.opponent ? S.opponent.skill : 0.25,
     preview: true,
@@ -455,8 +457,9 @@ function launchBag(actual) {
 // Out of time: that bag is lost.
 function timeUp() {
   S.clock = null; S.pull.active = false; S.feedback = [];
-  S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.phase = "flight"; S.lastId = null;
-  showBanner("Time's up! Bag lost", S.player); sfx.thud(); haptic("thud");
+  S.thrown[S.player]++; S.settleT = -1.7; S.acc = 0; S.phase = "flight"; S.lastId = null; // hold 3 s before the next throw
+  const m = $("timeupMsg"); m.hidden = false; clearTimeout(timeUp.t); timeUp.t = setTimeout(() => { m.hidden = true; }, 3000);
+  sfx.thud(); haptic("thud");
   if (S.online && S.player === 0) netSend({ t: "timeout" });
   ui();
 }

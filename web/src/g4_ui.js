@@ -356,6 +356,7 @@ function dismissScorecard(dx, dy) {
 // ───────────────────────── Clubhouse (career hub) and shop
 let hubVenue = career.venue || 0;
 function openHub() {
+  $("timeupMsg").hidden = true;
   leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
