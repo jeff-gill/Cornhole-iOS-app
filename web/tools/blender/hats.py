@@ -50,13 +50,21 @@ def setup():
     bpy.ops.object.light_add(type="SUN", rotation=(math.radians(45), math.radians(-15), math.radians(-35))); bpy.context.active_object.data.energy = 3.4
 
 def render(name):
+    """Frame the hat so it fits inside the round avatar tile (not just the square image), then render."""
     objs = [o for o in bpy.data.objects if o.type == "MESH"]; bpy.context.view_layer.update()
-    pts = [o.matrix_world @ Vector(c) for o in objs for c in o.bound_box]
-    lo = Vector([min(p[i] for p in pts) for i in range(3)]); hi = Vector([max(p[i] for p in pts) for i in range(3)]); ctr = (lo + hi) / 2
-    size = max(hi - lo) * 1.22
+    pts = []
+    for o in objs:
+        ev = o.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        pts += [o.matrix_world @ v.co for v in ev.data.vertices]
     d = Vector((0.55, -1, 0.42)).normalized()  # a three-quarter view from the front, a little above
+    up = Vector((0, 0, 1)); right = d.cross(up).normalized(); up = right.cross(d).normalized()
+    xs = [p.dot(right) for p in pts]; ys = [p.dot(up) for p in pts]
+    cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+    radius = max(math.hypot(x - cx, y - cy) for x, y in zip(xs, ys))  # the farthest point from the centre on screen
+    ctr = right * cx + up * cy + d * sum(p.dot(d) for p in pts) / len(pts)
     bpy.ops.object.camera_add(location=ctr + d * 20); cam = bpy.context.active_object
-    cam.rotation_euler = (-d).to_track_quat("-Z", "Y").to_euler(); cam.data.type = "ORTHO"; cam.data.ortho_scale = size; bpy.context.scene.camera = cam
+    cam.rotation_euler = (-d).to_track_quat("-Z", "Y").to_euler(); cam.data.type = "ORTHO"; cam.data.ortho_scale = radius * 2 * 1.12
+    bpy.context.scene.camera = cam
     bpy.context.scene.render.filepath = os.path.join(OUT, name + ".png"); bpy.ops.render.render(write_still=True); print("wrote", name)
 
 def ball_cap(crown=RED, brim=WHITE, name="ballcap"):
