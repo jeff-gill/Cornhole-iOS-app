@@ -1241,12 +1241,12 @@ const VENUES = [
   { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [1, 3], speed: "Grippy boards" },
   { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [2, 4], speed: "Slick boards" },
   { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [2, 5], speed: "Icy boards" },
-  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [3, 5], speed: "Damp boards" },
+  { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [3, 5], speed: "Manicured boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 6], speed: "Sandy boards" },
-  { id: "rooftop", name: "City Rooftop", sub: "Skyline lights and swirling wind", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [4, 7], speed: "Slick boards" },
+  { id: "rooftop", name: "City Rooftop", sub: "Skyline views and swirling wind", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [4, 7], speed: "Slick boards" },
   { id: "lakeside", soon: true, name: "Lakeside Dock", sub: "Morning mist on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 0.55, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [4, 8], speed: "Dewy boards" },
   { id: "canyon", soon: true, name: "Desert Canyon", sub: "Red rock, hot gusts", max: 900, fee: 3000000, win: 30, loss: 32, swing: 0.55, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [5, 8], speed: "Dusty boards" },
-  { id: "carnival", soon: true, name: "County Fair", sub: "Ferris wheel and midway lights", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 0.55, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [5, 9], speed: "Fast boards" },
+  { id: "carnival", soon: true, name: "County Fair", sub: "Ferris wheel and midway games", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 0.55, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [5, 9], speed: "Fast boards" },
   { id: "stadium", soon: true, name: "Stadium Finals", sub: "The big show", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [6, 10], speed: "Fast pro boards" },
 ];
 const pot = v => v.fee * 2;
@@ -1568,7 +1568,7 @@ function newWind() {
   if (S.practice && S.practice.wind != null) S.wind.mph = S.practice.wind; // practice: the wind speed you picked
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
-  setAmbience({ wind: mph, surf: ["beach", "bonfire", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: ["brewery", "bonfire", "carnival"].includes(id), fire: id === "bonfire" || id === "lodge" });
+  setAmbience({ wind: mph, surf: ["beach", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: false, fire: id === "lodge" });
 }
 function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
@@ -1634,7 +1634,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     const r = online ? rng(online.seed + 17) : Math.random, pair = TEAM_PAIRS[Math.floor(r() * TEAM_PAIRS.length)], swap = online ? !online.host : r() < 0.5;
     S.teamC = swap ? [pair[1], pair[0]] : [pair[0], pair[1]];
   }
-  setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(S.board); applyBoardTraits(boardById(S.board)); buildVenue(v.id); newWind(); venueAmbience();
+  setTeamColors(); showTeamCoolers(S.teamC); clearBagMeshes(); setHoleHalo(0); setBoardDesign(S.board); applyBoardTraits(boardById(S.board)); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
   showBanner(`${S.kind === "career" && S.leader === 0 ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);
@@ -2811,6 +2811,14 @@ function cooler(g, x, z, rotY, color = 0xe8392b) {
   add(c, new THREE.Mesh(new RoundedBoxGeometry(2.2, 0.3, 1.4, 3, 0.12), std(0xffffff, { roughness: 0.4 })), 0, 1.4, 0);
   c.position.set(x, 0, z); c.rotation.y = rotY; g.add(c);
 }
+// Two coolers by the far board, one on each side of the lane, in each side's team colour (outside the venue group so
+// they can be repainted for every match).
+const teamCoolers = new THREE.Group(); scene.add(teamCoolers);
+function showTeamCoolers(colors) {
+  teamCoolers.traverse(o => { if (o.material) o.material.dispose(); });
+  teamCoolers.clear();
+  for (const p of [0, 1]) cooler(teamCoolers, SIDES[p] * 5.5, -22.5, SIDES[p] * 0.35, colors[p]);
+}
 function truck(g, x, z, rotY, color) {
   const t = new THREE.Group(), paint = std(color, { roughness: 0.35, metalness: 0.3 }), dark = std(0x1c1f24), glass = std(0x9fc4e0, { roughness: 0.1, metalness: 0.5 });
   add(t, new THREE.Mesh(new RoundedBoxGeometry(6.5, 2.2, 16, 3, 0.4), paint), 0, 2.4, 0);
@@ -3948,6 +3956,62 @@ function deckTable(g, x, z, seed) { // a round table with chairs, people sitting
   if (r() < 0.6) add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.2, 0.5, 10), lam(0xffffff)), x + 0.4, 3.25, z - 0.3, false); // hot cocoa
 }
 
+// ── Golf Club: the 18th green at a country club in the late afternoon.
+function clubhouse(g, x, z) {
+  const b = new THREE.Group(), W = 110, D = 44, white = lam(0xf6f4ee), trim = lam(0xffffff), roofM = lam(0x3a4656, { flatShading: true });
+  const glass = std(0xffffff, { map: dayWindowTex(), roughness: 0.15, metalness: 0.2 });
+  add(b, box(W, 26, D, white), 0, 13, 0, false);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(D * 0.66, D * 0.66, W + 6, 3, 1), roofM);
+  roof.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); roof.scale.set(1, 1, 0.5); add(b, roof, 0, 26 + D * 0.66 * 0.25, 0, false);
+  for (let wx = -48; wx <= 48; wx += 12) { if (Math.abs(wx) < 14) continue; add(b, box(6, 9, 0.3, glass), wx, 7, D / 2 + 0.05, false); add(b, box(6, 7, 0.3, glass), wx, 19, D / 2 + 0.05, false);
+    for (const sx of [-1, 1]) add(b, box(1.4, 9, 0.25, lam(0x1f4a2e)), wx + sx * 3.8, 7, D / 2 + 0.2, false); }
+  // the portico: a pediment on white columns over the doors
+  for (let k = -2; k <= 2; k++) add(b, new THREE.Mesh(new THREE.CylinderGeometry(1, 1.15, 22, 12), trim), k * 6, 11, D / 2 + 8, false);
+  add(b, box(32, 2, 12, trim), 0, 23, D / 2 + 6, false);
+  const ped = new THREE.Mesh(new THREE.CylinderGeometry(16, 16, 12, 3, 1), trim); ped.rotation.set(-Math.PI / 2, 0, 0); ped.scale.set(1, 1, 0.42); add(b, ped, 0, 27, D / 2 + 6, false);
+  add(b, box(10, 14, 0.3, glass), 0, 7, D / 2 + 0.05, false);
+  const sign = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#1f4a2e"; c.fillRect(0, 0, w, h); c.strokeStyle = "#e8d39a"; c.lineWidth = 8; c.strokeRect(8, 8, w - 16, h - 16); c.fillStyle = "#fff8e6"; c.textAlign = "center"; let fs = 62; do { c.font = `bold ${fs}px Georgia, serif`; fs -= 2; } while (c.measureText("OAK HOLLOW CLUB").width > w - 50); c.fillText("OAK HOLLOW CLUB", w / 2, 84); });
+  add(b, new THREE.Mesh(new THREE.PlaneGeometry(24, 6), new THREE.MeshBasicMaterial({ map: sign })), 0, 23, D / 2 + 12.1, false);
+  b.position.set(x, 0, z); g.add(b);
+}
+function golfCart(g, x, z, rotY) {
+  const c = new THREE.Group(), body = std(0xf4f4f0, { roughness: 0.4 }), dark = std(0x222222), seat = lam(0x6a4a30);
+  add(c, box(4, 1.6, 8, body), 0, 1.6, 0);
+  add(c, box(3.6, 1.2, 2, seat), 0, 2.8, -0.6);
+  add(c, box(3.6, 2.2, 0.4, seat), 0, 3.4, -1.6);
+  for (const sx of [-1.8, 1.8]) for (const sz of [-3, 3]) add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4, 5), dark), sx, 4.4, sz * 0.7, false);
+  add(c, box(4.4, 0.2, 7, body), 0, 6.4, 0, false); // canopy
+  add(c, box(1.4, 2.4, 1.4, std(0x2a2a2a)), 0, 2.6, -3.4, false); // golf bag on the back
+  for (const sx of [-2, 2]) for (const sz of [-2.6, 2.6]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.5, 12), dark); w.rotation.z = Math.PI / 2; add(c, w, sx, 0.7, sz); }
+  c.position.set(x, 0, z); c.rotation.y = rotY; g.add(c);
+}
+function puttingGreen(g, x, z, r) {
+  const green = new THREE.Mesh(new THREE.CircleGeometry(r, 40), lam(0x5fbf4a)); green.rotation.x = -Math.PI / 2; green.position.set(x, 0.06, z); green.scale.set(1, 0.8, 1); g.add(green);
+  const fringe = new THREE.Mesh(new THREE.RingGeometry(r, r + 2, 40), lam(0x4a9a3a)); fringe.rotation.x = -Math.PI / 2; fringe.position.set(x, 0.05, z); fringe.scale.set(1, 0.8, 1); g.add(fringe);
+  const hole = new THREE.Mesh(new THREE.CircleGeometry(0.4, 16), new THREE.MeshBasicMaterial({ color: 0x111111 })); hole.rotation.x = -Math.PI / 2; hole.position.set(x + r * 0.2, 0.08, z - r * 0.1); g.add(hole);
+  add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 8, 5), lam(0xf2f2f2)), x + r * 0.2, 4, z - r * 0.1, false);
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), lam(0xd62828, { side: THREE.DoubleSide })); fl.position.set(x + r * 0.2 + 1.1, 7.3, z - r * 0.1); g.add(fl);
+  venueAnim.push({ kind: "flag", o: fl, phase: 1 });
+  const sign = canvasTex(64, 64, (c) => { c.fillStyle = "#fff"; c.font = "bold 40px Arial"; c.textAlign = "center"; c.fillText("18", 32, 46); });
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: sign, transparent: true })); s.position.set(x + r * 0.2 + 1.1, 7.3, z - r * 0.1 + 0.02); g.add(s);
+}
+function bunker(g, x, z, w, d, rot) {
+  const sand = new THREE.Mesh(new THREE.CircleGeometry(1, 28), lam(0xe8d8a8)); sand.rotation.x = -Math.PI / 2; sand.rotation.z = rot; sand.scale.set(w, d, 1); sand.position.set(x, 0.07, z); g.add(sand);
+}
+function pond(g, x, z, w, d) {
+  const n1 = waveNormalTex(7); n1.repeat.set(6, 6);
+  const water = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshPhysicalMaterial({ color: 0x2a7aa0, roughness: 0.1, normalMap: n1, normalScale: new THREE.Vector2(0.3, 0.3), clearcoat: 1 }));
+  water.rotation.x = -Math.PI / 2; water.scale.set(w, d, 1); water.position.set(x, 0.09, z); g.add(water);
+  venueAnim.push({ kind: "sea", n1, n2: n1 });
+  // a fountain in the middle
+  const jet = new THREE.Mesh(new THREE.ConeGeometry(1.2, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false }));
+  jet.position.set(x, 4.5, z); g.add(jet);
+}
+function putter(p) { // a putter in a golfer's hand, head on the grass
+  const s = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.2, 5), std(0xbfc4cc, { metalness: 0.7 })); s.position.set(0.35, 1.6, 0.6); s.rotation.x = 0.25; p.add(s);
+  add(p, box(0.25, 0.2, 0.8, std(0x333333)), 0.35, 0.1, 1.05, false);
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -3959,20 +4023,20 @@ const VENUE_LOOK = {
     hemi: [0xdcecff, 0x7a5a48, 1.2], sun: [0xfff0d8, 3.0, [-22, 34, 6]], exposure: 1.05, dust: 0xd8c0a0 },
   lodge: { top: [0.42, 0.52, 0.66], mid: [0.70, 0.77, 0.86], horizon: [0.88, 0.91, 0.95], sunGlow: 0.25, night: 0, fog: [0xdfe6ef, 70, 330],
     hemi: [0xeef4ff, 0xb8c8dc, 1.4], sun: [0xf4f6ff, 2.2, [-18, 30, -10]], exposure: 1.0, dust: 0xffffff },
-  bonfire: { top: [0.16, 0.10, 0.34], mid: [0.62, 0.30, 0.42], horizon: [1.0, 0.55, 0.25], sunGlow: 1.8, night: 0.6, fog: [0x8a4a5a, 90, 360],
-    hemi: [0xffb8a0, 0x6a4a3a, 0.75], sun: [0xff9a50, 2.4, [0, 7, -110]], exposure: 1.05, dust: 0xe0c890 },
+  bonfire: { top: [0.16, 0.42, 0.80], mid: [0.52, 0.74, 0.94], horizon: [0.92, 0.90, 0.86], sunGlow: 0.8, night: 0, fog: [0xd8e6f0, 250, 800],
+    hemi: [0xe6f2ff, 0x4a6a3a, 1.25], sun: [0xfff2dc, 3.0, [-24, 36, -10]], exposure: 1.05, dust: 0xe0e8c0 },
   island: { top: [0.08, 0.42, 0.86], mid: [0.40, 0.74, 0.97], horizon: [0.85, 0.95, 1.0], sunGlow: 0.9, night: 0, fog: [0xc8ecff, 140, 460],
     hemi: [0xe6f6ff, 0x3aa8c8, 1.35], sun: [0xfff2d6, 3.3, [16, 34, -4]], exposure: 1.0, dust: 0xe8f8ff },
-  rooftop: { top: [0.06, 0.06, 0.20], mid: [0.30, 0.20, 0.42], horizon: [0.95, 0.50, 0.35], sunGlow: 0.6, night: 0.6, fog: [0x3a2a4a, 120, 380],
-    hemi: [0x8a8ac8, 0x3a3a40, 0.8], sun: [0xffb070, 2.0, [-30, 12, -40]], exposure: 1.05, dust: 0xb8b8c0 },
+  rooftop: { top: [0.14, 0.42, 0.82], mid: [0.50, 0.73, 0.95], horizon: [0.90, 0.92, 0.94], sunGlow: 0.8, night: 0, fog: [0xc8d8e8, 160, 520],
+    hemi: [0xe0ecff, 0x5a5a60, 1.2], sun: [0xfff4e2, 3.1, [-20, 38, -8]], exposure: 1.04, dust: 0xd8d8d0 },
   lakeside: { top: [0.30, 0.50, 0.78], mid: [0.62, 0.76, 0.90], horizon: [0.95, 0.88, 0.78], sunGlow: 0.9, night: 0, fog: [0xd8e2ea, 70, 340],
     hemi: [0xe0eeff, 0x4a6a3a, 1.25], sun: [0xffe6c0, 2.7, [-20, 18, -30]], exposure: 1.05, dust: 0xd8e6d0 },
   canyon: { top: [0.18, 0.40, 0.75], mid: [0.55, 0.68, 0.85], horizon: [1.0, 0.78, 0.55], sunGlow: 1.2, night: 0, fog: [0xf0c898, 120, 420],
     hemi: [0xfff0d8, 0x9a5a30, 1.2], sun: [0xfff0d0, 3.4, [-10, 40, -8]], exposure: 1.02, dust: 0xe0a870 },
-  carnival: { top: [0.02, 0.02, 0.09], mid: [0.08, 0.06, 0.22], horizon: [0.40, 0.20, 0.38], sunGlow: 0, night: 1, fog: [0x1a1030, 90, 300],
-    hemi: [0x7a6ac8, 0x2a2a18, 0.6], sun: [0xffd8a0, 1.6, [-8, 30, -16]], exposure: 1.05, dust: 0xb89a70 },
-  stadium: { top: [0.01, 0.02, 0.07], mid: [0.04, 0.07, 0.18], horizon: [0.18, 0.22, 0.38], sunGlow: 0, night: 1, fog: [0x10162a, 140, 420],
-    hemi: [0xbfd4ff, 0x1d3a1f, 0.8], sun: [0xf2f6ff, 3.4, [10, 40, -8]], exposure: 1.1, dust: 0xd8e8d0, wall: [12, 32] },
+  carnival: { top: [0.14, 0.42, 0.82], mid: [0.50, 0.73, 0.95], horizon: [0.90, 0.92, 0.94], sunGlow: 0.8, night: 0, fog: [0xd2e2f0, 160, 520],
+    hemi: [0xe6f2ff, 0x5a6a3a, 1.25], sun: [0xfff4e2, 3.1, [-20, 38, -8]], exposure: 1.04, dust: 0xd8d8d0 },
+  stadium: { top: [0.14, 0.42, 0.82], mid: [0.50, 0.73, 0.95], horizon: [0.90, 0.92, 0.94], sunGlow: 0.8, night: 0, fog: [0xd8e4f0, 180, 560],
+    hemi: [0xe6f2ff, 0x2d5a2f, 1.25], sun: [0xfff4e2, 3.1, [-20, 38, -8]], exposure: 1.04, dust: 0xd8d8d0, wall: [12, 32] },
 };
 function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); const m = n.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x.map) x.map.dispose(); x.dispose(); }); }); }
 function buildVenue(id) {
@@ -3997,7 +4061,6 @@ function buildVenue(id) {
     house(g, 4, 40, Math.PI, 0xf2e6d0, 0x4a5a6a); // the house behind you
     plankFence(g);
     stringLights(g, [[-9, -38], [9, -38], [-9, -14], [9, -14]], [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]], [[-9, -14], [9, -26]], [[9, -14], [-9, -26]]]);
-    cooler(g, 5, -22, 0.4);
     placeModel(g, "plastic_monobloc_chair_01", -7.5, -36, 0.35); // set back from the board, facing the players
     placeModel(g, "plastic_monobloc_chair_01", 7.8, -37, -0.35);
     placeModel(g, "wooden_picnic_table", -15, 14, 0.3 + Math.PI / 2);
@@ -4044,8 +4107,7 @@ function buildVenue(id) {
     crowd(g, 11, -52, 4, 3, 9, 0, -27);
     crowd(g, 0, 34, 5, 4, 11, 0, 0);
     crowd(g, -21, 8, 3, 2, 13, -17, 20);
-    crowd(g, 20, -16, 3, 2, 15, 0, -15); // watching the game
-    cooler(g, 5, -22, -0.3, 0x2f86ff); chair(g, -7, -38, 0.3, 0xffc93a); chair(g, 7.5, -39, -0.3, 0x2fbf71);
+    crowd(g, 20, -16, 3, 2, 15, 0, -15); // watching the game chair(g, -7, -38, 0.3, 0xffc93a); chair(g, 7.5, -39, -0.3, 0x2fbf71);
     picnicTable(g, -18, -32, 0.1);
   } else if (id === "beach") {
     // A resort beach: the sea and its surf alongside the court, rows of umbrellas and loungers, palms where the sand
@@ -4086,7 +4148,6 @@ function buildVenue(id) {
     beachShack(g, -31, -40, Math.PI / 2);
     surfboard(g, -24, -55, 1.2, 0xff6a3d, 0xffffff); surfboard(g, -23, -57.5, 1.5, 0x2fd0c8, 0xffc93a);
     lifeguardTower(g, 12, -95, Math.PI / 2); lifeguardTower(g, 11, -330, Math.PI / 2); // one close by, one down the beach
-    cooler(g, 5, -22, 0.5, 0x00b8c8);
     towel(g, 8, -6, 0.1, ["#ff7ac0", "#ffffff"]); towel(g, -9, -14, -0.2, ["#2f86ff", "#ffffff", "#ffc93a"]);
     // people: at the shack, playing volleyball, sunbathing, watching the game and out in the waves
     crowd(g, -21, -36, 4, 2.6, 41, -31, -40);
@@ -4198,20 +4259,37 @@ function buildVenue(id) {
     }
     for (let k = 0; k < 16; k++) pine(g, 40 + r() * 60, 30 - r() * 160, 1 + r() * 0.8, true);
     snowman(g, -9, 12, Math.PI + 0.4);
-    cooler(g, 5, -22, 0.4, 0x2f86ff);
     snowfall(g, 1300);
-  } else if (id === "bonfire") {
-    setGround(g, "sand", 10);
-    ocean(g);
-    for (const [x, z, h, l] of [[-15, -42, 24, 1], [14, -46, 26, -1], [-30, -8, 20, 0.6], [30, -12, 24, -0.8], [-24, 30, 24, 0.7], [20, 40, 22, -0.8], [0, 52, 26, 0.4]]) palm(g, x, z, h, l);
-    bonfire(g, -14, -22);
-    for (const [x, z] of [[-7, -6], [7, -6], [-7, -20], [7, -20], [-7, -36], [7, -36]]) tiki(g, x, z);
-    stringLights(g, [[-11, 8], [11, 8]], [[[-11, 8], [11, 8]]], 9, 2, 0.6);
-    const hut = new THREE.Group();
-    add(hut, box(10, 4, 4, std(0x9b7a52)), 0, 2, 0);
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(9, 4, 4, 1), lam(0xd9b56a, { flatShading: true })); roof.rotation.y = Math.PI / 4; add(hut, roof, 0, 8.5, 0);
-    hut.position.set(18, 0, 16); hut.rotation.y = -0.6; g.add(hut);
-    cooler(g, 5, -22, 0.5, 0xff8a1f); chair(g, 9, -30, -0.6, 0x2f86ff);
+  } else if (id === "bonfire") { // (the id is kept from the old court so saves carry over): the Golf Club
+    // The 18th at Oak Hollow Club late in the afternoon: the clubhouse and its patio, the putting green beside the lane,
+    // bunkers, a pond with a fountain, carts parked by the clubhouse, and fairways lined with trees.
+    const lawn = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), photoMat("sparse_grass", 900 / 9, 900 / 9, { tint: 0xa8f070, bump: 0.6, fallback: 0x5fae3e }));
+    lawn.rotation.x = -Math.PI / 2; lawn.position.z = -60; lawn.receiveShadow = true; g.add(lawn);
+    clubhouse(g, 0, -110);
+    puttingGreen(g, 30, -40, 14);
+    bunker(g, 46, -22, 8, 4, 0.4); bunker(g, -34, -64, 10, 5, -0.3); bunker(g, -90, -160, 14, 6, 0.2);
+    pond(g, -58, -20, 22, 14);
+    for (let k = 0; k < 6; k++) golfCart(g, -66 + k * 6.5, -92, 0.05); // parked beside the clubhouse
+    // the patio in front of the clubhouse: tables under umbrellas, people sitting and watching
+    const deck = photoMat("weathered_brown_planks", 6, 3, { fallback: 0x9a7a5a, tint: 0xe8d8c0 });
+    add(g, box(60, 0.6, 18, deck), 20, 0.3, -78, false);
+    let seed = 91;
+    for (const x of [0, 13, 26, 39]) { deckTable(g, x, -78, seed++); beachUmbrella(g, x, -78, seed % 2 ? ["#1f4a2e", "#ffffff"] : ["#e8d39a", "#ffffff"], 0, seed); }
+    // golfers: a few on the putting green, some by the carts, some watching the game
+    const pr = rng(19);
+    for (const [x, z, f] of [[26, -36, 2.6], [36, -44, -2.2], [22, -48, 0.6]]) putter(person(g, x, z, f, 900 + Math.round(x + z), "stand"));
+    for (const [x, z] of [[-26, -72], [-12, -73], [-20, -84], [14, -14], [16, 6], [-16, -6], [-18, 14]]) person(g, x, z, Math.atan2(-x, -15 - z) + (pr() - 0.5) * 0.5, 950 + Math.round(x * 3 + z), pr() < 0.2 ? "cheer" : "stand");
+    // trees down both sides and behind the clubhouse
+    const tk = ["tree_oak", "tree_maple", "tree_oak", "tree_pine"], spots = [];
+    for (let z = 40; z > -320; z -= 14 + pr() * 8) { spots.push([-110 - pr() * 30, z]); spots.push([70 + pr() * 30, z]); }
+    for (let x = -100; x <= 100; x += 16 + pr() * 10) spots.push([x, -160 - pr() * 20]);
+    for (const [x, z] of spots) { const kind = tk[Math.floor(pr() * tk.length)], rot = pr() * 6.28, sc = 1.4 + pr() * 0.8; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); }); }
+    loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
+      if (!sky || venueId !== "bonfire") return;
+      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
+      hemi.intensity = 0.85; renderer.toneMappingExposure = 1.08;
+      scene.fog.color.setHex(0xd8e6f0); scene.fog.near = 250; scene.fog.far = 800;
+    });
   } else if (id === "island") {
     const wt = waterTexture(); wt.repeat.set(70, 70);
     const sea = new THREE.Mesh(new THREE.CircleGeometry(620, 64), new THREE.MeshStandardMaterial({ map: wt, roughness: 0.25, metalness: 0.1 }));
@@ -4235,8 +4313,7 @@ function buildVenue(id) {
     // beyond the ledge the street is far below
     const below = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), new THREE.MeshBasicMaterial({ color: 0x141a28 })); below.rotation.x = -Math.PI / 2; below.position.set(0, -20, -15); g.add(below);
     waterTower(g, -20, -42); acUnit(g, 18, -44); acUnit(g, 21, -38); acUnit(g, -20, 12);
-    stringLights(g, [[-11, -40], [11, -40], [-11, -8], [11, -8]], [[[-11, -40], [11, -40]], [[-11, -40], [-11, -8]], [[11, -40], [11, -8]], [[-11, -8], [11, -8]]], 10, 2, 0.7);
-    cooler(g, 5, -22, 0.4, 0xff2e88); chair(g, -8, -36, 0.35, 0x2f86ff); chair(g, 8, -37, -0.35, 0xffc93a);
+    stringLights(g, [[-11, -40], [11, -40], [-11, -8], [11, -8]], [[[-11, -40], [11, -40]], [[-11, -40], [-11, -8]], [[11, -40], [11, -8]], [[-11, -8], [11, -8]]], 10, 2, 0.7); chair(g, -8, -36, 0.35, 0x2f86ff); chair(g, 8, -37, -0.35, 0xffc93a);
   } else if (id === "lakeside") {
     // The court is a long wooden dock running out into the lake; the shore (and the cabin) is behind you.
     const wt = waterTexture("#2a6a8a", "#4a9ab8"); wt.repeat.set(90, 90);
@@ -4267,13 +4344,12 @@ function buildVenue(id) {
     mountains(g, 31, false, 0x5a7a6a);
     cabin(g, -22, 40, Math.PI + 0.4); picnicTable(g, 16, 28, 0.2);
     for (const [x, z] of [[-6, -36], [6, -37]]) chair(g, x, z, x < 0 ? 0.35 : -0.35, x < 0 ? 0x2fbf71 : 0xff8a1f);
-    cooler(g, 5, -22, 0.4, 0x2f86ff);
   } else if (id === "canyon") {
     setGround(g, "desert", 12);
     mesas(g, 13);
     const r = rng(7);
     for (let k = 0; k < 26; k++) { const a = r() * Math.PI * 2, d = 30 + r() * 70; cactus(g, Math.sin(a) * d, -15 + Math.cos(a) * d, 0.7 + r() * 0.6); }
-    umbrella(g, -9, -34, 0xffc93a); cooler(g, 5, -22, 0.4, 0x0fb5a5); chair(g, 8, -37, -0.35, 0xe8392b);
+    umbrella(g, -9, -34, 0xffc93a); chair(g, 8, -37, -0.35, 0xe8392b);
     truck(g, -18, 16, 0.4, 0xd9a05a);
   } else if (id === "carnival") {
     setGround(g, "dirt", 8);
@@ -4281,8 +4357,7 @@ function buildVenue(id) {
     stripedTent(g, 28, -50, 8, ["#e8392b", "#ffffff"]); stripedTent(g, -30, -30, 6, ["#2f86ff", "#ffffff"]); stripedTent(g, 32, 10, 7, ["#ffc93a", "#e8392b"]); stripedTent(g, -28, 22, 6, ["#2fbf71", "#ffffff"]);
     const poles = [[-12, -44], [12, -44], [-12, -14], [12, -14], [-12, 16], [12, 16]];
     stringLights(g, poles, [[[-12, -44], [12, -44]], [[-12, -44], [-12, -14]], [[12, -44], [12, -14]], [[-12, -14], [12, -14]], [[-12, -14], [-12, 16]], [[12, -14], [12, 16]], [[-12, 16], [12, 16]], [[-12, -44], [12, -14]], [[12, -44], [-12, -14]]], 11, 2, 0.85);
-    for (const [x, z] of [[-6, -27], [6, -27], [0, 6]]) { const pl = new THREE.PointLight(0xffc27a, 26, 26, 1.6); pl.position.set(x, 9, z); g.add(pl); }
-    cooler(g, 5, -22, 0.4, 0xff2e88); chair(g, -8, -36, 0.35, 0xa24bff);
+    for (const [x, z] of [[-6, -27], [6, -27], [0, 6]]) { const pl = new THREE.PointLight(0xffc27a, 26, 26, 1.6); pl.position.set(x, 9, z); g.add(pl); } chair(g, -8, -36, 0.35, 0xa24bff);
   } else if (id === "stadium") {
     // A tight arena: a long rectangle of grass for the court, the crowd right on top of it on all four sides.
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.9 }));
@@ -5453,7 +5528,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794187477";
+const BUILD_ID = "1794188056";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -5921,7 +5996,7 @@ function renderBoardInfo() {
 }
 // The bottom-corner tables: how many bags each side has in the hole and on the board this inning.
 function renderInOn() {
-  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden;
+  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden && $("coach").hidden; // (out of the way of a coaching tip)
   for (const p of [0, 1]) {
     const el = $("io" + p); el.hidden = !show; if (!show) continue;
     let hole = 0, on = 0;
@@ -6006,6 +6081,7 @@ function coachText() {
 function renderCoach() {
   const el = $("coach"), text = coachText();
   el.hidden = !text;
+  renderInOn();
   el.classList.toggle("top", S.phase === "throw"); // keep the arrow clear while pulling
   if (text && el.innerHTML !== text) el.innerHTML = text;
   if (text) $("hint").hidden = true;
@@ -6149,6 +6225,7 @@ let hubVenue = career.venue || 0;
 function openHub() {
   $("timeupMsg").hidden = true;
   $("io0").hidden = $("io1").hidden = true; $("boardInfo").hidden = true;
+  showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;

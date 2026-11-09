@@ -32,12 +32,12 @@ const VENUES = [
   { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [1, 3], speed: "Grippy boards" },
   { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [2, 4], speed: "Slick boards" },
   { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [2, 5], speed: "Icy boards" },
-  { id: "bonfire", name: "Bonfire Beach", sub: "Sunset tournament by the fire", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [3, 5], speed: "Damp boards" },
+  { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [3, 5], speed: "Manicured boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 6], speed: "Sandy boards" },
-  { id: "rooftop", name: "City Rooftop", sub: "Skyline lights and swirling wind", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [4, 7], speed: "Slick boards" },
+  { id: "rooftop", name: "City Rooftop", sub: "Skyline views and swirling wind", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [4, 7], speed: "Slick boards" },
   { id: "lakeside", soon: true, name: "Lakeside Dock", sub: "Morning mist on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 0.55, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [4, 8], speed: "Dewy boards" },
   { id: "canyon", soon: true, name: "Desert Canyon", sub: "Red rock, hot gusts", max: 900, fee: 3000000, win: 30, loss: 32, swing: 0.55, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [5, 8], speed: "Dusty boards" },
-  { id: "carnival", soon: true, name: "County Fair", sub: "Ferris wheel and midway lights", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 0.55, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [5, 9], speed: "Fast boards" },
+  { id: "carnival", soon: true, name: "County Fair", sub: "Ferris wheel and midway games", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 0.55, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [5, 9], speed: "Fast boards" },
   { id: "stadium", soon: true, name: "Stadium Finals", sub: "The big show", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [6, 10], speed: "Fast pro boards" },
 ];
 const pot = v => v.fee * 2;
@@ -359,7 +359,7 @@ function newWind() {
   if (S.practice && S.practice.wind != null) S.wind.mph = S.practice.wind; // practice: the wind speed you picked
 }
 function venueAmbience(id = venue().id, mph = S.wind.mph) {
-  setAmbience({ wind: mph, surf: ["beach", "bonfire", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: ["brewery", "bonfire", "carnival"].includes(id), fire: id === "bonfire" || id === "lodge" });
+  setAmbience({ wind: mph, surf: ["beach", "island", "lakeside"].includes(id), crowd: ["stadium", "tailgate", "carnival"].includes(id), night: false, fire: id === "lodge" });
 }
 function windAccel() {
   const a = S.wind.mph * WIND_ACCEL_PER_MPH;
@@ -425,7 +425,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     const r = online ? rng(online.seed + 17) : Math.random, pair = TEAM_PAIRS[Math.floor(r() * TEAM_PAIRS.length)], swap = online ? !online.host : r() < 0.5;
     S.teamC = swap ? [pair[1], pair[0]] : [pair[0], pair[1]];
   }
-  setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(S.board); applyBoardTraits(boardById(S.board)); buildVenue(v.id); newWind(); venueAmbience();
+  setTeamColors(); showTeamCoolers(S.teamC); clearBagMeshes(); setHoleHalo(0); setBoardDesign(S.board); applyBoardTraits(boardById(S.board)); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
   showBanner(`${S.kind === "career" && S.leader === 0 ? "You throw" : esc(S.names[S.leader]) + " throws"} first`, S.leader);

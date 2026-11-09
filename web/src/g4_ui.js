@@ -151,7 +151,7 @@ function renderBoardInfo() {
 }
 // The bottom-corner tables: how many bags each side has in the hole and on the board this inning.
 function renderInOn() {
-  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden;
+  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden && $("coach").hidden; // (out of the way of a coaching tip)
   for (const p of [0, 1]) {
     const el = $("io" + p); el.hidden = !show; if (!show) continue;
     let hole = 0, on = 0;
@@ -236,6 +236,7 @@ function coachText() {
 function renderCoach() {
   const el = $("coach"), text = coachText();
   el.hidden = !text;
+  renderInOn();
   el.classList.toggle("top", S.phase === "throw"); // keep the arrow clear while pulling
   if (text && el.innerHTML !== text) el.innerHTML = text;
   if (text) $("hint").hidden = true;
@@ -379,6 +380,7 @@ let hubVenue = career.venue || 0;
 function openHub() {
   $("timeupMsg").hidden = true;
   $("io0").hidden = $("io1").hidden = true; $("boardInfo").hidden = true;
+  showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
