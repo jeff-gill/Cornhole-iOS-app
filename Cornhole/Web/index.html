@@ -2995,6 +2995,9 @@ function venueTick(dt, t) {
         const p = a.A.clone().addScaledVector(a.dir, L * u).addScaledVector(a.side, up ? 4.5 : -4.5);
         c.o.position.set(p.x, p.y + a.H + 1 - 7, p.z); c.o.rotation.y = Math.atan2(a.dir.x, a.dir.z) + (up ? 0 : Math.PI);
       }
+    } else if (a.kind === "cruise") { // a boat crossing far out, round and round
+      a.x0 += a.speed * dt; if (a.x0 > 600) a.x0 = -600; if (a.x0 < -600) a.x0 = 600;
+      a.o.position.set(a.x0, Math.sin(t * 1.2 + a.z) * 0.2, a.z); a.o.rotation.y = a.speed > 0 ? 0 : Math.PI;
     } else if (a.kind === "water") {
       a.o.offset.x = (a.o.offset.x + dt * 0.006) % 1; a.o.offset.y = Math.sin(t * 0.4) * 0.02;
     }
@@ -4079,6 +4082,64 @@ function backOfHouse(g, x, z, color = 0xf2e6d0, roofColor = 0x4a4f58) {
   deckTable(g, x - 8, z - D / 2 - 7, 77); beachUmbrella(g, x - 8, z - D / 2 - 7, ["#2f86ff", "#ffffff"], 0, 1);
 }
 
+// ── Island Hop: throwing from one little island to another, with spectators all over the water.
+// An irregular island: a wobbly outline (not a circle) for the sand, a wet rim and turquoise shallows around it.
+function islandShape(g, x, z, rad, seed, sandTex) {
+  const r = rng(seed), n = 40, wob = [];
+  for (let k = 0; k < 5; k++) wob.push([1 + Math.floor(r() * 4), r() * 6.28, 0.04 + r() * 0.06]);
+  const outline = s => { const sh = new THREE.Shape(); for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2; let k = 1; for (const [f, p, amp] of wob) k += Math.sin(a * f + p) * amp; const px = Math.cos(a) * rad * s * k, pz = Math.sin(a) * rad * s * k * 1.15; i ? sh.lineTo(px, pz) : sh.moveTo(px, pz); } return sh; };
+  const layer = (s, mat, y) => { const m = new THREE.Mesh(new THREE.ShapeGeometry(outline(s), 2), mat); m.rotation.x = Math.PI / 2; m.position.set(x, y, z); m.receiveShadow = true; g.add(m); return m; };
+  layer(1.8, new THREE.MeshBasicMaterial({ color: 0x5fe0e6, transparent: true, opacity: 0.42, depthWrite: false, side: THREE.DoubleSide }), 0.14);
+  layer(1.12, lam(0xc9b27a, { side: THREE.DoubleSide }), 0.16);
+  layer(1, new THREE.MeshStandardMaterial({ map: sandTex, roughness: 1, side: THREE.DoubleSide }), 0.18);
+}
+// Small craft for the spectators. Each floats and bobs; riders sit or stand in them.
+function hullGeo(len, w) {
+  const s = new THREE.Shape(); s.moveTo(-len / 2, -w / 2); s.lineTo(len * 0.25, -w / 2); s.quadraticCurveTo(len / 2, -w * 0.3, len / 2 + 0.6, 0); s.quadraticCurveTo(len / 2, w * 0.3, len * 0.25, w / 2); s.lineTo(-len / 2, w / 2); s.closePath();
+  return new THREE.ExtrudeGeometry(s, { depth: 0.9, bevelEnabled: true, bevelSize: 0.15, bevelThickness: 0.15, bevelSegments: 2 }).rotateX(-Math.PI / 2);
+}
+function rider(b, x, z, rotY, seed, pose = "sit") {
+  const p = person(b, x, z, rotY, seed, pose); venueAnim.pop(); // moves with the boat
+  if (pose === "sit") p.position.y = -0.6; return p;
+}
+function paddle(b, x, y, z, rot, double) {
+  const m = std(0xdedede), blade = lam(0xffc93a);
+  const pg = new THREE.Group(); add(pg, new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, double ? 7 : 4.5, 5), m), 0, 0, 0, false);
+  add(pg, box(0.5, 1.1, 0.08, blade), 0, double ? 3.5 : 2.4, 0, false); if (double) add(pg, box(0.5, 1.1, 0.08, blade), 0, -3.5, 0, false);
+  pg.position.set(x, y, z); pg.rotation.set(0, 0, rot); b.add(pg);
+}
+function craft(g, kind, x, z, rotY, seed) {
+  const b = new THREE.Group(), r = rng(seed), C = [0xd62828, 0xffc93a, 0x2f86ff, 0x2fbf71, 0xff8a1f, 0xff7ac0][Math.floor(r() * 6)];
+  if (kind === "canoe") { add(b, new THREE.Mesh(hullGeo(12, 2.4), std(C, { roughness: 0.5 })), 0, 0.2, 0, false); rider(b, -2.5, 0, Math.PI / 2, seed); rider(b, 2.5, 0, Math.PI / 2, seed + 1); paddle(b, -2.2, 2, 1.1, 0.6); }
+  else if (kind === "kayak") { add(b, new THREE.Mesh(hullGeo(10, 1.6), std(C, { roughness: 0.4 })), 0, 0.2, 0, false); rider(b, 0, 0, Math.PI / 2, seed); paddle(b, 0, 2.5, 0, 1.3, true); }
+  else if (kind === "paddle") { add(b, box(10, 0.3, 2.4, std(C, { roughness: 0.4 })), 0, 0.3, 0, false); rider(b, 0, 0, Math.PI / 2, seed, "stand").position.y = 0.4; paddle(b, 0.6, 3.4, 0.9, 0.25); }
+  else if (kind === "row") { add(b, new THREE.Mesh(hullGeo(10, 3.4), std(C, { roughness: 0.5 })), 0, 0.2, 0, false); add(b, box(0.6, 0.15, 3, std(0xb08050)), 0, 1.0, 0, false); rider(b, -1.5, 0, Math.PI / 2, seed); rider(b, 2, 0, -Math.PI / 2, seed + 1); }
+  else if (kind === "motor") { add(b, new THREE.Mesh(hullGeo(13, 4.4), std(0xf6f6f6, { roughness: 0.3 })), 0, 0.2, 0, false); add(b, box(13, 0.35, 4.6, std(C)), -0.4, 0.6, 0, false); add(b, box(1.2, 1.8, 1, std(0x222222)), -7, 1.4, 0, false); add(b, box(2.4, 1.6, 0.15, std(0x9fd0f0, { roughness: 0.1 })), 2.5, 2.4, 0, false); rider(b, -2, -0.9, Math.PI / 2, seed); rider(b, -2, 0.9, Math.PI / 2, seed + 1); rider(b, 1.5, 0, Math.PI / 2, seed + 2); }
+  else if (kind === "raft") { add(b, new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.6, 10, 20).rotateX(Math.PI / 2), lam(C)), 0, 0.3, 0, false); rider(b, 0, -0.6, 0, seed).position.y = -0.9; }
+  b.position.set(x, 0, z); b.rotation.y = rotY; g.add(b);
+  venueAnim.push({ kind: "bob", o: b, phase: seed, y: 0 });
+}
+// Boats crossing far out, each trailing a white wake; they loop round and come again.
+function cruisers(g, n, seed) {
+  const r = rng(seed);
+  for (let i = 0; i < n; i++) {
+    const b = new THREE.Group(), C = [0xffffff, 0xd62828, 0x1f3a6e, 0xffc93a][i % 4];
+    add(b, new THREE.Mesh(hullGeo(22, 7), std(0xf6f6f6, { roughness: 0.3 })), 0, 0.3, 0, false); add(b, box(22, 0.6, 7.2, std(C)), -0.4, 1.2, 0, false); add(b, box(8, 3, 5.5, std(0xf2f2f2)), -2, 3.2, 0, false); add(b, box(4, 2, 0.2, std(0x7fb4d8, { roughness: 0.1 })), 2.2, 3.8, 0, false);
+    const wake = new THREE.Mesh(new THREE.PlaneGeometry(60, 9), new THREE.MeshBasicMaterial({ map: smokeTex, color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false })); wake.rotation.x = -Math.PI / 2; wake.position.set(-38, 0.25, 0); b.add(wake);
+    g.add(b);
+    venueAnim.push({ kind: "cruise", o: b, z: -170 - r() * 110 + (i % 2 ? 300 : 0), x0: -500 + r() * 1000, speed: (30 + r() * 25) * (r() < 0.5 ? 1 : -1) });
+  }
+}
+// A big island across the water: a beach, palms along it, green hills and a few huts.
+function bigIsland(g, z) {
+  const sand = lam(0xead39c), green = lam(0x2f8a46, { flatShading: true }), r = rng(33);
+  const beach = new THREE.Mesh(new THREE.PlaneGeometry(900, 60), sand); beach.rotation.x = -Math.PI / 2; beach.position.set(0, 0.2, z); g.add(beach);
+  for (let k = 0; k < 9; k++) { const s = 70 + r() * 70, hill = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), green); hill.scale.set(s, s * (0.4 + r() * 0.35), s * 0.7); hill.position.set(-420 + k * 105 + r() * 30, 0, z - 70 - r() * 40); g.add(hill); }
+  const kinds = ["palm_a", "palm_b", "palm_c"];
+  for (let x = -420; x <= 420; x += 12 + r() * 14) { const kind = kinds[Math.floor(r() * 3)], rot = r() * 6.28, sc = 1.1 + r() * 0.5, pz = z - 12 - r() * 18; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, pz); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); }); }
+  for (const hx of [-160, -40, 90, 230]) { const hut = new THREE.Group(); add(hut, box(14, 7, 10, lam(0xc8a878)), 0, 3.5, 0, false); const roof = new THREE.Mesh(new THREE.ConeGeometry(12, 7, 4), lam(0xb8924a, { flatShading: true })); roof.rotation.y = Math.PI / 4; add(hut, roof, 0, 10.5, 0, false); hut.position.set(hx, 0, z - 22); g.add(hut); }
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -4373,17 +4434,34 @@ function buildVenue(id) {
       scene.fog.color.setHex(0xd8e6f0); scene.fog.near = 250; scene.fog.far = 800;
     });
   } else if (id === "island") {
-    const wt = waterTexture(); wt.repeat.set(70, 70);
-    const sea = new THREE.Mesh(new THREE.CircleGeometry(620, 64), new THREE.MeshStandardMaterial({ map: wt, roughness: 0.25, metalness: 0.1 }));
-    sea.rotation.x = -Math.PI / 2; sea.position.set(0, 0.0, -15); sea.receiveShadow = true; g.add(sea);
-    venueAnim.push({ kind: "water", o: wt });
+    // Throwing from one little island to the next, a big island's beach across the water, smaller islands all round,
+    // and spectators everywhere on the water: canoes, kayaks, paddle boards, rowboats, motorboats, rafts and waders.
+    const n1 = waveNormalTex(5), n2 = waveNormalTex(9); n1.repeat.set(120, 120); n2.repeat.set(47, 47);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(1400, 64), new THREE.MeshPhysicalMaterial({ color: 0x1fa0c0, roughness: 0.1, normalMap: n1, normalScale: new THREE.Vector2(0.3, 0.3), clearcoat: 1, clearcoatRoughness: 0.05, clearcoatNormalMap: n2, clearcoatNormalScale: new THREE.Vector2(0.2, 0.2) }));
+    water.rotation.x = -Math.PI / 2; water.position.set(0, 0.1, -15); water.receiveShadow = true; g.add(water);
+    venueAnim.push({ kind: "sea", n1, n2 });
     const sandTex = groundTexture("sand"); sandTex.repeat.set(2, 2);
-    island(g, 0, 3, 8.5, sandTex); island(g, 0, -29.5, 7.5, sandTex);   // yours, and the board's island across the water
-    palm(g, -6.5, 6, 18, 0.9); palm(g, 6, 8, 16, -0.8); palm(g, -5, -34, 20, 0.8); palm(g, 5.5, -33, 17, -0.9);
-    umbrella(g, 6, 0, 0xff4b3a); cooler(g, -5, 2, 0.4, 0x00b8c8); chair(g, 5, -24.5, -0.5, 0xffc93a);
-    rowboat(g, 9, -15, 0.4);
+    islandShape(g, 0, 4, 10.5, 11, sandTex); islandShape(g, 0, -30, 9.5, 23, sandTex); // yours, and the board's island across the water
+    palm(g, -7.5, 7, 18, 0.9); palm(g, 7, 9, 16, -0.8); palm(g, -6, -35, 20, 0.8); palm(g, 6.5, -34, 17, -0.9);
+    umbrella(g, 7, 0, 0xff4b3a); chair(g, 5.5, -25, -0.5, 0xffc93a);
+    // spectators on the water, all keeping clear of the throwing lane
+    const spots = [["canoe", -22, -6, 0.3], ["kayak", 20, -10, -0.4], ["paddle", -18, -40, 0.9], ["row", 24, -36, -0.6], ["motor", -32, -24, 1.4], ["raft", 15, 6, 0], ["raft", -14, 12, 0], ["kayak", 30, 14, 2.2],
+      ["canoe", 34, -52, -1.0], ["paddle", -30, -58, 0.4], ["motor", 40, -18, -1.6], ["raft", 17, -22, 0], ["row", -40, 6, 2.6], ["kayak", -26, -76, 1.2], ["raft", -12, -48, 0]];
+    spots.forEach(([k, x, z, rot], i) => craft(g, k, x, z, rot, 1000 + i * 7));
+    // people wading in the shallows by both islands
+    const wr = rng(71);
+    for (const [x, z] of [[-11, -4], [12, -2], [-10, -22], [11, -38], [-9, 16], [10, -44]]) { person(g, x, z, Math.atan2(-x, -13 - z), 1100 + Math.round(x * 5 + z), wr() < 0.3 ? "cheer" : "stand"); venueAnim[venueAnim.length - 1].y0 = -2.2; }
+    // the big island's shoreline across the water, smaller islands round the other sides, and boats crossing
+    bigIsland(g, -230);
     const r = rng(29);
-    for (let k = 0; k < 14; k++) { const a = r() * Math.PI * 2, d = 110 + r() * 200; farIsland(g, Math.sin(a) * d, -15 + Math.cos(a) * d, 12 + r() * 22, r); }
+    for (let k = 0; k < 16; k++) { const a = r() * Math.PI * 2, d = 160 + r() * 260; if (Math.cos(a) * d < -150) continue; farIsland(g, Math.sin(a) * d, -15 + Math.cos(a) * d, 18 + r() * 30, r); }
+    cruisers(g, 5, 7);
+    loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
+      if (!sky || venueId !== "island") return;
+      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
+      hemi.intensity = 0.9; renderer.toneMappingExposure = 1.05;
+      scene.fog.color.setHex(0xd6e6f2); scene.fog.near = 300; scene.fog.far = 1300;
+    });
   } else if (id === "rooftop") {
     const deckTex = groundTexture("roof"); deckTex.repeat.set(56 / 14, 72 / 14);
     const deck = new THREE.Mesh(new THREE.PlaneGeometry(56, 72), new THREE.MeshStandardMaterial({ map: deckTex, roughness: 1 }));
@@ -5610,7 +5688,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794232821";
+const BUILD_ID = "1794233141";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
