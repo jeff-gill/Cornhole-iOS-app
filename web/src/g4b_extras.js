@@ -117,7 +117,7 @@ function rulesHTML() {
     "Switching to another app, taking a call or locking your phone doesn't end the match.",
     "The throw clock keeps counting while you're away. When you come back, that time comes off your turns, and each turn that runs out loses that bag.",
     "If the app is closed while you're away (you close it, your iPhone closes it to save memory, or the phone turns off), the match counts as a loss.",
-    `At the Backyard, the first ${QUIT_WARNINGS} times this happens you get a warning and a refund instead.`,
+    `At the Backyard BBQ, the first ${QUIT_WARNINGS} times this happens you get a warning and a refund instead.`,
   ])}
   ${sec("🛟", "Glitches and refunds", [
     "If the game freezes or crashes while it's on your screen, the match is stopped and refunded: your buy-in and ticket come back and no stars are lost.",
@@ -125,7 +125,7 @@ function rulesHTML() {
   ])}
   ${sec("🌬️", "Wind", [
     "The wind is set at the start of each match and stays the same for the whole match.",
-    "There's no wind at the Backyard. It builds a little at every court after that, up to 10 mph.",
+    "There's no wind at the Backyard BBQ. It builds a little at every court after that, up to 10 mph.",
     "Faint streaks drift across the court in the wind's direction. The aiming guide doesn't allow for wind.",
   ])}
   ${sec("⭐", "Stars and courts", [
