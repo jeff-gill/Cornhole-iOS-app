@@ -309,7 +309,7 @@ function openBagPick() {
   if (best.id !== S.gear[0].id) { S.gear[0] = best; career.bag = best.id; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: best.id }); }
   renderBagPick(); $("bagPick").hidden = false;
 }
-function renderBagPick() {
+function renderBagPick() { // (the suggested bag is listed first)
   const d = boardById(S.board), cur = S.gear[0];
   const tex = document.createElement("canvas"); tex.width = 96; tex.height = 192; paintBoard(tex.getContext("2d"), 96, 192, d);
   $("bagPickBody").innerHTML = `<h2>Board check</h2>
@@ -317,7 +317,7 @@ function renderBagPick() {
       <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
     <div class="bpsuggest">We picked <b>${esc(bagById(S.bestBag).name)}</b> for this board. Tap another bag to change it.</div>
     <div class="label">Your bags</div>
-    <div class="bplist">${[S.bestBag, ...career.bags.filter(id => id !== S.bestBag)].map(id => { // the suggested bag first const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
+    <div class="bplist">${[S.bestBag, ...career.bags.filter(id => id !== S.bestBag)].map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
       return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
         <div class="bpstats"><em>Acc</em>${dots("acc")}<em>Ctl</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
