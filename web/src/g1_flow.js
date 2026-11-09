@@ -317,7 +317,7 @@ function renderBagPick() {
       <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
     <div class="bpsuggest">We picked <b>${esc(bagById(S.bestBag).name)}</b> for this board. Tap another bag to change it.</div>
     <div class="label">Your bags</div>
-    <div class="bplist">${career.bags.map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
+    <div class="bplist">${[S.bestBag, ...career.bags.filter(id => id !== S.bestBag)].map(id => { // the suggested bag first const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
       return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
         <div class="bpstats"><em>Acc</em>${dots("acc")}<em>Ctl</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
