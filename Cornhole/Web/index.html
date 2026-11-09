@@ -2955,7 +2955,7 @@ function venueTick(dt, t) {
       for (const pf of a.puffs) {
         pf.t = (pf.t + dt / a.life) % 1;
         const u = pf.t;
-        pf.s.position.set(a.x + Math.sin(w.dir) * w.mph * 0.25 * u * 6 + Math.sin(u * 9 + pf.t) * 0.3, 3.4 + u * 11, a.z - Math.cos(w.dir) * w.mph * 0.25 * u * 6);
+        pf.s.position.set(a.x + Math.sin(w.dir) * w.mph * 0.25 * u * 6 + Math.sin(u * 9 + pf.t) * 0.3, (a.y0 || 3.4) + u * 11, a.z - Math.cos(w.dir) * w.mph * 0.25 * u * 6);
         pf.s.scale.setScalar(0.8 + u * 4.5); pf.s.material.opacity = Math.sin(Math.PI * u) * 0.55;
       }
     } else if (a.kind === "flag") {
@@ -4012,6 +4012,49 @@ function putter(p) { // a putter in a golfer's hand, head on the grass
   add(p, box(0.25, 0.2, 0.8, std(0x333333)), 0.35, 0.1, 1.05, false);
 }
 
+// An offset barrel smoker: the long cooking chamber, a firebox on the end, a stack puffing smoke.
+function smoker(g, x, z, rotY) {
+  const k = new THREE.Group(), black = std(0x1e1e20, { metalness: 0.6, roughness: 0.45 }), steel = std(0x8a8f99, { metalness: 0.7 });
+  add(k, new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 4.2, 18).rotateZ(Math.PI / 2), black), 0, 3.0, 0);
+  add(k, box(1.8, 1.8, 1.8, black), 2.9, 2.6, 0);
+  add(k, new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 3, 10), black), -1.8, 4.9, 0, false);
+  for (const sx of [-1.6, 1.6]) for (const sz of [-0.7, 0.7]) add(k, new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 2.2, 6), steel), sx, 1.1, sz, false);
+  for (const sx of [-1.6, 1.6]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.2, 12), black); w.rotation.x = Math.PI / 2; add(k, w, sx, 0.4, 0.8, false); }
+  add(k, box(4, 0.1, 1.2, steel), 0, 1.9, 0, false); // the shelf below
+  k.position.set(x, 0, z); k.rotation.y = rotY; g.add(k);
+  // smoke from the stack
+  const puffs = [], sx = x + Math.cos(rotY) * -1.8, sz = z - Math.sin(rotY) * -1.8;
+  for (let i = 0; i < 12; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTex, transparent: true, depthWrite: false, opacity: 0 })); g.add(s); puffs.push({ s, t: i / 12 }); }
+  venueAnim.push({ kind: "smoke", puffs, x: sx, z: sz, life: 5, y0: 6.3 });
+}
+// An apron on someone (person() group): a bib down the front of the shirt, with ties.
+function apron(p, color) {
+  const m = lam(color);
+  add(p, box(0.85, 1.9, 0.08, m), 0, 2.9, 0.52, false);
+  add(p, box(0.6, 0.45, 0.08, m), 0, 4.0, 0.47, false);
+  for (const sx of [-0.28, 0.28]) add(p, box(0.06, 0.5, 0.06, m), sx, 4.35, 0.4, false);
+}
+// Scatter trees across a ring around the court so every direction ends in trees, not empty sky.
+function treeRing(g, seed, rMin, rMax, count, kinds, avoid = () => false) {
+  const r = rng(seed);
+  for (let i = 0; i < count; i++) {
+    const a = r() * Math.PI * 2, d = rMin + r() * (rMax - rMin), x = Math.sin(a) * d, z = -20 + Math.cos(a) * d;
+    if (avoid(x, z)) continue;
+    const kind = kinds[Math.floor(r() * kinds.length)], rot = r() * 6.28, sc = 1.3 + r() * 1.0;
+    if (kind === "pine") { pine(g, x, z, 1.6 + r() * 1.2, false); continue; }
+    loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); });
+  }
+}
+// A group of golfers out on the course: two carts and up to four players.
+function golfGroup(g, x, z, rot, seed) {
+  const r = rng(seed), n = 2 + Math.floor(r() * 3);
+  golfCart(g, x - Math.cos(rot) * 3.5, z + Math.sin(rot) * 3.5, rot); golfCart(g, x + Math.cos(rot) * 3.5, z - Math.sin(rot) * 3.5, rot);
+  for (let k = 0; k < n; k++) {
+    const a = r() * 6.28, px = x + Math.sin(rot) * 8 + Math.cos(a) * 3, pz = z + Math.cos(rot) * 8 + Math.sin(a) * 3;
+    const p = person(g, px, pz, r() * 6.28, seed * 10 + k, r() < 0.15 ? "cheer" : "stand"); if (r() < 0.6) putter(p);
+  }
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -4070,8 +4113,11 @@ function buildVenue(id) {
     placeModel(g, "planter_box_01", -9, 34, 0); placeModel(g, "planter_box_01", 17, 34, 0);
     // a backyard party: friends by the picnic table and the grill, a couple watching the game from the side
     grill(g, 15, 4, -0.5);
+    smoker(g, 19.5, 9, -0.6);
+    { const cook = person(g, 15.5, 8.2, Math.PI - 0.5, 33, "stand"); apron(cook, 0xd62828); } // the cook, between the grill and the smoker
+    deckTable(g, -15, -4, 41); deckTable(g, 18, -10, 43); deckTable(g, -17, 24, 45);
     crowd(g, -14, 10, 4, 2.6, 21, -15, 14);
-    crowd(g, 17, 7, 3, 2.2, 23, 15, 4);
+    crowd(g, 22, -3, 3, 2.2, 23, 15, 4); // chatting a few steps from the grill
     person(g, -11, -30, 0.9, 25, "drink"); person(g, -12.5, -27, 1.2, 27, "stand");
     person(g, 11.5, -24, -1.1, 29, "cheer");
     loadSky("garden_nook_2k.hdr").then(sky => {
@@ -4284,6 +4330,18 @@ function buildVenue(id) {
     for (let z = 40; z > -320; z -= 14 + pr() * 8) { spots.push([-110 - pr() * 30, z]); spots.push([70 + pr() * 30, z]); }
     for (let x = -100; x <= 100; x += 16 + pr() * 10) spots.push([x, -160 - pr() * 20]);
     for (const [x, z] of spots) { const kind = tk[Math.floor(pr() * tk.length)], rot = pr() * 6.28, sc = 1.4 + pr() * 0.8; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); }); }
+    // the rest of the course, all the way round: fairways, more greens and flags, groups out playing, trees everywhere
+    const fairway = lam(0x74cc56);
+    for (const [x, z, w, d, rz] of [[-200, -40, 60, 360, 0.2], [190, -60, 60, 360, -0.15], [0, 200, 320, 60, 0.05], [-60, -300, 300, 60, -0.1], [200, 180, 60, 220, 0.3]]) {
+      const f = new THREE.Mesh(new THREE.PlaneGeometry(w, d), fairway); f.rotation.x = -Math.PI / 2; f.rotation.z = rz; f.position.set(x, 0.03, z); g.add(f);
+    }
+    for (const [x, z, r] of [[-210, -180, 12], [200, -200, 11], [-90, 210, 12], [120, 210, 10], [-230, 120, 11], [240, 60, 12]]) puttingGreen(g, x, z, r);
+    for (const [x, z, s2] of [[-200, -150, 3], [-190, 60, 5], [190, -170, 7], [210, 20, 9], [-60, 190, 11], [90, 180, 13], [-230, 150, 15], [250, 100, 17]]) golfGroup(g, x, z, (s2 % 4) * 1.4, s2);
+    bunker(g, -180, -120, 10, 5, 0.3); bunker(g, 170, -150, 9, 4, -0.4); bunker(g, -40, 180, 12, 5, 0.1); bunker(g, 230, 90, 8, 4, 0.6);
+    // scattered evergreen and leafy trees in every direction, then a fuller ring further out so the view always ends in green
+    const keepClear = (x, z) => (Math.abs(x) < 70 && z > -140 && z < 70) || (Math.abs(x) < 64 && z < -60 && z > -140);
+    treeRing(g, 61, 90, 260, 120, ["tree_oak", "tree_maple", "pine", "tree_oak", "pine"], keepClear);
+    treeRing(g, 67, 300, 380, 90, ["tree_oak", "tree_maple", "pine", "pine"]);
     loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
       if (!sky || venueId !== "bonfire") return;
       scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
@@ -5528,7 +5586,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794230564";
+const BUILD_ID = "1794231072";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
