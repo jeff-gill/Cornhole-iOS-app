@@ -1470,6 +1470,29 @@ function golfGroup(g, x, z, rot, seed) {
   }
 }
 
+// The back of a two-storey family house, facing the yard: sliding glass doors onto a stone patio, windows, a back
+// door with a little roof, siding and a shingled roof. (The front door is round the other side, on the street.)
+function backOfHouse(g, x, z, color = 0xf2e6d0, roofColor = 0x4a4f58) {
+  const h = new THREE.Group(), W = 64, D = 34, H = 22, wall = std(color, { roughness: 0.9 }), trim = lam(0xffffff);
+  const glass = std(0xffffff, { map: dayWindowTex(), roughness: 0.15, metalness: 0.2 });
+  add(h, box(W, H, D, wall), 0, H / 2, 0);
+  for (let y = 1.5; y < H; y += 1.1) add(h, box(W + 0.05, 0.08, D + 0.05, lam(0xd8ccb4)), 0, y, 0, false); // siding lines
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(D * 0.66, D * 0.66, W + 3, 3, 1), std(roofColor, { flatShading: true, roughness: 0.9 }));
+  roof.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); roof.scale.set(1, 1, 0.5); add(h, roof, 0, H + D * 0.66 * 0.25, 0);
+  add(h, box(4, 10, 4, lam(0x8a4a3a)), W * 0.3, H + 8, 4, false); // brick chimney
+  const back = -D / 2 - 0.05; // the side facing the yard
+  add(h, box(14, 8, 0.3, glass), -6, 4.4, back, false); add(h, box(14.8, 0.6, 0.4, trim), -6, 8.6, back, false); // sliding doors
+  add(h, box(4, 7.5, 0.3, lam(0x2f4a6a)), 14, 3.9, back, false); // back door
+  add(h, box(7, 0.4, 4, trim), 14, 8.6, back - 2, false); // its little roof
+  for (const wx of [-24, 24]) add(h, box(6, 5, 0.3, glass), wx, 5, back, false);
+  for (let wx = -24; wx <= 24; wx += 12) { add(h, box(5, 5, 0.3, glass), wx, 15.5, back, false); for (const sx of [-1, 1]) add(h, box(1.2, 5.4, 0.25, lam(0x3a4f6a)), wx + sx * 3.2, 15.5, back - 0.1, false); }
+  // the stone patio off the back, with a table and an umbrella
+  const pav = new THREE.Mesh(new THREE.PlaneGeometry(36, 14), lam(0xb8aea0)); pav.rotation.x = -Math.PI / 2; pav.position.set(-2, 0.04, -D / 2 - 7); h.add(pav);
+  for (let k = -16; k <= 16; k += 4) add(h, box(0.15, 0.02, 14, lam(0x9a9080)), k - 2, 0.06, -D / 2 - 7, false);
+  h.position.set(x, 0, z); g.add(h);
+  deckTable(g, x - 8, z - D / 2 - 7, 77); beachUmbrella(g, x - 8, z - D / 2 - 7, ["#2f86ff", "#ffffff"], 0, 1);
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -1516,7 +1539,7 @@ function buildVenue(id) {
     const lawn = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), photoMat("sparse_grass", 520 / 9, 520 / 9, { tint: 0xb4ff6a, bump: 0.8, fallback: 0x5fae3e }));
     lawn.rotation.x = -Math.PI / 2; lawn.position.z = -30; lawn.receiveShadow = true; g.add(lawn);
     blenderTrees(g, 21, ["tree_oak", "tree_maple", "tree_oak", "tree_pine"], { front: 62 });
-    house(g, 4, 40, Math.PI, 0xf2e6d0, 0x4a5a6a); // the house behind you
+    backOfHouse(g, 2, 66); // the back of the house, behind you: we're in the backyard
     plankFence(g);
     stringLights(g, [[-9, -38], [9, -38], [-9, -14], [9, -14]], [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]], [[-9, -14], [9, -26]], [[9, -14], [-9, -26]]]);
     placeModel(g, "plastic_monobloc_chair_01", -7.5, -36, 0.35); // set back from the board, facing the players
