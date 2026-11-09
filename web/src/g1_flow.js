@@ -408,6 +408,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     S.gear = [bagById(career.bag), RIVAL_BAGS[0]];
   }
   S.kind = kind; S.venue = vi; S.botRematch = null;
+  if (career.venue !== vi) { career.venue = vi; save(); } // the clubhouse opens on the last court played (practice too)
   // Coin flip for pitcher's boxes: who throws from the left and who from the right.
   const flip = online ? online.flip : Math.random() < 0.5 ? 1 : -1;
   SIDES[0] = -flip; SIDES[1] = flip;
