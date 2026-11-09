@@ -4128,12 +4128,36 @@ function cruisers(g, n, seed) {
 }
 // A big island across the water: a beach, palms along it, green hills and a few huts.
 function bigIsland(g, z) {
-  const sand = lam(0xead39c), green = lam(0x2f8a46, { flatShading: true }), r = rng(33);
-  const beach = new THREE.Mesh(new THREE.PlaneGeometry(900, 60), sand); beach.rotation.x = -Math.PI / 2; beach.position.set(0, 0.2, z); g.add(beach);
-  for (let k = 0; k < 9; k++) { const s = 70 + r() * 70, hill = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), green); hill.scale.set(s, s * (0.4 + r() * 0.35), s * 0.7); hill.position.set(-420 + k * 105 + r() * 30, 0, z - 70 - r() * 40); g.add(hill); }
-  const kinds = ["palm_a", "palm_b", "palm_c"];
-  for (let x = -420; x <= 420; x += 12 + r() * 14) { const kind = kinds[Math.floor(r() * 3)], rot = r() * 6.28, sc = 1.1 + r() * 0.5, pz = z - 12 - r() * 18; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, pz); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); }); }
-  for (const hx of [-160, -40, 90, 230]) { const hut = new THREE.Group(); add(hut, box(14, 7, 10, lam(0xc8a878)), 0, 3.5, 0, false); const roof = new THREE.Mesh(new THREE.ConeGeometry(12, 7, 4), lam(0xb8924a, { flatShading: true })); roof.rotation.y = Math.PI / 4; add(hut, roof, 0, 10.5, 0, false); hut.position.set(hx, 0, z - 22); g.add(hut); }
+  const r = rng(33);
+  const hgt = islandHill(g, 0, z - 60, 980, 190, 42, 5); // a long island with ridges, sand along its edge
+  for (let x = -440; x <= 440; x += 12 + r() * 14) { const pz = z - 10 - r() * 22, y = Math.max(0, hgt(x, pz)); if (y < 14) blenderPalm(g, x, y, pz, 300 + x, 1.15); }
+  for (let k = 0; k < 70; k++) { const x = (r() - 0.5) * 880, pz = z - 40 - r() * 100, y = hgt(x, pz); if (y > 6) blenderPalm(g, x, y - 1, pz, 500 + k, 1.4); }
+  for (const hx of [-160, -40, 90, 230]) { const hut = new THREE.Group(); add(hut, box(14, 7, 10, lam(0xc8a878)), 0, 3.5, 0, false); const roof = new THREE.Mesh(new THREE.ConeGeometry(12, 7, 4), lam(0xb8924a, { flatShading: true })); roof.rotation.y = Math.PI / 4; add(hut, roof, 0, 10.5, 0, false); hut.position.set(hx, Math.max(0, hgt(hx, z - 18)), z - 18); g.add(hut); }
+}
+
+// Natural island terrain: a heightfield with an uneven outline and ridges (not a dome), sand at the waterline and
+// jungle greens above. Returns a height function for placing things on it.
+function islandHill(g, x, z, w, d, h, seed) {
+  const r = rng(seed), waves = [];
+  for (let k = 0; k < 6; k++) waves.push([0.5 + r() * 2.5, 0.5 + r() * 2.5, r() * 6.28, 0.5 / (1 + k * 0.5)]);
+  const height = (u, v) => { // u, v in -1..1 across the island
+    let e = 1 - Math.pow(Math.hypot(u, v), 2.2);
+    let n = 0; for (const [fu, fv, p, a] of waves) n += Math.sin(u * fu * 3 + p) * Math.cos(v * fv * 3 - p) * a;
+    e += n * 0.35; return Math.max(-0.2, e) * h;
+  };
+  const geo = new THREE.PlaneGeometry(w, d, 48, 48); geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position, col = [], c = new THREE.Color(), sand = new THREE.Color(0xe8d49a), lo = new THREE.Color(0x3f8f3a), hi = new THREE.Color(0x2a6a2c);
+  for (let i = 0; i < pos.count; i++) {
+    const u = pos.getX(i) / (w / 2), v = pos.getZ(i) / (d / 2), y = height(u, v); pos.setY(i, y);
+    const t = y / h; c.copy(t < 0.06 ? sand : lo.clone().lerp(hi, Math.min(1, t * 1.4))).offsetHSL(0, 0, (r() - 0.5) * 0.04); col.push(c.r, c.g, c.b);
+  }
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3)); geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true })); m.position.set(x, 0, z); m.receiveShadow = true; g.add(m);
+  return (px, pz) => height((px - x) / (w / 2), (pz - z) / (d / 2));
+}
+function blenderPalm(g, x, y, z, seed, scale = 1) {
+  const r = rng(seed), kind = ["palm_a", "palm_b", "palm_c"][Math.floor(r() * 3)], rot = r() * 6.28, sc = scale * (0.9 + r() * 0.3);
+  loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, y, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); });
 }
 
 const VENUE_LOOK = {
@@ -4247,6 +4271,7 @@ function buildVenue(id) {
     // the promenade, palms where the sand ends, and the hotels behind them
     const walk = new THREE.Mesh(new THREE.PlaneGeometry(10, 1400), lam(0xd8cdb8)); walk.rotation.x = -Math.PI / 2; walk.position.set(-52, 0.06, -500); g.add(walk);
     const pr = rng(31), kinds = ["palm_a", "palm_b", "palm_c"];
+    for (let z = 60; z > -1000; z -= 9 + pr() * 9) blenderPalm(g, -36 - pr() * 30, 0, z + pr() * 6, 2000 + Math.round(-z), 0.85 + pr() * 0.45); // scattered between the beach and the buildings
     for (let z = 60; z > -1000; z -= 13 + pr() * 3) for (const px of [-45, -59]) {
       const kind = kinds[Math.floor(pr() * 3)], rot = pr() * 6.28, sc = 0.95 + pr() * 0.3, pz = z + (px < -50 ? 6 : 0);
       loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(px, 0, pz); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); });
@@ -4438,7 +4463,7 @@ function buildVenue(id) {
     venueAnim.push({ kind: "sea", n1, n2 });
     const sandTex = groundTexture("sand"); sandTex.repeat.set(2, 2);
     islandShape(g, 0, 4, 10.5, 11, sandTex); islandShape(g, 0, -30, 9.5, 23, sandTex); // yours, and the board's island across the water
-    palm(g, -7.5, 7, 18, 0.9); palm(g, 7, 9, 16, -0.8); palm(g, -6, -35, 20, 0.8); palm(g, 6.5, -34, 17, -0.9);
+    blenderPalm(g, -7.5, 0, 7, 1, 0.95); blenderPalm(g, 7, 0, 9, 2, 0.85); blenderPalm(g, -6, 0, -35, 3, 1); blenderPalm(g, 6.5, 0, -34, 4, 0.9);
     umbrella(g, 7, 0, 0xff4b3a); chair(g, 5.5, -25, -0.5, 0xffc93a);
     // spectators on the water, all keeping clear of the throwing lane
     const spots = [["canoe", -22, -6, 0.3], ["kayak", 20, -10, -0.4], ["paddle", -18, -40, 0.9], ["row", 24, -36, -0.6], ["motor", -32, -24, 1.4], ["raft", 15, 6, 0], ["raft", -14, 12, 0], ["kayak", 30, 14, 2.2],
@@ -4448,13 +4473,17 @@ function buildVenue(id) {
     const wr = rng(71);
     for (const [x, z] of [[-11, -4], [12, -2], [-10, -22], [11, -38], [-9, 16], [10, -44]]) { person(g, x, z, Math.atan2(-x, -13 - z), 1100 + Math.round(x * 5 + z), wr() < 0.3 ? "cheer" : "stand"); venueAnim[venueAnim.length - 1].y0 = -2.2; }
     // the big island's shoreline across the water, smaller islands round the other sides, and boats crossing
-    bigIsland(g, -230);
+    bigIsland(g, -270);
     const r = rng(29);
-    for (let k = 0; k < 16; k++) { const a = r() * Math.PI * 2, d = 160 + r() * 260; if (Math.cos(a) * d < -150) continue; farIsland(g, Math.sin(a) * d, -15 + Math.cos(a) * d, 18 + r() * 30, r); }
+    for (let k = 0; k < 16; k++) {
+      const a = r() * Math.PI * 2, d = 170 + r() * 280, fx = Math.sin(a) * d, fz = -15 + Math.cos(a) * d; if (fz < -150) continue;
+      const w = 50 + r() * 90, hf = islandHill(g, fx, fz, w, w * (0.6 + r() * 0.4), 10 + r() * 22, 40 + k);
+      for (let p = 0; p < 4; p++) { const px = fx + (r() - 0.5) * w * 0.5, pz = fz + (r() - 0.5) * w * 0.3, y = hf(px, pz); if (y > 1) blenderPalm(g, px, y - 0.5, pz, 700 + k * 9 + p, 1.2); }
+    }
     cruisers(g, 5, 7);
     loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
       if (!sky || venueId !== "island") return;
-      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
+      scene.environment = sky.env; // the photo sky only for reflections: the game's own deep-blue sky stays behind
       hemi.intensity = 0.9; renderer.toneMappingExposure = 1.05;
       scene.fog.color.setHex(0xd6e6f2); scene.fog.near = 300; scene.fog.far = 1300;
     });
@@ -5684,7 +5713,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794233141";
+const BUILD_ID = "1794234338";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
