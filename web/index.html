@@ -128,6 +128,9 @@ body.inhub .score, body.inhub #panel { display: none; }
 .bpstats em { font-style: normal; font-size: 9px; color: var(--ink-dim); text-align: right; padding-right: 3px; }
 .bpstats i { width: 6px; height: 6px; border-radius: 2px; background: rgba(255,255,255,.18); } .bpstats i.on { background: var(--gold); }
 .bpres { font-size: 11px; color: #3ee07a; }
+.bpbag { position: relative; } .bpbest { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 10px; font-weight: 900; color: #12203a; background: var(--gold); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+.bpsuggest { background: rgba(62,224,122,.14); border: 2px solid #2fbf71; border-radius: 12px; padding: 8px 10px; font-size: 14px; font-weight: 900; } .bpsuggest b { color: #3ee07a; }
+.bplist { padding-top: 8px; }
 .bpfit { min-height: 18px; font-weight: 900; font-size: 13px; }
 .bptimer { height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; } .bptimer i { display: block; height: 100%; background: var(--gold); transition: width .2s linear; }
 #boardInfo { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 74px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.78); border: 2px solid rgba(255,255,255,.6);
@@ -1489,7 +1492,7 @@ function setGear(pl) {
 
 // ───────────────────────── Board check: before the first throw, the board in play and its traits, and 10 seconds for
 // each player to pick the bag that suits it (the throw clock doesn't start until this is done).
-const BAG_PICK_SECS = 10;
+const BAG_PICK_SECS = 20;
 function bagFit(bag, board) { // a warning when the bag and board pull the same way
   const f = bag.feel, s = board.surf || 0;
   if (f === "fast" && s > 0) return "⚠️ Fast bag on a fast board: it'll slide a long way.";
@@ -1500,8 +1503,15 @@ function bagFit(bag, board) { // a warning when the bag and board pull the same 
 // How far bags slide on this board with this bag: the board's surface plus the bag's feel.
 const SLIDE_RESULT = { "-3": "Very short", "-2": "Very short", "-1": "Short", "0": "Normal", "1": "Long", "2": "Very long", "3": "Very long" };
 const slideWith = (bag, board) => SLIDE_RESULT[(board.surf || 0) + (bag.feel === "fast" ? 1 : bag.feel === "sticky" ? -1 : 0)];
+// The best of your bags for this board: a normal slide first, then the best accuracy, control and spin.
+function bestBagFor(board) {
+  const net = b => Math.abs((board.surf || 0) + (b.feel === "fast" ? 1 : b.feel === "sticky" ? -1 : 0));
+  return career.bags.map(bagById).sort((a, b) => net(a) - net(b) || (b.acc + b.ctrl + b.spin) - (a.acc + a.ctrl + a.spin))[0];
+}
 function openBagPick() {
   S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
+  const best = bestBagFor(boardById(S.board)); S.bestBag = best.id; // picked for you; tap another to change it
+  if (best.id !== S.gear[0].id) { S.gear[0] = best; career.bag = best.id; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: best.id }); }
   renderBagPick(); $("bagPick").hidden = false;
 }
 function renderBagPick() {
@@ -1510,9 +1520,10 @@ function renderBagPick() {
   $("bagPickBody").innerHTML = `<h2>Board check</h2>
     <div class="bpboard"><img src="${tex.toDataURL()}" alt=""><div><b>${esc(d.name)}</b><small>${S.boardMine ? "Your board" : S.online ? esc(S.names[1]) + "'s board" : "Your opponent's board"}</small>
       <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
-    <div class="label">Pick your bag</div>
+    <div class="bpsuggest">We picked <b>${esc(bagById(S.bestBag).name)}</b> for this board. Tap another bag to change it.</div>
+    <div class="label">Your bags</div>
     <div class="bplist">${career.bags.map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
-      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}"><canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
+      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
         <div class="bpstats"><em>Acc</em>${dots("acc")}<em>Ctl</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
@@ -5424,7 +5435,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794180381";
+const BUILD_ID = "1794187228";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));

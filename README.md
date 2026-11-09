@@ -137,7 +137,7 @@ The odds are not shown in the game. The App Store requires the odds for paid loo
 - Each match is played on either your board or your opponent's, picked at random (live matches agree through the
   shared seed). Every board has two traits, different rather than better: surface (Sticky, Grippy, Normal, Fast, Slick:
   how far bags slide) and bounce (Soft, Normal, Lively).
-- Before the first throw, a Board check splash shows the board and gives each player 10 seconds to pick a bag (the
+- Before the first throw, a Board check splash shows the board and gives each player 20 seconds to pick a bag (the best one for the board is picked for you) (the
   throw clock hasn't started yet). It warns about pairings that pull the same way, like a fast bag on a fast board.
 - While you pick your finish and landing spots, a small card shows the board and its traits.
 
