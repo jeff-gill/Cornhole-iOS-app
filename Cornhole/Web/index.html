@@ -1463,7 +1463,17 @@ const COL = { p: ["#ff4b3a", "#2f86ff"], pd: [], pl: [], gold: "#ffc93a", go: "#
 function hueOf(hex) { const n = parseInt(hex.slice(1), 16), r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
   if (d < 0.12) return -1; const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return (h * 60 + 360) % 360; }
 const isGreen = hex => { const h = hueOf(hex); return h >= 75 && h <= 170; };
+// Team colours: each match gives the two sides a random pair of contrasting colours (never green, which is the points
+// bubble's). Bags keep their own pattern and stats, painted in their side's colour, so the sides never look alike.
+const TEAM_PAIRS = [["#ff4b3a", "#2f86ff"], ["#ff8a1f", "#8a4dff"], ["#ffc93a", "#1f3a6e"], ["#ff2e88", "#0fb5a5"], ["#c8102e", "#0fb5a5"], ["#2f86ff", "#ff8a1f"], ["#8a4dff", "#ffc93a"]];
+function teamGear() {
+  for (const p of [0, 1]) {
+    const g = S.gear[p], baseId = g.baseId || g.id, c = S.teamC ? S.teamC[p] : g.c;
+    S.gear[p] = { ...g, c, id: baseId + "~" + c, baseId };
+  }
+}
 function setTeamColors() {
+  teamGear();
   COL.p = [S.gear[0].c, S.gear[1].c];
   for (const p of [0, 1]) if (isGreen(COL.p[p])) { const o = COL.p[1 - p]; COL.p[p] = Math.abs(hueOf(o) - 270) < 40 ? "#ff8a1f" : "#8a4dff"; }
   COL.pd = COL.p.map(c => shade(c, -0.35));
@@ -1515,11 +1525,11 @@ function bestBagFor(board) {
 function openBagPick() {
   S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
   const best = bestBagFor(boardById(S.board)); S.bestBag = best.id; // picked for you; tap another to change it
-  if (best.id !== S.gear[0].id) { S.gear[0] = best; career.bag = best.id; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: best.id }); }
+  if (best.id !== (S.gear[0].baseId || S.gear[0].id)) { S.gear[0] = best; career.bag = best.id; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: best.id }); }
   renderBagPick(); $("bagPick").hidden = false;
 }
 function renderBagPick() { // (the suggested bag is listed first)
-  const d = boardById(S.board), cur = S.gear[0];
+  const d = boardById(S.board), cur = bagById(S.gear[0].baseId || S.gear[0].id);
   const tex = document.createElement("canvas"); tex.width = 96; tex.height = 192; paintBoard(tex.getContext("2d"), 96, 192, d);
   $("bagPickBody").innerHTML = `<h2>Board check</h2>
     <div class="bpboard"><img src="${tex.toDataURL()}" alt=""><div><b>${esc(d.name)}</b><small>${S.boardMine ? "Your board" : S.online ? esc(S.names[1]) + "'s board" : "Your opponent's board"}</small>
@@ -1533,7 +1543,7 @@ function renderBagPick() { // (the suggested bag is listed first)
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
     <button class="btn green" id="bagPickGo">${S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
   for (const c of $("bagPickBody").querySelectorAll(".bpbag")) {
-    paintBag(c.querySelector("canvas").getContext("2d"), 48, 48, bagById(c.dataset.bag));
+    paintBag(c.querySelector("canvas").getContext("2d"), 48, 48, { ...bagById(c.dataset.bag), c: S.teamC ? S.teamC[0] : bagById(c.dataset.bag).c });
     c.onclick = () => { S.gear[0] = bagById(c.dataset.bag); career.bag = c.dataset.bag; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: c.dataset.bag }); renderBagPick(); };
   }
   $("bagPickGo").onclick = () => { if (!S.online) closeBagPick(); else { S.pickReady = true; $("bagPickGo").textContent = "WAITING…"; } };
@@ -1620,6 +1630,10 @@ function startMatch(kind, vi, online = null, pick = null) {
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
   S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
+  { // this match's team colours (live matches: the shared seed picks the pair, the host takes the first colour)
+    const r = online ? rng(online.seed + 17) : Math.random, pair = TEAM_PAIRS[Math.floor(r() * TEAM_PAIRS.length)], swap = online ? !online.host : r() < 0.5;
+    S.teamC = swap ? [pair[1], pair[0]] : [pair[0], pair[1]];
+  }
   setTeamColors(); clearBagMeshes(); setHoleHalo(0); setBoardDesign(S.board); applyBoardTraits(boardById(S.board)); buildVenue(v.id); newWind(); venueAmbience();
   S.tut = { dragged: false, thrown: false };
   $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
@@ -5439,7 +5453,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794187336";
+const BUILD_ID = "1794187477";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
