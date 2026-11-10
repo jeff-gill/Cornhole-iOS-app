@@ -664,6 +664,8 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashboard"><i class="hole"></i><i class="sbag b1"></i><i class="sbag b2"></i></div>
   <div class="splashbar"><i></i></div>
   <div class="splashtag">__GAME_TAGLINE__</div>
+  <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(__BUILD_ID__ * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
