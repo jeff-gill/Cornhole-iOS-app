@@ -693,7 +693,7 @@ s.was { opacity: .6; font-size: .8em; }
       <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button><button class="linkbtn" id="artBtn" hidden>🧪 New art: off</button></div>
+    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button></div>
   </div>
 </div>
 
@@ -2744,7 +2744,22 @@ function setGround(g, kind, tile) {
 // Trees made in Blender (web/tools/blender/trees.py): low-poly with baked soft shading. `kinds` picks the mix.
 const BLENDER = "assets/blender/";
 const blenderCache = new Map();
+// Trees and palms now come from the Quaternius packs (see styledBackyard); the old Blender names still work and pick a
+// random matching variant each time, scaled to the height the old trees had (in feet).
+const TREE_SWAP = { tree_oak: [["commontree_1", "commontree_2", "commontree_3", "commontree_4", "commontree_5"], 20], tree_maple: [["commontree_2", "commontree_5", "birchtree_1", "birchtree_3"], 20],
+  tree_pine: [["pinetree_1", "pinetree_3", "pinetree_5"], 18], palm_a: [["palmtree_1", "palmtree_3"], 24], palm_b: [["palmtree_1", "palmtree_4"], 28], palm_c: [["palmtree_2", "palmtree_3"], 20] };
+const sizedNature = new Map();
+function sizedTree(variant, feet) { // a Quaternius model wrapped in a group scaled to `feet` tall
+  const key = variant + "@" + feet;
+  if (!sizedNature.has(key)) sizedNature.set(key, loadNature(variant).then(src => {
+    if (!src) return null; const bb = new THREE.Box3().setFromObject(src), h = bb.max.y - bb.min.y || 1, w = new THREE.Group(), m = src.clone();
+    m.scale.setScalar(feet / h); w.add(m); return w;
+  }));
+  return sizedNature.get(key);
+}
 function loadBlender(name) {
+  const sw = TREE_SWAP[name];
+  if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
   if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
@@ -3011,7 +3026,7 @@ function venueTick(dt, t) {
     } else if (a.kind === "cruise") { // a boat crossing far out, round and round
       a.x0 += a.speed * dt; if (a.x0 > 600) a.x0 = -600; if (a.x0 < -600) a.x0 = 600;
       a.o.position.set(a.x0, Math.sin(t * 1.2 + a.z) * 0.2, a.z); a.o.rotation.y = a.speed > 0 ? 0 : Math.PI;
-    } else if (a.kind === "mixer") { a.mixer.update(dt);
+    } else if (a.kind === "mixer") { if (a.mixer) a.mixer.update(dt); if (a.y0 != null) a.o.position.y = a.y0;
     } else if (a.kind === "dance") { // bouncing to the beat, arms pumping
       const k = t * a.rate + a.phase; a.o.position.y = Math.abs(Math.sin(k)) * 0.5; a.o.rotation.y = a.base + Math.sin(k * 0.5) * 0.6;
       for (const [i, arm] of a.arms.entries()) arm.rotation.x = Math.PI * 0.8 + Math.sin(k * 2 + i * Math.PI) * 0.5;
@@ -3033,15 +3048,9 @@ function house(g, x, z, rotY, color = 0xf2e6d0, roofColor = 0x5a3a2a) {
   add(h, box(3, 6, 0.2, std(0x6a3f2a)), 0, 3, -7.05, false);
   h.position.set(x, 0, z); h.rotation.y = rotY; g.add(h);
 }
-function pine(g, x, z, s, snowy) {
-  const p = new THREE.Group(), needles = lam(0x1f5a3a, { flatShading: true }), cap = lam(0xffffff, { flatShading: true });
-  add(p, new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 3, 6), lam(0x5a3a22)), 0, 1.5, 0);
-  for (let k = 0; k < 3; k++) {
-    const r = 3.6 - k * 0.95, hh = 4.4 - k * 0.6, y = 3 + k * 2.6;
-    add(p, new THREE.Mesh(new THREE.ConeGeometry(r, hh, 8), needles), 0, y + hh / 2, 0);
-    if (snowy) add(p, new THREE.Mesh(new THREE.ConeGeometry(r * 0.62, hh * 0.45, 8), cap), 0, y + hh * 0.8, 0, false);
-  }
-  p.position.set(x, 0, z); p.scale.setScalar(s); g.add(p);
+function pine(g, x, z, s, snowy, y = 0) {
+  const v = snowy ? ["pinetree_snow_1", "pinetree_snow_3", "pinetree_snow_5"] : ["pinetree_1", "pinetree_3", "pinetree_5"], rot = Math.random() * 6.28;
+  sizedTree(v[Math.floor(Math.random() * 3)], 16 * s).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, y, z); t.rotation.y = rot; g.add(t); });
 }
 function mountains(g, seed, snowy, color = 0x7d8fa8) {
   const r = rng(seed), rock = lam(color, { flatShading: true }), snow = lam(0xf4f8ff, { flatShading: true });
@@ -3282,38 +3291,22 @@ const SKIN = [0xf1c7a5, 0xe0ac86, 0xc68e62, 0x8d5a3b, 0x5e3a25];
 const SHIRTS = [0xc8102e, 0x1f3a6e, 0xffc93a, 0xffffff, 0x2fbf71, 0xff8a1f, 0x2f86ff, 0x6a2c91, 0x222222];
 const PANTS = [0x2a3550, 0x3a3a40, 0x6a5a40, 0x1f2a44, 0x8a7a60];
 // A simple low-poly person, about 5.5-6 ft tall, facing +z before rotY. pose: "stand", "drink" (arm raised) or "cheer".
+// An animated person (a Quaternius character; see animPerson). pose: "stand", "drink", "cheer", "sit" or "dance".
+// Returns their group straight away (things can be attached to it, like skis or an apron); the model loads into it.
 function person(g, x, z, rotY, seed, pose = "stand") {
-  const r = rng(seed), p = new THREE.Group();
-  const skin = lam(SKIN[Math.floor(r() * SKIN.length)]), shirt = lam(SHIRTS[Math.floor(r() * SHIRTS.length)]), pants = lam(PANTS[Math.floor(r() * PANTS.length)]);
-  const h = 0.92 + r() * 0.16, sit = pose === "sit", dy = sit ? -1.05 : 0; // sitting: hips at bench height, knees forward
-  if (sit) for (const sx of [-0.22, 0.22]) {
-    add(p, new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.16, 1.3, 8), pants).rotateX(Math.PI / 2), sx, 1.6, 0.6); // thigh
-    add(p, new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.15, 1.55, 8), pants), sx, 0.8, 1.2);                       // shin
-    add(p, new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 0.55), lam(0x222222)), sx, 0.09, 1.3);
-  } else {
-    for (const sx of [-0.22, 0.22]) add(p, new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.15, 2.6, 8), pants), sx, 1.3, 0);
-    for (const sx of [-0.22, 0.22]) add(p, new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.18, 0.55), lam(0x222222)), sx, 0.09, 0.08);
-  }
-  add(p, new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.3, 4, 10), shirt), 0, 3.35 + dy, 0);
-  const head = add(p, new THREE.Mesh(new THREE.SphereGeometry(0.42, 14, 10), skin), 0, 4.75 + dy, 0);
-  if (r() < 0.55) { // a ball cap
-    const cap = lam(SHIRTS[Math.floor(r() * SHIRTS.length)]);
-    add(p, new THREE.Mesh(new THREE.SphereGeometry(0.44, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), cap), 0, 4.82 + dy, 0, false);
-    add(p, new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.05, 0.4), cap), 0, 4.84 + dy, 0.4, false);
-  }
-  const arms = [];
-  for (const sx of [-1, 1]) {
-    const arm = new THREE.Group(); arm.position.set(sx * 0.62, 4.0 + dy, 0);
-    add(arm, new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 1.3, 3, 8), shirt), 0, -0.75, 0);
-    add(arm, new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6), skin), 0, -1.55, 0, false);
-    arm.rotation.z = sx * 0.12;
-    if (sit) arm.rotation.x = -0.9; // forearms toward the table
-    if ((pose === "drink" && sx === 1) || pose === "cheer") arm.rotation.x = pose === "cheer" ? Math.PI * 0.9 : -1.9;
-    if (pose === "drink" && sx === 1) add(arm, new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.11, 0.38, 10), lam(0xd62828)), 0, -1.6, 0.18, false); // a soda cup
-    p.add(arm); arms.push(arm);
-  }
-  p.position.set(x, 0, z); p.rotation.y = rotY; p.scale.setScalar(h); g.add(p);
-  venueAnim.push({ kind: "person", o: p, head, arms, pose, phase: r() * 6, base: rotY });
+  const p = new THREE.Group(); p.position.set(x, 0, z); p.rotation.y = rotY; g.add(p);
+  const an = { kind: "mixer", mixer: null, o: p }; venueAnim.push(an);
+  const r = rng(seed), name = PEOPLE_MODELS[Math.floor(r() * PEOPLE_MODELS.length)];
+  const look = { Skin: P_SKIN[Math.floor(r() * P_SKIN.length)], Hair: P_HAIR[Math.floor(r() * P_HAIR.length)], Shirt: P_SHIRT[Math.floor(r() * P_SHIRT.length)], Pants: P_PANTS[Math.floor(r() * P_PANTS.length)] };
+  const h = 5.3 + r() * 0.9, phase = r(), anim = { stand: "Idle", drink: "Idle", cheer: "Clap", sit: "Sit", dance: "Jump" }[pose] || "Idle";
+  loadPeople(name).then(gl => {
+    if (!gl) return;
+    const m = SkeletonUtils.clone(gl.scene), k = h / gl.tall;
+    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; if (look[o.material.name]) { o.material = o.material.clone(); o.material.color.set(look[o.material.name]); } } });
+    m.scale.setScalar(k); m.position.y = -gl.base * k + (pose === "sit" ? 0.35 : 0); p.add(m);
+    const mixer = new THREE.AnimationMixer(m), clip = gl.animations.find(c => c.name === anim) || gl.animations[0], act = mixer.clipAction(clip);
+    act.play(); act.time = phase * clip.duration; an.mixer = mixer;
+  });
   return p;
 }
 // A crowd of people, scattered around a spot and loosely facing a point.
@@ -3906,7 +3899,7 @@ const slopeY = x => (x < SLOPE_X ? (x - SLOPE_X) * SKI_GRADE : 0);
 function skiers(g, n, seed) {
   const r = rng(seed);
   for (let i = 0; i < n; i++) {
-    const p = person(g, 0, 0, 0, 500 + i, "stand"); venueAnim.pop(); // they move along the slope instead
+    const p = person(g, 0, 0, 0, 500 + i, "stand"); // (moved along the slope by the "skier" entry below)
     wearSkis(p, SKI_COLS[Math.floor(r() * SKI_COLS.length)]);
     venueAnim.push({ kind: "skier", o: p, t: r(), z0: -150 + r() * 200, speed: 0.045 + r() * 0.04, wig: 6 + r() * 10, ph: r() * 6 });
   }
@@ -3958,7 +3951,7 @@ function chairLift(g) {
     add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 7, 5), steel), 0, 3.5, 0, false);
     add(c, box(4.6, 0.3, 1.8, seatMat), 0, 0, 0.4, false); add(c, box(4.6, 2.2, 0.25, seatMat), 0, 1.1, -0.5, false);
     if (r() < 0.75) for (const dx of r() < 0.5 ? [-1.1] : [-1.1, 1.1]) { // riders, skis dangling
-      const p = person(c, dx, 0.35, 0, 600 + k * 3 + (dx > 0 ? 1 : 0), "sit"); venueAnim.pop();
+      const p = person(c, dx, 0.35, 0, 600 + k * 3 + (dx > 0 ? 1 : 0), "sit");
       p.position.y = -1.45; wearSkis(p, SKI_COLS[Math.floor(r() * SKI_COLS.length)]);
       p.children.slice(-4, -2).forEach(s => { s.position.set(s.position.x, 0.2, 1.4); s.rotation.x = 0.5; });
     }
@@ -4119,7 +4112,7 @@ function hullGeo(len, w) {
   return new THREE.ExtrudeGeometry(s, { depth: 0.9, bevelEnabled: true, bevelSize: 0.15, bevelThickness: 0.15, bevelSegments: 2 }).rotateX(-Math.PI / 2);
 }
 function rider(b, x, z, rotY, seed, pose = "sit") {
-  const p = person(b, x, z, rotY, seed, pose); venueAnim.pop(); // moves with the boat
+  const p = person(b, x, z, rotY, seed, pose); // moves with the boat
   if (pose === "sit") p.position.y = -0.6; return p;
 }
 function paddle(b, x, y, z, rot, double) {
@@ -4270,7 +4263,7 @@ function dancers(g, cx, cz, n, rad, seed) {
   const r = rng(seed);
   for (let i = 0; i < n; i++) {
     const a = r() * Math.PI * 2, d = 0.8 + r() * rad, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
-    const p = person(g, x, z, r() * 6.28, seed * 10 + i, r() < 0.5 ? "cheer" : "stand"); const an = venueAnim[venueAnim.length - 1]; an.kind = "dance"; an.rate = 4 + r() * 2;
+    person(g, x, z, r() * 6.28, seed * 10 + i, r() < 0.5 ? "dance" : "cheer");
   }
   const floor = canvasTex(256, 256, (c, w, h) => { for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { c.fillStyle = `hsl(${(x * 47 + y * 83) % 360},80%,${(x + y) % 2 ? 35 : 55}%)`; c.fillRect(x * 32 + 1, y * 32 + 1, 30, 30); } });
   const f = new THREE.Mesh(new THREE.PlaneGeometry(rad * 2 + 4, rad * 2 + 4), new THREE.MeshBasicMaterial({ map: floor })); f.rotation.x = -Math.PI / 2; f.position.set(cx, 0.03, cz); g.add(f);
@@ -4419,8 +4412,8 @@ function buildVenue(id) {
   skyU.sunDir.value.copy(sun.position).sub(sun.target.position).normalize();
   renderer.toneMappingExposure = L.exposure; venueDust = L.dust;
 
-  if (id === "backyard" && career.artTest) { styledBackyard(g); // the stylized art test (🧪 switch in the clubhouse)
-  } else if (id === "backyard") {
+  if (id === "backyard") { styledBackyard(g);
+  } else if (id === "backyard-old") {
     // Photo-real backyard: real sky light, a photo lawn and plank fence, and scanned chairs, table and shrubs.
     const lawn = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), photoMat("sparse_grass", 520 / 9, 520 / 9, { tint: 0xb4ff6a, bump: 0.8, fallback: 0x5fae3e }));
     lawn.rotation.x = -Math.PI / 2; lawn.position.z = -30; lawn.receiveShadow = true; g.add(lawn);
@@ -4626,7 +4619,7 @@ function buildVenue(id) {
     for (let k = 0; k < 90; k++) {
       const a = r(), x = k < 45 ? -60 - r() * 200 : (r() - 0.5) * 300, z = k < 45 ? (r() < 0.5 ? 40 + r() * 60 : -180 - r() * 120) : -140 - r() * 120;
       if (k >= 45 && Math.abs(x) < 70 && z > -150) continue;
-      pine(g, x, z, 1.1 + r() * 0.9, true); g.children[g.children.length - 1].position.y = slopeY(x);
+      pine(g, x, z, 1.1 + r() * 0.9, true, slopeY(x));
     }
     for (let k = 0; k < 16; k++) pine(g, 40 + r() * 60, 30 - r() * 160, 1 + r() * 0.8, true);
     snowman(g, -9, 12, Math.PI + 0.4);
@@ -4634,8 +4627,7 @@ function buildVenue(id) {
   } else if (id === "bonfire") { // (the id is kept from the old court so saves carry over): the Golf Club
     // The 18th at Oak Hollow Club late in the afternoon: the clubhouse and its patio, the putting green beside the lane,
     // bunkers, a pond with a fountain, carts parked by the clubhouse, and fairways lined with trees.
-    const lawn = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), photoMat("sparse_grass", 900 / 9, 900 / 9, { tint: 0xa8f070, bump: 0.6, fallback: 0x5fae3e }));
-    lawn.rotation.x = -Math.PI / 2; lawn.position.z = -60; lawn.receiveShadow = true; g.add(lawn);
+    stylizedLawn(g, 900, 7);
     clubhouse(g, 0, -110);
     puttingGreen(g, 30, -40, 14);
     bunker(g, 46, -22, 8, 4, 0.4); bunker(g, -34, -64, 10, 5, -0.3); bunker(g, -90, -160, 14, 6, 0.2);
@@ -4724,7 +4716,7 @@ function buildVenue(id) {
     for (const [x, z, k] of [[-22, -40, 1], [-24, -28, 2], [-18, 14, 3], [-8, 22, 4], [10, 22, 5], [24, 10, 6], [-26, -52, 7], [14, -54, 8]]) bistroTable(g, x, z, 300 + k);
     partyLights(g, 6, 5); // over the dance floor
     sofa(g, 28, -8, -Math.PI / 2, 0x2f4a8a); sofa(g, 28, 4, -Math.PI / 2, 0x8a2f4a);
-    for (const [x, z] of [[-30, -52], [30, -52], [-30, 24], [30, 24], [30, -42], [-30, 6]]) { add(g, box(4, 3, 4, std(0x4a4f58)), x, 1.5, z); pine(g, x, z, 0.45, false); g.children[g.children.length - 1].position.y = 3; }
+    for (const [x, z] of [[-30, -52], [30, -52], [-30, 24], [30, 24], [30, -42], [-30, 6]]) { add(g, box(4, 3, 4, std(0x4a4f58)), x, 1.5, z); pine(g, x, z, 0.45, false, 3); }
     waterTower(g, -22, -54); acUnit(g, 18, -54);
     crowd(g, -22, -2, 5, 3, 51, -27, -2); crowd(g, -16, 8, 3, 2, 55, 0, -14);
     for (const [x, z, f] of [[26, -8, -Math.PI / 2], [26, 4, -Math.PI / 2]]) person(g, x, z, f, 60 + x + z, "sit");
@@ -5942,7 +5934,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794331516";
+const BUILD_ID = "1794331845";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -5956,11 +5948,6 @@ if (testing()) { // Max stars: fill every court's star track, which opens all th
     const t = document.createElement("div"); t.className = "toast"; t.textContent = `All ${VENUES.length} courts open · ${career.stars.toLocaleString()} ⭐`;
     $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
   };
-}
-if (testing()) { // The stylized art test: flip between the current look and the new one (Backyard BBQ only for now)
-  const b = $("artBtn"), label = () => { b.textContent = `🧪 New art: ${career.artTest ? "on" : "off"}`; };
-  b.hidden = false; label();
-  b.onclick = () => { career.artTest = !career.artTest; save(); label(); venueId = ""; renderHub(); };
 }
 if (testing()) { // Test cans: also in Xcode debug builds
   $("testCans").hidden = false;
