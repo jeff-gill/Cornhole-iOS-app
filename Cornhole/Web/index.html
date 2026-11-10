@@ -2063,7 +2063,7 @@ function playCourt(vi, confirmed = false) {
     return;
   }
   const online = canGoOnline();
-  search = { vi, t: 0, online, limit: online ? SEARCH_TIME : 2 + Math.random() * 1.5, reel: buildReel() };
+  search = { vi, t: 0, online, limit: online ? SEARCH_TIME : REEL_SPIN, reel: buildReel() };
   if (online) postNative("net", JSON.stringify({ op: "find", group: bracket(vi) }));
   renderSearch();
 }
@@ -2078,25 +2078,27 @@ function cancelSearch(playCPU) {
 }
 // ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).
 const ROW = 68; // one reel row = the window's inner height
+const REEL_SPIN = 3, REEL_SLOW = 2; // seconds spinning at full speed, then seconds slowing down to land
 function buildReel() {
   const reel = $("oppReel"); reel.innerHTML = "";
-  const rows = Array.from({ length: 40 }, randomPick);
+  const rows = Array.from({ length: 80 }, randomPick);
   for (const r of rows) reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(r.avatar)}<span>${esc(r.name)}</span></div>`);
   $("oppSpin").classList.remove("done"); $("oppSpin").hidden = false; $("searchSpin").hidden = true;
-  return { pos: 0, speed: 1400, rows: rows.length };
+  return { pos: 0, speed: 900, rows: rows.length }; // about 13 names a second
 }
 function settleReel(pick, done) {
   const R = search && search.reel; if (!R || R.settle) return;
-  const reel = $("oppReel"), at = Math.ceil(R.pos / ROW) + 8; // land a few rows ahead
+  // a steady slow-down: at full speed it would cover speed × dur / 2 while braking evenly to a stop
+  const reel = $("oppReel"), at = Math.ceil((R.pos + R.speed * REEL_SLOW / 2) / ROW);
   while (reel.children.length <= at) reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(randomPick().avatar)}<span>${esc(randomPick().name)}</span></div>`);
   reel.children[at].innerHTML = `${avatarHTML(pick.avatar)}<span>${esc(pick.name)}</span>`;
-  R.settle = { from: R.pos, to: at * ROW, t: 0, dur: 1.6, done };
+  R.settle = { from: R.pos, to: at * ROW, t: 0, dur: REEL_SLOW, done };
 }
 function updateReel(dt) {
   const R = search && search.reel; if (!R) return;
   if (R.settle) {
     const S2 = R.settle; S2.t += dt;
-    const k = Math.min(1, S2.t / S2.dur), e = 1 - Math.pow(1 - k, 3); // ease out
+    const k = Math.min(1, S2.t / S2.dur), e = 1 - Math.pow(1 - k, 2); // brakes evenly from full speed to a stop
     R.pos = S2.from + (S2.to - S2.from) * e;
     if (k >= 1 && !S2.landed) { S2.landed = true; $("oppSpin").classList.add("done"); sfx.thud(); haptic("thud"); setTimeout(S2.done, 900); }
   } else {
@@ -5944,7 +5946,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794324227";
+const BUILD_ID = "1794331516";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
