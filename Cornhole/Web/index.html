@@ -77,6 +77,9 @@ body.inhub .score, body.inhub #panel { display: none; }
 .pauseclock { margin: -4px 0 12px; padding: 8px 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 14px; background: rgba(255,255,255,.1); }
 .pauseclock.running { background: rgba(255,59,48,.18); color: #ffb3ad; }
 .card .live { min-height: 14px; }
+/* the right-hand player's tile mirrors the left: score on the inside edge, bags and stars on the outside */
+.card.p1 .cardrow { flex-direction: row-reverse; } .card.p1 .cardrow > div:first-child { text-align: right; }
+.card.p1 .dots { justify-content: flex-end; } .card.p1 .live { text-align: right; }
 .card .live b { font-family: var(--font-display); font-size: 16px; font-weight: 400; vertical-align: -1px; letter-spacing: 0; }
 .card .live span { opacity: .85; font-size: 10px; }
 .card .cardrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; }
@@ -5937,7 +5940,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794323955";
+const BUILD_ID = "1794324146";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
