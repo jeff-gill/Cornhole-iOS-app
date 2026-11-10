@@ -43,11 +43,17 @@ body.inhub .score, body.inhub #panel { display: none; }
 #app { height: 100%; display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; position: relative; }
 
 /* Scoreboard */
+/* The match header: pause and ? sit up in the top corners (beside the Dynamic Island, where the hidden status bar
+   would be); below them the two player tiles run edge to edge with the court name and inning between them. */
 .score {
-  display: grid; grid-template-columns: 38px 1fr 56px 1fr 38px; gap: 6px; align-items: center;
-  padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px));
+  --toprow: max(50px, calc(env(safe-area-inset-top, 0px) + 6px));
+  position: relative; display: grid; grid-template-columns: 1fr 62px 1fr; gap: 6px; align-items: center;
+  padding-top: var(--toprow); padding-bottom: 8px; padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px));
   background: linear-gradient(#1d3563, var(--deck)); border-bottom: 2px solid var(--deck-edge);
 }
+.score #menuBtn, .score #helpBtn { position: absolute; top: calc(var(--toprow) - 44px); z-index: 2; }
+.score #menuBtn { left: max(12px, env(safe-area-inset-left, 0px)); } .score #helpBtn { right: max(12px, env(safe-area-inset-right, 0px)); }
+.card .live { font-size: 12px; font-weight: 900; margin-top: 2px; text-shadow: 0 1px 0 rgba(0,0,0,.3); white-space: nowrap; } /* the player's stars */
 .roundbtn {
   width: 36px; height: 36px; border-radius: 50%; border: 0; display: grid; place-items: center;
   background: linear-gradient(#36558f, #22395f); box-shadow: 0 3px 0 var(--deck-edge), inset 0 1px 0 rgba(255,255,255,.25);
@@ -70,7 +76,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card .dots i.x::before { content: "✕"; position: absolute; inset: 0; display: grid; place-items: center; color: #e0201a; font: 900 9px/1 Arial, sans-serif; }
 .pauseclock { margin: -4px 0 12px; padding: 8px 12px; border-radius: 12px; text-align: center; font-weight: 900; font-size: 14px; background: rgba(255,255,255,.1); }
 .pauseclock.running { background: rgba(255,59,48,.18); color: #ffb3ad; }
-.card .live { font-size: 11px; min-height: 14px; white-space: nowrap; margin-top: 2px; }
+.card .live { min-height: 14px; }
 .card .live b { font-family: var(--font-display); font-size: 16px; font-weight: 400; vertical-align: -1px; letter-spacing: 0; }
 .card .live span { opacity: .85; font-size: 10px; }
 .card .cardrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; }
@@ -137,7 +143,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 .bplist { padding-top: 8px; }
 .bpfit { min-height: 18px; font-weight: 900; font-size: 13px; }
 .bptimer { height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; } .bptimer i { display: block; height: 100%; background: var(--gold); transition: width .2s linear; }
-#boardInfo { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 74px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.78); border: 2px solid rgba(255,255,255,.6);
+#boardInfo { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.78); border: 2px solid rgba(255,255,255,.6);
   border-radius: 12px; padding: 5px 9px; font-size: 12px; font-weight: 900; text-align: right; line-height: 1.3; }
 #boardInfo b { font-family: var(--font-display); font-weight: 400; font-size: 14px; display: block; }
 #boardInfo i { font-style: normal; color: var(--gold); }
@@ -5930,7 +5936,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794321078";
+const BUILD_ID = "1794323697";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6365,7 +6371,7 @@ function updateHUD() {
   $("gauge").hidden = true; $("aim").hidden = true;
   const inMatch = S.phase !== "hub";
   $("wind").hidden = !inMatch;
-  $("opp").hidden = !(inMatch && S.opponent);
+  $("opp").hidden = true; // (the opponent's name and stars are in their tile)
   if (inMatch) {
     $("windMph").textContent = `${S.wind.mph} mph`;
     // Screen up is down-range, so the arrow points the way the wind blows across the lane.
@@ -6381,15 +6387,14 @@ function renderScore() {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
     $("name" + p).innerHTML = (S.kind === "career" ? avatarHTML(av, "sm") : "") + esc(S.names[p]);
     $("pts" + p).textContent = S.scores[p];
-    $("live" + p).innerHTML = S.phase === "hub" ? "" : `Inning <b>${ir.raw[p]}</b>`;
+    // career matches: each player's career stars, under their name (practice has none)
+    const stars = S.kind === "career" ? (p === 0 ? career.stars : S.opponent ? S.opponent.stars || 0 : 0) : null;
+    $("live" + p).innerHTML = stars == null ? "" : `⭐ ${bigNum(stars)}`;
     const lost = (S.lost || [[], []])[p]; // bag k (0-based) empties dot 3-k
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
   $("inningNum").textContent = S.inning;
-  if (S.opponent) $("opp").innerHTML = S.opponent.live
-    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>⭐ ${bigNum(S.opponent.stars || 0)}`
-    : `<b>${esc(S.opponent.name)}</b>⭐ ${bigNum(S.opponent.stars || 0)}`;
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
   renderInOn(); renderBoardInfo();

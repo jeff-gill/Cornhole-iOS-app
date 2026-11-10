@@ -113,7 +113,7 @@ function updateHUD() {
   $("gauge").hidden = true; $("aim").hidden = true;
   const inMatch = S.phase !== "hub";
   $("wind").hidden = !inMatch;
-  $("opp").hidden = !(inMatch && S.opponent);
+  $("opp").hidden = true; // (the opponent's name and stars are in their tile)
   if (inMatch) {
     $("windMph").textContent = `${S.wind.mph} mph`;
     // Screen up is down-range, so the arrow points the way the wind blows across the lane.
@@ -129,15 +129,14 @@ function renderScore() {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
     $("name" + p).innerHTML = (S.kind === "career" ? avatarHTML(av, "sm") : "") + esc(S.names[p]);
     $("pts" + p).textContent = S.scores[p];
-    $("live" + p).innerHTML = S.phase === "hub" ? "" : `Inning <b>${ir.raw[p]}</b>`;
+    // career matches: each player's career stars, under their name (practice has none)
+    const stars = S.kind === "career" ? (p === 0 ? career.stars : S.opponent ? S.opponent.stars || 0 : 0) : null;
+    $("live" + p).innerHTML = stars == null ? "" : `⭐ ${bigNum(stars)}`;
     const lost = (S.lost || [[], []])[p]; // bag k (0-based) empties dot 3-k
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
   $("inningNum").textContent = S.inning;
-  if (S.opponent) $("opp").innerHTML = S.opponent.live
-    ? `<b>${esc(S.opponent.name)}<span class="live">⚡ THROWDOWN</span></b>⭐ ${bigNum(S.opponent.stars || 0)}`
-    : `<b>${esc(S.opponent.name)}</b>⭐ ${bigNum(S.opponent.stars || 0)}`;
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
   renderInOn(); renderBoardInfo();
