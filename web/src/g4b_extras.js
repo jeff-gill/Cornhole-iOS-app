@@ -360,6 +360,11 @@ if (testing()) { // Max stars: fill every court's star track, which opens all th
     $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
   };
 }
+if (testing()) { // The stylized art test: flip between the current look and the new one (Backyard BBQ only for now)
+  const b = $("artBtn"), label = () => { b.textContent = `🧪 New art: ${career.artTest ? "on" : "off"}`; };
+  b.hidden = false; label();
+  b.onclick = () => { career.artTest = !career.artTest; save(); label(); venueId = ""; renderHub(); };
+}
 if (testing()) { // Test cans: also in Xcode debug builds
   $("testCans").hidden = false;
   $("testCans").onclick = () => {

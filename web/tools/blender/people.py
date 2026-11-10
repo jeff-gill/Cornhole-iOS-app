@@ -1,7 +1,7 @@
 """Quaternius people (CC0) for the game: crowd models and avatar portraits.
 
 Run from the repo root:  blender -b --python web/tools/blender/people.py [-- models|avatars]
-  models:  web/assets/people/<name>.json   (glTF, buffers embedded; animations Idle, Clap, Jump; height ~1, feet at 0)
+  models:  web/assets/people/<name>.json   (glTF, buffers embedded; animations Idle, Clap, Jump, Sit, Walk; height ~1, feet at 0)
   avatars: web/assets/avatars/<id>.png     (head-and-shoulders portraits, transparent, 256 px)
 Source: web/tools/blender/quaternius/{men,women}-fbx.zip. The flat-shaded (non "Smooth_") models match the game's look.
 The game recolours the Skin, Hair, Shirt and Pants materials, so a few models make a varied crowd."""
@@ -20,7 +20,7 @@ def fbx(name):
     raise FileNotFoundError(name)
 
 MODELS = ["Male_Casual", "Male_LongSleeve", "Male_Shirt", "Female_Casual", "Female_TankTop", "Female_Alternative", "Female_Dress"]
-KEEP = {"Idle": "Idle", "Clapping": "Clap", "Jump": "Jump"}
+KEEP = {"Idle": "Idle", "Clapping": "Clap", "Jump": "Jump", "Sitting": "Sit", "Walk": "Walk"}
 
 def load(name):
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -33,6 +33,10 @@ def load(name):
         short = a.name.split("|")[-1].split("_", 1)[-1]
         if short in KEEP: a.name = KEEP[short]; a.use_fake_user = True
         else: bpy.data.actions.remove(a)
+    # one NLA track per animation, so the glTF export writes every one of them (not just the active action)
+    arm.animation_data_create(); arm.animation_data.action = None
+    for a in bpy.data.actions:
+        tr = arm.animation_data.nla_tracks.new(); tr.name = a.name; st = tr.strips.new(a.name, int(a.frame_range[0]), a); st.name = a.name
     return arm
 
 def pack(path_gltf, out_json):
@@ -50,7 +54,7 @@ if "models" in mode:
         h = mesh.dimensions.z or 1
         arm.scale = [s / h for s in arm.scale]; bpy.ops.object.select_all(action="SELECT")
         p = os.path.join(TMP, name + ".gltf")
-        bpy.ops.export_scene.gltf(filepath=p, export_format="GLTF_SEPARATE", export_animations=True, export_animation_mode="ACTIONS",
+        bpy.ops.export_scene.gltf(filepath=p, export_format="GLTF_SEPARATE", export_animations=True, export_animation_mode="NLA_TRACKS",
                                   export_apply=False, export_yup=True, export_materials="EXPORT", export_image_format="NONE")
         pack(p, os.path.join(OUT_M, name.lower() + ".json"))
         print("wrote model", name, os.path.getsize(os.path.join(OUT_M, name.lower() + ".json")))

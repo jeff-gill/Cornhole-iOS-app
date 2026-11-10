@@ -683,7 +683,7 @@ s.was { opacity: .6; font-size: .8em; }
       <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button></div>
+    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button><button class="linkbtn" id="artBtn" hidden>🧪 New art: off</button></div>
   </div>
 </div>
 
@@ -1210,6 +1210,7 @@ function gauss(s) { const u = Math.max(1e-9, Math.random()), v = Math.random(); 
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -2998,6 +2999,7 @@ function venueTick(dt, t) {
     } else if (a.kind === "cruise") { // a boat crossing far out, round and round
       a.x0 += a.speed * dt; if (a.x0 > 600) a.x0 = -600; if (a.x0 < -600) a.x0 = 600;
       a.o.position.set(a.x0, Math.sin(t * 1.2 + a.z) * 0.2, a.z); a.o.rotation.y = a.speed > 0 ? 0 : Math.PI;
+    } else if (a.kind === "mixer") { a.mixer.update(dt);
     } else if (a.kind === "dance") { // bouncing to the beat, arms pumping
       const k = t * a.rate + a.phase; a.o.position.y = Math.abs(Math.sin(k)) * 0.5; a.o.rotation.y = a.base + Math.sin(k * 0.5) * 0.6;
       for (const [i, arm] of a.arms.entries()) arm.rotation.x = Math.PI * 0.8 + Math.sin(k * 2 + i * Math.PI) * 0.5;
@@ -3952,7 +3954,7 @@ function chairLift(g) {
   }
   venueAnim.push({ kind: "lift", chairs, A, B, side, dir, H });
 }
-function deckTable(g, x, z, seed) { // a round table with chairs, people sitting on most
+function deckTable(g, x, z, seed, styled = false) { // a round table with chairs, people sitting on most
   const r = rng(seed), wood = std(0x8a5a34, { roughness: 0.8 }), dark = std(0x3a2a1c);
   add(g, new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 0.2, 18), wood), x, 2.9, z);
   add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.4, 2.8, 8), dark), x, 1.5, z, false);
@@ -3961,7 +3963,7 @@ function deckTable(g, x, z, seed) { // a round table with chairs, people sitting
     const ch = new THREE.Group(); add(ch, box(1.4, 0.2, 1.4, wood), 0, 1.5, 0); add(ch, box(1.4, 1.8, 0.2, wood), 0, 2.4, -0.65);
     for (const [lx, lz] of [[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]]) add(ch, box(0.15, 1.5, 0.15, dark), lx, 0.75, lz, false);
     ch.position.set(cx, 0, cz); ch.rotation.y = face; g.add(ch);
-    if (r() < 0.7) person(g, cx - Math.sin(face) * 0.25, cz - Math.cos(face) * 0.25, face, seed * 7 + k, "sit");
+    if (r() < 0.7) { if (styled) animPerson(g, cx - Math.sin(face) * 0.15, cz - Math.cos(face) * 0.15, face, seed * 7 + k, "Sit", 0.35); else person(g, cx - Math.sin(face) * 0.25, cz - Math.cos(face) * 0.25, face, seed * 7 + k, "sit"); }
   }
   if (r() < 0.6) add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.2, 0.5, 10), lam(0xffffff)), x + 0.4, 3.25, z - 0.3, false); // hot cocoa
 }
@@ -4281,6 +4283,89 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
   }
 }
 
+// ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
+const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
+function loadNature(name) {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json`).then(g => {
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
+    return g.scene;
+  }).catch(() => null));
+  return natureCache.get(name);
+}
+function plant(g, name, x, z, scale, rot) { // models are in metres; the court is in feet
+  loadNature(name).then(src => { if (!src || venueGroup !== g) return; const m = src.clone(); m.position.set(x, 0, z); m.rotation.y = rot ?? Math.random() * 6.28; m.scale.setScalar(FT * scale); g.add(m); });
+}
+const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
+function loadPeople(name) {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json`).then(gl => {
+    gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
+  }).catch(() => null));
+  return peopleCache.get(name);
+}
+const P_SKIN = ["#f6d2b8", "#eab894", "#d29a6c", "#a8714a", "#7a4e30", "#5a3620"], P_HAIR = ["#2a1c14", "#4a2e1a", "#8a5a2e", "#d9a94e", "#b03a1c", "#1c1c22", "#9aa0a8"];
+const P_SHIRT = ["#d62828", "#2f86ff", "#ffc93a", "#2fbf71", "#ff8a1f", "#8a4dff", "#ff7ac0", "#f2f2f2", "#1f3a6e"], P_PANTS = ["#2a3550", "#3a3a40", "#6a5a40", "#1f2a44", "#8a7a60", "#d8ccb4"];
+// An animated person: anim is Idle, Clap, Jump, Sit or Walk. Height in feet (about 5.3 to 6.2).
+function animPerson(g, x, z, rotY, seed, anim = "Idle", y = 0) {
+  const r = rng(seed), name = PEOPLE_MODELS[Math.floor(r() * PEOPLE_MODELS.length)];
+  const look = { Skin: P_SKIN[Math.floor(r() * P_SKIN.length)], Hair: P_HAIR[Math.floor(r() * P_HAIR.length)], Shirt: P_SHIRT[Math.floor(r() * P_SHIRT.length)], Pants: P_PANTS[Math.floor(r() * P_PANTS.length)] };
+  const h = 5.3 + r() * 0.9, phase = r() * 3;
+  loadPeople(name).then(gl => {
+    if (!gl || venueGroup !== g) return;
+    const m = SkeletonUtils.clone(gl.scene);
+    m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; if (look[o.material.name]) { o.material = o.material.clone(); o.material.color.set(look[o.material.name]); } } });
+    const k = h / gl.tall; m.position.set(x, y - gl.base * k, z); m.rotation.y = rotY; m.scale.setScalar(k); g.add(m);
+    const mixer = new THREE.AnimationMixer(m), clip = gl.animations.find(c => c.name === anim) || gl.animations[0];
+    const act = mixer.clipAction(clip); act.play(); act.time = phase * clip.duration / 3;
+    venueAnim.push({ kind: "mixer", mixer });
+  });
+}
+// A low-poly lawn: flat green with gentle patches of light and dark, no photo texture.
+function stylizedLawn(g, size, seed) {
+  const geo = new THREE.PlaneGeometry(size, size, 60, 60); geo.rotateX(-Math.PI / 2);
+  const r = rng(seed), pos = geo.attributes.position, col = [], c = new THREE.Color(), a = new THREE.Color(0x76c05a), b = new THREE.Color(0x5aa646);
+  for (let i = 0; i < pos.count; i++) { const k = 0.5 + 0.5 * Math.sin(pos.getX(i) * 0.07 + Math.sin(pos.getZ(i) * 0.05) * 2) * Math.cos(pos.getZ(i) * 0.06); c.copy(a).lerp(b, k * 0.8 + r() * 0.15); col.push(c.r, c.g, c.b); }
+  geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
+  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true })); m.position.z = -30; m.receiveShadow = true; g.add(m);
+}
+function styledFence(g) { // painted wooden fence: posts, rails and boards in two warm tones
+  const board = lam(0xb98a5a), post = lam(0x8a6038);
+  const run = (x0, z0, x1, z1) => {
+    const len = Math.hypot(x1 - x0, z1 - z0), rot = Math.atan2(x1 - x0, z1 - z0), n = Math.round(len / 0.75);
+    for (let i = 0; i <= n; i++) { const t = i / n, x = lerp(x0, x1, t), z = lerp(z0, z1, t); const bd = add(g, box(0.62, 5.2 + (i % 2) * 0.15, 0.18, i % 9 ? board : post), x, 2.6, z); bd.rotation.y = rot + Math.PI / 2; }
+    for (let i = 0; i <= Math.round(len / 8); i++) { const t = i / Math.round(len / 8); add(g, box(0.5, 6, 0.5, post), lerp(x0, x1, t), 3, lerp(z0, z1, t)); }
+  };
+  run(-26, -46, 26, -46); run(-26, -46, -26, 10); run(26, -46, 26, 10);
+}
+function styledBackyard(g) {
+  stylizedLawn(g, 700, 3);
+  styledFence(g);
+  backOfHouse(g, 2, 66);
+  // trees all the way round: a mix of leafy, birch and pine, bigger the further out
+  const r = rng(91), leafy = ["commontree_1", "commontree_2", "commontree_3", "commontree_4", "commontree_5"], others = ["birchtree_1", "birchtree_3", "pinetree_1", "pinetree_3", "pinetree_5"];
+  for (let i = 0; i < 70; i++) {
+    const a = r() * Math.PI * 2, d = 55 + r() * 140, x = Math.sin(a) * d, z = -15 + Math.cos(a) * d;
+    if (z > 40 && Math.abs(x) < 50) continue; // the house
+    const kind = r() < 0.6 ? leafy[Math.floor(r() * leafy.length)] : others[Math.floor(r() * others.length)];
+    plant(g, kind, x, z, 3.2 + r() * 1.6);
+  }
+  for (const [x, z] of [[-21, -40], [21, -38], [-22, 4]]) plant(g, leafy[Math.floor(r() * 5)], x, z, 3.4);
+  // shrubs and flowers along the fence, grass tufts and a few rocks on the lawn
+  for (let x = -24; x <= 24; x += 3 + r() * 2.5) plant(g, r() < 0.35 ? "flowers" : r() < 0.6 ? "bushberries_1" : "bush_1", x, -44.3, 1.0 + r() * 0.4);
+  for (let z = -40; z <= 6; z += 4 + r() * 3) for (const sx of [-1, 1]) plant(g, r() < 0.3 ? "flowers" : r() < 0.6 ? "bush_2" : "plant_3", sx * 24.2, z, 1.0 + r() * 0.4);
+  for (let i = 0; i < 60; i++) { const x = (r() - 0.5) * 46, z = -44 + r() * 54; if (Math.abs(x) < 5 && z > -32 && z < 2) continue; plant(g, r() < 0.7 ? "grass_short" : "grass", x, z, 0.35 + r() * 0.3); }
+  plant(g, "rock_1", -18, -20, 1.6); plant(g, "rock_moss_2", 19, -28, 1.4); plant(g, "treestump", -20, 18, 2);
+  // the cookout: grill and smoker, tables, string lights
+  grill(g, 15, 4, -0.5); smoker(g, 19.5, 9, -0.6);
+  deckTable(g, -15, -4, 41, true); deckTable(g, 18, -10, 43, true); deckTable(g, -17, 24, 45, true); picnicTable(g, -15, 14, 0.3);
+  stringLights(g, [[-9, -38], [9, -38], [-9, -14], [9, -14]], [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]], [[-9, -14], [9, -26]], [[9, -14], [-9, -26]]], 10.6, 2, 0.35);
+  // people: the cook, friends at the tables, a few watching (some clapping)
+  animPerson(g, 15.5, 8.2, Math.PI - 0.5, 33, "Idle");
+  for (const [x, z, f, s] of [[-13, 12, 2.6, 1], [-17, 16, -0.6, 2], [-12, 16, 3.6, 3], [22, -2, -2.2, 4], [24, 0, -2.6, 5]]) animPerson(g, x, z, f, 200 + s, "Idle");
+  for (const [x, z, f, s] of [[-11, -30, 0.9, 6], [-12.5, -27, 1.2, 7], [11.5, -24, -1.1, 8], [12, -32, -0.8, 9]]) animPerson(g, x, z, f, 300 + s, s % 2 ? "Clap" : "Idle");
+  loadSky("garden_nook_2k.hdr").then(sky => { if (!sky || venueId !== "backyard") return; scene.environment = sky.env; scene.environmentIntensity = 0.6; }); // soft light only; the sky behind stays the game's blue
+  renderer.toneMappingExposure = 1.12;
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -4322,7 +4407,8 @@ function buildVenue(id) {
   skyU.sunDir.value.copy(sun.position).sub(sun.target.position).normalize();
   renderer.toneMappingExposure = L.exposure; venueDust = L.dust;
 
-  if (id === "backyard") {
+  if (id === "backyard" && career.artTest) { styledBackyard(g); // the stylized art test (🧪 switch in the clubhouse)
+  } else if (id === "backyard") {
     // Photo-real backyard: real sky light, a photo lawn and plank fence, and scanned chairs, table and shrubs.
     const lawn = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), photoMat("sparse_grass", 520 / 9, 520 / 9, { tint: 0xb4ff6a, bump: 0.8, fallback: 0x5fae3e }));
     lawn.rotation.x = -Math.PI / 2; lawn.position.z = -30; lawn.receiveShadow = true; g.add(lawn);
@@ -5844,7 +5930,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794276720";
+const BUILD_ID = "1794319961";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -5858,6 +5944,11 @@ if (testing()) { // Max stars: fill every court's star track, which opens all th
     const t = document.createElement("div"); t.className = "toast"; t.textContent = `All ${VENUES.length} courts open · ${career.stars.toLocaleString()} ⭐`;
     $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
   };
+}
+if (testing()) { // The stylized art test: flip between the current look and the new one (Backyard BBQ only for now)
+  const b = $("artBtn"), label = () => { b.textContent = `🧪 New art: ${career.artTest ? "on" : "off"}`; };
+  b.hidden = false; label();
+  b.onclick = () => { career.artTest = !career.artTest; save(); label(); venueId = ""; renderHub(); };
 }
 if (testing()) { // Test cans: also in Xcode debug builds
   $("testCans").hidden = false;
