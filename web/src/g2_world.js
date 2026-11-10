@@ -1801,6 +1801,7 @@ const VENUE_LOOK = {
 function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); const m = n.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x.map) x.map.dispose(); x.dispose(); }); }); }
 function buildVenue(id) {
   if (id === venueId) return;
+  restoreOcclusion(); // put back anything faded on the old court before it goes
   if (venueGroup) { scene.remove(venueGroup); disposeTree(venueGroup); }
   venueId = id; glowSprites = []; venueAnim = []; clearPhotoSky();
   // Glow (bloom) only where there are real lights at night; in daylight it hazes the whole picture.

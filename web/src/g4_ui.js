@@ -19,6 +19,56 @@ function camMode() {
   }
   return "watch";
 }
+// ── See-through scenery on the main screen: while the camera circles the court, anything between it and the boards
+// (a car, a tent, an umbrella, a person) fades out of the way, and comes back once the camera has passed.
+const occRay = new THREE.Raycaster(), occTargets = [new THREE.Vector3(0, 1.5, -1), new THREE.Vector3(0, 1.5, -15), new THREE.Vector3(0, 1.5, -29.5)];
+const occFaded = new Map(), occHidden = new Map(); // object -> original materials; "mesh#instance" -> [mesh, id, matrix]
+let occT = 0;
+function occRoot(o) { while (o.parent && o.parent !== venueGroup && o.parent !== scene) o = o.parent; return o; }
+function fadeObject(root) {
+  if (occFaded.has(root)) return;
+  const saved = [];
+  root.traverse(m => { if (m.isMesh && !m.isInstancedMesh) { saved.push([m, m.material]); const mats = (Array.isArray(m.material) ? m.material : [m.material]).map(x => { const c = x.clone(); c.transparent = true; c.opacity = 0.18; c.depthWrite = false; return c; }); m.material = Array.isArray(m.material) ? mats : mats[0]; } });
+  occFaded.set(root, saved);
+}
+function unfadeObject(root) { for (const [m, mat] of occFaded.get(root) || []) { (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => x.dispose()); m.material = mat; } occFaded.delete(root); }
+function hideInstance(mesh, id) {
+  const key = mesh.uuid + "#" + id; if (occHidden.has(key)) return key;
+  const m4 = new THREE.Matrix4(); mesh.getMatrixAt(id, m4); occHidden.set(key, [mesh, id, m4.clone()]);
+  mesh.setMatrixAt(id, new THREE.Matrix4().makeScale(0, 0, 0)); mesh.instanceMatrix.needsUpdate = true; return key;
+}
+function restoreOcclusion(keepRoots = new Set(), keepInst = new Set()) {
+  for (const root of [...occFaded.keys()]) if (!keepRoots.has(root)) unfadeObject(root);
+  for (const [key, [mesh, id, m4]] of [...occHidden]) if (!keepInst.has(key)) { mesh.setMatrixAt(id, m4); mesh.instanceMatrix.needsUpdate = true; occHidden.delete(key); }
+}
+function updateOcclusion(dt) {
+  if (camMode() !== "intro" || !venueGroup) { if (occFaded.size || occHidden.size) restoreOcclusion(); return; }
+  const now = performance.now(); if (now - occT < 150) return; occT = now; // about 7 times a second
+  const roots = new Set(), inst = new Set(), cam = camera.position;
+  for (const t of occTargets) {
+    const dir = t.clone().sub(cam), len = dir.length(); dir.normalize();
+    occRay.set(cam, dir); occRay.far = len - 2; occRay.camera = camera; // (sprites such as smoke need the camera to be hit-tested)
+    for (const hit of occRay.intersectObject(venueGroup, true)) {
+      const o = hit.object; if (!o.visible || o.isSprite || o.isLine || o.isPoints) continue;
+      if (o.isInstancedMesh) { if (hit.instanceId != null) inst.add(hideInstance(o, hit.instanceId)); continue; }
+      const root = occRoot(o), bb = new THREE.Box3().setFromObject(root), sz = bb.getSize(new THREE.Vector3());
+      if (sz.x > 60 || sz.z > 60 || sz.y < 0.3) continue; // ground, lawns, water, big buildings: leave them
+      fadeObject(root); roots.add(root);
+    }
+  }
+  // anything right beside the camera (it fills the view even when it isn't on the line to the boards)
+  const near = 30, pos = new THREE.Vector3(), m4 = new THREE.Matrix4();
+  for (const ch of venueGroup.children) {
+    if (ch.isInstancedMesh) {
+      for (let i = 0; i < ch.count; i++) { const key = ch.uuid + "#" + i; const saved = occHidden.get(key); (saved ? m4.copy(saved[2]) : ch.getMatrixAt(i, m4)); pos.setFromMatrixPosition(m4); if (pos.distanceTo(cam) < near) inst.add(hideInstance(ch, i)); }
+      continue;
+    }
+    if (!ch.userData.occ) { const bb = new THREE.Box3().setFromObject(ch); ch.userData.occ = bb.isEmpty() ? { skip: true } : { c: bb.getCenter(new THREE.Vector3()), r: bb.getSize(new THREE.Vector3()).length() / 2, big: Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) > 60 }; }
+    const o = ch.userData.occ; if (o.skip || o.big || ch.isSprite || ch.isLine || ch.isPoints) continue;
+    if (o.c.distanceTo(cam) < o.r + near * 0.6) { fadeObject(ch); roots.add(ch); }
+  }
+  restoreOcclusion(roots, inst);
+}
 function updateCamera(dt) {
   if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
@@ -780,6 +830,7 @@ function step(now) {
   updateWindStreaks(dt);
   venueTick(dt, S.time);
   updateCamera(dt);
+  updateOcclusion(dt);
   if (!window.__skipRender) renderScene();
 }
 
