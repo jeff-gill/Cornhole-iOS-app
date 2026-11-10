@@ -156,7 +156,7 @@ function renderInOn() {
     let hole = 0, on = 0;
     for (const b of S.world.bags) if (b.owner === p) { const pts = bagPoints(b); if (pts === 3) hole++; else if (pts === 1) on++; }
     el.style.borderColor = COL.p[p]; el.style.setProperty("--line", COL.p[p]);
-    el.innerHTML = `<table><tr><th class="inn" colspan="2">INNING ${S.inning}</th></tr><tr><th>IN</th><th>ON</th></tr><tr><td>${hole}</td><td>${on}</td></tr></table>`;
+    el.innerHTML = `<table><tr><th>IN</th><th>ON</th><th>PTS</th></tr><tr><td>${hole}</td><td>${on}</td><td class="pts">${hole * 3 + on}</td></tr></table>`; // this inning
   }
 }
 function renderBanner() {
