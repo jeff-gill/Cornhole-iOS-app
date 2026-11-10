@@ -412,6 +412,12 @@ function venueTick(dt, t) {
     } else if (a.kind === "cruise") { // a boat crossing far out, round and round
       a.x0 += a.speed * dt; if (a.x0 > 600) a.x0 = -600; if (a.x0 < -600) a.x0 = 600;
       a.o.position.set(a.x0, Math.sin(t * 1.2 + a.z) * 0.2, a.z); a.o.rotation.y = a.speed > 0 ? 0 : Math.PI;
+    } else if (a.kind === "dance") { // bouncing to the beat, arms pumping
+      const k = t * a.rate + a.phase; a.o.position.y = Math.abs(Math.sin(k)) * 0.5; a.o.rotation.y = a.base + Math.sin(k * 0.5) * 0.6;
+      for (const [i, arm] of a.arms.entries()) arm.rotation.x = Math.PI * 0.8 + Math.sin(k * 2 + i * Math.PI) * 0.5;
+    } else if (a.kind === "led") { a.tex.offset.x = (t * 0.2) % 1;
+    } else if (a.kind === "sweep") { const k = t * a.speed + a.phase; a.o.position.set(a.cx + Math.cos(k) * a.rad, 9 + Math.sin(k * 1.7) * 2, a.cz + Math.sin(k) * a.rad);
+    } else if (a.kind === "blink") { a.o.material.opacity = Math.sin(t * 2.5 + a.phase) > 0.2 ? 1 : 0.1;
     } else if (a.kind === "water") {
       a.o.offset.x = (a.o.offset.x + dt * 0.006) % 1; a.o.offset.y = Math.sin(t * 0.4) * 0.02;
     }
@@ -1578,6 +1584,117 @@ function blenderPalm(g, x, y, z, seed, scale = 1) {
   loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, y, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); });
 }
 
+// ── City Rooftop at night: a floodlit roof court with a lounge bar, and a varied city skyline around it.
+// Night windows in different styles: office grid, glass curtain wall (bands), apartment (warm, uneven).
+function nightWindows(style, seed) {
+  const r = rng(seed);
+  return canvasTex(128, 256, (c, w, h) => {
+    if (style === "glass") {
+      const g = c.createLinearGradient(0, 0, w, h); g.addColorStop(0, "#1a3550"); g.addColorStop(1, "#0d1a2a"); c.fillStyle = g; c.fillRect(0, 0, w, h);
+      for (let y = 4; y < h; y += 10) if (r() < 0.7) { c.fillStyle = `rgba(160,210,255,${0.25 + r() * 0.45})`; c.fillRect(0, y, w, 5); }
+      c.fillStyle = "rgba(0,0,0,.35)"; for (let x = 0; x < w; x += 16) c.fillRect(x, 0, 2, h);
+    } else if (style === "brick") {
+      c.fillStyle = "#3a2420"; c.fillRect(0, 0, w, h);
+      for (let y = 10; y < h; y += 26) for (let x = 10; x < w; x += 28) { c.fillStyle = r() < 0.6 ? `hsl(${35 + r() * 15},85%,${55 + r() * 20}%)` : "#120c0a"; c.fillRect(x, y, 12, 16); }
+    } else {
+      c.fillStyle = "#1b2233"; c.fillRect(0, 0, w, h);
+      for (let y = 6; y < h; y += 14) for (let x = 6; x < w; x += 14) { c.fillStyle = r() < 0.5 ? `hsl(${45 + r() * 15},70%,${70 + r() * 20}%)` : "#0e1420"; c.fillRect(x, y, 8, 9); }
+    }
+  }, [1, 1]);
+}
+function cityTower(g, x, z, w, hgt, style, seed) {
+  const r = rng(seed), tex = nightWindows(style, seed), mats = [];
+  const tiers = style === "brick" ? 1 : 1 + Math.floor(r() * 3);
+  let y = -20, tw = w, th = hgt;
+  for (let k = 0; k < tiers; k++) { // setbacks: each tier narrower and shorter
+    const h = k === tiers - 1 ? th : th * (0.5 + r() * 0.2), t = tex.clone(); t.needsUpdate = true; t.repeat.set(Math.max(1, Math.round(tw / 12)), Math.max(1, Math.round(h / 22)));
+    const b = new THREE.Mesh(new THREE.BoxGeometry(tw, h, tw * (0.7 + r() * 0.3)), new THREE.MeshBasicMaterial({ map: t })); b.position.set(x, y + h / 2, z); g.add(b);
+    y += h; th -= h; tw *= 0.72; if (th < 10) break;
+  }
+  if (style !== "brick" && r() < 0.5) { // a spire or antenna with a blinking red light on top
+    add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.3, 1.2, 18 + r() * 20, 6), new THREE.MeshBasicMaterial({ color: 0x8890a0 })), x, y + 12, z, false);
+    const l = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff3030, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); l.position.set(x, y + 24, z); l.scale.setScalar(6); g.add(l);
+    venueAnim.push({ kind: "blink", o: l, phase: r() * 6 });
+  } else if (r() < 0.5) add(g, box(tw * 0.8, 1.2, tw * 0.6, new THREE.MeshBasicMaterial({ color: 0x9ad0ff })), x, y + 0.6, z, false); // a lit crown
+}
+function citySkyline(g, seed) {
+  const r = rng(seed), styles = ["glass", "office", "brick", "glass", "office"];
+  // about 18 distinct buildings in loose groups with gaps between them
+  for (let k = 0; k < 18; k++) {
+    const a = k / 18 * Math.PI * 2 + (r() - 0.5) * 0.25, d = 150 + r() * 170, style = styles[Math.floor(r() * styles.length)];
+    const hgt = style === "brick" ? 30 + r() * 30 : 70 + r() * 150, w = style === "brick" ? 40 + r() * 30 : 22 + r() * 22;
+    cityTower(g, Math.sin(a) * d, -15 + Math.cos(a) * d, w, hgt, style, seed * 100 + k);
+  }
+  // a low, far ring of city lights so the horizon is never empty
+  const far = nightWindows("office", seed + 9); far.repeat.set(60, 1);
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(560, 560, 40, 64, 1, true), new THREE.MeshBasicMaterial({ map: far, side: THREE.BackSide, fog: false }));
+  ring.position.set(0, 0, -15); g.add(ring);
+}
+function roofFlood(g, x, z, aimX, aimZ) {
+  const pole = std(0x6a6e78, { metalness: 0.6 });
+  add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 24, 8), pole), x, 12, z, false);
+  const head = add(g, box(4, 2.4, 1.2, new THREE.MeshBasicMaterial({ color: 0xfffbe6 })), x, 24, z, false); head.lookAt(aimX, 0, aimZ);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xfff6d8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 })); s.position.set(x, 24, z); s.scale.setScalar(10); g.add(s); glowSprites.push(s);
+  const l = new THREE.SpotLight(0xfff6e6, 900, 120, 0.7, 0.5, 1.4); l.position.set(x, 24, z); l.target.position.set(aimX, 0, aimZ); g.add(l); g.add(l.target);
+}
+function skyBar(g, x, z, rotY) {
+  const b = new THREE.Group(), wood = std(0x3a2a1c), top = std(0x1c1c1c, { roughness: 0.3, metalness: 0.4 });
+  add(b, box(20, 3.6, 3, wood), 0, 1.8, 0); add(b, box(21, 0.3, 3.6, top), 0, 3.75, 0);
+  add(b, box(20, 0.25, 0.3, new THREE.MeshBasicMaterial({ color: 0x5fd8ff })), 0, 0.3, 1.6, false); // glow strip
+  const sign = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#0b0f1a"; c.fillRect(0, 0, w, h); c.shadowColor = "#5fd8ff"; c.shadowBlur = 26; c.fillStyle = "#c8f2ff"; c.font = "bold 80px Arial Black, sans-serif"; c.textAlign = "center"; c.fillText("SKY BAR", w / 2, 92); });
+  add(b, new THREE.Mesh(new THREE.PlaneGeometry(14, 3.5), new THREE.MeshBasicMaterial({ map: sign })), 0, 9, -1.4, false);
+  add(b, box(20, 0.4, 1, wood), 0, 6.6, -1.6, false); for (const sx of [-9.5, 9.5]) add(b, box(0.4, 7, 0.4, wood), sx, 3.5, -1.6, false);
+  for (let k = -3; k <= 3; k++) { const st = new THREE.Group(); add(st, new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.2, 12), top), 0, 2.8, 0, false); add(st, new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.8, 6), std(0xaaaaaa, { metalness: 0.7 })), 0, 1.4, 0, false); st.position.set(k * 2.8, 0, 3.2); b.add(st); }
+  b.position.set(x, 0, z); b.rotation.y = rotY; g.add(b);
+}
+function sofa(g, x, z, rotY, color) {
+  const s = new THREE.Group(), m = std(color, { roughness: 0.9 });
+  add(s, box(7, 1.4, 3, m), 0, 0.9, 0); add(s, box(7, 2, 0.8, m), 0, 2, -1.1); for (const sx of [-3.3, 3.3]) add(s, box(0.6, 1.8, 3, m), sx, 1.4, 0);
+  s.position.set(x, 0, z); s.rotation.y = rotY; g.add(s);
+}
+
+// The party: a DJ booth with speakers and a light wall, people dancing, high bistro tables, coloured party lights.
+function djBooth(g, x, z, rotY) {
+  const b = new THREE.Group(), black = std(0x141418, { roughness: 0.6 });
+  add(b, box(9, 3.4, 3, black), 0, 1.7, 0); add(b, box(9.2, 0.25, 3.2, std(0x2a2a30)), 0, 3.5, 0);
+  add(b, box(8.6, 0.25, 0.2, new THREE.MeshBasicMaterial({ color: 0xff2e88 })), 0, 0.8, 1.55, false);
+  for (const sx of [-2.2, 2.2]) add(b, new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.15, 20), std(0x333333)), sx, 3.7, 0, false); // the decks
+  for (const sx of [-6.5, 6.5]) { add(b, box(2.6, 6, 2.4, black), sx, 3, 0); for (const y of [1.6, 4.2]) add(b, new THREE.Mesh(new THREE.CircleGeometry(0.85, 20), std(0x222222)), sx, y, 1.22, false); }
+  const wall = canvasTex(256, 128, (c, w, h) => { for (let y = 0; y < h; y += 8) for (let x = 0; x < w; x += 8) { c.fillStyle = `hsl(${(x + y) * 1.4 % 360},90%,60%)`; c.fillRect(x + 1, y + 1, 6, 6); } });
+  const led = add(b, new THREE.Mesh(new THREE.PlaneGeometry(16, 7), new THREE.MeshBasicMaterial({ map: wall })), 0, 7.5, -1.6, false);
+  venueAnim.push({ kind: "led", tex: wall });
+  const dj = person(b, 0, -0.9, 0, 77, "cheer"); // hands up behind the decks
+  b.position.set(x, 0, z); b.rotation.y = rotY; g.add(b);
+}
+function dancers(g, cx, cz, n, rad, seed) {
+  const r = rng(seed);
+  for (let i = 0; i < n; i++) {
+    const a = r() * Math.PI * 2, d = 0.8 + r() * rad, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+    const p = person(g, x, z, r() * 6.28, seed * 10 + i, r() < 0.5 ? "cheer" : "stand"); const an = venueAnim[venueAnim.length - 1]; an.kind = "dance"; an.rate = 4 + r() * 2;
+  }
+  const floor = canvasTex(256, 256, (c, w, h) => { for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { c.fillStyle = `hsl(${(x * 47 + y * 83) % 360},80%,${(x + y) % 2 ? 35 : 55}%)`; c.fillRect(x * 32 + 1, y * 32 + 1, 30, 30); } });
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(rad * 2 + 4, rad * 2 + 4), new THREE.MeshBasicMaterial({ map: floor })); f.rotation.x = -Math.PI / 2; f.position.set(cx, 0.03, cz); g.add(f);
+}
+function bistroTable(g, x, z, seed) {
+  const r = rng(seed), top = std(0x1c1c1c, { roughness: 0.3, metalness: 0.4 }), steel = std(0xb0b4bc, { metalness: 0.8, roughness: 0.3 });
+  add(g, new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.15, 18), top), x, 3.6, z);
+  add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 3.5, 8), steel), x, 1.8, z, false);
+  add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.9, 0.12, 14), steel), x, 0.06, z, false);
+  for (let k = 0; k < 2; k++) {
+    const a = r() * 6.28, sx = x + Math.cos(a) * 2, sz = z + Math.sin(a) * 2;
+    add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.15, 12), top), sx, 2.9, sz); add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.8, 6), steel), sx, 1.4, sz, false);
+    if (r() < 0.6) person(g, sx + Math.cos(a) * 0.5, sz + Math.sin(a) * 0.5, Math.atan2(x - sx, z - sz), seed * 3 + k, r() < 0.4 ? "drink" : "stand");
+  }
+}
+function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
+  const r = rng(seed), cols = [0xff2e88, 0x5fd8ff, 0xffc93a, 0x8a4dff, 0x3ee07a];
+  for (let i = 0; i < n; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: cols[i % cols.length], blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }));
+    s.scale.setScalar(5); s.material.opacity = 0.4; g.add(s); glowSprites.push(s);
+    venueAnim.push({ kind: "sweep", o: s, cx: 22 + (r() - 0.5) * 4, cz: -32 + (r() - 0.5) * 6, rad: 2 + r() * 4, speed: 0.6 + r() * 0.8, phase: r() * 6 });
+  }
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -1593,8 +1710,8 @@ const VENUE_LOOK = {
     hemi: [0xe6f2ff, 0x4a6a3a, 1.25], sun: [0xfff2dc, 3.0, [-24, 36, -10]], exposure: 1.05, dust: 0xe0e8c0 },
   island: { top: [0.08, 0.42, 0.86], mid: [0.40, 0.74, 0.97], horizon: [0.85, 0.95, 1.0], sunGlow: 0.9, night: 0, fog: [0xc8ecff, 140, 460],
     hemi: [0xe6f6ff, 0x3aa8c8, 1.35], sun: [0xfff2d6, 3.3, [16, 34, -4]], exposure: 1.0, dust: 0xe8f8ff },
-  rooftop: { top: [0.14, 0.42, 0.82], mid: [0.50, 0.73, 0.95], horizon: [0.90, 0.92, 0.94], sunGlow: 0.8, night: 0, fog: [0xc8d8e8, 160, 520],
-    hemi: [0xe0ecff, 0x5a5a60, 1.2], sun: [0xfff4e2, 3.1, [-20, 38, -8]], exposure: 1.04, dust: 0xd8d8d0 },
+  rooftop: { top: [0.02, 0.04, 0.14], mid: [0.06, 0.10, 0.26], horizon: [0.20, 0.22, 0.40], sunGlow: 0, night: 1, fog: [0x141a30, 200, 700],
+    hemi: [0xcfdcff, 0x3a3a48, 1.0], sun: [0xfff6e6, 2.4, [-6, 40, 4]], exposure: 1.1, dust: 0xd8d8e0 },
   lakeside: { top: [0.30, 0.50, 0.78], mid: [0.62, 0.76, 0.90], horizon: [0.95, 0.88, 0.78], sunGlow: 0.9, night: 0, fog: [0xd8e2ea, 70, 340],
     hemi: [0xe0eeff, 0x4a6a3a, 1.25], sun: [0xffe6c0, 2.7, [-20, 18, -30]], exposure: 1.05, dust: 0xd8e6d0 },
   canyon: { top: [0.18, 0.40, 0.75], mid: [0.55, 0.68, 0.85], horizon: [1.0, 0.78, 0.55], sunGlow: 1.2, night: 0, fog: [0xf0c898, 120, 420],
@@ -1906,17 +2023,27 @@ function buildVenue(id) {
       scene.fog.color.setHex(0xd6e6f2); scene.fog.near = 300; scene.fog.far = 1300;
     });
   } else if (id === "rooftop") {
-    const deckTex = groundTexture("roof"); deckTex.repeat.set(56 / 14, 72 / 14);
-    const deck = new THREE.Mesh(new THREE.PlaneGeometry(56, 72), new THREE.MeshStandardMaterial({ map: deckTex, roughness: 1 }));
+    // A floodlit court on a city roof at night: four light towers keep the court bright, a lounge bar and sofas along
+    // the side, and a varied skyline (glass towers, setbacks, spires, brick low-rises) with a ring of far city lights.
+    const deckTex = groundTexture("roof"); deckTex.repeat.set(70 / 14, 90 / 14);
+    const deck = new THREE.Mesh(new THREE.PlaneGeometry(70, 90), new THREE.MeshStandardMaterial({ map: deckTex, roughness: 0.9, color: 0xe8e8ec }));
     deck.rotation.x = -Math.PI / 2; deck.position.z = -14; deck.receiveShadow = true; g.add(deck);
-    skyline(g, 41);
-    const ledge = std(0x5a5c64);
-    add(g, box(56, 3.2, 1.2, ledge), 0, 1.6, -50); add(g, box(56, 3.2, 1.2, ledge), 0, 1.6, 22);
-    add(g, box(1.2, 3.2, 72, ledge), -28, 1.6, -14); add(g, box(1.2, 3.2, 72, ledge), 28, 1.6, -14);
-    // beyond the ledge the street is far below
-    const below = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200), new THREE.MeshBasicMaterial({ color: 0x141a28 })); below.rotation.x = -Math.PI / 2; below.position.set(0, -20, -15); g.add(below);
-    waterTower(g, -20, -42); acUnit(g, 18, -44); acUnit(g, 21, -38); acUnit(g, -20, 12);
-    stringLights(g, [[-11, -40], [11, -40], [-11, -8], [11, -8]], [[[-11, -40], [11, -40]], [[-11, -40], [-11, -8]], [[11, -40], [11, -8]], [[-11, -8], [11, -8]]], 10, 2, 0.7); chair(g, -8, -36, 0.35, 0x2f86ff); chair(g, 8, -37, -0.35, 0xffc93a);
+    const ledge = std(0x5a5c64), glassRail = new THREE.MeshPhysicalMaterial({ color: 0xbfe6ff, transparent: true, opacity: 0.25, roughness: 0.05 });
+    for (const [x, z, w, d] of [[0, -59, 70, 1.2], [0, 31, 70, 1.2], [-35, -14, 1.2, 90], [35, -14, 1.2, 90]]) { add(g, box(w, 2, d, ledge), x, 1, z); add(g, box(w, 3, d * 0.3 + (d > 1.2 ? 0 : 0), glassRail), x, 3.5, z, false); }
+    const below = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshBasicMaterial({ color: 0x0b1020 })); below.rotation.x = -Math.PI / 2; below.position.set(0, -20, -15); g.add(below);
+    citySkyline(g, 41);
+    for (const [x, z] of [[-26, -50], [26, -50], [-26, 18], [26, 18]]) roofFlood(g, x, z, 0, -14);
+    stringLights(g, [[-12, -44], [12, -44], [-12, -4], [12, -4]], [[[-12, -44], [12, -44]], [[-12, -44], [-12, -4]], [[12, -44], [12, -4]], [[-12, -4], [12, -4]]], 10, 2, 0.5);
+    skyBar(g, -27, -2, Math.PI / 2);
+    djBooth(g, 22, -44, -Math.PI / 2 + 0.4);
+    dancers(g, 22, -30, 12, 5, 61);
+    for (const [x, z, k] of [[-22, -40, 1], [-24, -28, 2], [-18, 14, 3], [-8, 22, 4], [10, 22, 5], [24, 10, 6], [-26, -52, 7], [14, -54, 8]]) bistroTable(g, x, z, 300 + k);
+    partyLights(g, 6, 5); // over the dance floor
+    sofa(g, 28, -8, -Math.PI / 2, 0x2f4a8a); sofa(g, 28, 4, -Math.PI / 2, 0x8a2f4a);
+    for (const [x, z] of [[-30, -52], [30, -52], [-30, 24], [30, 24], [30, -42], [-30, 6]]) { add(g, box(4, 3, 4, std(0x4a4f58)), x, 1.5, z); pine(g, x, z, 0.45, false); g.children[g.children.length - 1].position.y = 3; }
+    waterTower(g, -22, -54); acUnit(g, 18, -54);
+    crowd(g, -22, -2, 5, 3, 51, -27, -2); crowd(g, -16, 8, 3, 2, 55, 0, -14);
+    for (const [x, z, f] of [[26, -8, -Math.PI / 2], [26, 4, -Math.PI / 2]]) person(g, x, z, f, 60 + x + z, "sit");
   } else if (id === "lakeside") {
     // The court is a long wooden dock running out into the lake; the shore (and the cabin) is behind you.
     const wt = waterTexture("#2a6a8a", "#4a9ab8"); wt.repeat.set(90, 90);
