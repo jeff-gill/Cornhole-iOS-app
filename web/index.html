@@ -3025,6 +3025,9 @@ function venueTick(dt, t) {
     } else if (a.kind === "cruise") { // a boat crossing far out, round and round
       a.x0 += a.speed * dt; if (a.x0 > 600) a.x0 = -600; if (a.x0 < -600) a.x0 = 600;
       a.o.position.set(a.x0, Math.sin(t * 1.2 + a.z) * 0.2, a.z); a.o.rotation.y = a.speed > 0 ? 0 : Math.PI;
+    } else if (a.kind === "coaster") { a.t = (a.t + dt * 0.05) % 1; a.cars.forEach((c, i) => { const u = (a.t + i * 0.012) % 1, p = a.curve.getPointAt(u), q = a.curve.getPointAt((u + 0.003) % 1); c.position.copy(p); c.lookAt(q); });
+    } else if (a.kind === "swing") { a.o.rotation.z = Math.sin(t * 0.9) * 1.0;
+    } else if (a.kind === "drop") { const k = (t * 0.12) % 1; a.o.position.y = k < 0.7 ? 6 + (k / 0.7) * 76 : 82 - Math.pow((k - 0.7) / 0.3, 2) * 76;
     } else if (a.kind === "wheelY") { a.o.rotation.y += dt * a.speed;
     } else if (a.kind === "mixer") { if (a.mixer) a.mixer.update(dt); if (a.y0 != null) a.o.position.y = a.y0;
     } else if (a.kind === "dance") { // bouncing to the beat, arms pumping
@@ -3204,7 +3207,7 @@ function ferrisWheel(g, x, z) {
   }
   wheel.position.y = R + 3; w.add(wheel);
   for (const sx of [-1, 1]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, R + 6, 8), frame); leg.position.set(sx * 6, (R + 3) / 2, 0); leg.rotation.z = sx * 0.25; w.add(leg); }
-  w.position.set(x, 0, z); w.rotation.y = Math.atan2(-x, -15 - z); // face the court g.add(w);
+  w.position.set(x, 0, z); w.rotation.y = Math.atan2(-x, -15 - z); g.add(w); // facing the court
   venueAnim.push({ kind: "wheel", o: wheel, cars });
 }
 function stripedTent(g, x, z, r, colors) {
@@ -4498,6 +4501,103 @@ function adBoards(g) {
   });
 }
 
+// A proper log cabin: stacked round logs with notched corners, framed windows, a front door, a stone chimney, a deep
+// roof overhang, and a deck off the back (toward the lake) with a railing and chairs.
+function logCabin(g, x, z, rotY, seed) {
+  const c = new THREE.Group(), r = rng(seed), W = 30, D = 22, H = 11;
+  const logM = std(0x8a5a32, { roughness: 0.95 }), endM = std(0xc89a68, { roughness: 0.9 }), roofM = std([0x3a4a3a, 0x5a3a2a, 0x3a3f4a][Math.floor(r() * 3)], { flatShading: true, roughness: 0.9 });
+  const trim = lam(0xf2ead8), glass = std(0xffffff, { map: dayWindowTex(), roughness: 0.15, metalness: 0.2 }), stone = lam(0x8a8a90, { flatShading: true });
+  const logGeo = (len) => new THREE.CylinderGeometry(0.62, 0.62, len, 10).rotateZ(Math.PI / 2);
+  for (let k = 0; k < 9; k++) { // walls of logs, ends poking out past the corners
+    const y = 0.62 + k * 1.2, off = k % 2 ? 0.3 : 0;
+    for (const sz of [-D / 2, D / 2]) add(c, new THREE.Mesh(logGeo(W + 2.4), logM), 0, y + off, sz, false);
+    for (const sx of [-W / 2, W / 2]) { const m = add(c, new THREE.Mesh(logGeo(D + 2.4), logM), sx, y + 0.6 - off, 0, false); m.rotation.y = Math.PI / 2; }
+  }
+  add(c, box(W - 0.6, H, D - 0.6, logM), 0, H / 2, 0, false); // (fills the gaps between the logs)
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(D * 0.7, D * 0.7, W + 6, 3, 1), roofM); roof.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); roof.scale.set(1, 1, 0.42); add(c, roof, 0, H + D * 0.7 * 0.2, 0);
+  for (const sx of [-1, 1]) { const gab = new THREE.Mesh(new THREE.CylinderGeometry(D * 0.6, D * 0.6, 0.6, 3, 1), logM); gab.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); gab.scale.set(1, 1, 0.42); add(c, gab, sx * (W / 2 - 0.4), H + D * 0.6 * 0.2 - 0.4, 0, false); }
+  add(c, box(4.5, H + 12, 4.5, stone), W / 2 + 1.6, (H + 12) / 2, -3, false); // stone chimney
+  const front = D / 2 + 0.7;
+  add(c, box(4, 7.5, 0.3, lam(0x5a2e16)), 0, 3.75, front, false); add(c, box(5, 0.5, 0.5, trim), 0, 7.7, front, false);
+  for (const wx of [-9, 9]) { add(c, box(5, 4, 0.3, glass), wx, 5, front, false); add(c, box(5.6, 0.5, 0.5, trim), wx, 7.2, front, false); add(c, box(5.6, 0.5, 0.5, trim), wx, 2.8, front, false); }
+  for (const wx of [-9, 0, 9]) add(c, box(5, 4.5, 0.3, glass), wx, 5.2, -front, false); // big windows facing the lake
+  // the deck off the back, out toward the water
+  const deckM = std(0x9a7050, { roughness: 0.9 });
+  add(c, box(W, 0.5, 10, deckM), 0, 1.4, -D / 2 - 5.6);
+  for (let px = -W / 2; px <= W / 2; px += W / 6) { add(c, box(0.4, 1.4, 0.4, deckM), px, 0.7, -D / 2 - 10.4, false); add(c, box(0.25, 3, 0.25, deckM), px, 3.1, -D / 2 - 10.4, false); }
+  add(c, box(W, 0.3, 0.3, deckM), 0, 4.5, -D / 2 - 10.4, false);
+  c.position.set(x, 0, z); c.rotation.y = rotY; g.add(c);
+  // deck chairs with people, looking out over the lake
+  const back = new THREE.Vector3(0, 0, -D / 2 - 6).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY);
+  for (const dx of [-5, 5]) { const s = new THREE.Vector3(dx, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotY); const px = x + back.x + s.x, pz = z + back.z + s.z; chair(g, px, pz, rotY + Math.PI, 0x2f6a3a); }
+}
+
+// ── County fair rides
+function coaster(g, cx, cz, seed) {
+  const pts = [], n = 14;
+  for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; pts.push(new THREE.Vector3(cx + Math.cos(a) * (46 + Math.sin(a * 3) * 10), 6 + Math.abs(Math.sin(a * 2)) * 34 + (i === 2 ? 14 : 0), cz + Math.sin(a) * 30)); }
+  const curve = new THREE.CatmullRomCurve3(pts, true, "catmullrom", 0.5), red = std(0xd62828, { metalness: 0.4, roughness: 0.4 }), white = lam(0xf2f2f2);
+  for (const off of [-1.2, 1.2]) { const c2 = new THREE.CatmullRomCurve3(pts.map(p => p.clone().add(new THREE.Vector3(0, 0, off))), true); g.add(new THREE.Mesh(new THREE.TubeGeometry(c2, 300, 0.35, 6, true), red)); }
+  for (let i = 0; i < 60; i++) { const p = curve.getPointAt(i / 60); add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, p.y, 6), white), p.x, p.y / 2, p.z, false); }
+  const cars = [];
+  for (let k = 0; k < 5; k++) {
+    const c = new THREE.Group(); add(c, box(3, 1.6, 4.4, lam([0xffc93a, 0x2f86ff, 0xffc93a, 0x2f86ff, 0xffc93a][k])), 0, 1, 0, false);
+    for (const dx of [-0.7, 0.7]) { const p = person(c, dx, 0, 0, seed + k * 2 + (dx > 0), "cheer"); p.scale.setScalar(0.85); p.position.y = 0.2; }
+    g.add(c); cars.push(c);
+  }
+  venueAnim.push({ kind: "coaster", curve, cars, t: 0 });
+}
+function pirateShip(g, x, z, rotY) {
+  const base = new THREE.Group(), pivot = new THREE.Group(), frame = std(0x2f4a8a, { metalness: 0.5 });
+  for (const sz of [-6, 6]) for (const sx of [-1, 1]) { const leg = add(base, box(1, 34, 1, frame), sx * 8, 16, sz, false); leg.rotation.z = sx * 0.28; }
+  add(base, box(1, 1, 14, frame), 0, 32, 0, false);
+  pivot.position.y = 32; base.add(pivot);
+  const hull = new THREE.Mesh(new THREE.CylinderGeometry(6, 3, 26, 14, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), std(0x8a4a2a)); hull.rotation.x = Math.PI; hull.position.y = -24; pivot.add(hull);
+  for (const sx of [-1, 1]) add(pivot, box(0.5, 24, 0.5, frame), sx * 6, -12, 0, false);
+  const sail = new THREE.Mesh(new THREE.PlaneGeometry(8, 9), lam(0xffffff, { side: THREE.DoubleSide })); sail.position.set(0, -14, 0); pivot.add(sail);
+  for (let k = 0; k < 6; k++) { const p = person(pivot, -10 + k * 4, 0, 0, 4600 + k, "cheer"); p.position.y = -24; p.scale.setScalar(0.85); }
+  base.position.set(x, 0, z); base.rotation.y = rotY; g.add(base);
+  venueAnim.push({ kind: "swing", o: pivot });
+}
+function dropTower(g, x, z) {
+  const t = new THREE.Group(), steel = std(0xc8ccd4, { metalness: 0.6 });
+  add(t, new THREE.Mesh(new THREE.CylinderGeometry(2, 2.6, 90, 12), steel), 0, 45, 0);
+  add(t, new THREE.Mesh(new THREE.CylinderGeometry(4, 2, 6, 12), lam(0xffc93a)), 0, 92, 0, false);
+  const ring = new THREE.Group(); add(ring, new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 2, 16), lam(0xd62828)), 0, 0, 0, false);
+  for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2, p = person(ring, Math.cos(a) * 6.5, Math.sin(a) * 6.5, -a + Math.PI / 2, 4700 + k, "cheer"); p.scale.setScalar(0.85); p.position.y = -4; }
+  t.add(ring); t.position.set(x, 0, z); g.add(t);
+  venueAnim.push({ kind: "drop", o: ring });
+}
+function foodTruck(g, x, z, rotY, label, color) {
+  const t = new THREE.Group(), body = std(color, { roughness: 0.4 }), dark = std(0x222222);
+  add(t, box(8, 9, 20, body), 0, 5.5, 0); add(t, box(7.6, 4, 5, std(0xf2f2f2)), 0, 3.5, 12, false);
+  add(t, box(0.3, 3.5, 10, std(0x2a3a4a)), 4.05, 6.5, -1, false); const awn = add(t, box(1.6, 0.25, 11, lam(0xffffff)), 4.9, 8.7, -1, false); awn.rotation.z = -0.25;
+  for (const sz of [-6, 8]) for (const sx of [-4, 4]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 1, 14), dark); w.rotation.z = Math.PI / 2; add(t, w, sx, 1.4, sz); }
+  const sg = canvasTex(512, 128, (c, w, h) => { c.fillStyle = "#fff6e0"; c.fillRect(0, 0, w, h); c.fillStyle = "#222"; c.textAlign = "center"; let fs = 70; do { c.font = `bold ${fs}px Arial Black, sans-serif`; fs -= 2; } while (c.measureText(label).width > w - 30); c.fillText(label, w / 2, 88); });
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(10, 2.5), new THREE.MeshBasicMaterial({ map: sg })); s.position.set(4.06, 9.8, -1); s.rotation.y = Math.PI / 2; t.add(s);
+  t.position.set(x, 0, z); t.rotation.y = rotY; g.add(t);
+}
+function queue(g, x0, z0, x1, z1, n, seed) { for (let i = 0; i < n; i++) { const t = i / Math.max(1, n - 1); person(g, lerp(x0, x1, t) + (Math.random() - 0.5), lerp(z0, z1, t), Math.atan2(x0 - x1, z0 - z1), seed + i, "stand"); } }
+
+// Bleachers for a small stadium: stepped concrete, rows of seats, and fans in most of them (simple seated figures drawn
+// as a few instanced meshes so a full stand stays cheap), real people in the front row.
+function bleachers(g, cx, cz, rotY, width, rows, seed) {
+  const r = rng(seed), b = new THREE.Group(), conc = lam(0xb8bcc4), seatGeo = new THREE.BoxGeometry(1.6, 0.4, 1.4), backGeo = new THREE.BoxGeometry(1.6, 1.4, 0.2);
+  const spots = [], m = new THREE.Matrix4();
+  for (let k = 0; k < rows; k++) { add(b, box(width, 1.6, 3, conc), 0, 0.8 + k * 1.6, -k * 3, false); for (let x = -width / 2 + 1.2; x <= width / 2 - 1.2; x += 2) spots.push([x, 1.6 + k * 1.6, -k * 3 + 0.3, k]); }
+  const seats = new THREE.InstancedMesh(seatGeo, lam(0x1f5fbf), spots.length), backs = new THREE.InstancedMesh(backGeo, lam(0x1f5fbf), spots.length);
+  spots.forEach(([x, y, z], i) => { seats.setMatrixAt(i, m.makeTranslation(x, y + 0.2, z)); backs.setMatrixAt(i, m.makeTranslation(x, y + 0.9, z - 0.7)); });
+  b.add(seats); b.add(backs);
+  const fans = spots.filter(([, , , k]) => k > 0 && r() < 0.78), body = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.5, 1.1, 3, 8), new THREE.MeshLambertMaterial(), fans.length), head = new THREE.InstancedMesh(new THREE.SphereGeometry(0.42, 10, 8), new THREE.MeshLambertMaterial(), fans.length);
+  const SHIRT = [0x1f5fbf, 0x1f5fbf, 0xffc93a, 0xffffff, 0xd62828, 0x2fbf71, 0x222222], SKIN = [0xf1c7a5, 0xe0ac86, 0xc68e62, 0x8d5a3b, 0x5e3a25], col = new THREE.Color();
+  fans.forEach(([x, y, z], i) => { body.setMatrixAt(i, m.makeTranslation(x, y + 1.2, z - 0.1)); body.setColorAt(i, col.setHex(SHIRT[Math.floor(r() * SHIRT.length)])); head.setMatrixAt(i, m.makeTranslation(x, y + 2.4, z - 0.1)); head.setColorAt(i, col.setHex(SKIN[Math.floor(r() * SKIN.length)])); });
+  b.add(body); b.add(head);
+  for (const [x, y, z] of spots.filter(([, , , k]) => k === 0).filter(() => r() < 0.5)) person(b, x, z + 0.2, 0, seed + Math.round(x * 7), r() < 0.4 ? "cheer" : "sit").position.y = y - 1.2; // front row: real people
+  const roof = add(b, box(width + 4, 0.6, rows * 3 + 6), 0, rows * 1.6 + 9, -rows * 1.5 + 1, false); roof.material = lam(0xe8ecf2);
+  for (const sx of [-1, 1]) add(b, box(0.8, rows * 1.6 + 9, 0.8, lam(0x8a8f99)), sx * (width / 2 + 1), (rows * 1.6 + 9) / 2, -rows * 3 + 1, false);
+  b.position.set(cx, 0, cz); b.rotation.y = rotY; g.add(b);
+}
+
 const VENUE_LOOK = {
   backyard: { top: [0.19, 0.44, 0.80], mid: [0.56, 0.78, 0.95], horizon: [1.0, 0.83, 0.62], sunGlow: 1, night: 0, fog: [0xf2cfa0, 90, 260],
     hemi: [0xd6ecff, 0x557a2c, 1.25], sun: [0xffe3b8, 2.9, [-26, 20, -18]], exposure: 1.08, dust: 0xf1dcb0 },
@@ -4522,7 +4622,7 @@ const VENUE_LOOK = {
   carnival: { top: [0.14, 0.42, 0.82], mid: [0.50, 0.73, 0.95], horizon: [0.90, 0.92, 0.94], sunGlow: 0.8, night: 0, fog: [0xd2e2f0, 160, 520],
     hemi: [0xe6f2ff, 0x5a6a3a, 1.25], sun: [0xfff4e2, 3.1, [-20, 38, -8]], exposure: 1.04, dust: 0xd8d8d0 },
   stadium: { top: [0.14, 0.42, 0.82], mid: [0.50, 0.73, 0.95], horizon: [0.90, 0.92, 0.94], sunGlow: 0.8, night: 0, fog: [0xd8e4f0, 180, 560],
-    hemi: [0xe6f2ff, 0x2d5a2f, 1.25], sun: [0xfff4e2, 3.1, [-20, 38, -8]], exposure: 1.04, dust: 0xd8d8d0, wall: [12, 32] },
+    hemi: [0xe6f2ff, 0x2d5a2f, 1.25], sun: [0xfff4e2, 3.1, [-20, 38, -8]], exposure: 1.04, dust: 0xd8d8d0, wall: [46, 66] },
 };
 function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); const m = n.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x.map) x.map.dispose(); x.dispose(); }); }); }
 function buildVenue(id) {
@@ -4854,11 +4954,12 @@ function buildVenue(id) {
     const lake = new THREE.Mesh(new THREE.CircleGeometry(1400, 64), new THREE.MeshPhysicalMaterial({ color: 0x2f7fa0, roughness: 0.1, normalMap: n1, normalScale: new THREE.Vector2(0.25, 0.25), clearcoat: 1, clearcoatRoughness: 0.05, clearcoatNormalMap: n2, clearcoatNormalScale: new THREE.Vector2(0.18, 0.18) }));
     lake.rotation.x = -Math.PI / 2; lake.position.set(0, -1.4, -15); lake.receiveShadow = true; g.add(lake); venueAnim.push({ kind: "sea", n1, n2 });
     // the near shore behind you, and forested shores all the way round the lake
-    { const sh = new THREE.Mesh(new THREE.PlaneGeometry(900, 260), lam(0x6ab04a)); sh.rotation.x = -Math.PI / 2; sh.position.set(0, 0, 18 + 130); sh.receiveShadow = true; g.add(sh); }
-    for (let k = 0; k < 14; k++) { const a2 = (k / 14) * Math.PI * 2 + 0.2, d = 260 + (k % 3) * 40, hx = Math.sin(a2) * d, hz = -15 - Math.abs(Math.cos(a2)) * d; if (hz > -60) continue;
-      const hf = islandHill(g, hx, hz, 180, 110, 40 + (k % 4) * 14, 200 + k); for (let t = 0; t < 10; t++) { const px = hx + (Math.random() - 0.5) * 140, pz = hz + (Math.random() - 0.5) * 80, y = hf(px, pz); if (y > 2) pine(g, px, pz, 1.4 + Math.random(), false, y - 0.5); } }
-    for (const sx of [-1, 1]) { const hf = islandHill(g, sx * 300, -15, 200, 600, 50, 300 + sx); for (let t = 0; t < 30; t++) { const pz = -300 + Math.random() * 500, px = sx * (240 + Math.random() * 120), y = hf(px, pz); if (y > 2) pine(g, px, pz, 1.4 + Math.random(), false, y - 0.5); } }
-    const sand = new THREE.Mesh(new THREE.PlaneGeometry(900, 6), lam(0xc8b88a)); sand.rotation.x = -Math.PI / 2; sand.position.set(0, -0.6, 15); g.add(sand);
+    { const sh = new THREE.Mesh(new THREE.PlaneGeometry(900, 260), lam(0x6ab04a)); sh.rotation.x = -Math.PI / 2; sh.position.set(0, -0.05, 50 + 130); sh.receiveShadow = true; g.add(sh); }
+    // the far shores: low wooded hills well out across a big lake, all the way round
+    for (let k = 0; k < 18; k++) { const a2 = (k / 18) * Math.PI * 2, d = 520 + (k % 3) * 60, hx = Math.sin(a2) * d, hz = -15 + Math.cos(a2) * d; if (hz > 120) continue;
+      const hf = islandHill(g, hx, hz, 220, 160, 16 + (k % 4) * 6, 200 + k); for (let t = 0; t < 12; t++) { const px = hx + (Math.random() - 0.5) * 180, pz = hz + (Math.random() - 0.5) * 110, y = hf(px, pz); if (y > 1.5) pine(g, px, pz, 1.6 + Math.random(), false, y - 0.5); } }
+    const sand = new THREE.Mesh(new THREE.PlaneGeometry(900, 34), lam(0xe8d6a8)); sand.rotation.x = -Math.PI / 2; sand.position.set(0, 0.02, 34); g.add(sand); // a little beach
+    { const wet = new THREE.Mesh(new THREE.PlaneGeometry(900, 8), lam(0xc8b080)); wet.rotation.x = -Math.PI / 2; wet.position.set(0, -0.4, 16); g.add(wet); }
     const planks = canvasTex(256, 512, (c, w, h) => {
       const r = rng(9), bw = w / 8;
       for (let k = 0; k < 8; k++) { c.fillStyle = `hsl(${26 + r() * 8},${38 + r() * 10}%,${42 + r() * 10}%)`; c.fillRect(k * bw, 0, bw, h); }
@@ -4873,83 +4974,112 @@ function buildVenue(id) {
     add(g, box(16.6, 1.2, 64, wood), 0, -0.62, -15); // the deck's edge, down toward the water
     for (const sx of [-8.2, 8.2]) { add(g, box(0.5, 0.35, 64, std(0x5a3a1e)), sx, 0.17, -15); for (let z = 16; z >= -46; z -= 6.2) add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 4.5, 8), wood), sx, -1.6, z); }
     add(g, box(16.6, 0.35, 0.5, std(0x5a3a1e)), 0, 0.17, -47);
-    rowboat(g, 16, -30, 0.5); rowboat(g, -20, -60, -0.3);
     // out on the lake: boats and a pontoon full of people, swimmers off the end of the dock
-    [["canoe", -40, -40, 0.4], ["kayak", 36, -20, -0.8], ["motor", 60, -110, 1.6], ["kayak", -60, -90, 2.2], ["canoe", 30, -150, -1.2], ["paddle", -28, -10, 0.9]].forEach(([k, x, z, rr], i) => craft(g, k, x, z, rr, 2000 + i * 7));
+    [["canoe", -40, -40, 0.4], ["kayak", 38, -24, -0.8], ["motor", 70, -120, 1.6], ["kayak", -66, -96, 2.2], ["canoe", 36, -160, -1.2], ["paddle", -34, -8, 0.9], ["row", 30, -70, 0.6], ["row", -36, -130, -0.4]].forEach(([k, x, z, rr], i) => craft(g, k, x, z, rr, 2000 + i * 7));
     pontoon(g, -70, -150, 0.6, 2100);
     for (const [x, z] of [[-12, -56], [10, -60], [3, -66], [-20, -70]]) { person(g, x, z, Math.random() * 6.28, 2200 + x, Math.random() < 0.5 ? "cheer" : "stand"); venueAnim[venueAnim.length - 1].y0 = -4.6; }
     // people fishing off the sides of the dock, and others watching from the shore
-    for (const [x, z, f] of [[-7.6, -4, -Math.PI / 2], [7.6, -8, Math.PI / 2], [7.6, -40, Math.PI / 2], [-7.6, -44, -Math.PI / 2]]) fishingRod(person(g, x, z, f, 2300 + z, "sit"));
-    crowd(g, -18, 26, 5, 3, 2401, 0, -15); crowd(g, 20, 30, 4, 3, 2403, 0, -15);
-    boathouse(g, 46, 24, Math.PI); cabin(g, 70, 46, Math.PI + 0.3);    const r = rng(23);
+    for (const [x, z, f] of [[-7.1, -4, -Math.PI / 2], [7.1, -8, Math.PI / 2], [7.1, -40, Math.PI / 2], [-7.1, -44, -Math.PI / 2]]) fishingRod(person(g, x, z, f, 2300 + z, "stand")); // standing on the edge
+    crowd(g, -18, 30, 5, 3, 2401, 0, -15); crowd(g, 20, 34, 4, 3, 2403, 0, -15);
+    boathouse(g, 50, 30, Math.PI); logCabin(g, 82, 78, 0.3, 1);    const r = rng(23);
     for (let k = 0; k < 60; k++) { const x = (r() - 0.5) * 220, z = 26 + r() * 90; if (Math.abs(x) < 10 && z < 40) continue; pine(g, x, z, 0.9 + r() * 0.6, false); }
     for (let k = 0; k < 40; k++) { const a = r() * Math.PI - Math.PI / 2, d = 230 + r() * 40; pine(g, Math.sin(a) * d, -15 - Math.cos(a) * d, 2 + r(), false); } // the far shore
-    cabin(g, -22, 40, Math.PI + 0.4); picnicTable(g, 16, 28, 0.2);
+    logCabin(g, -40, 80, -0.35, 2); picnicTable(g, 16, 32, 0.2);
     for (const [x, z] of [[-6, -36], [6, -37]]) chair(g, x, z, x < 0 ? 0.35 : -0.35, x < 0 ? 0x2fbf71 : 0xff8a1f);
   } else if (id === "canyon") { // Block Party: the boards in a closed-off street, the party on every lawn
     stylizedLawn(g, 900, 11);
-    const asphalt = lam(0x4a4c52), walk = lam(0xc8c4bc), curb = lam(0xdedad2);
-    const st = new THREE.Mesh(new THREE.PlaneGeometry(34, 900), asphalt); st.rotation.x = -Math.PI / 2; st.position.set(0, 0.04, -100); st.receiveShadow = true; g.add(st);
-    const cross = new THREE.Mesh(new THREE.PlaneGeometry(700, 34), asphalt); cross.rotation.x = -Math.PI / 2; cross.position.set(0, 0.045, -250); g.add(cross);
-    for (const sx of [-1, 1]) { const w = new THREE.Mesh(new THREE.PlaneGeometry(6, 900), walk); w.rotation.x = -Math.PI / 2; w.position.set(sx * 26, 0.05, -100); g.add(w); add(g, box(0.6, 0.5, 900, curb), sx * 17.3, 0.25, -100, false); }
-    for (let z = 120; z > -230; z -= 9) if (z > 34 || z < -68) add(g, box(0.4, 0.05, 4, lam(0xffffff)), 0, 0.06, z, false); // dashed centre line, not through the court
-    sawhorse(g, -8, 30); sawhorse(g, 8, 30); sawhorse(g, -8, -64); sawhorse(g, 8, -64);
-    // houses down both sides of the street (and round the corner at the far end), a party on every lawn
+    const asphalt = lam(0x4a4c52), walk = lam(0xc8c4bc), curb = lam(0xdedad2), drive = lam(0xb0aca4);
+    // the street runs between two T-intersections, houses across the top of each T (so no street runs off into nothing)
+    const ZN = 150, ZF = -250, LEN = ZN - ZF;
+    const st = new THREE.Mesh(new THREE.PlaneGeometry(34, LEN + 34), asphalt); st.rotation.x = -Math.PI / 2; st.position.set(0, 0.04, (ZN + ZF) / 2); st.receiveShadow = true; g.add(st);
+    for (const zc of [ZN, ZF]) { const cr = new THREE.Mesh(new THREE.PlaneGeometry(800, 34), asphalt); cr.rotation.x = -Math.PI / 2; cr.position.set(0, 0.045, zc); g.add(cr);
+      for (const sz of [-1, 1]) { const w = new THREE.Mesh(new THREE.PlaneGeometry(800, 6), walk); w.rotation.x = -Math.PI / 2; w.position.set(0, 0.05, zc + sz * 26); g.add(w); } }
+    for (const sx of [-1, 1]) { const w = new THREE.Mesh(new THREE.PlaneGeometry(6, LEN - 46), walk); w.rotation.x = -Math.PI / 2; w.position.set(sx * 26, 0.05, (ZN + ZF) / 2); g.add(w); add(g, box(0.6, 0.5, LEN - 34, curb), sx * 17.3, 0.25, (ZN + ZF) / 2, false); }
+    for (let z = ZN - 20; z > ZF + 20; z -= 9) if (z > 66 || z < -100) add(g, box(0.4, 0.05, 4, lam(0xffffff)), 0, 0.06, z, false); // centre line, not through the party
+    // road closed well outside the game area, with cars parked along the curb beyond the barricades
+    for (const zc of [62, -96]) { sawhorse(g, -9, zc); sawhorse(g, 0, zc); sawhorse(g, 9, zc); }
+    const CC = [0xc8102e, 0x2f86ff, 0xf2f2f2, 0x222222, 0x9aa4b2, 0xffc93a, 0x2fbf71];
+    let ci = 0;
+    for (const z of [80, 100, 120, -114, -134, -154, -174, -194, -214]) for (const sx of [-1, 1]) if ((ci++ % 3) !== 2) car(g, sx * 12.5, z, z > 0 ? (sx < 0 ? 0 : Math.PI) : (sx < 0 ? 0 : Math.PI), CC[ci % CC.length], ci % 2 ? "sedan" : "suv");
+    // houses down both sides with driveways (a car on some of them), and across the top of both T-intersections
     let k = 0;
-    for (let z = 70; z > -230; z -= 48) for (const sx of [-1, 1]) frontHouse(g, sx * 62, z, sx < 0 ? Math.PI / 2 : -Math.PI / 2, 40 + k++);
-    for (let x = -200; x <= 200; x += 50) frontHouse(g, x, -300, 0, 90 + k++);
-    for (let x = -200; x <= 200; x += 60) if (Math.abs(x) > 30) frontHouse(g, x, 130, Math.PI, 120 + k++);
-    // street trees along the sidewalks, more trees behind the houses
-    for (let z = 50; z > -230; z -= 22) for (const sx of [-1, 1]) { const kind = ["tree_oak", "tree_maple"][(Math.abs(z) / 22 | 0) % 2]; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(sx * 31, 0, z + 6); t.rotation.y = z; t.scale.setScalar(1.1); g.add(t); }); }
-    treeRing(g, 141, 120, 260, 70, ["tree_oak", "tree_maple", "pine", "tree_oak"], (x, z) => Math.abs(x) < 100 && z > -280 && z < 160);
+    for (let z = 110; z > ZF + 40; z -= 50) for (const sx of [-1, 1]) {
+      frontHouse(g, sx * 62, z, sx < 0 ? Math.PI / 2 : -Math.PI / 2, 40 + k);
+      const dw = new THREE.Mesh(new THREE.PlaneGeometry(26, 10), drive); dw.rotation.x = -Math.PI / 2; dw.position.set(sx * 42, 0.055, z + 24); g.add(dw);
+      if (k % 2 === 0) car(g, sx * 44, z + 24, Math.PI / 2, CC[k % CC.length], k % 4 ? "sedan" : "suv");
+      k++;
+    }
+    for (let x = -240; x <= 240; x += 48) { frontHouse(g, x, ZF - 62, 0, 90 + k++); frontHouse(g, x, ZN + 62, Math.PI, 140 + k++); }
+    // street trees along the sidewalks, more trees behind the houses all round
+    for (let z = ZN - 30; z > ZF + 30; z -= 22) for (const sx of [-1, 1]) { const kind = ["tree_oak", "tree_maple"][(Math.abs(z) / 22 | 0) % 2]; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(sx * 31, 0, z + 6); t.rotation.y = z; t.scale.setScalar(1.1); g.add(t); }); }
+    treeRing(g, 141, 130, 340, 90, ["tree_oak", "tree_maple", "pine", "tree_oak"], (x, z) => Math.abs(x) < 100 && z > ZF - 110 && z < ZN + 110);
     // the party: tents, tables of food, grills, balloons on the mailboxes, a bounce house, lawn chairs, people everywhere
-    tent(g, -42, -10, 0x2f86ff); tent(g, 42, -34, 0xe8392b); tent(g, -42, -56, 0xffc93a);
-    foldTable(g, -40, 4, Math.PI / 2, 1); foldTable(g, 40, -20, -Math.PI / 2, 2); foldTable(g, -40, -42, Math.PI / 2, 3); foldTable(g, 40, 8, -Math.PI / 2, 4);
-    grill(g, 38, -50, 1.2); grill(g, -36, 22, -0.4); smoker(g, 44, -56, 0.8);
-    bounceHouse(g, 44, 26, -0.3);
-    for (const [x, z] of [[-30, 18], [30, -8], [-30, -38], [30, -60], [-30, -82], [30, 44]]) balloons(g, x, z, 300 + x + z);
+    tent(g, -44, -10, 0x2f86ff); tent(g, 44, -34, 0xe8392b); tent(g, -44, -56, 0xffc93a); tent(g, 44, 40, 0x2fbf71);
+    foldTable(g, -42, 4, Math.PI / 2, 1); foldTable(g, 42, -20, -Math.PI / 2, 2); foldTable(g, -42, -42, Math.PI / 2, 3); foldTable(g, 42, 8, -Math.PI / 2, 4);
+    grill(g, 38, -50, 1.2); grill(g, -36, 22, -0.4); smoker(g, 46, -58, 0.8);
+    bounceHouse(g, 46, 70, -0.3);
+    for (const [x, z] of [[-30, 18], [30, -8], [-30, -38], [30, -60], [-30, -82], [30, 44], [-30, 60], [30, 90]]) balloons(g, x, z, 300 + x + z);
     for (const [x, z, f] of [[-22, -20, Math.PI / 2], [-22, -26, Math.PI / 2], [22, -14, -Math.PI / 2], [22, -40, -Math.PI / 2]]) { chair(g, x, z, f, 0x2fbf71); person(g, x, z, f, 3000 + z, "sit"); }
-    crowd(g, -40, -24, 6, 4, 3101, -40, -10); crowd(g, 42, -6, 6, 4, 3103, 42, -20); crowd(g, -38, 30, 4, 3, 3105, -36, 22); crowd(g, 36, -48, 4, 3, 3107, 38, -50);
-    crowd(g, -12, 20, 4, 3, 3109, 0, -15); crowd(g, 12, -58, 4, 3, 3111, 0, -15); // watching the game from the street
-    for (const [x, z, rot, c] of [[-12, 70, 0, 0xc8102e], [12, 82, Math.PI, 0x2f86ff], [-12, -100, 0, 0xf2f2f2], [12, -118, Math.PI, 0x222222], [-12, -150, 0, 0xffc93a]]) car(g, x, z, rot, c, "suv");
+    // people all over the lawns and sidewalks, up and down the street
+    const pr = rng(3201);
+    for (let i = 0; i < 70; i++) {
+      const sx = pr() < 0.5 ? -1 : 1, x = sx * (24 + pr() * 22), z = 100 - pr() * 300;
+      person(g, x, z, Math.atan2(-x, -15 - z) + (pr() - 0.5) * 2, 3300 + i, pr() < 0.2 ? "cheer" : pr() < 0.3 ? "dance" : "stand");
+    }
+    crowd(g, -12, 22, 4, 3, 3109, 0, -15); crowd(g, 12, -58, 4, 3, 3111, 0, -15); // watching the game from the street
   } else if (id === "carnival") {
-    // County fair in the afternoon: a dirt midway down the middle, the Ferris wheel and carousel, game booths and food
-    // stands, hay bales, a big red barn, pennant strings, crowds everywhere, and trees round the fairground.
+    // County fair in the afternoon: the court on the grass in the middle of the midway, game booths and food stands down
+    // both sides on dirt paths, food trucks, and rides all round with people queuing: a roller coaster, the Ferris
+    // wheel, a merry-go-round, a swinging pirate ship and a drop tower. Hay bales, a red barn, pennants, a fence, fields.
     stylizedLawn(g, 900, 13);
-    const mid = new THREE.Mesh(new THREE.PlaneGeometry(60, 260), lam(0xc8a878)); mid.rotation.x = -Math.PI / 2; mid.position.set(0, 0.04, -30); mid.receiveShadow = true; g.add(mid);
-    ferrisWheel(g, -60, -110);
-    carousel(g, 60, -90);
-    barn(g, -90, 20, Math.PI / 2);
-    stripedTent(g, 70, 20, 10, ["#e8392b", "#ffffff"]); stripedTent(g, -70, -40, 8, ["#2f86ff", "#ffffff"]);
-    const foods = [["CORN DOGS", ["#e8392b", "#ffffff"]], ["LEMONADE", ["#ffc93a", "#ffffff"]], ["COTTON CANDY", ["#ff7ac0", "#ffffff"]], ["FUNNEL CAKE", ["#2f86ff", "#ffffff"]], ["KETTLE CORN", ["#8a4dff", "#ffffff"]]];
-    foods.forEach(([t, c], i) => stand(g, -34, 10 - i * 22, Math.PI / 2, t, c));
-    ["RING TOSS", "BALLOON DARTS", "DUCK POND", "STRONGMAN", "BEAN BAG TOSS"].forEach((t, i) => stand(g, 34, 10 - i * 22, -Math.PI / 2, t, [["#2fbf71", "#ffffff"], ["#e8392b", "#ffc93a"], ["#2f86ff", "#ffc93a"], ["#c8102e", "#ffffff"], ["#ff8a1f", "#ffffff"]][i]));
-    for (const [x, z, r] of [[-20, 30, 0.2], [-24, 26, 1.4], [20, -70, 0.4], [24, -66, 1.9], [-20, -80, 0.8], [18, 34, 2.4]]) hayBale(g, x, z, r);
-    for (let z = 20; z > -100; z -= 30) pennants(g, [-30, z], [30, z - 4], 14, 400 + z);
-    crowd(g, -18, 0, 6, 4, 4001, -34, 0); crowd(g, 18, -30, 6, 4, 4003, 34, -30); crowd(g, -16, -60, 5, 4, 4005, -34, -60); crowd(g, 16, 10, 5, 3, 4007, 0, -15);
-    crowd(g, -12, 24, 4, 3, 4009, 0, -15); crowd(g, 12, -62, 4, 3, 4011, 0, -15); crowd(g, -60, -80, 6, 6, 4013, -60, -110); crowd(g, 60, -60, 6, 6, 4015, 60, -90);
-    // a white rail fence round the fairground, trees and farm fields beyond
-    for (const [x0, z0, x1, z1] of [[-120, 60, 120, 60], [-120, -170, 120, -170], [-120, 60, -120, -170], [120, 60, 120, -170]]) { const len = Math.hypot(x1 - x0, z1 - z0); for (let t = 0; t <= len; t += 8) add(g, box(0.4, 4, 0.4, lam(0xffffff)), lerp(x0, x1, t / len), 2, lerp(z0, z1, t / len), false); const rail = add(g, box(x0 === x1 ? 0.3 : len, 0.4, x0 === x1 ? len : 0.3, lam(0xffffff)), (x0 + x1) / 2, 3.4, (z0 + z1) / 2, false); }
-    treeRing(g, 151, 140, 300, 90, ["tree_oak", "tree_maple", "pine", "tree_oak"]);
-    for (let k = 0; k < 6; k++) { const cf = new THREE.Mesh(new THREE.PlaneGeometry(120, 80), lam([0xd8c070, 0x8ab048][k % 2])); cf.rotation.x = -Math.PI / 2; cf.position.set(-250 + k * 100, 0.02, 160 + (k % 2) * 30); g.add(cf); } // farm fields
+    const dirt = lam(0xc8a878);
+    for (const sx of [-1, 1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(14, 190), dirt); p.rotation.x = -Math.PI / 2; p.position.set(sx * 26, 0.04, -40); p.receiveShadow = true; g.add(p); }
+    for (const zc of [50, -130]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(240, 14), dirt); p.rotation.x = -Math.PI / 2; p.position.set(0, 0.04, zc); g.add(p); }
+    const foods = [["CORN DOGS", ["#e8392b", "#ffffff"]], ["LEMONADE", ["#ffc93a", "#ffffff"]], ["COTTON CANDY", ["#ff7ac0", "#ffffff"]], ["FUNNEL CAKE", ["#2f86ff", "#ffffff"]], ["KETTLE CORN", ["#8a4dff", "#ffffff"]], ["CARAMEL APPLES", ["#c8102e", "#ffc93a"]], ["SNOW CONES", ["#0fb5a5", "#ffffff"]]];
+    foods.forEach(([t, c], i) => stand(g, -38, 30 - i * 20, Math.PI / 2, t, c));
+    ["RING TOSS", "BALLOON DARTS", "DUCK POND", "STRONGMAN", "BEAN BAG TOSS", "WATER RACE", "SKEE BALL"].forEach((t, i) => stand(g, 38, 30 - i * 20, -Math.PI / 2, t, [["#2fbf71", "#ffffff"], ["#e8392b", "#ffc93a"], ["#2f86ff", "#ffc93a"], ["#c8102e", "#ffffff"], ["#ff8a1f", "#ffffff"], ["#0fb5a5", "#ffffff"], ["#8a4dff", "#ffc93a"]][i]));
+    [["TACOS", 0xd62828], ["BBQ", 0x2a2a2a], ["PIZZA", 0x2fbf71], ["ICE CREAM", 0xff7ac0], ["BURGERS", 0xffc93a]].forEach(([t, c], i) => { foodTruck(g, -90 + i * 38, 70, -Math.PI / 2, t, c); queue(g, -86 + i * 38, 62, -86 + i * 38, 50, 4, 4800 + i * 10); });
+    // the rides, each with a line of people waiting
+    coaster(g, 110, -150, 4500); queue(g, 70, -112, 56, -100, 8, 4520);
+    ferrisWheel(g, -90, -150); queue(g, -78, -134, -64, -122, 7, 4540);
+    carousel(g, -100, -60); queue(g, -84, -54, -62, -50, 6, 4560);
+    pirateShip(g, 100, -60, Math.PI / 2); queue(g, 80, -46, 62, -40, 6, 4580);
+    dropTower(g, 0, -170); queue(g, 6, -158, 10, -140, 6, 4600);
+    barn(g, -170, 40, Math.PI / 2);
+    stripedTent(g, 140, 30, 10, ["#e8392b", "#ffffff"]); stripedTent(g, -150, -10, 8, ["#2f86ff", "#ffffff"]);
+    for (const [x, z, r] of [[-20, 40, 0.2], [-24, 36, 1.4], [20, -96, 0.4], [24, -92, 1.9], [-20, -100, 0.8], [18, 44, 2.4]]) hayBale(g, x, z, r);
+    for (let z = 40; z > -120; z -= 32) pennants(g, [-32, z], [32, z - 4], 15, 400 + z);
+    crowd(g, -26, 0, 6, 4, 4001, -38, 0); crowd(g, 26, -30, 6, 4, 4003, 38, -30); crowd(g, -26, -70, 5, 4, 4005, -38, -70); crowd(g, 26, 14, 5, 3, 4007, 0, -15);
+    crowd(g, -14, 30, 4, 3, 4009, 0, -15); crowd(g, 14, -64, 4, 3, 4011, 0, -15); crowd(g, 0, 50, 8, 8, 4013, 0, 30); crowd(g, 0, -128, 8, 10, 4015, 0, -150);
+    for (const [x0, z0, x1, z1] of [[-200, 110, 200, 110], [-200, -230, 200, -230], [-200, 110, -200, -230], [200, 110, 200, -230]]) { const len = Math.hypot(x1 - x0, z1 - z0); for (let t = 0; t <= len; t += 10) add(g, box(0.4, 4, 0.4, lam(0xffffff)), lerp(x0, x1, t / len), 2, lerp(z0, z1, t / len), false); add(g, box(x0 === x1 ? 0.3 : len, 0.4, x0 === x1 ? len : 0.3, lam(0xffffff)), (x0 + x1) / 2, 3.4, (z0 + z1) / 2, false); }
+    treeRing(g, 151, 220, 380, 100, ["tree_oak", "tree_maple", "pine", "tree_oak"]);
   } else if (id === "stadium") {
-    // A tight arena: a long rectangle of grass for the court, the crowd right on top of it on all four sides.
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), new THREE.MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.9 }));
-    floor.rotation.x = -Math.PI / 2; floor.position.z = -30; floor.receiveShadow = true; g.add(floor);
+    // A small stadium for the finals: a grass field, the court in the middle behind low padded walls, folding chairs along
+    // both sidelines with people sitting and standing, and a stand of seats with fans on every side under a roof.
+    const grass = new THREE.Mesh(new THREE.PlaneGeometry(130, 170), lam(0x4fa83a)); grass.rotation.x = -Math.PI / 2; grass.position.set(0, 0.005, -14); grass.receiveShadow = true; g.add(grass);
+    for (let z = -95; z < 70; z += 10) { const st = new THREE.Mesh(new THREE.PlaneGeometry(130, 5), lam(0x5cb846)); st.rotation.x = -Math.PI / 2; st.position.set(0, 0.008, z); g.add(st); } // mowing stripes
+    const around = new THREE.Mesh(new THREE.PlaneGeometry(700, 700), lam(0x6a6e78)); around.rotation.x = -Math.PI / 2; around.position.set(0, -0.02, -14); g.add(around);
     const turf = groundTexture("turf"); turf.repeat.set(26 / 6, 72 / 6);
     const field = new THREE.Mesh(new THREE.PlaneGeometry(26, 72), new THREE.MeshStandardMaterial({ map: turf, roughness: 1 }));
     field.rotation.x = -Math.PI / 2; field.position.set(0, 0.01, -14); field.receiveShadow = true; g.add(field);
-    stands(g, -52, 34, 12); stands(g, -14, 76, 10, Math.PI / 2, -16); stands(g, -14, 76, 10, -Math.PI / 2, 16); stands(g, 24, 34, 10, Math.PI);
     const pad = std(0x1f3a6e);
     add(g, box(30, 3, 0.6, pad), 0, 1.5, -50); add(g, box(30, 3, 0.6, pad), 0, 1.5, 22);
     add(g, box(0.6, 3, 72, pad), -14.5, 1.5, -14); add(g, box(0.6, 3, 72, pad), 14.5, 1.5, -14);
-    for (const [x, z] of [[-40, -80], [40, -80], [-40, 45], [40, 45]]) floodlight(g, x, z);
-    jumbotron(g);
-    bowl(g, 64, 150, 70, 5); // the full stadium bowl all the way round, packed
     adBoards(g);
-    crowd(g, -20, -30, 4, 2, 5001, 0, -14); crowd(g, 20, 0, 4, 2, 5003, 0, -14); // photographers and staff courtside
+    // sideline seating on the field: rows of folding chairs, people sitting and standing
+    const pr = rng(5201);
+    for (const sx of [-1, 1]) for (let row = 0; row < 3; row++) for (let z = -44; z <= 16; z += 4) {
+      const x = sx * (19 + row * 4); chair(g, x, z, sx < 0 ? Math.PI / 2 : -Math.PI / 2, sx < 0 ? 0x1f5fbf : 0xffc93a);
+      const v = pr(); if (v < 0.55) person(g, x, z, sx < 0 ? Math.PI / 2 : -Math.PI / 2, 5200 + row * 50 + z + (sx > 0 ? 500 : 0), "sit"); else if (v < 0.75) person(g, x + sx * 1.5, z, sx < 0 ? Math.PI / 2 : -Math.PI / 2, 5600 + row * 50 + z + (sx > 0 ? 500 : 0), "cheer");
+    }
+    // the stands, close in on all four sides
+    bleachers(g, -62, -14, Math.PI / 2, 140, 12, 61); bleachers(g, 62, -14, -Math.PI / 2, 140, 12, 63);
+    bleachers(g, 0, -100, 0, 100, 12, 65); bleachers(g, 0, 72, Math.PI, 100, 12, 67);
+    for (const [x, z] of [[-55, -92], [55, -92], [-55, 64], [55, 64]]) floodlight(g, x, z);
+    jumbotron(g);
     for (let k = 0; k < 6; k++) person(g, -10 + k * 4, 26, Math.PI, 5100 + k, "cheer"); // cheer squad behind the near box
-    const pl = new THREE.PointLight(0xffffff, 40, 40, 1.4); pl.position.set(0, 18, -24); g.add(pl);
+    crowd(g, -20, -56, 3, 2, 5001, 0, -14); crowd(g, 20, 30, 3, 2, 5003, 0, -14); // photographers and staff
+
   }
   scene.add(g); venueGroup = g;
 }
@@ -6106,7 +6236,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794336902";
+const BUILD_ID = "1794337896";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
