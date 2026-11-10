@@ -698,7 +698,11 @@ const PANTS = [0x2a3550, 0x3a3a40, 0x6a5a40, 0x1f2a44, 0x8a7a60];
 // An animated person (a Quaternius character; see animPerson). pose: "stand", "drink", "cheer", "sit" or "dance".
 // Returns their group straight away (things can be attached to it, like skis or an apron); the model loads into it.
 function person(g, x, z, rotY, seed, pose = "stand") {
-  const p = new THREE.Group(); p.position.set(x, 0, z); p.rotation.y = rotY; g.add(p);
+  // keep people from standing inside each other: nudge this one clear of anyone already placed in the same group
+  const spots = (g.userData.people ||= []);
+  for (let t = 0; t < 10 && spots.some(([px, pz]) => (px - x) ** 2 + (pz - z) ** 2 < 2.5 * 2.5); t++) { const a = t * 2.4 + seed; x += Math.cos(a) * 1.6; z += Math.sin(a) * 1.6; }
+  spots.push([x, z]);
+  const p = new THREE.Group(); p.position.set(x, 0, z); p.rotation.y = rotY; p.userData.isPerson = true; g.add(p);
   const an = { kind: "mixer", mixer: null, o: p }; venueAnim.push(an);
   const r = rng(seed), name = PEOPLE_MODELS[Math.floor(r() * PEOPLE_MODELS.length)];
   const look = { Skin: P_SKIN[Math.floor(r() * P_SKIN.length)], Hair: P_HAIR[Math.floor(r() * P_HAIR.length)], Shirt: P_SHIRT[Math.floor(r() * P_SHIRT.length)], Pants: P_PANTS[Math.floor(r() * P_PANTS.length)] };
@@ -2416,7 +2420,7 @@ function buildVenue(id) {
     pontoon(g, -70, -150, 0.6, 2100);
     for (const [x, z] of [[-12, -56], [10, -60], [3, -66], [-20, -70]]) { person(g, x, z, Math.random() * 6.28, 2200 + x, Math.random() < 0.5 ? "cheer" : "stand"); venueAnim[venueAnim.length - 1].y0 = -4.6; }
     // people fishing off the sides of the dock, and others watching from the shore
-    for (const [x, z, f] of [[-7.1, -4, -Math.PI / 2], [7.1, -8, Math.PI / 2], [7.1, -40, Math.PI / 2], [-7.1, -44, -Math.PI / 2]]) fishingRod(person(g, x, z, f, 2300 + z, "stand")); // standing on the edge
+    for (const [x, z, f] of [[7.1, -8, Math.PI / 2], [-7.1, -44, -Math.PI / 2]]) fishingRod(person(g, x, z, f, 2300 + z, "stand")); // two people fishing, standing on the edge
     crowd(g, -18, 30, 5, 3, 2401, 0, -15); crowd(g, 20, 34, 4, 3, 2403, 0, -15);
     boathouse(g, 50, 28, 0); craft(g, "canoe", 74, -2, Math.PI / 2, 2501); logCabin(g, 82, 78, 0.3, 1);    const r = rng(23);
     for (let k = 0; k < 60; k++) { const x = (r() - 0.5) * 260, z = 60 + r() * 90; if (Math.abs(x - 82) < 26 && Math.abs(z - 78) < 22 || Math.abs(x + 40) < 26 && Math.abs(z - 80) < 22) continue; pine(g, x, z, 0.9 + r() * 0.6, false); } // on the grass, clear of the cabins
@@ -2462,7 +2466,7 @@ function buildVenue(id) {
       const sx = pr() < 0.5 ? -1 : 1, x = sx * (24 + pr() * 22), z = 100 - pr() * 300;
       person(g, x, z, Math.atan2(-x, -15 - z) + (pr() - 0.5) * 2, 3300 + i, pr() < 0.2 ? "cheer" : pr() < 0.3 ? "dance" : "stand");
     }
-    sideline(g, 3600, 8, -44, 4, 26); // the neighbours right up by the lane, in the street
+    sideline(g, 3600, 11.5, -44, 4, 22); // the neighbours lining the lane, a step back, in the street
   } else if (id === "carnival") {
     // County fair in the afternoon: the court on the grass in the middle of the midway, game booths and food stands down
     // both sides on dirt paths, food trucks, and rides all round with people queuing: a roller coaster, the Ferris
@@ -2494,7 +2498,7 @@ function buildVenue(id) {
       const pr2 = rng(77), CC = [0xc8102e, 0x1f3a6e, 0xf2f2f2, 0x222222, 0x9aa4b2, 0x2f86ff, 0x6a6a70, 0x2fbf71, 0xffc93a], cars = [];
       for (const zr of [160, 186, 214, 240]) for (let x = -146; x <= 146; x += 8) if (pr2() < 0.78) cars.push([x, zr, (zr === 186 || zr === 240 ? Math.PI : 0) + (pr2() - 0.5) * 0.06, CC[Math.floor(pr2() * CC.length)], pr2() < 0.4 ? "suv" : "sedan"]);
       carLot(g, cars); }
-    sideline(g, 4700, 8, -44, 4, 26); // people right up by the lane
+    sideline(g, 4700, 12, -44, 4, 22); // people lining the lane, a step back from it
     treeRing(g, 151, 220, 400, 100, ["tree_oak", "tree_maple", "pine", "tree_oak"], (x, z) => Math.abs(x) < 180 && z > 130 && z < 270);
   } else if (id === "stadium") {
     // A small stadium for the finals: a grass field, the court in the middle behind low padded walls, folding chairs along
