@@ -127,7 +127,7 @@ function renderScore() {
   const ir = inningResult();
   for (const p of [0, 1]) {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
-    $("name" + p).innerHTML = (S.kind === "career" ? avatarHTML(av, "sm") : "") + esc(S.names[p]);
+    $("name" + p).textContent = S.names[p]; $("av" + p).innerHTML = S.kind === "career" ? avatarHTML(av, "sm") : "";
     $("pts" + p).textContent = S.scores[p];
     // career matches: each player's career stars, under their name (practice has none)
     const stars = S.kind === "career" ? (p === 0 ? career.stars : S.opponent ? S.opponent.stars || 0 : 0) : null;

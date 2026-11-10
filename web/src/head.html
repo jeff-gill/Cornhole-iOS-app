@@ -66,8 +66,12 @@ body.inhub .score, body.inhub #panel { display: none; }
 .pauseclock.running { background: rgba(255,59,48,.18); color: #ffb3ad; }
 .card .live { min-height: 14px; }
 /* the right-hand player's tile mirrors the left: score on the inside edge, bags and stars on the outside */
-.card.p1 .cardrow { flex-direction: row-reverse; } .card.p1 .cardrow > div:first-child { text-align: right; }
-.card.p1 .dots { justify-content: flex-end; } .card.p1 .live { text-align: right; }
+.card.p1 .cardrow { flex-direction: row-reverse; } .card.p1 .name { text-align: right; }
+/* row 2: avatar, then the bags over the stars (centred), then the score */
+.card .cardrow { align-items: center !important; }
+.card .cav { flex: none; } .card .cav .avatar { width: 34px; height: 34px; }
+.card .cmid { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.card .cmid .dots { justify-content: center; margin-top: 0; }
 .card .live b { font-family: var(--font-display); font-size: 16px; font-weight: 400; vertical-align: -1px; letter-spacing: 0; }
 .card .live span { opacity: .85; font-size: 10px; }
 .card .cardrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; }
@@ -630,9 +634,9 @@ s.was { opacity: .6; font-size: .8em; }
 <div id="app">
   <header class="score">
     <button class="roundbtn" id="menuBtn" aria-label="Pause"><span class="pausebars"><i></i><i></i></span></button>
-    <div class="card p0" id="card0"><div class="name" id="name0">You</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div></div>
+    <div class="card p0" id="card0"><div class="name" id="name0">You</div><div class="cardrow"><div class="cav" id="av0"></div><div class="cmid"><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div></div>
     <div class="inning"><div class="courtname" id="courtName"></div><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
-    <div class="card p1" id="card1"><div class="name" id="name1">CPU</div><div class="cardrow"><div style="min-width:0"><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div></div>
+    <div class="card p1" id="card1"><div class="name" id="name1">CPU</div><div class="cardrow"><div class="cav" id="av1"></div><div class="cmid"><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div></div>
     <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
   </header>
   <div id="stage">
