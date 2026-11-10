@@ -95,8 +95,12 @@ top = box("top_occluder", (2 * HW, L, 0.35), (0, L / 2, 1.0), bevel=0.005)
 ground = box("ground", (12, 12, 0.02), (0, L / 2, -0.01), bevel=0.001)
 legs = []
 for sx in (-1, 1):
-    leg = box(f"leg{sx}", (0.125, 0.29, LEG_H), (sx * (HW - 0.2), Y, LEG_H / 2)); leg.rotation_euler.x = math.radians(-8)
-    bpy.ops.object.select_all(action="DESELECT"); leg.select_set(True); bpy.context.view_layer.objects.active = leg; bpy.ops.object.transform_apply(rotation=True)
+    # Built at the origin and splayed there, then moved: box() bakes its position in, so rotating in place would
+    # swing the leg around the world origin and sink it into the ground.
+    leg = box(f"leg{sx}", (0.125, 0.29, LEG_H), (0, 0, 0)); leg.rotation_euler.x = math.radians(-8)
+    bpy.ops.object.select_all(action="DESELECT"); leg.select_set(True); bpy.context.view_layer.objects.active = leg
+    bpy.ops.object.transform_apply(rotation=True)
+    leg.location = (sx * (HW - 0.2), Y, LEG_H / 2 * math.cos(math.radians(8)) + 0.01); bpy.ops.object.transform_apply(location=True)
     legs.append(leg)
 cross = box("cross", (2 * HW - 0.52, 0.09, 0.14), (0, Y + 0.05, 0.28))
 feet = [box(f"foot{sx}", (0.15, 0.32, 0.03), (sx * (HW - 0.2), Y + 0.06, 0.015), bevel=0.006) for sx in (-1, 1)]
