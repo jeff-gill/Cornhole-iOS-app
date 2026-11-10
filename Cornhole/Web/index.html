@@ -90,14 +90,14 @@ body.inhub .score, body.inhub #panel { display: none; }
 #stage { position: relative; flex: 1 1 auto; min-height: 0; background: #9fd0f0; overflow: hidden; touch-action: none; }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 #banner {
-  position: absolute; top: 64px; left: 50%; transform: translateX(-50%) scale(.5) rotate(-3deg); opacity: 0; pointer-events: none;
+  position: absolute; top: 132px; left: 50%; transform: translateX(-50%) scale(.5) rotate(-3deg); opacity: 0; pointer-events: none;
   font-family: var(--font-display); font-size: 24px; padding: 7px 18px 9px; border-radius: 16px; white-space: nowrap; color: #fff; max-width: calc(100% - 90px); overflow: hidden; text-overflow: ellipsis;
   border: 3px solid #fff; text-shadow: 0 3px 0 rgba(0,0,0,.3); box-shadow: 0 6px 0 rgba(0,0,0,.25);
   transition: transform .28s cubic-bezier(.3,1.7,.5,1), opacity .2s;
 }
 #banner.show { transform: translateX(-50%) scale(1) rotate(-3deg); opacity: 1; }
 #hint {
-  position: absolute; left: 50%; bottom: 86px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
+  position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); pointer-events: none; white-space: nowrap;
   font-size: 14px; background: rgba(10,20,38,.72); padding: 7px 14px; border-radius: 999px; border: 2px solid rgba(255,255,255,.25);
 }
 
@@ -113,15 +113,16 @@ body.inhub .score, body.inhub #panel { display: none; }
 #aim svg { width: 100%; height: 100%; overflow: visible; }
 /* Wind */
 /* In / On for each player this inning, in the bottom corners of the court view */
-.iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
+.iobox { position: absolute; top: 10px; z-index: 3; pointer-events: none; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
 .iobox table { border-collapse: collapse; } /* IN | ON over the two counts, split by a + of grid lines */
 .iobox th, .iobox td { width: 36px; padding: 2px 4px; text-align: center; }
+.iobox th.inn { color: #fff; font-size: 10px; letter-spacing: .1em; border-bottom: 2px solid var(--line); background: var(--line); }
 .iobox th { color: var(--ink-dim); font-size: 11px; letter-spacing: .06em; border-bottom: 2px solid var(--line); }
 .iobox td { color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 18px; }
 .iobox th + th, .iobox td + td { border-left: 2px solid var(--line); }
-#wind { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; display: flex; align-items: center; gap: 8px; pointer-events: none;
+#wind { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: 10px; display: flex; align-items: center; gap: 8px; pointer-events: none;
   background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8); border-radius: 999px; padding: 4px 12px 4px 4px; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
 #wind .dial { width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(#2b4a80, #12203a); display: grid; place-items: center; }
 #wind b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
@@ -143,13 +144,13 @@ body.inhub .score, body.inhub #panel { display: none; }
 .bplist { padding-top: 8px; }
 .bpfit { min-height: 18px; font-weight: 900; font-size: 13px; }
 .bptimer { height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; } .bptimer i { display: block; height: 100%; background: var(--gold); transition: width .2s linear; }
-#boardInfo { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.78); border: 2px solid rgba(255,255,255,.6);
+#boardInfo { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 92px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.78); border: 2px solid rgba(255,255,255,.6);
   border-radius: 12px; padding: 5px 9px; font-size: 12px; font-weight: 900; text-align: right; line-height: 1.3; }
 #boardInfo b { font-family: var(--font-display); font-weight: 400; font-size: 14px; display: block; }
 #boardInfo i { font-style: normal; color: var(--gold); }
 #opp { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; pointer-events: none; background: rgba(10,20,38,.7); border: 3px solid rgba(255,255,255,.8);
   border-radius: 14px; padding: 4px 10px; font-size: 12px; box-shadow: 0 4px 0 rgba(0,0,0,.25); text-align: right; }
-#clock { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 64px; pointer-events: none; background: rgba(10,20,38,.75); border: 3px solid #fff; border-radius: 999px; padding: 3px 14px; font-family: var(--font-display); font-size: 17px; }
+#clock { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: 14px; pointer-events: none; background: rgba(10,20,38,.75); border: 3px solid #fff; border-radius: 999px; padding: 3px 14px; font-family: var(--font-display); font-size: 17px; }
 #clock b { font-weight: 400; font-size: 20px; font-variant-numeric: tabular-nums; }
 #clock { transform-origin: left center; transition: transform .25s cubic-bezier(.3,1.6,.5,1), background .25s; }
 #clock.warn { background: linear-gradient(#ffe27a, #ffc93a); color: #3a2600; transform: scale(1.3); }
@@ -608,7 +609,7 @@ s.was { opacity: .6; font-size: .8em; }
 .toggle.on i { background: var(--go); }
 .toggle.on i::after { transform: translateX(24px); }
 /* First-match coach */
-#coach { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(92%, 420px); pointer-events: none; text-align: center;
+#coach { position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); width: min(92%, 420px); pointer-events: none; text-align: center;
   font-size: 16px; font-weight: 900; line-height: 1.3; padding: 10px 14px; border-radius: 18px; background: rgba(10,20,38,.88); border: 3px solid var(--gold);
   box-shadow: 0 5px 0 rgba(0,0,0,.3); animation: coachbob 1.6s ease-in-out infinite; }
 #coach b { color: var(--gold); }
@@ -5936,7 +5937,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794323697";
+const BUILD_ID = "1794323866";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6408,13 +6409,13 @@ function renderBoardInfo() {
 }
 // The bottom-corner tables: how many bags each side has in the hole and on the board this inning.
 function renderInOn() {
-  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden && $("coach").hidden; // (out of the way of a coaching tip)
+  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden;
   for (const p of [0, 1]) {
     const el = $("io" + p); el.hidden = !show; if (!show) continue;
     let hole = 0, on = 0;
     for (const b of S.world.bags) if (b.owner === p) { const pts = bagPoints(b); if (pts === 3) hole++; else if (pts === 1) on++; }
     el.style.borderColor = COL.p[p]; el.style.setProperty("--line", COL.p[p]);
-    el.innerHTML = `<table><tr><th>IN</th><th>ON</th></tr><tr><td>${hole}</td><td>${on}</td></tr></table>`;
+    el.innerHTML = `<table><tr><th class="inn" colspan="2">INNING ${S.inning}</th></tr><tr><th>IN</th><th>ON</th></tr><tr><td>${hole}</td><td>${on}</td></tr></table>`;
   }
 }
 function renderBanner() {

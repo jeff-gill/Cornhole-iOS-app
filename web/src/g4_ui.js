@@ -150,13 +150,13 @@ function renderBoardInfo() {
 }
 // The bottom-corner tables: how many bags each side has in the hole and on the board this inning.
 function renderInOn() {
-  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden && $("coach").hidden; // (out of the way of a coaching tip)
+  const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden;
   for (const p of [0, 1]) {
     const el = $("io" + p); el.hidden = !show; if (!show) continue;
     let hole = 0, on = 0;
     for (const b of S.world.bags) if (b.owner === p) { const pts = bagPoints(b); if (pts === 3) hole++; else if (pts === 1) on++; }
     el.style.borderColor = COL.p[p]; el.style.setProperty("--line", COL.p[p]);
-    el.innerHTML = `<table><tr><th>IN</th><th>ON</th></tr><tr><td>${hole}</td><td>${on}</td></tr></table>`;
+    el.innerHTML = `<table><tr><th class="inn" colspan="2">INNING ${S.inning}</th></tr><tr><th>IN</th><th>ON</th></tr><tr><td>${hole}</td><td>${on}</td></tr></table>`;
   }
 }
 function renderBanner() {
