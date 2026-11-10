@@ -1516,16 +1516,16 @@ function rider(b, x, z, rotY, seed, pose = "sit") {
   const p = person(b, x, z, rotY, seed, pose); // moves with the boat
   if (pose === "sit") p.position.y = -0.6; return p;
 }
-function paddle(b, x, y, z, rot, double) {
+function paddle(b, x, y, z, rot, double, across = false) { // across: held crosswise in front of the paddler (kayak)
   const m = std(0xdedede), blade = lam(0xffc93a);
   const pg = new THREE.Group(); add(pg, new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, double ? 7 : 4.5, 5), m), 0, 0, 0, false);
   add(pg, box(0.5, 1.1, 0.08, blade), 0, double ? 3.5 : 2.4, 0, false); if (double) add(pg, box(0.5, 1.1, 0.08, blade), 0, -3.5, 0, false);
-  pg.position.set(x, y, z); pg.rotation.set(0, 0, rot); b.add(pg);
+  pg.position.set(x, y, z); if (across) pg.rotation.set(rot, 0, 0.2); else pg.rotation.set(0, 0, rot); b.add(pg);
 }
 function craft(g, kind, x, z, rotY, seed) {
   const b = new THREE.Group(), r = rng(seed), C = [0xd62828, 0xffc93a, 0x2f86ff, 0x2fbf71, 0xff8a1f, 0xff7ac0][Math.floor(r() * 6)];
   if (kind === "canoe") { add(b, new THREE.Mesh(hullGeo(12, 2.4), std(C, { roughness: 0.5 })), 0, 0.2, 0, false); rider(b, -2.5, 0, Math.PI / 2, seed); rider(b, 2.5, 0, Math.PI / 2, seed + 1); paddle(b, -2.2, 2, 1.1, 0.6); }
-  else if (kind === "kayak") { add(b, new THREE.Mesh(hullGeo(10, 1.6), std(C, { roughness: 0.4 })), 0, 0.2, 0, false); rider(b, 0, 0, Math.PI / 2, seed); paddle(b, 0, 2.5, 0, 1.3, true); }
+  else if (kind === "kayak") { add(b, new THREE.Mesh(hullGeo(10, 1.6), std(C, { roughness: 0.4 })), 0, 0.2, 0, false); rider(b, 0, 0, Math.PI / 2, seed); paddle(b, 1.15, 2.6, 0, 1.25, true, true); }
   else if (kind === "paddle") { add(b, box(10, 0.3, 2.4, std(C, { roughness: 0.4 })), 0, 0.3, 0, false); rider(b, 0, 0, Math.PI / 2, seed, "stand").position.y = 0.4; paddle(b, 0.6, 3.4, 0.9, 0.25); }
   else if (kind === "row") { add(b, new THREE.Mesh(hullGeo(10, 3.4), std(C, { roughness: 0.5 })), 0, 0.2, 0, false); add(b, box(0.6, 0.15, 3, std(0xb08050)), 0, 1.0, 0, false); rider(b, -1.5, 0, Math.PI / 2, seed); rider(b, 2, 0, -Math.PI / 2, seed + 1); }
   else if (kind === "motor") { add(b, new THREE.Mesh(hullGeo(13, 4.4), std(0xf6f6f6, { roughness: 0.3 })), 0, 0.2, 0, false); add(b, box(13, 0.35, 4.6, std(C)), -0.4, 0.6, 0, false); add(b, box(1.2, 1.8, 1, std(0x222222)), -7, 1.4, 0, false); add(b, box(2.4, 1.6, 0.15, std(0x9fd0f0, { roughness: 0.1 })), 2.5, 2.4, 0, false); rider(b, -2, -0.9, Math.PI / 2, seed); rider(b, -2, 0.9, Math.PI / 2, seed + 1); rider(b, 1.5, 0, Math.PI / 2, seed + 2); }
