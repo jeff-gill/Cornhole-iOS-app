@@ -241,13 +241,12 @@ function cooler(g, x, z, rotY, color = 0xe8392b) {
   add(c, new THREE.Mesh(new RoundedBoxGeometry(2.2, 0.3, 1.4, 3, 0.12), std(0xffffff, { roughness: 0.4 })), 0, 1.4, 0);
   c.position.set(x, 0, z); c.rotation.y = rotY; g.add(c);
 }
-// Two coolers by the far board, one on each side of the lane, in each side's team colour (outside the venue group so
-// they can be repainted for every match).
+// One cooler just behind the far board (outside the venue group so it stays put from court to court).
 const teamCoolers = new THREE.Group(); scene.add(teamCoolers);
 function showTeamCoolers(colors) {
   teamCoolers.traverse(o => { if (o.material) o.material.dispose(); });
   teamCoolers.clear();
-  for (const p of [0, 1]) cooler(teamCoolers, SIDES[p] * 5.5, -22.5, SIDES[p] * 0.35, colors[p]);
+  cooler(teamCoolers, 4.5, -37, -0.3, 0x8a8f99); // one cooler, just behind the far board: grey with a white lid (no side is ever grey)
 }
 function truck(g, x, z, rotY, color) {
   const t = new THREE.Group(), paint = std(color, { roughness: 0.35, metalness: 0.3 }), dark = std(0x1c1f24), glass = std(0x9fc4e0, { roughness: 0.1, metalness: 0.5 });
