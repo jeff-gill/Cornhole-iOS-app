@@ -36,10 +36,10 @@ const VENUES = [
   { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [3, 5], speed: "Manicured boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 6], speed: "Sandy boards" },
   { id: "rooftop", name: "City Rooftop", sub: "Rooftop party under the city lights", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [4, 7], speed: "Slick boards" },
-  { id: "lakeside", soon: true, name: "Lakeside Dock", sub: "Morning mist on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 0.55, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [4, 8], speed: "Dewy boards" },
-  { id: "canyon", soon: true, name: "Desert Canyon", sub: "Red rock, hot gusts", max: 900, fee: 3000000, win: 30, loss: 32, swing: 0.55, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [5, 8], speed: "Dusty boards" },
+  { id: "lakeside", soon: true, name: "Lakeside Dock", sub: "Out on the dock, out on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 0.55, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [4, 8], speed: "Dewy boards" },
+  { id: "canyon", soon: true, name: "Block Party", sub: "The whole street is out", max: 900, fee: 3000000, win: 30, loss: 32, swing: 0.55, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [5, 8], speed: "Street boards" },
   { id: "carnival", soon: true, name: "County Fair", sub: "Ferris wheel and midway games", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 0.55, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [5, 9], speed: "Fast boards" },
-  { id: "stadium", soon: true, name: "Stadium Finals", sub: "The big show", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [6, 10], speed: "Fast pro boards" },
+  { id: "stadium", soon: true, name: "Stadium Finals", sub: "The big show, a packed stadium", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [6, 10], speed: "Fast pro boards" },
 ];
 const pot = v => v.fee * 2;
 const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
