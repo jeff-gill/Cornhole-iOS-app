@@ -81,7 +81,7 @@ struct WebGameView: UIViewRepresentable {
                 let store = self.store
                 Task { await store.restore() }
             case "gamecenter":
-                gameCenter.authenticate()
+                if message.body as? String == "signin-now" { gameCenter.signIn() } else { gameCenter.authenticate() }
             case "score":
                 if let json = message.body as? String { gameCenter.submit(json) }
             case "leaderboards":

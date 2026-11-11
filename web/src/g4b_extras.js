@@ -199,8 +199,10 @@ function renderProfile() {
       <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
+      ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>`;
+    if ($("setGc")) $("setGc").onclick = () => postNative("gamecenter", "signin-now");
     $("setTour").onclick = () => { $("avatarSheet").hidden = true; startTour(true); };
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
     $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
@@ -322,6 +324,7 @@ $("canDone").onclick = () => { $("canSheet").hidden = true; $("prizeGrid").hidde
 // ── Testing tools: the browser preview and Xcode debug builds (the app sets window.__debugBuild), never the App Store.
 // Tester mode keeps coins and bottle caps topped up and the stars maxed so everything can be tried; it's on until switched off.
 const TEST_BANK = 99999999;
+let gcSignedIn = ""; // the Game Center name once the iPhone app reports a signed-in player
 const testing = () => !nativeBridge || !!window.__debugBuild;
 function testerTopUp() {
   if (!testing() || career.tester === false) return;

@@ -475,6 +475,8 @@ function renderHub() {
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
 // Game Center: your handle defaults to your Game Center name until you choose your own.
 window.__gcPlayer = p => {
+  gcSignedIn = p ? String(p.name || "Signed in") : "";
+  if (!$("avatarSheet").hidden && ptab === "settings") renderProfile();
   if (p && p.name && !career.handleSet) { career.handle = String(p.name).slice(0, 24); save(); }
   if (p) postScores();
 };

@@ -21,14 +21,59 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
     private var match: GKMatch?
     private var searching = false
 
-    /// Call once the page has loaded. If the player isn't signed in, iOS shows its own sign-in sheet (once).
+    /// iOS's sign-in screen, kept so a tap on "Sign in" or Rankings can show it again later.
+    private var signInSheet: UIViewController?
+    private var signInError: Error?
+    /// Set when the player tapped something that needs Game Center, so the sign-in screen is shown as soon as iOS has it.
+    private var wantsSignIn = false
+
+    /// Call once the page has loaded (silent: iOS shows its sign-in sheet itself the first time). The game calls
+    /// signIn() when the player taps "Sign in" in Settings or opens Rankings while signed out.
     func authenticate() {
         guard !started else { reportPlayer(); return }
         started = true
-        GKLocalPlayer.local.authenticateHandler = { [weak self] viewController, _ in
-            if let viewController { Self.topViewController()?.present(viewController, animated: true) }
-            self?.reportPlayer()
+        GKLocalPlayer.local.authenticateHandler = { [weak self] viewController, error in
+            guard let self else { return }
+            self.signInSheet = viewController
+            self.signInError = error
+            if let viewController {
+                Self.topViewController()?.present(viewController, animated: true)
+                self.signInSheet = nil
+            } else if self.wantsSignIn, !GKLocalPlayer.local.isAuthenticated {
+                self.explainSignIn()
+            }
+            if GKLocalPlayer.local.isAuthenticated { self.wantsSignIn = false }
+            self.reportPlayer()
         }
+    }
+
+    /// The player asked to sign in: show iOS's sign-in screen if it is available, otherwise say how to sign in.
+    func signIn() {
+        if GKLocalPlayer.local.isAuthenticated { reportPlayer(); return }
+        wantsSignIn = true
+        if !started { authenticate(); return } // the sheet (or an error) arrives in the handler
+        if let sheet = signInSheet {
+            signInSheet = nil
+            Self.topViewController()?.present(sheet, animated: true)
+        } else {
+            explainSignIn()
+        }
+    }
+
+    /// iOS shows its Game Center sign-in screen only once per launch. After that (or if Game Center is off on the
+    /// phone), the player signs in from the iPhone's Settings app; this offers to take them there.
+    private func explainSignIn() {
+        wantsSignIn = false
+        let notRecognized = (signInError as NSError?).map { $0.domain == GKErrorDomain && $0.code == GKError.Code.gameUnrecognized.rawValue } ?? false
+        let message = notRecognized
+            ? "Game Center doesn't recognise this app yet. It needs Game Center turned on for the app in App Store Connect."
+            : "Open the Settings app, tap Game Center, and sign in with your Apple Account. Then come back to the game."
+        let alert = UIAlertController(title: "Sign in to Game Center", message: message, preferredStyle: .alert)
+        if !notRecognized, let url = URL(string: UIApplication.openSettingsURLString) {
+            alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in UIApplication.shared.open(url) })
+        }
+        alert.addAction(UIAlertAction(title: notRecognized ? "OK" : "Not Now", style: .cancel))
+        DispatchQueue.main.async { Self.topViewController()?.present(alert, animated: true) }
     }
 
     /// Body is JSON from the game, e.g. {"stars": 42, "wins": 7, "fourBaggers": 1}.
@@ -43,10 +88,7 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
     }
 
     func showLeaderboards() {
-        guard GKLocalPlayer.local.isAuthenticated else {
-            callJS("window.__gcMessage && window.__gcMessage('Sign in to Game Center in Settings to see the leaderboards.')")
-            return
-        }
+        guard GKLocalPlayer.local.isAuthenticated else { signIn(); return }
         let vc = GKGameCenterViewController(state: .leaderboards)
         vc.gameCenterDelegate = self
         Self.topViewController()?.present(vc, animated: true)
