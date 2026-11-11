@@ -310,10 +310,11 @@ function bagFit(bag, board) { // a warning when the bag and board pull the same 
 const SLIDE_RESULT = { "-3": "Very short", "-2": "Very short", "-1": "Short", "0": "Normal", "1": "Long", "2": "Very long", "3": "Very long" };
 const slideWith = (bag, board) => SLIDE_RESULT[(board.surf || 0) + (bag.feel === "fast" ? 1 : bag.feel === "sticky" ? -1 : 0)];
 // The best of your bags for this board: a normal slide first, then the best accuracy, control and spin.
-function bestBagFor(board) {
+function rankBagsFor(board) {
   const net = b => Math.abs((board.surf || 0) + (b.feel === "fast" ? 1 : b.feel === "sticky" ? -1 : 0));
-  return career.bags.map(bagById).sort((a, b) => net(a) - net(b) || (b.acc + b.ctrl + b.spin) - (a.acc + a.ctrl + a.spin))[0];
+  return career.bags.map(bagById).sort((a, b) => net(a) - net(b) || (b.acc + b.ctrl + b.spin) - (a.acc + a.ctrl + a.spin));
 }
+const bestBagFor = board => rankBagsFor(board)[0];
 function openBagPick() {
   S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
   const best = bestBagFor(boardById(S.board)); S.bestBag = best.id; // picked for you; tap another to change it
@@ -327,15 +328,15 @@ function renderBagPick() { // (the suggested bag is listed first)
     <div class="bpboard"><img src="${tex.toDataURL()}" alt=""><div><b>${esc(d.name)}</b><small>${S.boardMine ? "Your board" : S.online ? esc(S.names[1]) + "'s board" : "Your opponent's board"}</small>
       <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
     <div class="bpsuggest">We picked <b>${esc(bagById(S.bestBag).name)}</b> for this board. Tap another bag to change it.</div>
-    <div class="label">Your bags</div>
-    <div class="bplist">${[S.bestBag, ...career.bags.filter(id => id !== S.bestBag)].map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
-      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
-        <div class="bpstats"><em>Acc</em>${dots("acc")}<em>Ctl</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
+    <div class="label">Your best two bags for this board</div>
+    <div class="bplist" style="grid-template-columns:repeat(${Math.min(2, career.bags.length)}, 1fr)">${rankBagsFor(d).slice(0, 2).map(b => b.id).map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
+      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="72" height="72"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
+        <div class="bpstats"><em>Accuracy</em>${dots("acc")}<em>Control</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
     <button class="btn green" id="bagPickGo">${S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
   for (const c of $("bagPickBody").querySelectorAll(".bpbag")) {
-    paintBag(c.querySelector("canvas").getContext("2d"), 48, 48, { ...bagById(c.dataset.bag), c: S.teamC ? S.teamC[0] : bagById(c.dataset.bag).c });
+    paintBag(c.querySelector("canvas").getContext("2d"), 72, 72, { ...bagById(c.dataset.bag), c: S.teamC ? S.teamC[0] : bagById(c.dataset.bag).c });
     c.onclick = () => { S.gear[0] = bagById(c.dataset.bag); career.bag = c.dataset.bag; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: c.dataset.bag }); renderBagPick(); };
   }
   $("bagPickGo").onclick = () => { if (!S.online) closeBagPick(); else { S.pickReady = true; $("bagPickGo").textContent = "WAITING…"; } };

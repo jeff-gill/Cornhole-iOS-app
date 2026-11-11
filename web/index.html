@@ -145,6 +145,16 @@ body.inhub .score, body.inhub #panel { display: none; }
 .bpbag { position: relative; } .bpbest { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 10px; font-weight: 900; color: #12203a; background: var(--gold); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
 .bpsuggest { background: rgba(62,224,122,.14); border: 2px solid #2fbf71; border-radius: 12px; padding: 8px 10px; font-size: 14px; font-weight: 900; } .bpsuggest b { color: #3ee07a; }
 .bplist { padding-top: 8px; }
+/* the two suggested bags, side by side across the sheet */
+#bagPick .bplist { gap: 12px; max-height: none; overflow: visible; }
+#bagPick .bpbag { padding: 14px 8px 12px; gap: 4px; font-size: 16px; border-radius: 18px; }
+#bagPick .bpbag canvas { width: 72px; height: 72px; }
+#bagPick .bpbag small { font-size: 13px; }
+#bagPick .bpstats { grid-template-columns: auto repeat(5, 11px); gap: 5px 3px; margin-top: 4px; }
+#bagPick .bpstats em { font-size: 12px; padding-right: 6px; }
+#bagPick .bpstats i { width: 11px; height: 11px; border-radius: 3px; }
+#bagPick .bpres { font-size: 14px; }
+#bagPick .bpbest { font-size: 12px; top: -10px; }
 .bpfit { min-height: 18px; font-weight: 900; font-size: 13px; }
 .bptimer { height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; } .bptimer i { display: block; height: 100%; background: var(--gold); transition: width .2s linear; }
 #boardInfo { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.78); border: 2px solid rgba(255,255,255,.6);
@@ -673,7 +683,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794400294 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794420613 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -1531,10 +1541,11 @@ function bagFit(bag, board) { // a warning when the bag and board pull the same 
 const SLIDE_RESULT = { "-3": "Very short", "-2": "Very short", "-1": "Short", "0": "Normal", "1": "Long", "2": "Very long", "3": "Very long" };
 const slideWith = (bag, board) => SLIDE_RESULT[(board.surf || 0) + (bag.feel === "fast" ? 1 : bag.feel === "sticky" ? -1 : 0)];
 // The best of your bags for this board: a normal slide first, then the best accuracy, control and spin.
-function bestBagFor(board) {
+function rankBagsFor(board) {
   const net = b => Math.abs((board.surf || 0) + (b.feel === "fast" ? 1 : b.feel === "sticky" ? -1 : 0));
-  return career.bags.map(bagById).sort((a, b) => net(a) - net(b) || (b.acc + b.ctrl + b.spin) - (a.acc + a.ctrl + a.spin))[0];
+  return career.bags.map(bagById).sort((a, b) => net(a) - net(b) || (b.acc + b.ctrl + b.spin) - (a.acc + a.ctrl + a.spin));
 }
+const bestBagFor = board => rankBagsFor(board)[0];
 function openBagPick() {
   S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
   const best = bestBagFor(boardById(S.board)); S.bestBag = best.id; // picked for you; tap another to change it
@@ -1548,15 +1559,15 @@ function renderBagPick() { // (the suggested bag is listed first)
     <div class="bpboard"><img src="${tex.toDataURL()}" alt=""><div><b>${esc(d.name)}</b><small>${S.boardMine ? "Your board" : S.online ? esc(S.names[1]) + "'s board" : "Your opponent's board"}</small>
       <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
     <div class="bpsuggest">We picked <b>${esc(bagById(S.bestBag).name)}</b> for this board. Tap another bag to change it.</div>
-    <div class="label">Your bags</div>
-    <div class="bplist">${[S.bestBag, ...career.bags.filter(id => id !== S.bestBag)].map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
-      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="48" height="48"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
-        <div class="bpstats"><em>Acc</em>${dots("acc")}<em>Ctl</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
+    <div class="label">Your best two bags for this board</div>
+    <div class="bplist" style="grid-template-columns:repeat(${Math.min(2, career.bags.length)}, 1fr)">${rankBagsFor(d).slice(0, 2).map(b => b.id).map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
+      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="72" height="72"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
+        <div class="bpstats"><em>Accuracy</em>${dots("acc")}<em>Control</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
     <button class="btn green" id="bagPickGo">${S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
   for (const c of $("bagPickBody").querySelectorAll(".bpbag")) {
-    paintBag(c.querySelector("canvas").getContext("2d"), 48, 48, { ...bagById(c.dataset.bag), c: S.teamC ? S.teamC[0] : bagById(c.dataset.bag).c });
+    paintBag(c.querySelector("canvas").getContext("2d"), 72, 72, { ...bagById(c.dataset.bag), c: S.teamC ? S.teamC[0] : bagById(c.dataset.bag).c });
     c.onclick = () => { S.gear[0] = bagById(c.dataset.bag); career.bag = c.dataset.bag; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: c.dataset.bag }); renderBagPick(); };
   }
   $("bagPickGo").onclick = () => { if (!S.online) closeBagPick(); else { S.pickReady = true; $("bagPickGo").textContent = "WAITING…"; } };
@@ -2762,7 +2773,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794400294`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794420613`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4300,7 +4311,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794400294`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794420613`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4311,7 +4322,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794400294`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794420613`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6297,7 +6308,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794400294";
+const BUILD_ID = "1794420613";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
