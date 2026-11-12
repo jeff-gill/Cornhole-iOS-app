@@ -490,8 +490,15 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 #bbLegend { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.82); border: 2px solid rgba(255,255,255,.6);
   border-radius: 14px; padding: 6px 9px; font-size: 12px; font-weight: 900; min-width: 150px; }
 #bbLegend h4 { margin: 0 0 3px; font-family: var(--font-display); font-weight: 400; font-size: 15px; color: var(--gold); }
-#bbLegend div { display: grid; grid-template-columns: 14px 1fr auto; gap: 6px; align-items: center; line-height: 1.5; }
-#bbLegend i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; } #bbLegend i.hole { background: #050302; } #bbLegend i.wood { background: #e6c086; border-radius: 3px; } #bbLegend i.miss { background: none; border-style: dashed; }
+#bbLegend h4 small, .bbstrip h4 small { font-family: var(--font-body); font-size: 11px; color: var(--ink-dim); margin-left: 4px; }
+#bbLegend div, .bbstrip div { display: grid; grid-template-columns: 14px 1fr auto; gap: 6px; align-items: center; line-height: 1.5; }
+#bbLegend i, .bbstrip i, .bbdots i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; background: var(--c); }
+#bbLegend i.hole, .bbstrip i.hole, .bbdots i.hole { background: #050302; box-shadow: 0 0 0 3px var(--c); border-width: 1px; }
+#bbLegend div.won, .bbstrip div.won { opacity: .45; } #bbLegend div.won span, .bbstrip div.won span { text-decoration: line-through; }
+.bbstrip { background: rgba(255,255,255,.06); border-radius: 12px; padding: 6px 10px; font-size: 13px; font-weight: 900; } .bbstrip b { text-align: right; }
+.bbdots { display: flex; justify-content: center; gap: 8px; padding: 2px 0; } .bbdots i { width: 16px; height: 16px; position: relative; }
+.bbdots i.won { opacity: .35; } .bbdots i.won::after { content: "✓"; position: absolute; inset: -2px; display: grid; place-items: center; color: #fff; font: 900 12px/1 Arial, sans-serif; }
+.bbleft { text-align: center; font-size: 12px; font-weight: 900; color: var(--ink-dim); }
 #bbLegend b { text-align: right; } #bbLegend p { margin: 3px 0 0; font-size: 11px; color: #ffe27a; }
 .bbthrows { text-align: center; font-weight: 900; font-size: 14px; }
 .bbbuy { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

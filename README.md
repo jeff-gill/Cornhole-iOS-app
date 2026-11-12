@@ -114,19 +114,21 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 
 At an even win rate, coins barely grow, and a court's winnings buy the shop tier or two that match it.
 
-**Bullseye Bags.** A daily one-throw challenge at a giant 5 × 10 ft bullseye board (a real board's 1:2 shape) (web/src/g4d_bullseye.js). The scene
-(Rooftop Drop, Long Bomb, Dock Drop, Cliff Toss), weather (sunny, cloudy, rain = slick, snow = sticky, fog), wind, board,
-bag and the bags already lying on the board all come from the date, so everyone gets the same challenge that day. Pick
-Easy or Hard per throw. Knocking the star bag into the hole doubles the prize. Coins are in buy-ins of your best court.
+**Bullseye Bags.** A daily challenge at a giant 5 × 10 ft board (a real board's 1:2 shape), modelled on Golf Clash's Golden
+Shot (web/src/g4d_bullseye.js). The scene (Rooftop Drop, Long Bomb, Dock Drop, Cliff Toss), weather (sunny, cloudy, rain =
+slick, snow = sticky, fog), wind, board, and where the prize targets and the bags already lying on the board are all come
+from the date, so everyone gets the same challenge that day. Everyone throws the Golden Bag. Easy and Hard each have five
+prizes: four coloured targets (radius 0.85 ft on Easy, 0.55 ft on Hard) and the hole. Finish inside a target to win it, and
+it's gone for the rest of the day. Knocking the star bag into the hole doubles the prize. Coins are in buy-ins of your best court.
 
-| Finish | Easy | Hard |
+| Prize | Easy | Hard |
 |---|---|---|
-| In the hole | Bronze–Gold can (opens right away) | Gold–Diamond can (opens right away) |
-| Bullseye ring (gold, < 1 ft) | 3 caps | 10 caps |
-| Middle ring (red, < 1.7 ft) | 0.1 buy-in | 0.3 buy-in |
-| Outer ring (blue, < 2.4 ft) | 0.05 buy-in | 0.15 buy-in |
-| On the board | 0.02 buy-in | 0.06 buy-in |
-| Missed | 0.005 buy-in | 0.01 buy-in |
+| 1 | Blue: 0.04 buy-in | Purple: 0.12 buy-in |
+| 2 | Green: 2 caps | Pink: 6 caps |
+| 3 | Red: 0.1 buy-in | Teal: 0.3 buy-in |
+| 4 | Orange: Bronze–Silver can | Red: Gold–Purple can |
+| 5 (the hole) | Silver–Purple can, opens right away | Purple–Diamond can, opens right away |
+| No target / missed | 0.02 / 0.005 buy-in | 0.06 / 0.01 buy-in |
 
 Extra throws are consumable in-app purchases: `com.jeffgill.cornhole.bullseye.1`, `.bullseye.3` and `.bullseye.5`.
 

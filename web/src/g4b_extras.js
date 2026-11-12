@@ -134,9 +134,9 @@ function rulesHTML() {
   ])}
   ${sec("🎯", "Bullseye Bags", [
     "One free throw a day at a giant bullseye board. It resets at midnight. You can buy more throws (1, 3 or 5).",
-    "Everyone gets the same challenge each day: the scene, the wind, the weather, the board, the bag and the bags already on the board.",
-    "Pick Easy or Hard for each throw. Hard is farther, windier and has more bags in the way, but pays much more.",
-    "The closer your bag finishes to the hole, the better the prize. In the hole wins a can that opens right away.",
+    "Everyone gets the same challenge each day: the scene, the wind, the weather, the board and where the prizes and other bags are. Everyone throws the Golden Bag.",
+    "Easy and Hard each have five prizes: four coloured targets and the hole. Finish inside a target to win it; then it's gone for the rest of the day. The hole is the top prize: a can that opens right away.",
+    "Hard has smaller targets, farther away, in more wind, with more bags in the way, but its prizes are much bigger.",
     "Knock the star bag into the hole and your prize is doubled.",
     "If you leave before throwing, you keep the throw. Once the bag is in the air, the throw counts.",
   ])}
