@@ -372,6 +372,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .cslot.full { border: 2px solid rgba(255,255,255,.85); background: rgba(10,20,38,.7); }
 .cslot.ready { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,201,58,.6); animation: canbob 1.4s ease-in-out infinite; }
 .cslot.ticking small { color: #7fd8ff; }
+.cslot.idle { border-style: dashed; } .cslot.idle .minican { filter: saturate(.5) brightness(.8); }
+.cslot .cunlock { font-size: 9px; letter-spacing: .04em; color: var(--gold); }
 .cslot small { font-size: 14px; font-variant-numeric: tabular-nums; }
 .cslot .minican { width: 26px; height: 42px; flex: none; }
 .cslot .cname { font-size: 11px; line-height: 1.05; text-align: center; color: rgba(255,255,255,.85); max-width: 100%; overflow: hidden; }
@@ -452,7 +454,9 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 #shop .row .pill > .coin, #shop .row .pill > .bcap { width: 24px; height: 24px; }
 #shop .row .pill > .coin::after { font-size: 15px; }
 .hubhead { position: relative; }
-.dailybtn { position: relative; margin: 8px auto 0; display: flex; align-items: center; gap: 6px; padding: 6px 10px 6px 6px; border-radius: 16px; border: 3px solid #fff; background: linear-gradient(#ffe27a, #ffb347); color: #5a3200; box-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 16px rgba(255,201,58,.7); animation: dailybob 1.4s ease-in-out infinite; text-align: left; z-index: 3; }
+.dailybtn { position: relative; margin: 8px auto 0; display: flex; align-items: center; gap: 6px; padding: 6px 10px 6px 6px; border-radius: 16px; border: 3px solid #fff; background: linear-gradient(#ffe27a, #ffb347); color: #5a3200; box-shadow: 0 4px 0 rgba(0,0,0,.3); text-align: left; z-index: 3; filter: saturate(.45) brightness(.85); }
+/* something to collect: it lights up and bobs like a ready can in the Prize Cooler; otherwise it sits still */
+.dailybtn.ready { filter: none; box-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 16px rgba(255,201,58,.7); animation: canbob 1.4s ease-in-out infinite; }
 .dailybtn .gift { font-size: 28px; line-height: 1; }
 .dailybtn b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 14px; line-height: 1; }
 .dailybtn small { font: 900 11px/1.2 Nunito, system-ui, sans-serif; }
@@ -464,8 +468,8 @@ body.bbmode #app { width: 100%; }
 body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; left: 0; right: 0; top: calc(var(--toprow) - 38px); text-align: center; font-family: var(--font-display); font-size: 20px; color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; }
 .hubperks { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 0 4px; }
 .hubperks .dailybtn { margin: 0; }
-.bbbtn { margin-left: auto !important; background: linear-gradient(#7fe0ff, #2f86ff); color: #06264f; box-shadow: 0 4px 0 rgba(0,0,0,.3); animation: none; }
-.bbbtn.ready { background: linear-gradient(#ffe27a, #ff8a3a); color: #5a2000; box-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 16px rgba(255,160,60,.7); animation: dailybob 1.4s ease-in-out infinite; }
+.bbbtn { margin-left: auto !important; }
+.bbbtn.ready { background: linear-gradient(#ffe27a, #ff8a3a); color: #5a2000; box-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 16px rgba(255,160,60,.7); animation: canbob 1.4s ease-in-out infinite; }
 #bbSheet .sheet { gap: 10px; max-width: 440px; }
 .bbday { text-align: center; } .bbday b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 22px; color: var(--gold); } .bbday small { color: var(--ink-dim); font-weight: 900; }
 .bbconds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -480,6 +484,15 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 .bbpay { display: grid; gap: 3px; font-size: 11px; }
 .bbpay div { display: flex; justify-content: space-between; gap: 4px; align-items: center; } .bbpay span { color: var(--ink-dim); font-weight: 800; } .bbpay b { font-weight: 900; text-align: right; }
 .bbmode .btn { font-size: 16px; padding: 10px 4px; }
+.bbrings { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 900; color: var(--ink-dim); }
+.bbrings i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; } .bbrings span { margin-left: 4px; }
+.bbslide { text-align: center; font-weight: 900; font-size: 14px; } .bbslide b { color: var(--gold); } .bbslide small { display: block; font-size: 11px; color: var(--ink-dim); }
+#bbLegend { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); top: 12px; z-index: 3; pointer-events: none; background: rgba(10,20,38,.82); border: 2px solid rgba(255,255,255,.6);
+  border-radius: 14px; padding: 6px 9px; font-size: 12px; font-weight: 900; min-width: 150px; }
+#bbLegend h4 { margin: 0 0 3px; font-family: var(--font-display); font-weight: 400; font-size: 15px; color: var(--gold); }
+#bbLegend div { display: grid; grid-template-columns: 14px 1fr auto; gap: 6px; align-items: center; line-height: 1.5; }
+#bbLegend i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; } #bbLegend i.hole { background: #050302; } #bbLegend i.wood { background: #e6c086; border-radius: 3px; } #bbLegend i.miss { background: none; border-style: dashed; }
+#bbLegend b { text-align: right; } #bbLegend p { margin: 3px 0 0; font-size: 11px; color: #ffe27a; }
 .bbthrows { text-align: center; font-weight: 900; font-size: 14px; }
 .bbbuy { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .bbbuy .btn { font-family: var(--font-body); font-size: 13px; padding: 8px 4px; display: grid; } .bbbuy .btn b { font-family: var(--font-display); font-weight: 400; font-size: 24px; } .bbbuy .btn small { font-size: 13px; }
@@ -487,6 +500,7 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 .bbprizes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 .bbprize { display: grid; justify-items: center; gap: 4px; padding: 12px 16px; border-radius: 16px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.2); font-size: 34px; }
 .bbprize b { font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.bbprize small { font-size: 12px; font-weight: 900; color: var(--ink-dim); }
 @keyframes dailybob { 50% { transform: translateY(-3px) rotate(-2deg); } }
 .coolerhead { font-family: var(--font-display); font-size: 15px; letter-spacing: .08em; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.45); margin: 0 0 4px 4px; }
 s.was { opacity: .6; font-size: .8em; }
@@ -681,6 +695,7 @@ s.was { opacity: .6; font-size: .8em; }
     <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
   </header>
   <div id="stage">
+    <div id="bbLegend" hidden></div>
     <div id="loading" hidden></div>
     <canvas id="gl"></canvas>
     <div id="banner"></div>
@@ -718,7 +733,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="gcname" id="gcName" hidden></div>
     <button class="seasonbadge" id="seasonBtn"></button>
     <div class="hubperks">
-      <button class="dailybtn" id="dailyBtn" hidden><span class="gift">🎁</span><span><b>Daily Drop</b><small><i class="coin"></i> 100 + a free can</small></span></button>
+      <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
       <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
     </div>
   </div>

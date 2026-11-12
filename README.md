@@ -114,7 +114,7 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 
 At an even win rate, coins barely grow, and a court's winnings buy the shop tier or two that match it.
 
-**Bullseye Bags.** A daily one-throw challenge at a giant 6 × 7 ft bullseye board (web/src/g4d_bullseye.js). The scene
+**Bullseye Bags.** A daily one-throw challenge at a giant 5 × 10 ft bullseye board (a real board's 1:2 shape) (web/src/g4d_bullseye.js). The scene
 (Rooftop Drop, Long Bomb, Dock Drop, Cliff Toss), weather (sunny, cloudy, rain = slick, snow = sticky, fog), wind, board,
 bag and the bags already lying on the board all come from the date, so everyone gets the same challenge that day. Pick
 Easy or Hard per throw. Knocking the star bag into the hole doubles the prize. Coins are in buy-ins of your best court.
@@ -122,11 +122,11 @@ Easy or Hard per throw. Knocking the star bag into the hole doubles the prize. C
 | Finish | Easy | Hard |
 |---|---|---|
 | In the hole | Bronze–Gold can (opens right away) | Gold–Diamond can (opens right away) |
-| Bullseye ring (< 1.1 ft) | 3 caps | 10 caps |
-| Middle ring (< 1.9 ft) | 1 buy-in | 3 buy-ins |
-| Outer ring (< 2.7 ft) | 0.5 buy-in | 1.5 buy-ins |
-| On the board | 0.2 buy-in | 0.6 buy-in |
-| Missed | 0.05 buy-in | 0.1 buy-in |
+| Bullseye ring (gold, < 1 ft) | 3 caps | 10 caps |
+| Middle ring (red, < 1.7 ft) | 0.1 buy-in | 0.3 buy-in |
+| Outer ring (blue, < 2.4 ft) | 0.05 buy-in | 0.15 buy-in |
+| On the board | 0.02 buy-in | 0.06 buy-in |
+| Missed | 0.005 buy-in | 0.01 buy-in |
 
 Extra throws are consumable in-app purchases: `com.jeffgill.cornhole.bullseye.1`, `.bullseye.3` and `.bullseye.5`.
 

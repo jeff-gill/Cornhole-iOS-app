@@ -268,7 +268,7 @@ function ui() {
       <div class="feedback" style="grid-template-columns:repeat(${S.feedback.length},1fr)">${S.feedback.map(f => `<div class="fb"><small>${f.title}</small><b class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</b></div>`).join("")}</div>` : "";
   } else panel.innerHTML = "";
   updateHUD(); renderClock();
-  renderInningSheet();
+  renderInningSheet(); bbRenderLegend();
 }
 // First career match only: one step at a time, following what the player is doing.
 function coachText() {
@@ -829,7 +829,7 @@ function step(now) {
     if (left !== before && $("innCount")) $("innCount").textContent = Math.max(0, left);
     if (S.innT >= INNING_CARD_SECS) { S.innT = 0; dismissScorecard(0, -1); }
   } else S.innT = 0;
-  if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); renderBBBtn(); if (career.lives <= 0) renderHub(); }
+  if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); renderBBBtn(); renderDaily(); if (career.lives <= 0) renderHub(); }
   updatePreview(dt);
   updateFx(dt);
   updateWindStreaks(dt);

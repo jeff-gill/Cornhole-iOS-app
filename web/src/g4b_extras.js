@@ -35,8 +35,8 @@ function renderHubExtras() {
     if (c) {
       const k = canById(c.id), st = canState(c);
       b.className = `cslot full ${st}`;
-      b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "tap to start opening"}`);
-      b.innerHTML = `<span class="cname">${k.name}</span><span class="crow"><i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : durText(openMs(c.id))}</small></span>`;
+      b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "locked, tap to unlock"}`);
+      b.innerHTML = `<span class="cname">${k.name}</span><span class="crow"><i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : `🔒 ${durText(openMs(c.id))}`}</small></span>${st === "idle" ? `<span class="cunlock">TAP TO UNLOCK</span>` : ""}`;
       b.onclick = () => canTapped(i);
     } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
     cooler.appendChild(b);
@@ -83,8 +83,8 @@ function canTapped(i) {
   if (st === "ticking") { showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="big">Opens in ${timeText(canLeft(c))}</div>${nowBtn}<div class="muted">You have <i class="bcap"></i> ${career.caps}. Win matches while you wait.</div>`); }
   else {
     const busy = anyTicking();
-    showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="muted">${k.pulls} prizes inside. It takes ${durText(openMs(c.id))} to open${busy ? ", and another can is opening right now. One at a time." : "."}</div>
-      ${busy ? "" : `<button class="btn green" id="startCan">START OPENING · ${durText(openMs(c.id))}</button>`}${nowBtn}<div class="muted">You have <i class="bcap"></i> ${career.caps}.</div>`);
+    showInfo(`<div class="lifebig">🔒</div><h2>${k.name}</h2><div class="muted">${k.pulls} prizes inside. It's locked: unlocking it takes ${durText(openMs(c.id))}${busy ? ", and another can is unlocking right now. One at a time." : "."}</div>
+      ${busy ? "" : `<button class="btn green" id="startCan">🔓 UNLOCK · ${durText(openMs(c.id))}</button>`}${nowBtn}<div class="muted">You have <i class="bcap"></i> ${career.caps}.</div>`);
     if (!busy) $("startCan").onclick = () => { startCan(i); $("livesSheet").hidden = true; renderHubExtras(); sfx.tick(); };
   }
   $("openNow").onclick = () => {
@@ -425,9 +425,12 @@ $("seasonBtn").onclick = openSeason;
 // after your last claim). It pays 100 coins plus a free can that opens right away (mostly the low cans).
 const DAILY_COINS = 100;
 const dailyReady = () => career.lastDaily !== new Date().toDateString();
-function renderDaily() { $("dailyBtn").hidden = !dailyReady(); }
+function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once claimed
+  const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
+  $("dailySub").innerHTML = ready ? `<i class="coin"></i> 100 + a free can` : `Next in ${timeText(bbUntilMidnight())}`;
+}
 $("dailyBtn").onclick = () => {
-  if (!dailyReady()) return;
+  if (!dailyReady()) { const t = document.createElement("div"); t.className = "toast"; t.textContent = "Your next Daily Drop is ready at midnight."; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); return; }
   initAudio();
   career.lastDaily = new Date().toDateString(); career.coins += DAILY_COINS;
   // The free can skips the cooler limit and opens on the spot.
