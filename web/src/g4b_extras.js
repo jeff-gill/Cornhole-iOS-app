@@ -132,6 +132,14 @@ function rulesHTML() {
     "A win earns stars at that court and the buy-in prize. A loss costs some stars.",
     "Fill a court's star track to open the next court.",
   ])}
+  ${sec("🎯", "Bullseye Bags", [
+    "One free throw a day at a giant bullseye board. It resets at midnight. You can buy more throws (1, 3 or 5).",
+    "Everyone gets the same challenge each day: the scene, the wind, the weather, the board, the bag and the bags already on the board.",
+    "Pick Easy or Hard for each throw. Hard is farther, windier and has more bags in the way, but pays much more.",
+    "The closer your bag finishes to the hole, the better the prize. In the hole wins a can that opens right away.",
+    "Knock the star bag into the hole and your prize is doubled.",
+    "If you leave before throwing, you keep the throw. Once the bag is in the air, the throw counts.",
+  ])}
   ${sec("🎟️", "Tickets", [
     `Every match uses a ticket. You can hold ${MAX_LIVES}, and one comes back every hour.`,
     "Win and you get your ticket back.",
@@ -413,7 +421,7 @@ function showSeasonResult() {
 }
 $("seasonBtn").onclick = openSeason;
 
-// ── Daily reward: a bubble in the clubhouse, claimable once per calendar day (it resets at midnight, not 24 hours
+// ── Daily Drop: a bubble in the clubhouse, claimable once per calendar day (it resets at midnight, not 24 hours
 // after your last claim). It pays 100 coins plus a free can that opens right away (mostly the low cans).
 const DAILY_COINS = 100;
 const dailyReady = () => career.lastDaily !== new Date().toDateString();
@@ -473,7 +481,8 @@ const TOUR = [
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away or to buy a ticket."],
   ["#starsPill", "Stars", "Win matches to earn stars. Fill a court's stars to open the next court."],
   ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
-  ["#dailyBtn", "Daily reward", "Coins and a free can, once a day."],
+  ["#dailyBtn", "Daily Drop", "Coins and a free can, once a day."],
+  ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most. Tap one to start opening it."],
   ["#venueCard .venue.cur", "Courts", "Swipe to see each court: its buy-in, payout, stars and wind."],
   ["#playBtn", "Play", "Find an opponent at this court and start a match."],

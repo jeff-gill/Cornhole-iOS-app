@@ -456,6 +456,37 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .dailybtn .gift { font-size: 28px; line-height: 1; }
 .dailybtn b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 14px; line-height: 1; }
 .dailybtn small { font: 900 11px/1.2 Nunito, system-ui, sans-serif; }
+/* Daily Drop on the left, Bullseye Bags on the right */
+/* Bullseye Bags: no scoreboard, just pause and help along the top */
+body.bbmode .score > .card, body.bbmode .score > .inning, body.bbmode .iobox, body.bbmode #boardInfo { display: none !important; }
+body.bbmode .score { padding-bottom: 0; min-height: var(--toprow); }
+body.bbmode #app { width: 100%; }
+body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; left: 0; right: 0; top: calc(var(--toprow) - 38px); text-align: center; font-family: var(--font-display); font-size: 20px; color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; }
+.hubperks { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 0 4px; }
+.hubperks .dailybtn { margin: 0; }
+.bbbtn { margin-left: auto !important; background: linear-gradient(#7fe0ff, #2f86ff); color: #06264f; box-shadow: 0 4px 0 rgba(0,0,0,.3); animation: none; }
+.bbbtn.ready { background: linear-gradient(#ffe27a, #ff8a3a); color: #5a2000; box-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 16px rgba(255,160,60,.7); animation: dailybob 1.4s ease-in-out infinite; }
+#bbSheet .sheet { gap: 10px; max-width: 440px; }
+.bbday { text-align: center; } .bbday b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 22px; color: var(--gold); } .bbday small { color: var(--ink-dim); font-weight: 900; }
+.bbconds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.bbconds span { background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.14); border-radius: 12px; padding: 6px; font-size: 13px; font-weight: 900; text-align: center; }
+.bbconds small { display: block; font-size: 10px; color: var(--ink-dim); font-weight: 800; margin-top: 2px; }
+.bbstar { text-align: center; font-size: 13px; font-weight: 900; color: #ffe27a; }
+.bbmodes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.bbmode { border-radius: 16px; padding: 10px 8px; display: grid; gap: 6px; border: 3px solid rgba(62,224,122,.7); background: rgba(62,224,122,.1); }
+.bbmode.hard { border-color: rgba(255,90,70,.8); background: rgba(255,90,70,.12); }
+.bbmode h3 { margin: 0; text-align: center; font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.bbfacts { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 8px; font-size: 11px; font-weight: 900; color: var(--ink-dim); }
+.bbpay { display: grid; gap: 3px; font-size: 11px; }
+.bbpay div { display: flex; justify-content: space-between; gap: 4px; align-items: center; } .bbpay span { color: var(--ink-dim); font-weight: 800; } .bbpay b { font-weight: 900; text-align: right; }
+.bbmode .btn { font-size: 16px; padding: 10px 4px; }
+.bbthrows { text-align: center; font-weight: 900; font-size: 14px; }
+.bbbuy { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bbbuy .btn { font-family: var(--font-body); font-size: 13px; padding: 8px 4px; display: grid; } .bbbuy .btn b { font-family: var(--font-display); font-weight: 400; font-size: 24px; } .bbbuy .btn small { font-size: 13px; }
+.bbdouble { text-align: center; font-weight: 900; color: #ffe27a; } .bbdouble b { color: var(--gold); }
+.bbprizes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.bbprize { display: grid; justify-items: center; gap: 4px; padding: 12px 16px; border-radius: 16px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.2); font-size: 34px; }
+.bbprize b { font-family: var(--font-display); font-weight: 400; font-size: 22px; }
 @keyframes dailybob { 50% { transform: translateY(-3px) rotate(-2deg); } }
 .coolerhead { font-family: var(--font-display); font-size: 15px; letter-spacing: .08em; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.45); margin: 0 0 4px 4px; }
 s.was { opacity: .6; font-size: .8em; }
@@ -686,7 +717,10 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="hubtitle" id="hubTitle">__GAME_TITLE_HTML__</div>
     <div class="gcname" id="gcName" hidden></div>
     <button class="seasonbadge" id="seasonBtn"></button>
-    <button class="dailybtn" id="dailyBtn" hidden><span class="gift">🎁</span><span><b>Daily reward</b><small><i class="coin"></i> 100 + a free can</small></span></button>
+    <div class="hubperks">
+      <button class="dailybtn" id="dailyBtn" hidden><span class="gift">🎁</span><span><b>Daily Drop</b><small><i class="coin"></i> 100 + a free can</small></span></button>
+      <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
+    </div>
   </div>
   <div class="hubbottom">
     <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
@@ -702,6 +736,7 @@ s.was { opacity: .6; font-size: .8em; }
 </div>
 
 <div id="tour" hidden><div id="tourSpot"></div><div id="tourCard"></div></div>
+<div class="overlay" id="bbSheet" hidden><div class="sheet" id="bbBody"></div></div>
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
 <div class="overlay" id="avatarSheet" hidden><div class="sheet">
   <div class="tabs ptabs"><button data-ptab="settings" class="on">SETTINGS</button><button data-ptab="avatar">AVATAR</button><button data-ptab="profile">PROFILE</button></div>

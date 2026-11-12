@@ -24,6 +24,9 @@ final class StoreManager {
         "com.jeffgill.cornhole.lives5",
         "com.jeffgill.cornhole.can.gold",
         "com.jeffgill.cornhole.can.platinum",
+        "com.jeffgill.cornhole.bullseye.1",
+        "com.jeffgill.cornhole.bullseye.3",
+        "com.jeffgill.cornhole.bullseye.5",
     ]
 
     weak var webView: WKWebView?

@@ -132,7 +132,8 @@ function updateAimRig(dt) {
   // Place the rig a few feet in front of the hand, on the line toward the landing spot.
   const rel = release(S.player), to = S.landing || HOLE, d = Math.hypot(to.x - rel.x, to.y - rel.y);
   const dir = { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
-  aimRig.position.copy(W(rel.x + dir.x * 4.2, rel.y + dir.y * 4.2, 0.06));
+  const ahead = handFloor() > 0 ? 9 : 4.2; // up high (Bullseye Bags), farther out so it sits above the board on screen
+  aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
   aimBase.rotation.y = -Math.atan2(dir.x, dir.y);
   // Perfect-direction wedge.
   if (aimWedgeZone !== L.zone) {

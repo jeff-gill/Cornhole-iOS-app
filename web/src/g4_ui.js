@@ -69,7 +69,8 @@ function updateCamera(dt) {
   if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
-  if (mode === "preview") {
+  if (S.kind === "bullseye" && mode !== "intro" && mode !== "preview") { const c = bbCamera(mode, narrow); fov = c.fov; k = c.k; }
+  else if (mode === "preview") {
     // Shop previews: a close look at the hole, or a side-on look at a throw.
     if (S.preview.kind === "hole") { tPos.set(1.6, 4.2, -(FY - 5.5)); tLook.set(0, 0.6, -(HOLE.y + 0.5)); }
     else { tPos.set(2.5, 7.5, 9); tLook.set(0, 1.2, -17); } // behind the thrower: the whole flight and its trail
@@ -170,6 +171,7 @@ function updateHUD() {
 // ───────────────────────── Panel and scoreboard
 const panel = $("panel");
 function renderScore() {
+  if (S.kind === "bullseye") { $("boardInfo").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = true; return; } // no scoreboard: one throw
   const ir = inningResult();
   for (const p of [0, 1]) {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
@@ -220,8 +222,9 @@ function outcomeText(p) {
   return "Off the board";
 }
 const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${label}</small><b>${value}</b></div>`;
-const whoName = p => S.kind === "career" && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
+const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
+  document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
@@ -241,7 +244,7 @@ function ui() {
         ${S.push ? chip("Push shot", "+" + Math.round(S.push.extra * 100) + "%", "gold") : ""}
       </div>`;
     }
-    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">${side} · Bag ${S.thrown[S.player] + 1} of 4</span></div>
+    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">${S.kind === "bullseye" ? bbPanelTag() : `${side} · Bag ${S.thrown[S.player] + 1} of 4`}</span></div>
       <div style="min-height:50px">${plan}</div>
       <div class="btns">
         <button class="btn" id="clearBtn" ${S.end ? "" : "disabled"}>CLEAR</button>
@@ -428,6 +431,7 @@ function openHub() {
   showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
+  bbExit();
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
@@ -465,7 +469,7 @@ function renderHub() {
   fitChips($("venueCard")); document.fonts?.ready.then(() => fitChips($("venueCard")));
   $("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
-  renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily();
+  renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
   const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
   const noLives = career.lives <= 0;
   play.disabled = !open || (!afford && !noLives);
@@ -536,9 +540,9 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
-  renderShop(); renderHub();
+  renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message);
 };
 window.__restoreDone = count => { shopMsg = count ? "Purchases restored" : "Nothing to restore"; renderShop(); renderHub(); };
 function buy(id) {
@@ -740,6 +744,7 @@ $("forfeitBtn").onclick = () => {
   const careerMatch = S.kind === "career", fee = career.activeMatch ? career.activeMatch.fee : 0;
   const lose = careerMatch
     ? [`−${starsForLoss(S.venue)} ⭐ at ${esc(venue().name)}`, fee ? `Your buy-in: <i class="coin"></i> ${short(fee)} (your opponent takes the pot)` : null, "The ticket you used for this match"].filter(Boolean)
+    : S.kind === "bullseye" ? [S.lastId == null ? "Nothing: you haven't thrown yet, so you keep this throw." : "This throw (your bag is already in the air)."]
     : ["Nothing: practice games are free. This one just ends."];
   $("pause").hidden = true;
   showChoice(`<h2>Quit this match?</h2><div class="muted">${careerMatch ? "It counts as a loss. You'll lose:" : ""}</div><ul class="quitlist">${lose.map(l => `<li>${l}</li>`).join("")}</ul>`,
@@ -809,7 +814,9 @@ function step(now) {
     if (S.world.settled) { S.settleT += dt; if (S.settleT > 1.3 && flightSettled()) endTurn(); }
   }
   if (S.planVersion !== shownPlan || S.phase !== shownPhase) rebuildGuides();
-  if (finishMarker.visible) finishMarker.scale.setScalar(1 + 0.08 * Math.sin(S.time * 4));
+  if (finishMarker.visible) finishMarker.scale.setScalar(markerScale() * (1 + 0.08 * Math.sin(S.time * 4)));
+  landingMarker.scale.setScalar(markerScale());
+  bbTick(dt);
   updateBags(dt);
   updateAimRig(dt);
   updateOnline(dt);
@@ -822,7 +829,7 @@ function step(now) {
     if (left !== before && $("innCount")) $("innCount").textContent = Math.max(0, left);
     if (S.innT >= INNING_CARD_SECS) { S.innT = 0; dismissScorecard(0, -1); }
   } else S.innT = 0;
-  if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); if (career.lives <= 0) renderHub(); }
+  if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); renderBBBtn(); if (career.lives <= 0) renderHub(); }
   updatePreview(dt);
   updateFx(dt);
   updateWindStreaks(dt);
@@ -879,4 +886,4 @@ postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own
 setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
 
 requestAnimationFrame(frame);
-window.__cornhole = { setGlow: v => { glowOn = v; }, ui, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub };
+window.__cornhole = { setGlow: v => { glowOn = v; }, ui, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_SCENES, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };

@@ -1,10 +1,19 @@
 // ───────────────────────── Court (feet). y = down-range, x = lateral (right +), z = height.
-const G = 32.17, FY = 27, BY = 31, HW = 1, FH = 0.25, BH = 1;
-const HOLE = { x: 0, y: BY - 0.75 }, HR = 0.25, BAG = 0.5, BR = 0.25;
-const REL_H = 3, REL_Y = 0.5, REL_X = 1.8;
+// The court is mutable so Bullseye Bags can swap in its giant board (and a thrower up on a roof or a cliff): setCourt()
+// changes it and setCourt() with no argument puts the regular court back. Everything below reads these live.
+const G = 32.17; let FY = 27, BY = 31, HW = 1, FH = 0.25, BH = 1;
+const HOLE = { x: 0, y: BY - 0.75 }, BAG = 0.5, BR = 0.25; let HR = 0.25;
+let REL_H = 3, REL_Y = 0.5, REL_X = 1.8;
 // Which pitcher's box each player throws from this match (-1 = left, +1 = right). Randomized per match.
 const SIDES = [-1, 1];
-const SLOPE = Math.atan2(BH - FH, BY - FY), SS = Math.sin(SLOPE), SC = Math.cos(SLOPE);
+let SLOPE = Math.atan2(BH - FH, BY - FY), SS = Math.sin(SLOPE), SC = Math.cos(SLOPE);
+const COURT_STD = { FY: 27, BY: 31, HW: 1, FH: 0.25, BH: 1, HR: 0.25, hole: { x: 0, y: 30.25 }, rel: { h: 3, y: 0.5, x: 1.8 } };
+function setCourt(c = COURT_STD) {
+  FY = c.FY; BY = c.BY; HW = c.HW; FH = c.FH; BH = c.BH; HR = c.HR; HOLE.x = c.hole.x; HOLE.y = c.hole.y;
+  REL_H = c.rel.h; REL_Y = c.rel.y; REL_X = c.rel.x;
+  SLOPE = Math.atan2(BH - FH, BY - FY); SS = Math.sin(SLOPE); SC = Math.cos(SLOPE);
+}
+const handFloor = () => REL_H - 3; // what the thrower stands on (a roof, a cliff, a dock; 0 on a normal court)
 const T = { mu: 0.35, rBase: 0.75, rSteep: 0.6, rest: 0.35, luckSpeed: 0.08, luckDir: 0.07, grab: 0.08, stop: 0.08, dt: 1 / 240, carry: 1,
   minEl: 10 * Math.PI / 180, maxEl: 65 * Math.PI / 180, defEl: 32 * Math.PI / 180 };
 // Gear for the throw being planned: bag spin strength and how far the bag slides.

@@ -202,7 +202,7 @@ function clearBagMeshes() { for (const v of bagMeshes.values()) scene.remove(v.m
 function bagMesh(b) {
   let v = bagMeshes.get(b.id);
   if (!v) {
-    const mesh = new THREE.Mesh(bagGeo, bagMaterial(S.gear[b.owner]));
+    const mesh = new THREE.Mesh(bagGeo, bagMaterial(b.look || S.gear[b.owner])); // (b.look: Bullseye Bags' grey and star bags)
     mesh.castShadow = true; mesh.receiveShadow = true; mesh.rotation.order = "XYZ";
     scene.add(mesh); v = { mesh, dropT: 0, squashT: 9 }; bagMeshes.set(b.id, v);
   }
@@ -217,7 +217,7 @@ function updateBags(dt) {
     m.scale.set(1 + 0.25 * sq, 1 - 0.45 * sq, 1 + 0.25 * sq);
     if (b.state === "flying") {
       m.position.copy(W(b.x, b.y, b.z));
-      if (b.owner === 0 && S.kind === "career" && career.trail !== "none") trailPuff(m.position, career.trail, 0);
+      if (b.owner === 0 && (S.kind === "career" || S.kind === "bullseye") && career.trail !== "none") trailPuff(m.position, career.trail, 0);
       else if (b.owner === 1 && S.online && S.online.trail !== "none") trailPuff(m.position, S.online.trail, 1);
       m.rotation.set(0.2 * Math.sin(b.angle * 1.7), -b.angle, 0.15 * Math.cos(b.angle * 1.3));
     } else if (b.state === "inHole") {

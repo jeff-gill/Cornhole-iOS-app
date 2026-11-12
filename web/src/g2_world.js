@@ -2081,7 +2081,8 @@ function buildVenue(id) {
   skyU.sunDir.value.copy(sun.position).sub(sun.target.position).normalize();
   renderer.toneMappingExposure = L.exposure; venueDust = L.dust;
 
-  if (id === "backyard") { styledBackyard(g);
+  if (id.startsWith("bb_")) { bbScene(id, g); // Bullseye Bags (g4d_bullseye.js)
+  } else if (id === "backyard") { styledBackyard(g);
   } else if (id === "backyard-old") {
     // Photo-real backyard: real sky light, a photo lawn and plank fence, and scanned chairs, table and shrubs.
     const lawn = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), photoMat("sparse_grass", 520 / 9, 520 / 9, { tint: 0xb4ff6a, bump: 0.8, fallback: 0x5fae3e }));

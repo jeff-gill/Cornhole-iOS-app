@@ -95,6 +95,9 @@ const STORE = [
   { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Book of Tickets", icon: "🎟️", blurb: "+5 lives, even past the usual 5" },
   { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Pop can", icon: "🥫", blurb: "5 prizes: coins and cards" },
   { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Sparkle can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
+  { id: PID("bullseye.1"), kind: "throws", throws: 1, price: "$0.99", title: "1 Bullseye throw", hidden: true },
+  { id: PID("bullseye.3"), kind: "throws", throws: 3, price: "$1.99", title: "3 Bullseye throws", hidden: true },
+  { id: PID("bullseye.5"), kind: "throws", throws: 5, price: "$2.99", title: "5 Bullseye throws", hidden: true },
   { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
 ];
 // Throw effects: a trail behind your bag in flight (shop "Throw" tab).
@@ -214,6 +217,7 @@ function grantPurchase(id, restored) {
   if (!item) return null;
   if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
   if (item.kind === "caps") { if (!restored) career.caps += item.caps; save(); return item; }
+  if (item.kind === "throws") { if (!restored) bbState().extra += item.throws; save(); return item; }
   if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
   if (item.kind === "can") { // a bought can waits outside the cooler if it's full
     if (!restored) stashCan({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
@@ -279,6 +283,7 @@ function setTeamColors() {
 // (the straight-arrow window and the gold power band) on every court.
 const SWEET = 2;
 function lv() {
+  if (S.kind === "bullseye") return bbLevel();
   const v = venue(), g = S.gear[S.player];
   return {
     freq: v.swing * (1 - 0.06 * (g.acc - 1)),
@@ -379,6 +384,7 @@ function throwerName(p) {
   return P.names[p === 0 ? (b ? 2 : 0) : (b ? 3 : 1)];
 }
 function startMatch(kind, vi, online = null, pick = null) {
+  bbExit(); // (back to the regular court if Bullseye Bags was last)
   const v = VENUES[vi];
   S.online = null;
   if (kind === "career") S.practice = null;
@@ -456,7 +462,7 @@ let dragging = null, pendingDrag = null;
 function moveMarker(kind, p) {
   if (!canEdit()) return;
   if (kind === "end") {
-    S.end = { x: clamp(p.x, -1.8, 1.8), y: clamp(p.y, FY + 0.2, BY + 0.25) };
+    S.end = { x: clamp(p.x, -HW - 0.8, HW + 0.8), y: clamp(p.y, FY + 0.2, BY + 0.25) };
   } else if (S.plan) {
     const v = { x: p.x - S.end.x, y: p.y - S.end.y };
     S.landD = Math.hypot(v.x, v.y); S.landPhi = wrap(heading(v) - heading(S.plan.z.back));
@@ -570,6 +576,7 @@ function clockForfeit() {
   showInfo(`<div class="lifebig">⏱</div><h2>Match lost</h2><div class="muted">All four of your bags ran out of time in one inning, so the match goes to your opponent (−${stars} ⭐).</div>`);
 }
 function endTurn() {
+  if (S.kind === "bullseye") { bbFinish(); return; }
   if (S.kind === "career" && !career.tutorialDone && S.tut.thrown) { career.tutorialDone = true; save(); }
   if (S.thrown[0] >= 4 && S.thrown[1] >= 4) { finishInning(); return; }
   const other = 1 - S.player; if (S.thrown[other] < 4) S.player = other;

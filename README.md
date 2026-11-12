@@ -103,7 +103,8 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Win | Pot, stars, a can (if the cooler has room) and your life back |
 | Loss | Buy-in, stars and a life |
 | 4-bagger | Half a buy-in |
-| Daily | A free can (mostly Black or White) |
+| Daily Drop | 100 coins and a free can (mostly Black or White) that opens right away |
+| Bullseye Bags | One free throw a day (more for $0.99 / 3 for $1.99 / 5 for $2.99). See below |
 | Ticket (life) for coins | Set by your season title: 100, 250, 600, 1.5K, 4K, 10K, 25K, 60K, 150K (Rookie to Hall of Famer), but never more than a tenth of a buy-in at your highest open court |
 | Ticket (life) for caps | 15 caps |
 | Open a can now | 1 cap per 10 minutes left |
@@ -112,6 +113,22 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Duplicate card | 0.1% of the item's price per card |
 
 At an even win rate, coins barely grow, and a court's winnings buy the shop tier or two that match it.
+
+**Bullseye Bags.** A daily one-throw challenge at a giant 6 × 7 ft bullseye board (web/src/g4d_bullseye.js). The scene
+(Rooftop Drop, Long Bomb, Dock Drop, Cliff Toss), weather (sunny, cloudy, rain = slick, snow = sticky, fog), wind, board,
+bag and the bags already lying on the board all come from the date, so everyone gets the same challenge that day. Pick
+Easy or Hard per throw. Knocking the star bag into the hole doubles the prize. Coins are in buy-ins of your best court.
+
+| Finish | Easy | Hard |
+|---|---|---|
+| In the hole | Bronze–Gold can (opens right away) | Gold–Diamond can (opens right away) |
+| Bullseye ring (< 1.1 ft) | 3 caps | 10 caps |
+| Middle ring (< 1.9 ft) | 1 buy-in | 3 buy-ins |
+| Outer ring (< 2.7 ft) | 0.5 buy-in | 1.5 buy-ins |
+| On the board | 0.2 buy-in | 0.6 buy-in |
+| Missed | 0.05 buy-in | 0.1 buy-in |
+
+Extra throws are consumable in-app purchases: `com.jeffgill.cornhole.bullseye.1`, `.bullseye.3` and `.bullseye.5`.
 
 **Cans.** Chance per win and contents. Coins are counted in buy-ins of the court where the can was won.
 
