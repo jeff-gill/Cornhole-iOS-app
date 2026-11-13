@@ -1,11 +1,12 @@
-// ───────────────────────── Bullseye Bags: a daily challenge at a giant board with five prizes on it
-// Everyone gets the same challenge each day (the scene, wind, weather, board and where the prizes and the bags already
-// lying on the board are all come from the date), and everyone throws the same Golden Bag. Pick Easy or Hard: each has
-// four coloured prize targets plus the hole. Finish a throw inside a target to win its prize, and that target is gone for
-// the rest of the day, so later throws go after what's left. The hole is the top prize (a can that opens on the spot).
-// Knock the star bag into the hole for double. One free throw a day; more can be bought (1, 3 or 5).
-// The board is a giant 5 x 10 ft board, a real board's 1:2 shape.
-const BB_BOARD = { W: 5, L: 10, FH: 0.35, BH: 1.75, HR: 0.42 };
+// ───────────────────────── Bullseye Bags: a daily challenge at a giant cornhole board with a bullseye round the hole
+// Everyone gets the same challenge each day (the scene, wind, weather, board and the bags already lying on the board all
+// come from the date), and everyone throws the same Golden Bag. The board is laid out like a real one, just bigger: the
+// hole sits near the back, and four coloured rings circle it, running off the back and sides of the board. Each ring and
+// the hole is a prize; only a bag resting on the board counts. Win a ring and it's gone (plain wood) for the rest of the
+// day, so later throws go after what's left. The hole is the top prize (a can that opens on the spot). Knock the star bag
+// into the hole for double. Easy and Hard (tighter rings, farther, windier, more bags in the way). One free throw a day;
+// more can be bought (1, 3 or 5). The board is a giant 5 x 10 ft board, a real board's 1:2 shape.
+const BB_BOARD = { W: 5, L: 10, FH: 0.35, BH: 1.75, HR: 0.42, HOLE_Y: 8.125 }; // hole 9" from the back on a real board, scaled
 const BB_SCENES = [
   { id: "bb_roof", name: "Rooftop Drop", sub: "Down from a roof to the plaza", dist: [20, 30], height: 30, surf: false },
   { id: "bb_field", name: "Long Bomb", sub: "All the way down the park", dist: [40, 58], height: 0, surf: false },
@@ -20,16 +21,18 @@ const BB_WEATHER = [
   { id: "snow", name: "Snow", icon: "🌨️", w: 10, note: "Snowy board: bags stop short", mu: 1.35, r: -0.14, only: ["bb_roof", "bb_field"] },
   { id: "fog", name: "Fog", icon: "🌫️", w: 16, note: "Hard to see the board" },
 ];
-// The five prizes for each level, from smallest to the hole. Colours never change. Coins are in buy-ins of your best
-// court. Hard has smaller targets, farther away, in more wind, with more bags in the way.
+// The five prizes for each level: the four rings from the outside in, then the hole. Colours never change. Coins are in
+// buy-ins of your best court.
 const BB_PRIZES = {
-  easy: [{ name: "Blue", c: "#2f86ff", coins: 0.04 }, { name: "Green", c: "#2fbf71", caps: 2 }, { name: "Red", c: "#ff3b30", coins: 0.1 },
-    { name: "Orange", c: "#ff8a1f", can: { bronze: 60, silver: 40 } }, { name: "The hole", c: "#ffc93a", hole: true, can: { silver: 50, gold: 40, purple: 10 } }],
-  hard: [{ name: "Purple", c: "#8a4dff", coins: 0.12 }, { name: "Pink", c: "#ff2e88", caps: 6 }, { name: "Teal", c: "#00c2d1", coins: 0.3 },
-    { name: "Red", c: "#e8231a", can: { gold: 60, purple: 40 } }, { name: "The hole", c: "#b6f000", hole: true, can: { purple: 50, platinum: 35, diamond: 15 } }],
+  easy: [{ name: "Blue ring", c: "#2f86ff", coins: 0.04 }, { name: "Green ring", c: "#2fbf71", caps: 2 }, { name: "Red ring", c: "#ff3b30", coins: 0.1 },
+    { name: "Orange ring", c: "#ff8a1f", can: { bronze: 60, silver: 40 } }, { name: "The hole", c: "#ffc93a", hole: true, can: { silver: 50, gold: 40, purple: 10 } }],
+  hard: [{ name: "Purple ring", c: "#8a4dff", coins: 0.12 }, { name: "Pink ring", c: "#ff2e88", caps: 6 }, { name: "Teal ring", c: "#00c2d1", coins: 0.3 },
+    { name: "Red ring", c: "#e8231a", can: { gold: 60, purple: 40 } }, { name: "The hole", c: "#b6f000", hole: true, can: { purple: 50, platinum: 35, diamond: 15 } }],
 };
-const BB_TARGET_R = { easy: 0.85, hard: 0.55 };
-const BB_CONSOLATION = { easy: { board: 0.02, miss: 0.005 }, hard: { board: 0.06, miss: 0.01 } };
+// Ring edges (ft from the middle of the hole), outer to inner: prize 0 is the outer ring, prize 3 the one round the hole.
+// The outer rings run off the back and sides of the board; only the part on the board counts.
+const BB_RINGS = { easy: [3.1, 2.35, 1.65, 1.05], hard: [2.3, 1.75, 1.25, 0.82] };
+const BB_CONSOLATION = { easy: 0.02, hard: 0.06 }; // on the board but in no ring (or a ring already won); off the board wins nothing
 // Plain words for the day's board (what it does to a landing bag).
 const BB_SURF_WORDS = { "-2": "Sticky: bags stop short", "-1": "Grippy: bags stop a bit short", "0": "Normal: bags slide a normal amount", "1": "Fast: bags slide farther", "2": "Slick: bags slide a long way" };
 // Everyone throws the Golden Bag (a neutral bag with good stats), so nobody needs to know the shop's bags.
@@ -52,25 +55,15 @@ function bbToday() {
   const board = pick(BOARDS).id, windDir = r() * Math.PI * 2, gust = r();
   const modes = {};
   for (const m of ["easy", "hard"]) {
-    const hard = m === "hard", L = BB_BOARD.L, HWb = BB_BOARD.W / 2, hole = { x: 0, y: L / 2 }, tr = BB_TARGET_R[m];
-    // four prize targets around the hole, never touching it or each other; the farther up the board, the better the prize
-    const spots = [];
-    for (let tries = 0; spots.length < 4 && tries < 2000; tries++) {
-      const a = r() * Math.PI * 2, dd = BB_BOARD.HR + tr + 0.45 + r() * 2.2, p = { x: Math.sin(a) * dd, y: hole.y + Math.cos(a) * dd };
-      if (Math.abs(p.x) > HWb - tr - 0.25 || p.y < tr + 0.35 || p.y > L - tr - 0.35) continue;
-      if (spots.some(q => Math.hypot(q.x - p.x, q.y - p.y) < 2 * tr + 0.4)) continue;
-      spots.push(p);
-    }
-    spots.sort((a, b) => a.y - b.y);
-    const targets = spots.map((p, i) => ({ i, x: p.x, y: p.y, r: tr }));
-    // the star bag sits near the hole (knock it in for double); grey bags are scattered, never on the hole or a target's middle
-    const bags = [], clear = p => Math.hypot(p.x - hole.x, p.y - hole.y) > 0.75 && targets.every(t => Math.hypot(t.x - p.x, t.y - p.y) > t.r * 0.6) && bags.every(b => Math.hypot(b.x - p.x, b.y - p.y) > 0.7);
-    for (let tries = 0; tries < 200; tries++) { const sa = r() * Math.PI * 2, sd = 0.75 + r() * 0.55, p = { x: Math.sin(sa) * sd, y: hole.y + Math.cos(sa) * sd, star: true, angle: r() * 6 }; if (clear(p)) { bags.push(p); break; } }
+    const hard = m === "hard", L = BB_BOARD.L, HWb = BB_BOARD.W / 2, hole = { x: 0, y: BB_BOARD.HOLE_Y };
+    // the star bag sits near the hole (knock it in for double); grey bags are scattered, never on the hole
+    const bags = [], clear = p => Math.hypot(p.x - hole.x, p.y - hole.y) > 0.75 && p.y < L - 0.4 && bags.every(b => Math.hypot(b.x - p.x, b.y - p.y) > 0.7);
+    for (let tries = 0; tries < 200; tries++) { const sa = Math.PI * (0.55 + r() * 0.9), sd = 0.75 + r() * 0.55, p = { x: Math.sin(sa) * sd, y: hole.y + Math.cos(sa) * sd, star: true, angle: r() * 6 }; if (clear(p)) { bags.push(p); break; } }
     for (let k = 0, tries = 0; k < (hard ? 4 : 1) && tries < 400; tries++) {
-      const p = { x: (r() * 2 - 1) * (HWb - 0.45), y: 0.45 + r() * (L - 0.9), angle: r() * 6 };
+      const p = { x: (r() * 2 - 1) * (HWb - 0.45), y: 2 + r() * (L - 2.6), angle: r() * 6 };
       if (clear(p)) { bags.push(p); k++; }
     }
-    modes[m] = { dist: Math.round(hard ? scene.dist[1] : scene.dist[0]), wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags, targets };
+    modes[m] = { dist: Math.round(hard ? scene.dist[1] : scene.dist[0]), wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags };
   }
   return (bbToday.cache = { key, scene, weather, board, windDir, modes });
 }
@@ -113,15 +106,16 @@ function bbPrizeText(p) {
   if (p.caps) return `<i class="bcap"></i> ${p.caps}`;
   return `<i class="coin"></i> ${short(bbCoins(p.coins))}`;
 }
-// Where the thrown bag finished: a prize index (0-3 a target, 4 the hole), "board" or "miss". Won prizes are gone.
-function bbHit(b, mode, M) {
-  const won = bbWon(mode);
+// Where the thrown bag finished: a prize index (0-3 a ring from the outside in, 4 the hole), "board" or "miss".
+// Only a bag resting on the board counts; a ring already won today is plain wood.
+function bbHit(b, mode) {
+  const won = bbWon(mode), R = BB_RINGS[mode];
   if (!b) return "miss";
   if (b.state === "inHole") return won.includes(4) ? "board" : 4;
   if (!onSurface(b) || !onBoard(b)) return "miss";
-  let best = null, bd = 1e9;
-  for (const t of M.targets) { if (won.includes(t.i)) continue; const d = Math.hypot(b.x - t.x, b.y - (FY + t.y)); if (d < t.r && d < bd) { best = t.i; bd = d; } }
-  return best ?? "board";
+  const d = dist(b, HOLE);
+  for (let i = 3; i >= 0; i--) if (d < R[i] && (i === 0 || d >= R[i + 1] || i === 3)) return won.includes(i) ? "board" : i;
+  return "board";
 }
 
 // ── Starting a throw
@@ -138,7 +132,7 @@ function bbStart(mode) {
   initAudio();
   $("bbSheet").hidden = true; $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
   BB.active = { mode, day, M, done: false };
-  setCourt({ FY: M.dist, BY: M.dist + L, HW: BB_BOARD.W / 2, FH: BB_BOARD.FH, BH: BB_BOARD.BH, HR: BB_BOARD.HR, hole: { x: 0, y: M.dist + L / 2 }, rel: { h: sc.height + 3, y: 0.5, x: 0 } });
+  setCourt({ FY: M.dist, BY: M.dist + L, HW: BB_BOARD.W / 2, FH: BB_BOARD.FH, BH: BB_BOARD.BH, HR: BB_BOARD.HR, hole: { x: 0, y: M.dist + BB_BOARD.HOLE_Y }, rel: { h: sc.height + 3, y: 0.5, x: 0 } });
   S.kind = "bullseye"; S.practice = null; S.online = null; S.opponent = null; S.names = [myHandle(), ""];
   S.gear = [BB_GOLDEN, { ...BB_LOOKS.grey, acc: 1, ctrl: 1, spin: 1, feel: "neutral" }];
   S.teamC = [BB_GOLDEN.c, "#9aa0aa"]; setTeamColors();
@@ -162,7 +156,8 @@ function bbStart(mode) {
   showBanner(mode === "hard" ? "Bullseye Bags · HARD" : "Bullseye Bags", 0);
   beginTurn();
   // aimed at the best prize still on the board to start, so the throw's path shows right away
-  const won = bbWon(mode), aim = !won.includes(4) ? { x: 0, y: HOLE.y } : [...M.targets].reverse().filter(t => !won.includes(t.i)).map(t => ({ x: t.x, y: FY + t.y }))[0] || { x: 0, y: HOLE.y };
+  const won = bbWon(mode), R = BB_RINGS[mode], k = [3, 2, 1, 0].find(i => !won.includes(i)) ?? 3;
+  const aim = !won.includes(4) ? { x: 0, y: HOLE.y } : { x: 0, y: HOLE.y - (R[k] + (R[k + 1] || BB_BOARD.HR)) / 2 }; // the front of the best ring left
   S.end = aim; refreshPlan(); ui();
 }
 // Today's prizes for a level: a colour dot, the prize, and a tick once won.
@@ -193,7 +188,7 @@ function bbExit() {
   sun.target.position.set(0, 0, -27);
 }
 
-// ── The giant board: wood with the day's prize targets painted on (won ones are gone), a ring round the hole, a frame.
+// ── The giant board: wood with the bullseye rings round the hole (won ones are plain wood), a frame and legs.
 function bbPaintBoard(c, w, h, d, mode, M) {
   const s = w / BB_BOARD.W, r = rng(9), won = bbWon(mode), P = BB_PRIZES[mode];
   const g = c.createLinearGradient(0, 0, w, 0);
@@ -212,20 +207,26 @@ function bbPaintBoard(c, w, h, d, mode, M) {
     if (p.can) { const cw = rad * 0.62, ch = rad * 1.0; c.beginPath(); c.roundRect(x - cw / 2, y - ch / 2, cw, ch, cw * 0.22); c.fill(); c.stroke(); c.fillStyle = p.c; c.fillRect(x - cw / 2, y - ch * 0.12, cw, ch * 0.24); }
     else { c.font = `900 ${Math.round(rad * (p.caps ? 1.1 : 1.2))}px Arial Black, sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(p.caps ? "★" : "$", x, y + rad * 0.06); }
   };
-  for (const t of M.targets) {
-    if (won.includes(t.i)) continue; // won: that target is gone for the day
-    const p = P[t.i], x = X(t.x), y = Y(t.y), rad = t.r * s;
-    c.fillStyle = "#ffffff"; c.beginPath(); c.arc(x, y, rad + 0.09 * s, 0, 7); c.fill();
-    const gr = c.createRadialGradient(x, y - rad * 0.4, rad * 0.1, x, y, rad); gr.addColorStop(0, shade(p.c, 0.35)); gr.addColorStop(1, p.c);
-    c.fillStyle = gr; c.beginPath(); c.arc(x, y, rad, 0, 7); c.fill();
-    glyph(p, x, y, rad * 0.75);
+  const hx = X(0), hy = Y(BB_BOARD.HOLE_Y), RR = BB_RINGS[mode];
+  for (let i = 0; i < 4; i++) { // outer ring first; each is an annulus out to its edge (in to the next ring)
+    if (won.includes(i)) continue; // won: plain wood for the rest of the day
+    const p = P[i], ro = RR[i] * s, ri = (RR[i + 1] || 0) * s;
+    const gr = c.createRadialGradient(hx, hy - ro * 0.3, ri, hx, hy, ro); gr.addColorStop(0, shade(p.c, 0.3)); gr.addColorStop(1, p.c);
+    c.fillStyle = gr; c.beginPath(); c.arc(hx, hy, ro, 0, 7); if (ri) c.arc(hx, hy, ri, 7, 0, true); c.fill("evenodd");
+  }
+  c.strokeStyle = "#ffffff"; c.lineWidth = 0.07 * s;
+  for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(hx, hy, RR[i] * s, 0, 7); c.stroke(); }
+  for (let i = 0; i < 4; i++) { // each ring's prize symbol on its front edge, where you can see it from the throw
+    if (won.includes(i)) continue;
+    glyph(P[i], hx, hy + (RR[i] + (RR[i + 1] || BB_BOARD.HR)) / 2 * s, Math.min(0.32, (RR[i] - (RR[i + 1] || BB_BOARD.HR)) * 0.45) * s);
   }
   if (!won.includes(4)) { // the hole: the top prize, ringed in its colour
-    const x = X(0), y = Y(BB_BOARD.L / 2), hr = BB_BOARD.HR * s;
-    c.fillStyle = "#ffffff"; c.beginPath(); c.arc(x, y, hr + 0.32 * s, 0, 7); c.fill();
-    c.fillStyle = P[4].c; c.beginPath(); c.arc(x, y, hr + 0.24 * s, 0, 7); c.fill();
-    c.fillStyle = "#ffffff"; c.beginPath(); c.arc(x, y, hr + 0.06 * s, 0, 7); c.fill();
+    const hr = BB_BOARD.HR * s;
+    c.fillStyle = "#ffffff"; c.beginPath(); c.arc(hx, hy, hr + 0.2 * s, 0, 7); c.fill();
+    c.fillStyle = P[4].c; c.beginPath(); c.arc(hx, hy, hr + 0.15 * s, 0, 7); c.fill();
   }
+  // the border on top of the rings, so the board's edge stays crisp where they run off it
+  c.strokeStyle = edge; c.lineWidth = 0.22 * s; c.strokeRect(0.11 * s, 0.11 * s, w - 0.22 * s, h - 0.22 * s);
   c.fillStyle = edge; for (const [x, y] of [[0.4, 0.4], [BB_BOARD.W - 0.4, 0.4], [0.4, BB_BOARD.L - 0.4], [BB_BOARD.W - 0.4, BB_BOARD.L - 0.4]]) { c.beginPath(); c.arc(x * s, y * s, 0.16 * s, 0, 7); c.fill(); }
 }
 function bbBuildBoard(d, mode, M) {
@@ -319,8 +320,9 @@ function bbCamera(mode, narrow) {
     const b = S.world.bags.find(x => x.id === S.lastId);
     if (b) { tPos.set(b.x * 0.6, Math.max(top + 3.2, b.z * 0.7 + 2.6), -b.y + 7.5); tLook.set(b.x * 0.5, Math.max(0, b.z * 0.4), -b.y - 6); return { fov: narrow ? 50 : 42, k: 5 }; }
   }
-  tPos.set(0, top + (narrow ? 17 : 13.5), -(FY - (narrow ? 4 : 3)));
-  tLook.set(0, top - 0.8, -(HOLE.y + 0.6));
+  const mid = plane(FY + (BY - FY) * 0.62); // the whole board in view, the hole near the back
+  tPos.set(0, mid + (narrow ? 17 : 13.5), -(FY - (narrow ? 4 : 3)));
+  tLook.set(0, mid - 0.8, -(FY + (BY - FY) * 0.62));
   return { fov: narrow ? 56 : 46, k: 3 };
 }
 
@@ -328,10 +330,10 @@ function bbCamera(mode, narrow) {
 function bbFinish() {
   const A = BB.active; if (!A || A.done) return;
   A.done = true; bbState().used = null;
-  const b = S.world.bags.find(x => x.id === S.lastId), hit = bbHit(b, A.mode, A.M);
+  const b = S.world.bags.find(x => x.id === S.lastId), hit = bbHit(b, A.mode);
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];
-  const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : { coins: BB_CONSOLATION[A.mode][hit] };
+  const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : hit === "board" ? { coins: BB_CONSOLATION[A.mode] } : {};
   if (typeof hit === "number") bbWon(A.mode).push(hit); // that prize is gone for the rest of the day
   if (p.can) for (let k = 0; k < times; k++) { // the first can opens on the spot; a doubled second one goes in the cooler, locked
     const id = rollCan(p.can);
@@ -339,7 +341,7 @@ function bbFinish() {
     got.push({ can: id, later: k > 0 });
   }
   else if (p.caps) { career.caps += p.caps * times; got.push({ caps: p.caps * times }); }
-  else { const n = bbCoins(p.coins) * times; career.coins += n; got.push({ coins: n }); }
+  else if (p.coins) { const n = bbCoins(p.coins) * times; career.coins += n; got.push({ coins: n }); }
   save(); S.phase = "bbdone"; ui();
   if (typeof hit === "number") { sfx.win(); haptic("success"); } else if (hit === "miss") sfx.thud();
   A.result = { hit, doubled, got };
@@ -350,10 +352,10 @@ function renderBBResult() {
   const prize = R.got.map(g => g.can ? `<div class="bbprize">🥫 <b>${esc(canById(g.can).name)}</b>${g.later ? "<small>In your cooler</small>" : ""}</div>` : g.caps ? `<div class="bbprize"><i class="bcap big"></i><b>${g.caps} caps</b></div>` : `<div class="bbprize"><i class="coin big"></i><b>${short(g.coins)}</b></div>`).join("");
   const left = 5 - bbWon(A.mode).length, level = A.mode === "hard" ? "Hard" : "Easy";
   $("bbBody").innerHTML = `<div class="lifebig">${won ? (P.hole ? "🎯" : "🏆") : R.hit === "miss" ? "💨" : "🙂"}</div>
-    <h2>${won ? (P.hole ? "In the hole!" : `${P.name} target!`) : R.hit === "miss" ? "Missed the board" : "No target this time"}</h2>
+    <h2>${won ? (P.hole ? "In the hole!" : `${P.name}!`) : R.hit === "miss" ? "Off the board" : "On the board"}</h2>
     ${R.doubled ? `<div class="bbdouble">⭐ You knocked the star bag in: <b>DOUBLE!</b></div>` : ""}
     <div class="bbprizes">${prize}</div>
-    <div class="muted center">${can ? "Your can opens right now." : won ? "That target is gone for today." : "A little something for trying."}</div>
+    <div class="muted center">${can ? "Your can opens right now." : won ? "That prize is gone for today." : R.hit === "miss" ? "Only bags on the board count." : "A little something for landing on the board."}</div>
     <div class="bbstrip">${bbPrizeRows(A.mode)}</div>
     <div class="bbthrows">${left ? `${left} of 5 ${level} prizes left today.` : `You've won every ${level} prize today! 🎉`}</div>
     <button class="btn green go" id="bbCollect">${can ? "OPEN IT!" : "COLLECT"}</button>
@@ -386,7 +388,7 @@ function renderBBSheet(msg = "") {
     const M = day.modes[mode], won = bbWon(mode), done = won.length >= 5;
     return `<div class="bbmode ${mode}">
       <h3>${mode === "hard" ? "HARD" : "EASY"}</h3>
-      <div class="bbfacts"><span>📏 ${M.dist} ft</span><span>🌬️ ${M.wind} mph</span><span>🎯 ${mode === "hard" ? "Small targets" : "Big targets"}</span></div>
+      <div class="bbfacts"><span>📏 ${M.dist} ft</span><span>🌬️ ${M.wind} mph</span><span>🎯 ${mode === "hard" ? "Tight rings" : "Wide rings"}</span></div>
       <div class="bbdots">${BB_PRIZES[mode].map((p, i) => `<i class="${p.hole ? "hole" : ""} ${won.includes(i) ? "won" : ""}" style="--c:${p.c}"></i>`).join("")}</div>
       <div class="bbleft">${done ? "All 5 won today ✓" : `${5 - won.length} of 5 prizes left`}</div>
       <button class="btn ${mode === "hard" ? "red" : "green"}" data-bbmode="${mode}" ${can && !done ? "" : "disabled"}>${done ? "CLEARED ✓" : `PLAY ${mode === "hard" ? "HARD" : "EASY"}`}</button></div>`;
@@ -394,7 +396,7 @@ function renderBBSheet(msg = "") {
   $("bbBody").innerHTML = `<h2>🎯 Bullseye Bags</h2>
     <div class="bbday"><b>${esc(day.scene.name)}</b><small>${esc(day.scene.sub)}${day.scene.height ? ` · ${day.scene.height} ft up` : ""}</small></div>
     <div class="bbconds"><span>${w.icon} ${w.name}<small>${w.note || "No effect on the board"}</small></span><span>🪵 The board<small>${BB_SURF_WORDS[d.surf || 0]}</small></span><span>🟡 Golden Bag<small>Everyone throws the same bag</small></span></div>
-    <div class="bbstar">Land in a coloured target to win it; the hole is the top prize. Won targets are gone for the day. ⭐ Knock the <b>star bag</b> in for <b>double</b>.</div>
+    <div class="bbstar">Finish in a ring to win it; the hole is the top prize. Only bags on the board count, and won rings are gone for the day. ⭐ Knock the <b>star bag</b> in for <b>double</b>.</div>
     <div class="bbmodes">${card("easy")}${card("hard")}</div>
     <div class="bbthrows">${free ? "🎁 Your free throw for today is ready." : extra ? `You have <b>${extra}</b> throw${extra > 1 ? "s" : ""} left.` : `Next free throw in <b id="bbCount">${timeText(bbUntilMidnight())}</b>`}</div>
     <div class="label center">${can ? "More throws" : "Buy more throws"}</div>
