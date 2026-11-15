@@ -2343,7 +2343,7 @@ function buildVenue(id) {
     venueAnim.push({ kind: "sea", n1, n2 });
     const sandTex = groundTexture("sand"); sandTex.repeat.set(2, 2);
     islandShape(g, 0, 4, 10.5, 11, sandTex); islandShape(g, 0, -30, 9.5, 23, sandTex); // yours, and the board's island across the water
-    blenderPalm(g, -7.5, 0, 7, 1, 0.95); blenderPalm(g, 7, 0, 9, 2, 0.85); blenderPalm(g, -6, 0, -35, 3, 1); blenderPalm(g, 6.5, 0, -34, 4, 0.9);
+    blenderPalm(g, -7.5, 0, 7, 1, 0.95); blenderPalm(g, 7, 0, 9, 2, 0.85); blenderPalm(g, -11, 0, -37, 3, 1); blenderPalm(g, 11.5, 0, -36, 4, 0.9); // well to the sides of the far board, so they never lean across it
     umbrella(g, 7, 0, 0xff4b3a); chair(g, 5.5, -25, -0.5, 0xffc93a);
     // spectators on the water, all keeping clear of the throwing lane
     const spots = [["canoe", -22, -6, 0.3], ["kayak", 20, -10, -0.4], ["paddle", -18, -40, 0.9], ["row", 24, -36, -0.6], ["motor", -32, -24, 1.4], ["raft", 15, 6, 0], ["raft", -14, 12, 0], ["kayak", 30, 14, 2.2],

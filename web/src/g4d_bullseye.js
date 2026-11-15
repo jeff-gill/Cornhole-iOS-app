@@ -29,7 +29,6 @@ const BB_PRIZES = {
 // Ring edges (ft from the middle of the hole), outer to inner: prize 0 is the outer ring, prize 3 the one round the hole.
 // The outer rings run off the back and sides of the board; only the part on the board counts.
 const BB_RINGS = { easy: [1.35, 1.05, 0.78, 0.52], hard: [1.0, 0.78, 0.58, 0.4] };
-const BB_CONSOLATION = { easy: 0.02, hard: 0.06 }; // on the board but in no ring (or a ring already won); off the board wins nothing
 // Plain words for the day's board (what it does to a landing bag).
 const BB_SURF_WORDS = { "-2": "Sticky: bags stop short", "-1": "Grippy: bags stop a bit short", "0": "Normal: bags slide a normal amount", "1": "Fast: bags slide farther", "2": "Slick: bags slide a long way" };
 // Everyone throws the Golden Bag (a neutral bag with good stats), so nobody needs to know the shop's bags.
@@ -78,6 +77,29 @@ function bbWon(mode) { // indexes 0-4 (4 is the hole) won today on this level
   const s = bbState();
   if (!s.won || s.won.day !== bbDay()) s.won = { day: bbDay(), easy: [], hard: [] };
   return s.won[mode];
+}
+// Labels floating over each ring (and the hole) saying what it's worth; a won ring has none (it's plain wood now).
+function bbShowRingLabels(on) {
+  for (const sp of BB.labels || []) { scene.remove(sp); sp.material.map.dispose(); sp.material.dispose(); }
+  BB.labels = [];
+  if (!on || !BB.active) return;
+  const mode = BB.active.mode, won = bbWon(mode), R = BB_RINGS[mode], P = BB_PRIZES[mode];
+  const ang = [0, 0.9, -0.9, 2.3]; // where on each ring its label sits (radians round from the front), spread so they don't overlap
+  for (let i = 0; i < 5; i++) {
+    if (won.includes(i)) continue;
+    const p = P[i], text = p.can ? `${Object.keys(p.can).map(k => canById(k).name.split(" ")[0]).filter((v, j, a) => j === 0 || j === a.length - 1).join("–")} can` : p.caps ? `${p.caps} caps` : `${short(bbCoins(p.coins))} coins`;
+    let x = -0.5, y = HOLE.y + 0.55; // the hole's label just behind it, to the left
+    if (i < 4) { const mid = (R[i] + (R[i + 1] || HR)) / 2, a = ang[i]; x = Math.sin(a) * mid; y = HOLE.y - Math.cos(a) * mid; if (i === 3) x = Math.max(x, 0.45); }
+    x = clamp(x, -HW + 0.4, HW - 0.4);
+    const tex = canvasTex(320, 96, (c, w, h) => {
+      c.fillStyle = p.c; c.strokeStyle = "#ffffff"; c.lineWidth = 7;
+      c.beginPath(); c.roundRect(5, 5, w - 10, h - 10, 34); c.fill(); c.stroke();
+      c.fillStyle = "#ffffff"; c.font = `900 ${text.length > 14 ? 30 : 40}px Arial Black, sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
+      c.lineWidth = 6; c.strokeStyle = "rgba(0,0,0,.35)"; c.strokeText(text, w / 2, h / 2 + 2); c.fillText(text, w / 2, h / 2 + 2);
+    });
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    sp.scale.set(0.8, 0.24, 1); sp.renderOrder = 10; sp.position.copy(W(x, y, plane(y) + 0.22)); scene.add(sp); BB.labels.push(sp);
+  }
 }
 const bbCleared = mode => !testing() && bbWon(mode).length >= 5;
 function bbUseThrow() {
@@ -157,12 +179,20 @@ function bbStart(mode, preview = false) {
   buildVenue(sc.id); setBoardDesign(day.board);
   bbBuildBoard(d, mode, M); bbWeather(w);
   venueAmbience(sc.id, M.wind);
-  if (preview) { S.phase = "bbpreview"; showBanner(mode === "hard" ? "Preview · HARDER" : "Preview · EASIER", 0); ui(); return; }
+  if (preview) { S.phase = "bbpreview"; bbShowRingLabels(true); showBanner(mode === "hard" ? "Preview · HARDER" : "Preview · EASIER", 0); ui(); return; }
   bbBeginThrow();
 }
+// Like Golf Clash: first a close look at the board with what each ring is worth, then the camera pulls back to aim.
+const BB_INTRO_SECS = 3.2;
 function bbBeginThrow() {
   const mode = BB.active.mode;
   showBanner(mode === "hard" ? "Bullseye Bags · HARDER" : "Bullseye Bags · EASIER", 0);
+  bbShowRingLabels(true); BB.introT = 0; S.phase = "bbintro"; ui();
+}
+function bbEndIntro() {
+  if (S.phase !== "bbintro") return;
+  const mode = BB.active.mode;
+  bbShowRingLabels(false);
   beginTurn();
   // aimed at the best prize still on the board to start, so the throw's path shows right away
   const won = bbWon(mode), R = BB_RINGS[mode], k = [3, 2, 1, 0].find(i => !won.includes(i)) ?? 3;
@@ -173,7 +203,7 @@ function bbBeginThrow() {
 function bbPreviewPlay() {
   const A = BB.active; if (!A || !A.preview) return;
   if (!bbUseThrow()) { bbPreviewBack(); return; }
-  A.preview = false; bbBeginThrow();
+  A.preview = false; bbShowRingLabels(false); bbBeginThrow();
 }
 function bbPreviewBack() { openHub(); renderBBSheet(); }
 function bbPreviewPanel() {
@@ -190,7 +220,7 @@ function bbPrizeRows(mode) {
 }
 // The prize key: shown on the board screen while you pick your spot, gone once you start the throw.
 function bbRenderLegend() {
-  const el = $("bbLegend"), show = S.kind === "bullseye" && (S.phase === "aiming" || S.phase === "bbpreview") && !!BB.active;
+  const el = $("bbLegend"), show = false; // (replaced by the labels on the board during the zoom-in)
   el.hidden = !show; if (!show) return;
   const mode = BB.active.mode;
   el.innerHTML = `<h4>Today's prizes <small>${5 - bbWon(mode).length} left</small></h4>${bbPrizeRows(mode)}<p>⭐ Star bag in the hole: <b>x2</b></p>`;
@@ -205,6 +235,7 @@ function bbExit() {
   if (BB.mesh) { scene.remove(BB.mesh); BB.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); }); BB.mesh = null; }
   if (BB.precip) { scene.remove(BB.precip.o); BB.precip.o.geometry.dispose(); BB.precip = null; }
   if (BB.starTag) { scene.remove(BB.starTag); BB.starTag = null; }
+  bbShowRingLabels(false);
   if (S.kind !== "bullseye") return;
   setCourt(); S.kind = "career";
   targetBoard.visible = ownBoard.visible = true; teamCoolers.visible = true;
@@ -262,7 +293,8 @@ function bbBuildBoard(d, mode, M) {
   geo.rotateX(-Math.PI / 2);
   const tex = canvasTex(800, Math.round(800 * L / (2 * HW)), (c, w, h) => bbPaintBoard(c, w, h, d, mode, M));
   tex.repeat.set(1 / (2 * HW), 1 / L); tex.offset.set(0.5, 0); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
-  const top = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55 }), new THREE.MeshStandardMaterial({ color: 0xc89a62, roughness: 0.7 })]);
+  // the top is matte and a touch darker so the rings stay bold in bright sun
+  const top = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, color: 0xd8d8d8, envMapIntensity: 0.35 }), new THREE.MeshStandardMaterial({ color: 0xc89a62, roughness: 0.7 })]);
   top.castShadow = top.receiveShadow = true; tilt.add(top);
   const frame = std(d.a === "#ffffff" ? 0x1f3a6e : d.a);
   for (const [w, dd, x, z] of [[0.1, L, HW - 0.05, -L / 2], [0.1, L, -HW + 0.05, -L / 2], [2 * HW, 0.1, 0, -0.05], [2 * HW, 0.1, 0, -L + 0.05]]) {
@@ -295,6 +327,7 @@ function bbWeather(w) {
   }
 }
 function bbTick(dt) {
+  if (S.phase === "bbintro" && (BB.introT += dt) >= BB_INTRO_SECS) bbEndIntro();
   if (BB.precip) {
     const P = BB.precip, a = P.o.geometry.attributes.position, wv = S.wind || { mph: 0, dir: 0 };
     const wx = Math.sin(wv.dir) * wv.mph * (P.rain ? 0.6 : 0.35), wz = -Math.cos(wv.dir) * wv.mph * (P.rain ? 0.6 : 0.35);
@@ -308,7 +341,7 @@ function bbTick(dt) {
   // a little "⭐ x2" tag floats over the star bag until it's in the hole or off the board
   if (S.kind === "bullseye") {
     const st = S.world.bags.find(b => b.star);
-    if (st && onSurface(st) && onBoard(st)) {
+    if (st && onSurface(st) && onBoard(st) && S.phase !== "bbintro") {
       if (!BB.starTag) BB.starTag = bbLabel("⭐ x2");
       BB.starTag.visible = true; BB.starTag.position.copy(W(st.x, st.y, plane(st.y) + 0.5 + 0.05 * Math.sin(S.time * 3)));
     } else if (BB.starTag) BB.starTag.visible = false;
@@ -356,7 +389,7 @@ function bbFinish() {
   const b = S.world.bags.find(x => x.id === S.lastId), hit = bbHit(b, A.mode);
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];
-  const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : hit === "board" ? { coins: BB_CONSOLATION[A.mode] } : {};
+  const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : {}; // no ring, no prize
   if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); if (testing() && wl.length >= 5) wl.length = 0; } // gone for the day (tester mode: all five come back once cleared)
   if (p.can) for (let k = 0; k < times; k++) { // the first can opens on the spot; a doubled second one goes in the cooler, locked
     const id = rollCan(p.can);
@@ -383,7 +416,7 @@ function renderBBResult() {
   $("bbRevTitle").innerHTML = won ? (P.hole ? "In the hole!" : `${P.name}!`) : R.hit === "miss" ? "Off the board" : "On the board";
   const card = $("bbRevPrize"); card.className = "prize";
   card.innerHTML = `<div class="pic">${pic}</div><b>${what}</b>${R.doubled ? `<small class="new">⭐ Star bag in: DOUBLE!</small>` : ""}${extra}
-    <small>${won ? (can ? "Open it now!" : "That prize is gone for today.") : R.hit === "miss" ? "Only bags on the board count." : "A little something for landing on the board."}</small>`;
+    <small>${won ? (can ? "Open it now!" : "That prize is gone for today.") : R.hit === "miss" ? "Only bags on the board count." : "No ring this time. Only the rings and the hole win."}</small>`;
   $("bbRevFoot").innerHTML = `<div class="bbrevleft">${left ? `${left} of 5 ${level} prizes left today` : `Every ${level} prize won today! 🎉`}</div>
     <button class="btn green go" id="bbCollect">${can ? "OPEN IT!" : won ? "COLLECT" : "OK"}</button>`;
   $("bbReveal").hidden = false;
@@ -416,8 +449,6 @@ function renderBBSheet(msg = "") {
     return `<div class="bbmode ${mode}">
       <h3>${mode === "hard" ? "HARDER" : "EASIER"}</h3>
       <div class="bbfacts"><span>📏 ${M.dist} ft</span><span>🌬️ ${M.wind} mph</span><span>🎯 ${mode === "hard" ? "Tighter rings" : "Wider rings"}</span></div>
-      <div class="bbdots">${BB_PRIZES[mode].map((p, i) => `<i class="${p.hole ? "hole" : ""} ${won.includes(i) ? "won" : ""}" style="--c:${p.c}"></i>`).join("")}</div>
-      <div class="bbleft">${done ? "All 5 won today ✓" : `${5 - won.length} of 5 prizes left`}</div>
       <button class="btn ${mode === "hard" ? "red" : "green"}" data-bbmode="${mode}" ${can && !done ? "" : "disabled"}>${done ? "CLEARED ✓" : "PLAY"}</button>
       ${done ? "" : `<button class="btn small" data-bbpreview="${mode}">👀 PREVIEW</button>`}</div>`;
   };

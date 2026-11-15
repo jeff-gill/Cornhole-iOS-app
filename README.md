@@ -8,7 +8,7 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 
 ## How it plays
 
-- **Career:** twelve courts (courts 9–12 show "Coming soon" until released; remove `soon: true` in `web/src/g1_flow.js` to release one) (Backyard BBQ, Tailgate Lot, Beach Shack, Pizza Patio, Mountain Lodge, Golf Club, Island Hop, City Rooftop, Lakeside Dock, Block Party, County Fair, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with a smaller sweet spot, wind that builds a little at every court (up to 10 mph), slicker boards and better opponents. The aim arrow swings at the same speed on every court. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
+- **Career:** twelve courts (courts 9–12 show "Coming soon" until released; remove `soon: true` in `web/src/g1_flow.js` to release one) (Backyard BBQ, Tailgate Lot, Beach Shack, Pizza Patio, Mountain Lodge, Golf Club, Island Hop, City Rooftop, Lakeside Dock, Block Party, County Fair, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with a smaller sweet spot, wind that builds a little at every court after the first two (calm) ones, up to 9 mph, slicker boards and better opponents. The aim arrow swings at the same speed on every court. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
 - **Pro Shop:** spend coins on bags (Accuracy, Control and Spin stats, plus a sticky, neutral or fast slide), board designs, throw effects and cornhole effects. Every coin item can also be unlocked by collecting its cards from cans.
 - **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Dazzle, plus rare Express Pop cans. Rarer cans hold more prizes (coins, item cards, now and then a life) and take longer to open: 15 minutes for Black up to 24 hours for Diamond. Only one can opens at a time, and Express cans open right away. Each of your cornholes in a match improves the odds of a better can. Opening one sprays mist and the prizes pop out one at a time.
 - **Lives (🎟️ raffle tickets):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra tickets come from the Store, from coins (at a steep price), from 15 bottle caps, or rarely from a can. The iPhone app can notify you when they're full.
@@ -103,7 +103,7 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Win | Pot, stars, a can (if the cooler has room) and your life back |
 | Loss | Buy-in, stars and a life |
 | 4-bagger | Half a buy-in |
-| Daily Drop | 100 coins and a free can (mostly Black or White) that opens right away |
+| Daily Drop | Grows with your season title: 100 coins (Rookie) up to 6,000 (Hall of Famer), plus a free can that opens right away, with better can odds at every title |
 | Bullseye Bags | One free throw a day (more for $0.99 / 3 for $1.99 / 5 for $2.99). See below |
 | Ticket (life) for coins | Set by your season title: 100, 250, 600, 1.5K, 4K, 10K, 25K, 60K, 150K (Rookie to Hall of Famer), but never more than a tenth of a buy-in at your highest open court |
 | Ticket (life) for caps | 15 caps |
@@ -129,7 +129,7 @@ hole. Only a bag resting on the board counts. Finish in a ring to win it, and it
 | 3rd ring | Red: 0.1 buy-in | Teal: 0.3 buy-in |
 | Inner ring | Orange: Bronze–Silver can | Red: Gold–Purple can |
 | The hole | Silver–Purple can, opens right away | Purple–Diamond can, opens right away |
-| On the board, no ring | 0.02 buy-in | 0.06 buy-in |
+| On the board, no ring | nothing | nothing |
 | Off the board | nothing | nothing |
 
 Extra throws are consumable in-app purchases: `com.jeffgill.cornhole.bullseye.1`, `.bullseye.3` and `.bullseye.5`.

@@ -87,7 +87,9 @@ function updateCamera(dt) {
   if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
-  if (S.kind === "bullseye" && handFloor() > 0 && mode !== "intro" && mode !== "preview") { const c = bbCamera(mode, narrow); fov = c.fov; k = c.k; } // (a standard court uses the match cameras)
+  if (S.kind === "bullseye" && S.phase === "bbintro") { // zoomed in over the board to read what each ring is worth
+    const top = plane(HOLE.y); tPos.set(0, top + (narrow ? 4.4 : 3.6), -(HOLE.y - (narrow ? 2.6 : 2.2))); tLook.set(0, top, -(HOLE.y - 0.45)); fov = narrow ? 50 : 42; k = 2.5;
+  } else if (S.kind === "bullseye" && handFloor() > 0 && mode !== "intro" && mode !== "preview") { const c = bbCamera(mode, narrow); fov = c.fov; k = c.k; } // (a standard court uses the match cameras)
   else if (mode === "preview") {
     // Shop previews: a close look at the hole, or a side-on look at a throw.
     if (S.preview.kind === "hole") { tPos.set(1.6, 4.2, -(FY - 5.5)); tLook.set(0, 0.6, -(HOLE.y + 0.5)); }
@@ -277,6 +279,10 @@ function ui() {
       <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
       <div><div class="big">Pull back and let go</div><div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div></div></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
+  } else if (S.phase === "bbintro") {
+    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
+      <div class="btns" style="grid-template-columns:1fr"><button class="btn" id="bbSkip">LET'S THROW</button></div>`;
+    $("bbSkip").onclick = bbEndIntro;
   } else if (S.phase === "bbpreview") {
     panel.innerHTML = bbPreviewPanel();
     $("bbPrevBack").onclick = bbPreviewBack; $("bbPrevPlay").onclick = bbPreviewPlay;

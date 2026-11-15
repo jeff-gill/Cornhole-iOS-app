@@ -751,7 +751,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794714916 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794715847 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -1342,17 +1342,17 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 // about 20% on the last courts with the starter bag.
 const VENUES = [
   { id: "backyard", name: "Backyard BBQ", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 0], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [1, 2], speed: "Normal boards" },
-  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [1, 3], speed: "Grippy boards" },
-  { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [2, 4], speed: "Slick boards" },
-  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [2, 5], speed: "Icy boards" },
-  { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [3, 5], speed: "Manicured boards" },
-  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 6], speed: "Sandy boards" },
-  { id: "rooftop", name: "City Rooftop", sub: "Rooftop party under the city lights", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [4, 7], speed: "Slick boards" },
-  { id: "lakeside", soon: true, name: "Lakeside Dock", sub: "Out on the dock, out on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 0.55, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [4, 8], speed: "Dewy boards" },
-  { id: "canyon", soon: true, name: "Block Party", sub: "The whole street is out", max: 900, fee: 3000000, win: 30, loss: 32, swing: 0.55, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [5, 8], speed: "Street boards" },
-  { id: "carnival", soon: true, name: "County Fair", sub: "Ferris wheel and midway games", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 0.55, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [5, 9], speed: "Fast boards" },
-  { id: "stadium", soon: true, name: "Stadium Finals", sub: "The big show, a packed stadium", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [6, 10], speed: "Fast pro boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [0, 0], speed: "Normal boards" },
+  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [1, 2], speed: "Grippy boards" },
+  { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [1, 3], speed: "Slick boards" },
+  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [2, 4], speed: "Icy boards" },
+  { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [2, 5], speed: "Manicured boards" },
+  { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 5], speed: "Sandy boards" },
+  { id: "rooftop", name: "City Rooftop", sub: "Rooftop party under the city lights", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [3, 6], speed: "Slick boards" },
+  { id: "lakeside", soon: true, name: "Lakeside Dock", sub: "Out on the dock, out on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 0.55, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [4, 7], speed: "Dewy boards" },
+  { id: "canyon", soon: true, name: "Block Party", sub: "The whole street is out", max: 900, fee: 3000000, win: 30, loss: 32, swing: 0.55, zone: 0.033, wob: 0.049, cpu: [0.072, 0.042], mu: 0.37, wind: [4, 8], speed: "Street boards" },
+  { id: "carnival", soon: true, name: "County Fair", sub: "Ferris wheel and midway games", max: 1000, fee: 10000000, win: 38, loss: 42, swing: 0.55, zone: 0.032, wob: 0.051, cpu: [0.068, 0.039], mu: 0.28, wind: [5, 8], speed: "Fast boards" },
+  { id: "stadium", soon: true, name: "Stadium Finals", sub: "The big show, a packed stadium", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [5, 9], speed: "Fast pro boards" },
 ];
 const pot = v => v.fee * 2;
 const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
@@ -2862,7 +2862,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794714916`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794715847`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4400,7 +4400,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794714916`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794715847`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4411,7 +4411,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794714916`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794715847`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -5044,7 +5044,7 @@ function buildVenue(id) {
     venueAnim.push({ kind: "sea", n1, n2 });
     const sandTex = groundTexture("sand"); sandTex.repeat.set(2, 2);
     islandShape(g, 0, 4, 10.5, 11, sandTex); islandShape(g, 0, -30, 9.5, 23, sandTex); // yours, and the board's island across the water
-    blenderPalm(g, -7.5, 0, 7, 1, 0.95); blenderPalm(g, 7, 0, 9, 2, 0.85); blenderPalm(g, -6, 0, -35, 3, 1); blenderPalm(g, 6.5, 0, -34, 4, 0.9);
+    blenderPalm(g, -7.5, 0, 7, 1, 0.95); blenderPalm(g, 7, 0, 9, 2, 0.85); blenderPalm(g, -11, 0, -37, 3, 1); blenderPalm(g, 11.5, 0, -36, 4, 0.9); // well to the sides of the far board, so they never lean across it
     umbrella(g, 7, 0, 0xff4b3a); chair(g, 5.5, -25, -0.5, 0xffc93a);
     // spectators on the water, all keeping clear of the throwing lane
     const spots = [["canoe", -22, -6, 0.3], ["kayak", 20, -10, -0.4], ["paddle", -18, -40, 0.9], ["row", 24, -36, -0.6], ["motor", -32, -24, 1.4], ["raft", 15, 6, 0], ["raft", -14, 12, 0], ["kayak", 30, 14, 2.2],
@@ -6177,7 +6177,7 @@ function rulesHTML() {
   ])}
   ${sec("🌬️", "Wind", [
     "The wind is set at the start of each match and stays the same for the whole match.",
-    "There's no wind at the Backyard BBQ. It builds a little at every court after that, up to 10 mph.",
+    "There's no wind at the Backyard BBQ or the Tailgate Lot. It builds a little at every court after that, up to 9 mph.",
     "Faint streaks drift across the court in the wind's direction. The aiming guide doesn't allow for wind.",
   ])}
   ${sec("⭐", "Stars and courts", [
@@ -6410,7 +6410,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794714916";
+const BUILD_ID = "1794715847";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6479,21 +6479,29 @@ $("seasonBtn").onclick = openSeason;
 
 // ── Daily Drop: a bubble in the clubhouse, claimable once per calendar day (it resets at midnight, not 24 hours
 // after your last claim). It pays 100 coins plus a free can that opens right away (mostly the low cans).
-const DAILY_COINS = 100;
+// It grows with your season title: more coins and better can odds at every title (Rookie 100 coins, mostly Black cans,
+// up to Hall of Famer 6,000 coins with real odds of Gold and better).
+const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
+const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
+const dailyCoins = () => DAILY_COINS_BY_TITLE[dailyTitle()];
+function dailyOdds() {
+  const t = dailyTitle();
+  return { black: Math.max(8, 70 - 8 * t), white: 24, bronze: 5 + 4 * t, silver: 1 + 3 * t, gold: t >= 3 ? 1.5 * (t - 2) : 0, purple: t >= 6 ? t - 5 : 0 };
+}
 const dailyReady = () => testing() || career.lastDaily !== new Date().toDateString(); // tester mode: always ready
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once claimed
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
-  $("dailySub").innerHTML = ready ? `<i class="coin"></i> 100 + a free can` : `Next in ${timeText(bbUntilMidnight())}`;
+  $("dailySub").innerHTML = ready ? `<i class="coin"></i> ${short(dailyCoins())} + a free can` : `Next in ${timeText(bbUntilMidnight())}`;
 }
 $("dailyBtn").onclick = () => {
   if (!dailyReady()) { const t = document.createElement("div"); t.className = "toast"; t.textContent = "Your next Daily Drop is ready at midnight."; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); return; }
   initAudio();
-  career.lastDaily = new Date().toDateString(); career.coins += DAILY_COINS;
+  career.lastDaily = new Date().toDateString(); const coins = dailyCoins(); career.coins += coins;
   // The free can skips the cooler limit and opens on the spot.
-  const id = rollCan(DAILY_ODDS);
+  const id = rollCan(dailyOdds());
   career.cans.push({ id, court: topCourt(), instant: true }); // opens on the spot below, so it never sits in a full cooler
   save(); renderHub(); sfx.win(); haptic("success");
-  const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${DAILY_COINS} coins and a free can!`;
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${short(coins)} coins and a free can!`;
   $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
   setTimeout(() => openCanSheet(career.cans.length - 1), 900);
 };
@@ -6762,7 +6770,6 @@ const BB_PRIZES = {
 // Ring edges (ft from the middle of the hole), outer to inner: prize 0 is the outer ring, prize 3 the one round the hole.
 // The outer rings run off the back and sides of the board; only the part on the board counts.
 const BB_RINGS = { easy: [1.35, 1.05, 0.78, 0.52], hard: [1.0, 0.78, 0.58, 0.4] };
-const BB_CONSOLATION = { easy: 0.02, hard: 0.06 }; // on the board but in no ring (or a ring already won); off the board wins nothing
 // Plain words for the day's board (what it does to a landing bag).
 const BB_SURF_WORDS = { "-2": "Sticky: bags stop short", "-1": "Grippy: bags stop a bit short", "0": "Normal: bags slide a normal amount", "1": "Fast: bags slide farther", "2": "Slick: bags slide a long way" };
 // Everyone throws the Golden Bag (a neutral bag with good stats), so nobody needs to know the shop's bags.
@@ -6811,6 +6818,29 @@ function bbWon(mode) { // indexes 0-4 (4 is the hole) won today on this level
   const s = bbState();
   if (!s.won || s.won.day !== bbDay()) s.won = { day: bbDay(), easy: [], hard: [] };
   return s.won[mode];
+}
+// Labels floating over each ring (and the hole) saying what it's worth; a won ring has none (it's plain wood now).
+function bbShowRingLabels(on) {
+  for (const sp of BB.labels || []) { scene.remove(sp); sp.material.map.dispose(); sp.material.dispose(); }
+  BB.labels = [];
+  if (!on || !BB.active) return;
+  const mode = BB.active.mode, won = bbWon(mode), R = BB_RINGS[mode], P = BB_PRIZES[mode];
+  const ang = [0, 0.9, -0.9, 2.3]; // where on each ring its label sits (radians round from the front), spread so they don't overlap
+  for (let i = 0; i < 5; i++) {
+    if (won.includes(i)) continue;
+    const p = P[i], text = p.can ? `${Object.keys(p.can).map(k => canById(k).name.split(" ")[0]).filter((v, j, a) => j === 0 || j === a.length - 1).join("–")} can` : p.caps ? `${p.caps} caps` : `${short(bbCoins(p.coins))} coins`;
+    let x = -0.5, y = HOLE.y + 0.55; // the hole's label just behind it, to the left
+    if (i < 4) { const mid = (R[i] + (R[i + 1] || HR)) / 2, a = ang[i]; x = Math.sin(a) * mid; y = HOLE.y - Math.cos(a) * mid; if (i === 3) x = Math.max(x, 0.45); }
+    x = clamp(x, -HW + 0.4, HW - 0.4);
+    const tex = canvasTex(320, 96, (c, w, h) => {
+      c.fillStyle = p.c; c.strokeStyle = "#ffffff"; c.lineWidth = 7;
+      c.beginPath(); c.roundRect(5, 5, w - 10, h - 10, 34); c.fill(); c.stroke();
+      c.fillStyle = "#ffffff"; c.font = `900 ${text.length > 14 ? 30 : 40}px Arial Black, sans-serif`; c.textAlign = "center"; c.textBaseline = "middle";
+      c.lineWidth = 6; c.strokeStyle = "rgba(0,0,0,.35)"; c.strokeText(text, w / 2, h / 2 + 2); c.fillText(text, w / 2, h / 2 + 2);
+    });
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    sp.scale.set(0.8, 0.24, 1); sp.renderOrder = 10; sp.position.copy(W(x, y, plane(y) + 0.22)); scene.add(sp); BB.labels.push(sp);
+  }
 }
 const bbCleared = mode => !testing() && bbWon(mode).length >= 5;
 function bbUseThrow() {
@@ -6890,12 +6920,20 @@ function bbStart(mode, preview = false) {
   buildVenue(sc.id); setBoardDesign(day.board);
   bbBuildBoard(d, mode, M); bbWeather(w);
   venueAmbience(sc.id, M.wind);
-  if (preview) { S.phase = "bbpreview"; showBanner(mode === "hard" ? "Preview · HARDER" : "Preview · EASIER", 0); ui(); return; }
+  if (preview) { S.phase = "bbpreview"; bbShowRingLabels(true); showBanner(mode === "hard" ? "Preview · HARDER" : "Preview · EASIER", 0); ui(); return; }
   bbBeginThrow();
 }
+// Like Golf Clash: first a close look at the board with what each ring is worth, then the camera pulls back to aim.
+const BB_INTRO_SECS = 3.2;
 function bbBeginThrow() {
   const mode = BB.active.mode;
   showBanner(mode === "hard" ? "Bullseye Bags · HARDER" : "Bullseye Bags · EASIER", 0);
+  bbShowRingLabels(true); BB.introT = 0; S.phase = "bbintro"; ui();
+}
+function bbEndIntro() {
+  if (S.phase !== "bbintro") return;
+  const mode = BB.active.mode;
+  bbShowRingLabels(false);
   beginTurn();
   // aimed at the best prize still on the board to start, so the throw's path shows right away
   const won = bbWon(mode), R = BB_RINGS[mode], k = [3, 2, 1, 0].find(i => !won.includes(i)) ?? 3;
@@ -6906,7 +6944,7 @@ function bbBeginThrow() {
 function bbPreviewPlay() {
   const A = BB.active; if (!A || !A.preview) return;
   if (!bbUseThrow()) { bbPreviewBack(); return; }
-  A.preview = false; bbBeginThrow();
+  A.preview = false; bbShowRingLabels(false); bbBeginThrow();
 }
 function bbPreviewBack() { openHub(); renderBBSheet(); }
 function bbPreviewPanel() {
@@ -6923,7 +6961,7 @@ function bbPrizeRows(mode) {
 }
 // The prize key: shown on the board screen while you pick your spot, gone once you start the throw.
 function bbRenderLegend() {
-  const el = $("bbLegend"), show = S.kind === "bullseye" && (S.phase === "aiming" || S.phase === "bbpreview") && !!BB.active;
+  const el = $("bbLegend"), show = false; // (replaced by the labels on the board during the zoom-in)
   el.hidden = !show; if (!show) return;
   const mode = BB.active.mode;
   el.innerHTML = `<h4>Today's prizes <small>${5 - bbWon(mode).length} left</small></h4>${bbPrizeRows(mode)}<p>⭐ Star bag in the hole: <b>x2</b></p>`;
@@ -6938,6 +6976,7 @@ function bbExit() {
   if (BB.mesh) { scene.remove(BB.mesh); BB.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); }); BB.mesh = null; }
   if (BB.precip) { scene.remove(BB.precip.o); BB.precip.o.geometry.dispose(); BB.precip = null; }
   if (BB.starTag) { scene.remove(BB.starTag); BB.starTag = null; }
+  bbShowRingLabels(false);
   if (S.kind !== "bullseye") return;
   setCourt(); S.kind = "career";
   targetBoard.visible = ownBoard.visible = true; teamCoolers.visible = true;
@@ -6995,7 +7034,8 @@ function bbBuildBoard(d, mode, M) {
   geo.rotateX(-Math.PI / 2);
   const tex = canvasTex(800, Math.round(800 * L / (2 * HW)), (c, w, h) => bbPaintBoard(c, w, h, d, mode, M));
   tex.repeat.set(1 / (2 * HW), 1 / L); tex.offset.set(0.5, 0); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
-  const top = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55 }), new THREE.MeshStandardMaterial({ color: 0xc89a62, roughness: 0.7 })]);
+  // the top is matte and a touch darker so the rings stay bold in bright sun
+  const top = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, color: 0xd8d8d8, envMapIntensity: 0.35 }), new THREE.MeshStandardMaterial({ color: 0xc89a62, roughness: 0.7 })]);
   top.castShadow = top.receiveShadow = true; tilt.add(top);
   const frame = std(d.a === "#ffffff" ? 0x1f3a6e : d.a);
   for (const [w, dd, x, z] of [[0.1, L, HW - 0.05, -L / 2], [0.1, L, -HW + 0.05, -L / 2], [2 * HW, 0.1, 0, -0.05], [2 * HW, 0.1, 0, -L + 0.05]]) {
@@ -7028,6 +7068,7 @@ function bbWeather(w) {
   }
 }
 function bbTick(dt) {
+  if (S.phase === "bbintro" && (BB.introT += dt) >= BB_INTRO_SECS) bbEndIntro();
   if (BB.precip) {
     const P = BB.precip, a = P.o.geometry.attributes.position, wv = S.wind || { mph: 0, dir: 0 };
     const wx = Math.sin(wv.dir) * wv.mph * (P.rain ? 0.6 : 0.35), wz = -Math.cos(wv.dir) * wv.mph * (P.rain ? 0.6 : 0.35);
@@ -7041,7 +7082,7 @@ function bbTick(dt) {
   // a little "⭐ x2" tag floats over the star bag until it's in the hole or off the board
   if (S.kind === "bullseye") {
     const st = S.world.bags.find(b => b.star);
-    if (st && onSurface(st) && onBoard(st)) {
+    if (st && onSurface(st) && onBoard(st) && S.phase !== "bbintro") {
       if (!BB.starTag) BB.starTag = bbLabel("⭐ x2");
       BB.starTag.visible = true; BB.starTag.position.copy(W(st.x, st.y, plane(st.y) + 0.5 + 0.05 * Math.sin(S.time * 3)));
     } else if (BB.starTag) BB.starTag.visible = false;
@@ -7089,7 +7130,7 @@ function bbFinish() {
   const b = S.world.bags.find(x => x.id === S.lastId), hit = bbHit(b, A.mode);
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];
-  const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : hit === "board" ? { coins: BB_CONSOLATION[A.mode] } : {};
+  const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : {}; // no ring, no prize
   if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); if (testing() && wl.length >= 5) wl.length = 0; } // gone for the day (tester mode: all five come back once cleared)
   if (p.can) for (let k = 0; k < times; k++) { // the first can opens on the spot; a doubled second one goes in the cooler, locked
     const id = rollCan(p.can);
@@ -7116,7 +7157,7 @@ function renderBBResult() {
   $("bbRevTitle").innerHTML = won ? (P.hole ? "In the hole!" : `${P.name}!`) : R.hit === "miss" ? "Off the board" : "On the board";
   const card = $("bbRevPrize"); card.className = "prize";
   card.innerHTML = `<div class="pic">${pic}</div><b>${what}</b>${R.doubled ? `<small class="new">⭐ Star bag in: DOUBLE!</small>` : ""}${extra}
-    <small>${won ? (can ? "Open it now!" : "That prize is gone for today.") : R.hit === "miss" ? "Only bags on the board count." : "A little something for landing on the board."}</small>`;
+    <small>${won ? (can ? "Open it now!" : "That prize is gone for today.") : R.hit === "miss" ? "Only bags on the board count." : "No ring this time. Only the rings and the hole win."}</small>`;
   $("bbRevFoot").innerHTML = `<div class="bbrevleft">${left ? `${left} of 5 ${level} prizes left today` : `Every ${level} prize won today! 🎉`}</div>
     <button class="btn green go" id="bbCollect">${can ? "OPEN IT!" : won ? "COLLECT" : "OK"}</button>`;
   $("bbReveal").hidden = false;
@@ -7149,8 +7190,6 @@ function renderBBSheet(msg = "") {
     return `<div class="bbmode ${mode}">
       <h3>${mode === "hard" ? "HARDER" : "EASIER"}</h3>
       <div class="bbfacts"><span>📏 ${M.dist} ft</span><span>🌬️ ${M.wind} mph</span><span>🎯 ${mode === "hard" ? "Tighter rings" : "Wider rings"}</span></div>
-      <div class="bbdots">${BB_PRIZES[mode].map((p, i) => `<i class="${p.hole ? "hole" : ""} ${won.includes(i) ? "won" : ""}" style="--c:${p.c}"></i>`).join("")}</div>
-      <div class="bbleft">${done ? "All 5 won today ✓" : `${5 - won.length} of 5 prizes left`}</div>
       <button class="btn ${mode === "hard" ? "red" : "green"}" data-bbmode="${mode}" ${can && !done ? "" : "disabled"}>${done ? "CLEARED ✓" : "PLAY"}</button>
       ${done ? "" : `<button class="btn small" data-bbpreview="${mode}">👀 PREVIEW</button>`}</div>`;
   };
@@ -7264,7 +7303,9 @@ function updateCamera(dt) {
   if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
-  if (S.kind === "bullseye" && handFloor() > 0 && mode !== "intro" && mode !== "preview") { const c = bbCamera(mode, narrow); fov = c.fov; k = c.k; } // (a standard court uses the match cameras)
+  if (S.kind === "bullseye" && S.phase === "bbintro") { // zoomed in over the board to read what each ring is worth
+    const top = plane(HOLE.y); tPos.set(0, top + (narrow ? 4.4 : 3.6), -(HOLE.y - (narrow ? 2.6 : 2.2))); tLook.set(0, top, -(HOLE.y - 0.45)); fov = narrow ? 50 : 42; k = 2.5;
+  } else if (S.kind === "bullseye" && handFloor() > 0 && mode !== "intro" && mode !== "preview") { const c = bbCamera(mode, narrow); fov = c.fov; k = c.k; } // (a standard court uses the match cameras)
   else if (mode === "preview") {
     // Shop previews: a close look at the hole, or a side-on look at a throw.
     if (S.preview.kind === "hole") { tPos.set(1.6, 4.2, -(FY - 5.5)); tLook.set(0, 0.6, -(HOLE.y + 0.5)); }
@@ -7454,6 +7495,10 @@ function ui() {
       <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
       <div><div class="big">Pull back and let go</div><div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div></div></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
+  } else if (S.phase === "bbintro") {
+    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
+      <div class="btns" style="grid-template-columns:1fr"><button class="btn" id="bbSkip">LET'S THROW</button></div>`;
+    $("bbSkip").onclick = bbEndIntro;
   } else if (S.phase === "bbpreview") {
     panel.innerHTML = bbPreviewPanel();
     $("bbPrevBack").onclick = bbPreviewBack; $("bbPrevPlay").onclick = bbPreviewPlay;

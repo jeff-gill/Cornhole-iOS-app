@@ -125,7 +125,7 @@ function rulesHTML() {
   ])}
   ${sec("🌬️", "Wind", [
     "The wind is set at the start of each match and stays the same for the whole match.",
-    "There's no wind at the Backyard BBQ. It builds a little at every court after that, up to 10 mph.",
+    "There's no wind at the Backyard BBQ or the Tailgate Lot. It builds a little at every court after that, up to 9 mph.",
     "Faint streaks drift across the court in the wind's direction. The aiming guide doesn't allow for wind.",
   ])}
   ${sec("⭐", "Stars and courts", [
@@ -427,21 +427,29 @@ $("seasonBtn").onclick = openSeason;
 
 // ── Daily Drop: a bubble in the clubhouse, claimable once per calendar day (it resets at midnight, not 24 hours
 // after your last claim). It pays 100 coins plus a free can that opens right away (mostly the low cans).
-const DAILY_COINS = 100;
+// It grows with your season title: more coins and better can odds at every title (Rookie 100 coins, mostly Black cans,
+// up to Hall of Famer 6,000 coins with real odds of Gold and better).
+const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
+const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
+const dailyCoins = () => DAILY_COINS_BY_TITLE[dailyTitle()];
+function dailyOdds() {
+  const t = dailyTitle();
+  return { black: Math.max(8, 70 - 8 * t), white: 24, bronze: 5 + 4 * t, silver: 1 + 3 * t, gold: t >= 3 ? 1.5 * (t - 2) : 0, purple: t >= 6 ? t - 5 : 0 };
+}
 const dailyReady = () => testing() || career.lastDaily !== new Date().toDateString(); // tester mode: always ready
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once claimed
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
-  $("dailySub").innerHTML = ready ? `<i class="coin"></i> 100 + a free can` : `Next in ${timeText(bbUntilMidnight())}`;
+  $("dailySub").innerHTML = ready ? `<i class="coin"></i> ${short(dailyCoins())} + a free can` : `Next in ${timeText(bbUntilMidnight())}`;
 }
 $("dailyBtn").onclick = () => {
   if (!dailyReady()) { const t = document.createElement("div"); t.className = "toast"; t.textContent = "Your next Daily Drop is ready at midnight."; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); return; }
   initAudio();
-  career.lastDaily = new Date().toDateString(); career.coins += DAILY_COINS;
+  career.lastDaily = new Date().toDateString(); const coins = dailyCoins(); career.coins += coins;
   // The free can skips the cooler limit and opens on the spot.
-  const id = rollCan(DAILY_ODDS);
+  const id = rollCan(dailyOdds());
   career.cans.push({ id, court: topCourt(), instant: true }); // opens on the spot below, so it never sits in a full cooler
   save(); renderHub(); sfx.win(); haptic("success");
-  const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${DAILY_COINS} coins and a free can!`;
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${short(coins)} coins and a free can!`;
   $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
   setTimeout(() => openCanSheet(career.cans.length - 1), 900);
 };
