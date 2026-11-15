@@ -29,7 +29,7 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 // about 20% on the last courts with the starter bag.
 const VENUES = [
   { id: "backyard", name: "Backyard BBQ", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 0], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [0, 0], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [0, 1], speed: "Normal boards" },
   { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [1, 2], speed: "Grippy boards" },
   { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [1, 3], speed: "Slick boards" },
   { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [2, 4], speed: "Icy boards" },

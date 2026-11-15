@@ -127,7 +127,7 @@ function rulesHTML() {
   ])}
   ${sec("🌬️", "Wind", [
     "The wind is set at the start of each match and stays the same for the whole match.",
-    "There's no wind at the Backyard BBQ or the Tailgate Lot. It builds a little at every court after that, up to 9 mph.",
+    "There's no wind at the Backyard BBQ. It builds a little at every court after that, from a light 0–1 mph at the Tailgate Lot up to 9 mph.",
     "Faint streaks drift across the court in the wind's direction. The aiming guide doesn't allow for wind.",
   ])}
   ${sec("⭐", "Stars and courts", [
