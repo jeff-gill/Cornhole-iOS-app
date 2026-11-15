@@ -463,6 +463,9 @@ function openHub() {
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
+  // the title shows big for a moment, then shrinks to give the court more room (after the splash, on first launch)
+  $("hub").classList.remove("compact"); clearTimeout(openHub.shrink);
+  openHub.shrink = setTimeout(() => $("hub").classList.add("compact"), $("splash") ? 4600 : 2200);
 
 }
 // 1,500 → 1.5K, 2,000,000 → 2M

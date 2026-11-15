@@ -348,6 +348,11 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubhead { width: 100%; max-width: 560px; margin: 0 auto; }
 .hubtitle { margin-top: 10px; font-family: var(--font-display); text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .9; font-size: min(11vw, 50px); text-shadow: 0 4px 0 rgba(0,0,0,.4); letter-spacing: .01em; }
 .hubtitle span { display: block; color: var(--gold); font-size: 1.12em; }
+/* The title arrives big, then shrinks to half size so the rank bar and the perk bubbles slide up and the court shows */
+.hubtitle { transition: font-size .6s cubic-bezier(.4,0,.2,1), margin-top .6s; }
+#hub.compact .hubtitle { font-size: min(5.5vw, 25px); margin-top: 4px; }
+#hub .seasonbadge, #hub .hubperks { transition: margin-top .6s; }
+#hub.compact .seasonbadge { margin-top: 4px; } #hub.compact .hubperks { margin-top: 6px; }
 /* the court's name above the inning count, in the same style as the game title (white over gold) */
 .courtname { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .9; font-size: 12px; text-shadow: 0 2px 0 rgba(0,0,0,.4); margin-bottom: 3px; }
 .courtname span { display: block; color: var(--gold); font-size: 1.12em; }
@@ -751,7 +756,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794715847 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794716138 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2862,7 +2867,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794715847`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794716138`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4400,7 +4405,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794715847`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794716138`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4411,7 +4416,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794715847`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794716138`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6410,7 +6415,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794715847";
+const BUILD_ID = "1794716138";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -7679,6 +7684,9 @@ function openHub() {
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
+  // the title shows big for a moment, then shrinks to give the court more room (after the splash, on first launch)
+  $("hub").classList.remove("compact"); clearTimeout(openHub.shrink);
+  openHub.shrink = setTimeout(() => $("hub").classList.add("compact"), $("splash") ? 4600 : 2200);
 
 }
 // 1,500 → 1.5K, 2,000,000 → 2M
