@@ -451,11 +451,11 @@ function renderBBSheet(msg = "") {
   const day = bbToday(), free = bbFreeReady(), extra = bbState().extra, can = bbCanPlay(), d = boardById(day.board), w = day.weather;
   const card = mode => {
     const M = day.modes[mode], won = bbWon(mode), done = won.length >= 5;
-    return `<div class="bbmode ${mode}">
+    // the whole tile is the button: tap it to see that level's board zoomed in, then BACK or PLAY
+    return `<button class="bbmode ${mode}" ${done ? "disabled" : `data-bbpreview="${mode}"`}>
       <h3>${mode === "hard" ? "HARDER" : "EASIER"}</h3>
-      <div class="bbfacts"><span>📏 ${M.dist} ft</span><span>🌬️ ${M.wind} mph</span><span>🎯 ${mode === "hard" ? "Tighter rings" : "Wider rings"}</span></div>
-      <button class="btn ${mode === "hard" ? "red" : "green"}" data-bbmode="${mode}" ${can && !done ? "" : "disabled"}>${done ? "CLEARED ✓" : "PLAY"}</button>
-      ${done ? "" : `<button class="btn small" data-bbpreview="${mode}">👀 PREVIEW</button>`}</div>`;
+      <div class="bbfacts"><span>🌬️ ${M.wind} mph</span><span>👝 ${M.bags.length} on the board</span><span>🎯 ${mode === "hard" ? "Tighter rings" : "Wider rings"}</span></div>
+      <div class="bbtap">${done ? "CLEARED ✓" : "TAP TO LOOK 👀"}</div></button>`;
   };
   $("bbBody").innerHTML = `<h2>🎯 Bullseye Bags</h2>
     <div class="bbday"><b>${esc(day.scene.name)}</b><small>${esc(day.scene.sub)} · a standard 27 ft court</small></div>
@@ -469,7 +469,6 @@ function renderBBSheet(msg = "") {
     ${msg ? `<div class="muted center">${esc(msg)}</div>` : ""}
     ${testing() ? `<button class="linkbtn" id="bbTest">🧪 +5 throws</button>` : ""}
     <button class="btn" id="bbClose">CLOSE</button>`;
-  for (const b of $("bbBody").querySelectorAll("[data-bbmode]")) b.onclick = () => bbStart(b.dataset.bbmode);
   for (const b of $("bbBody").querySelectorAll("[data-bbpreview]")) b.onclick = () => bbStart(b.dataset.bbpreview, true);
   bbWireBuy(m => renderBBSheet(m));
   if ($("bbTest")) $("bbTest").onclick = () => { bbState().extra += 5; save(); renderBBSheet(); renderBBBtn(); };

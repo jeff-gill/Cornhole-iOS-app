@@ -817,10 +817,12 @@ $("helpBtn").onclick = () => { $("helpSheet").hidden = false; };
 $("helpClose").onclick = () => { $("helpSheet").hidden = true; };
 
 // Popups close when you tap outside them (on the dimmed background), the same as their DONE button.
-// The clubhouse, can opening, matchmaking and between-innings screens keep their own taps.
+// The clubhouse, can opening, prize reveals, matchmaking, board check and between-innings screens keep their own taps.
 for (const [id, close] of [
-  ["livesSheet", () => { $("livesSheet").hidden = true; }],
-  ["avatarSheet", () => { $("avatarSheet").hidden = true; }],
+  // a two-choice popup counts it as the "no" choice (never the "yes"); info popups as their DONE
+  ["livesSheet", () => { const no = $("choiceNo") || $("infoClose") || $("livesClose"); if (no && $("livesSheet").contains(no)) no.click(); else $("livesSheet").hidden = true; }],
+  ["avatarSheet", () => $("avatarClose").click()],
+  ["bbSheet", () => { if ($("bbClose")) $("bbClose").click(); else $("bbSheet").hidden = true; }],
   ["shop", () => $("shopClose").click()],
   ["helpSheet", () => $("helpClose").click()],
   ["practiceSheet", () => { $("practiceSheet").hidden = true; }],

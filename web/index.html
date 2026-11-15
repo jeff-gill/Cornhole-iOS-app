@@ -505,6 +505,9 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 .bbpay { display: grid; gap: 3px; font-size: 11px; }
 .bbpay div { display: flex; justify-content: space-between; gap: 4px; align-items: center; } .bbpay span { color: var(--ink-dim); font-weight: 800; } .bbpay b { font-weight: 900; text-align: right; }
 .bbmode .btn { font-size: 16px; padding: 10px 4px; }
+button.bbmode { color: #fff; font: inherit; text-align: center; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.3); transition: transform .08s; }
+button.bbmode:active { transform: translateY(3px); } button.bbmode:disabled { opacity: .5; cursor: default; }
+.bbtap { margin-top: 2px; padding: 6px 4px; border-radius: 10px; background: rgba(255,255,255,.12); font-weight: 900; font-size: 13px; letter-spacing: .03em; }
 .bbrings { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 900; color: var(--ink-dim); }
 .bbrings i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; } .bbrings span { margin-left: 4px; }
 .bbslide { text-align: center; font-weight: 900; font-size: 14px; } .bbslide b { color: var(--gold); } .bbslide small { display: block; font-size: 11px; color: var(--ink-dim); }
@@ -764,7 +767,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794717651 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794718139 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2877,7 +2880,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794717651`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794718139`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4415,7 +4418,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794717651`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794718139`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4426,7 +4429,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794717651`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794718139`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6430,7 +6433,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794717651";
+const BUILD_ID = "1794718139";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -7212,11 +7215,11 @@ function renderBBSheet(msg = "") {
   const day = bbToday(), free = bbFreeReady(), extra = bbState().extra, can = bbCanPlay(), d = boardById(day.board), w = day.weather;
   const card = mode => {
     const M = day.modes[mode], won = bbWon(mode), done = won.length >= 5;
-    return `<div class="bbmode ${mode}">
+    // the whole tile is the button: tap it to see that level's board zoomed in, then BACK or PLAY
+    return `<button class="bbmode ${mode}" ${done ? "disabled" : `data-bbpreview="${mode}"`}>
       <h3>${mode === "hard" ? "HARDER" : "EASIER"}</h3>
-      <div class="bbfacts"><span>📏 ${M.dist} ft</span><span>🌬️ ${M.wind} mph</span><span>🎯 ${mode === "hard" ? "Tighter rings" : "Wider rings"}</span></div>
-      <button class="btn ${mode === "hard" ? "red" : "green"}" data-bbmode="${mode}" ${can && !done ? "" : "disabled"}>${done ? "CLEARED ✓" : "PLAY"}</button>
-      ${done ? "" : `<button class="btn small" data-bbpreview="${mode}">👀 PREVIEW</button>`}</div>`;
+      <div class="bbfacts"><span>🌬️ ${M.wind} mph</span><span>👝 ${M.bags.length} on the board</span><span>🎯 ${mode === "hard" ? "Tighter rings" : "Wider rings"}</span></div>
+      <div class="bbtap">${done ? "CLEARED ✓" : "TAP TO LOOK 👀"}</div></button>`;
   };
   $("bbBody").innerHTML = `<h2>🎯 Bullseye Bags</h2>
     <div class="bbday"><b>${esc(day.scene.name)}</b><small>${esc(day.scene.sub)} · a standard 27 ft court</small></div>
@@ -7230,7 +7233,6 @@ function renderBBSheet(msg = "") {
     ${msg ? `<div class="muted center">${esc(msg)}</div>` : ""}
     ${testing() ? `<button class="linkbtn" id="bbTest">🧪 +5 throws</button>` : ""}
     <button class="btn" id="bbClose">CLOSE</button>`;
-  for (const b of $("bbBody").querySelectorAll("[data-bbmode]")) b.onclick = () => bbStart(b.dataset.bbmode);
   for (const b of $("bbBody").querySelectorAll("[data-bbpreview]")) b.onclick = () => bbStart(b.dataset.bbpreview, true);
   bbWireBuy(m => renderBBSheet(m));
   if ($("bbTest")) $("bbTest").onclick = () => { bbState().extra += 5; save(); renderBBSheet(); renderBBBtn(); };
@@ -8059,10 +8061,12 @@ $("helpBtn").onclick = () => { $("helpSheet").hidden = false; };
 $("helpClose").onclick = () => { $("helpSheet").hidden = true; };
 
 // Popups close when you tap outside them (on the dimmed background), the same as their DONE button.
-// The clubhouse, can opening, matchmaking and between-innings screens keep their own taps.
+// The clubhouse, can opening, prize reveals, matchmaking, board check and between-innings screens keep their own taps.
 for (const [id, close] of [
-  ["livesSheet", () => { $("livesSheet").hidden = true; }],
-  ["avatarSheet", () => { $("avatarSheet").hidden = true; }],
+  // a two-choice popup counts it as the "no" choice (never the "yes"); info popups as their DONE
+  ["livesSheet", () => { const no = $("choiceNo") || $("infoClose") || $("livesClose"); if (no && $("livesSheet").contains(no)) no.click(); else $("livesSheet").hidden = true; }],
+  ["avatarSheet", () => $("avatarClose").click()],
+  ["bbSheet", () => { if ($("bbClose")) $("bbClose").click(); else $("bbSheet").hidden = true; }],
   ["shop", () => $("shopClose").click()],
   ["helpSheet", () => $("helpClose").click()],
   ["practiceSheet", () => { $("practiceSheet").hidden = true; }],

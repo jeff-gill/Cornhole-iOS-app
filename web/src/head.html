@@ -497,6 +497,9 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 .bbpay { display: grid; gap: 3px; font-size: 11px; }
 .bbpay div { display: flex; justify-content: space-between; gap: 4px; align-items: center; } .bbpay span { color: var(--ink-dim); font-weight: 800; } .bbpay b { font-weight: 900; text-align: right; }
 .bbmode .btn { font-size: 16px; padding: 10px 4px; }
+button.bbmode { color: #fff; font: inherit; text-align: center; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.3); transition: transform .08s; }
+button.bbmode:active { transform: translateY(3px); } button.bbmode:disabled { opacity: .5; cursor: default; }
+.bbtap { margin-top: 2px; padding: 6px 4px; border-radius: 10px; background: rgba(255,255,255,.12); font-weight: 900; font-size: 13px; letter-spacing: .03em; }
 .bbrings { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 900; color: var(--ink-dim); }
 .bbrings i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; } .bbrings span { margin-left: 4px; }
 .bbslide { text-align: center; font-weight: 900; font-size: 14px; } .bbslide b { color: var(--gold); } .bbslide small { display: block; font-size: 11px; color: var(--ink-dim); }
