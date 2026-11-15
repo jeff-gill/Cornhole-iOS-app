@@ -465,9 +465,26 @@ function openHub() {
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   // the title shows big for a moment, then shrinks to give the court more room (after the splash, on first launch)
   $("hub").classList.remove("compact"); clearTimeout(openHub.shrink);
-  openHub.shrink = setTimeout(() => $("hub").classList.add("compact"), $("splash") ? 4600 : 2200);
+  openHub.shrink = setTimeout(() => $("hub").classList.add("compact"), $("splash") ? 5400 : 3000); // big for 3 seconds, then a 3-second shrink
+  hubWake();
 
 }
+// Idle clubhouse: after 5 seconds without a touch it fades to 50% so the court shows through. The first tap only wakes it
+// (back to 100%), so nothing gets pressed by accident; after that the buttons work as usual.
+let hubIdleT = null;
+const hubSheetOpen = () => [...document.querySelectorAll(".overlay")].some(o => o.id !== "hub" && !o.hidden);
+function hubWake() {
+  $("hub").classList.remove("idle"); clearTimeout(hubIdleT);
+  hubIdleT = setTimeout(function idle() {
+    if ($("hub").hidden) return;
+    if (hubSheetOpen() || !$("tour").hidden) { hubIdleT = setTimeout(idle, 5000); return; } // not while a sheet or the tour is up
+    $("hub").classList.add("idle");
+  }, 5000);
+}
+for (const type of ["pointerdown", "click"]) $("hub").addEventListener(type, e => {
+  if ($("hub").classList.contains("idle")) { e.stopPropagation(); e.preventDefault(); if (type === "click") hubWake(); return; }
+  if (type === "pointerdown") hubWake();
+}, true);
 // 1,500 → 1.5K, 2,000,000 → 2M
 // Shrink a number in a court-card bubble until it fits (big buy-ins on narrow phones).
 function fitChips(root) {

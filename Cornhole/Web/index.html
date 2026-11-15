@@ -349,9 +349,11 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubtitle { margin-top: 10px; font-family: var(--font-display); text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .9; font-size: min(11vw, 50px); text-shadow: 0 4px 0 rgba(0,0,0,.4); letter-spacing: .01em; }
 .hubtitle span { display: block; color: var(--gold); font-size: 1.12em; }
 /* The title arrives big, then shrinks to half size so the rank bar and the perk bubbles slide up and the court shows */
-.hubtitle { transition: font-size .6s cubic-bezier(.4,0,.2,1), margin-top .6s; }
+.hubtitle { transition: font-size 3s cubic-bezier(.4,0,.2,1), margin-top 3s; }
 #hub.compact .hubtitle { font-size: min(5.5vw, 25px); margin-top: 4px; }
-#hub .seasonbadge, #hub .hubperks { transition: margin-top .6s; }
+#hub .seasonbadge, #hub .hubperks { transition: margin-top 3s; }
+/* left alone for 5 seconds, the clubhouse fades to half so the court shows through; the first tap brings it back */
+#hub { transition: opacity .8s; } #hub.idle { opacity: .5; }
 #hub.compact .seasonbadge { margin-top: 4px; } #hub.compact .hubperks { margin-top: 6px; }
 /* the court's name above the inning count, in the same style as the game title (white over gold) */
 .courtname { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .9; font-size: 12px; text-shadow: 0 2px 0 rgba(0,0,0,.4); margin-bottom: 3px; }
@@ -384,16 +386,18 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .splashbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #fff1a8); animation: splashload 2.6s ease-out forwards; }
 @keyframes splashload { to { width: 100%; } }
 .splashtag { font-weight: 900; color: var(--ink-dim); letter-spacing: .06em; }
-.cooler { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 8px; }
-.cslot { height: 92px; flex-direction: column; gap: 4px; border-radius: 12px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.45); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 4px; color: #fff; font: 900 12px/1.1 Nunito, system-ui, sans-serif; }
+.cooler { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.cslot { height: 66px; min-width: 0; flex-direction: row; gap: 4px; border-radius: 12px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.45); display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 4px; color: #fff; font: 900 12px/1.1 Nunito, system-ui, sans-serif; }
 .cslot.full { border: 2px solid rgba(255,255,255,.85); background: rgba(10,20,38,.7); }
 .cslot.ready { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,201,58,.6); animation: canbob 1.4s ease-in-out infinite; }
 .cslot.ticking small { color: #7fd8ff; }
 .cslot.idle { border-style: dashed; } .cslot.idle .minican { filter: saturate(.5) brightness(.8); }
 .cslot .cunlock { font-size: 9px; letter-spacing: .04em; color: var(--gold); }
-.cslot small { font-size: 14px; font-variant-numeric: tabular-nums; }
-.cslot .minican { width: 26px; height: 42px; flex: none; }
-.cslot .cname { font-size: 11px; line-height: 1.05; text-align: center; color: rgba(255,255,255,.85); max-width: 100%; overflow: hidden; }
+.cslot small { font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cslot .minican { width: 22px; height: 36px; flex: none; }
+.cslot .cinfo { display: flex; flex-direction: column; align-items: flex-end; text-align: right; gap: 2px; min-width: 0; }
+.cslot .cname { font-size: 10px; line-height: 1.05; text-align: right; color: rgba(255,255,255,.85); max-width: 100%; overflow: hidden; }
+.cslot .cunlock { line-height: 1; }
 .cslot .crow { display: flex; align-items: center; gap: 4px; }
 .bcap { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.2em; flex: none; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Cdefs%3E%3CradialGradient%20id%3D%27g%27%20cx%3D%2738%25%27%20cy%3D%2732%25%27%20r%3D%2775%25%27%3E%3Cstop%20offset%3D%270%27%20stop-color%3D%27%23fff%27%20stop-opacity%3D%27.55%27/%3E%3Cstop%20offset%3D%27.25%27%20stop-color%3D%27%23e8392b%27/%3E%3Cstop%20offset%3D%271%27%20stop-color%3D%27%23a01810%27/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpolygon%20points%3D%2732.0%2C0.0%2036.2%2C4.3%2041.4%2C1.4%2044.1%2C6.8%2050.0%2C5.6%2051.0%2C11.5%2057.0%2C12.0%2056.2%2C18.0%2061.8%2C20.3%2059.3%2C25.8%2063.9%2C29.6%2059.9%2C34.1%2063.2%2C39.1%2058.1%2C42.2%2059.7%2C48.0%2053.9%2C49.5%2053.8%2C55.5%2047.8%2C55.1%2045.9%2C60.8%2040.3%2C58.8%2036.8%2C63.6%2032.0%2C60.0%2027.2%2C63.6%2023.7%2C58.8%2018.1%2C60.8%2016.2%2C55.1%2010.2%2C55.5%2010.1%2C49.5%204.3%2C48.0%205.9%2C42.2%200.8%2C39.1%204.1%2C34.1%200.1%2C29.6%204.7%2C25.8%202.2%2C20.3%207.8%2C18.0%207.0%2C12.0%2013.0%2C11.5%2014.0%2C5.6%2019.9%2C6.8%2022.6%2C1.4%2027.8%2C4.3%27%20fill%3D%27%23c8ccd4%27%20stroke%3D%27%230003%27%20stroke-width%3D%271.2%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%2732%27%20r%3D%2725%27%20fill%3D%27url%28%23g%29%27%20stroke%3D%27%230003%27%20stroke-width%3D%271.5%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%2732%27%20r%3D%2719%27%20fill%3D%27none%27%20stroke%3D%27%23fff5%27%20stroke-width%3D%271.2%27/%3E%3Cpolygon%20points%3D%2732.0%2C22.0%2034.7%2C29.3%2042.5%2C29.6%2036.4%2C34.4%2038.5%2C41.9%2032.0%2C37.6%2025.5%2C41.9%2027.6%2C34.4%2021.5%2C29.6%2029.3%2C29.3%27%20fill%3D%27%23fff3c0%27/%3E%3Cellipse%20cx%3D%2723%27%20cy%3D%2721%27%20rx%3D%279%27%20ry%3D%274%27%20fill%3D%27%23fff7%27%20transform%3D%27rotate%28-30%2023%2021%29%27/%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
 .pill > .bcap { width: 28px; height: 28px; vertical-align: middle; }
@@ -756,7 +760,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794716138 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794716430 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2867,7 +2871,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794716138`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794716430`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4405,7 +4409,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794716138`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794716430`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4416,7 +4420,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794716138`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794716430`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6093,7 +6097,8 @@ function renderHubExtras() {
       const k = canById(c.id), st = canState(c);
       b.className = `cslot full ${st}`;
       b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "locked, tap to unlock"}`);
-      b.innerHTML = `<span class="cname">${k.name}</span><span class="crow"><i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : `🔒 ${durText(openMs(c.id))}`}</small></span>${st === "idle" ? `<span class="cunlock">TAP TO UNLOCK</span>` : ""}`;
+      // the can on the left; its name stacked a word a line, right-aligned beside it, with what it's doing underneath
+      b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><span class="cinfo"><span class="cname">${k.name.split(" ").join("<br>")}</span><small>${st === "ready" ? "OPEN!" : st === "ticking" ? timeText(canLeft(c)) : `🔒 ${durText(openMs(c.id))}`}</small>${st === "idle" ? `<span class="cunlock">TAP TO<br>UNLOCK</span>` : ""}</span>`;
       b.onclick = () => canTapped(i);
     } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
     cooler.appendChild(b);
@@ -6415,7 +6420,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794716138";
+const BUILD_ID = "1794716430";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -7686,9 +7691,26 @@ function openHub() {
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   // the title shows big for a moment, then shrinks to give the court more room (after the splash, on first launch)
   $("hub").classList.remove("compact"); clearTimeout(openHub.shrink);
-  openHub.shrink = setTimeout(() => $("hub").classList.add("compact"), $("splash") ? 4600 : 2200);
+  openHub.shrink = setTimeout(() => $("hub").classList.add("compact"), $("splash") ? 5400 : 3000); // big for 3 seconds, then a 3-second shrink
+  hubWake();
 
 }
+// Idle clubhouse: after 5 seconds without a touch it fades to 50% so the court shows through. The first tap only wakes it
+// (back to 100%), so nothing gets pressed by accident; after that the buttons work as usual.
+let hubIdleT = null;
+const hubSheetOpen = () => [...document.querySelectorAll(".overlay")].some(o => o.id !== "hub" && !o.hidden);
+function hubWake() {
+  $("hub").classList.remove("idle"); clearTimeout(hubIdleT);
+  hubIdleT = setTimeout(function idle() {
+    if ($("hub").hidden) return;
+    if (hubSheetOpen() || !$("tour").hidden) { hubIdleT = setTimeout(idle, 5000); return; } // not while a sheet or the tour is up
+    $("hub").classList.add("idle");
+  }, 5000);
+}
+for (const type of ["pointerdown", "click"]) $("hub").addEventListener(type, e => {
+  if ($("hub").classList.contains("idle")) { e.stopPropagation(); e.preventDefault(); if (type === "click") hubWake(); return; }
+  if (type === "pointerdown") hubWake();
+}, true);
 // 1,500 → 1.5K, 2,000,000 → 2M
 // Shrink a number in a court-card bubble until it fits (big buy-ins on narrow phones).
 function fitChips(root) {
