@@ -139,6 +139,8 @@ function rulesHTML() {
     "Tap PREVIEW to look at a level's court before using a throw. The board is a real 2 x 4 board: the hole near the back, with four coloured rings around it that run off the back and sides of the board.",
     "Easier and Harder each have five prizes: the four rings and the hole. Finish in a ring to win it; then it's plain wood for the rest of the day. The hole is the top prize: a can that opens right away.",
     "Only bags resting on the board count. Off the board wins nothing.",
+    `You have ${BB_THROW_TIME} seconds for the throw. If time runs out, the throw is used up.`,
+    "Every Sunday is Hole-in-One Sunday: sinking the hole also wins the exclusive Hole-in-One bag (a bonus can once you have it). It can't be bought.",
     "Harder has tighter rings, farther away, in more wind, with more bags in the way, but its prizes are much bigger.",
     "Knock the star bag into the hole and your prize is doubled.",
     "If you leave before throwing, you keep the throw. Once the bag is in the air, the throw counts.",

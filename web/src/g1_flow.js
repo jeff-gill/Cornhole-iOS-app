@@ -77,6 +77,7 @@ const PID = s => "com.jeffgill.cornhole." + s;
 BAGS.push(
   { id: "firecracker", name: "Firecracker", premium: PID("starterpack"), acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#e8392b", pattern: "flame" },
   { id: "galaxy", name: "Galaxy", premium: PID("set.galaxy"), acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#5b3bd6", pattern: "galaxy" },
+  { id: "holeinone", name: "Hole-in-One", premium: "bullseye", acc: 4, ctrl: 4, spin: 3, feel: "neutral", c: "#ffc93a", pattern: "target" }, // won only on Hole-in-One Sunday (Bullseye Bags)
   { id: "inferno", name: "Inferno", premium: PID("set.inferno"), acc: 4, ctrl: 4, spin: 4, feel: "fast", c: "#ff5a00", pattern: "flame" },
 );
 // Store products (prices are placeholders until the App Store reports the real, local ones).
@@ -250,7 +251,8 @@ const isRemote = p => !!S.online && p === 1; // the live opponent's throws arriv
 const canEdit = () => S.phase === "aiming" && !isCPU(S.player) && !isRemote(S.player);
 // Throw clock: career and online turns (not Pass & Play, not the tutorial match) must throw within this many seconds.
 const THROW_TIME = 25;
-const timedTurn = () => S.kind === "career" && career.tutorialDone && !isCPU(S.player) && !isRemote(S.player);
+const timedTurn = () => (S.kind === "career" && career.tutorialDone || S.kind === "bullseye") && !isCPU(S.player) && !isRemote(S.player);
+const BB_THROW_TIME = 30; // Bullseye Bags: 30 seconds for the throw
 const venue = () => VENUES[S.venue];
 const POWER_TARGET = 0.75;
 const COL = { p: ["#ff4b3a", "#2f86ff"], pd: [], pl: [], gold: "#ffc93a", go: "#3ee07a", bubble: "#2fd06a" };
@@ -479,7 +481,7 @@ function grabsLanding(p) {
 function beginTurn() {
   S.cpuPlan = null;
   setGear(S.player);
-  S.clock = timedTurn() ? THROW_TIME : null;
+  S.clock = timedTurn() ? (S.kind === "bullseye" ? BB_THROW_TIME : THROW_TIME) : null;
   if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.phase = "cpu"; }
   else if (isRemote(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.online.waitT = 0; S.phase = "remote"; }
   else {

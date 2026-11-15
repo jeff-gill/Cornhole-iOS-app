@@ -87,7 +87,8 @@ function updateCamera(dt) {
   if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
-  if (S.kind === "bullseye" && S.phase === "bbintro") { // zoomed in over the board to read what each ring is worth
+  const bbLanded = () => { const b = S.world.bags.find(x => x.id === S.lastId); return !!b && b.state !== "flying"; };
+  if (S.kind === "bullseye" && (S.phase === "bbintro" || S.phase === "bbpreview" || S.phase === "bbdone" || (S.phase === "flight" && bbLanded()))) { // zoomed in over the board: what each ring is worth, and where the bag finished
     const top = plane(HOLE.y); tPos.set(0, top + (narrow ? 4.4 : 3.6), -(HOLE.y - (narrow ? 2.6 : 2.2))); tLook.set(0, top, -(HOLE.y - 0.45)); fov = narrow ? 50 : 42; k = 2.5;
   } else if (S.kind === "bullseye" && handFloor() > 0 && mode !== "intro" && mode !== "preview") { const c = bbCamera(mode, narrow); fov = c.fov; k = c.k; } // (a standard court uses the match cameras)
   else if (mode === "preview") {
@@ -281,7 +282,7 @@ function ui() {
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
   } else if (S.phase === "bbintro") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
-      <div class="btns" style="grid-template-columns:1fr"><button class="btn" id="bbSkip">LET'S THROW</button></div>`;
+      <div class="btns" style="grid-template-columns:1fr"><button class="btn green go" id="bbSkip">NEXT: AIM</button></div>`;
     $("bbSkip").onclick = bbEndIntro;
   } else if (S.phase === "bbpreview") {
     panel.innerHTML = bbPreviewPanel();
@@ -696,7 +697,10 @@ function renderShop() {
     const info = document.createElement("div"); info.innerHTML = `<h4>${esc(it.name)}${it.premium ? ' <span class="tagfeel" style="background:#ff2e88">EXCLUSIVE</span>' : ""}</h4>${stats}${owned ? "" : cardProgress(catByKey(shopTab === "bags" ? "bag" : "board"), it)}`;
     row.appendChild(info);
     const btn = document.createElement("button");
-    if (it.premium && !owned) {
+    if (it.premium === "bullseye" && !owned) { // can't be bought: won by sinking the hole on Hole-in-One Sunday
+      btn.className = "btn"; btn.innerHTML = "WIN IT<br><small>⛳ Sundays</small>";
+      btn.onclick = () => { $("shop").hidden = true; renderBBSheet(); };
+    } else if (it.premium && !owned) {
       btn.className = "btn"; btn.textContent = "IN STORE";
       btn.onclick = () => { shopTab = "store"; renderShop(); };
     } else {

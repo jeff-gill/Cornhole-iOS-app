@@ -132,6 +132,9 @@ hole. Only a bag resting on the board counts. Finish in a ring to win it, and it
 | On the board, no ring | nothing | nothing |
 | Off the board | nothing | nothing |
 
+Each throw has a 30-second clock. Every Sunday is Hole-in-One Sunday: sinking the hole also wins the exclusive Hole-in-One
+bag (never sold; a bonus Golden Pop can once you have it).
+
 Extra throws are consumable in-app purchases: `com.jeffgill.cornhole.bullseye.1`, `.bullseye.3` and `.bullseye.5`.
 
 **Cans.** Chance per win and contents. Coins are counted in buy-ins of the court where the can was won.

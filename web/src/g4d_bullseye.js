@@ -41,7 +41,7 @@ const BB = { active: null, mesh: null, precip: null, starTag: null };
 const bbDay = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 function bbToday() {
   const key = bbDay();
-  if (bbToday.cache && bbToday.cache.key === key) return bbToday.cache;
+  if (bbToday.cache && bbToday.cache.key === key && bbToday.cache.sunday === (new Date().getDay() === 0 || !!window.__bbSunday)) return bbToday.cache;
   let h = 2166136261; for (const ch of "bullseye:" + key) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   const r = rng(h >>> 0), pick = a => a[Math.floor(r() * a.length)];
   const v = pick(bbCourts()), scene = { id: v.id, name: v.name, sub: v.sub, surf: ["beach", "island", "lakeside"].includes(v.id) }, side = r() < 0.5 ? -1 : 1;
@@ -66,7 +66,8 @@ function bbToday() {
     }
     modes[m] = { dist: 27, wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags };
   }
-  return (bbToday.cache = { key, scene, side, weather, board, windDir, modes });
+  const sunday = new Date().getDay() === 0 || !!window.__bbSunday; // Hole-in-One Sunday: the hole also wins the exclusive bag
+  return (bbToday.cache = { key, scene, side, weather, board, windDir, modes, sunday });
 }
 
 // ── Throws: one free a day (resets at midnight), plus any you've bought. Prizes won today, per level.
@@ -87,7 +88,7 @@ function bbShowRingLabels(on) {
   const ang = [0, 0.9, -0.9, 2.3]; // where on each ring its label sits (radians round from the front), spread so they don't overlap
   for (let i = 0; i < 5; i++) {
     if (won.includes(i)) continue;
-    const p = P[i], text = p.can ? `${Object.keys(p.can).map(k => canById(k).name.split(" ")[0]).filter((v, j, a) => j === 0 || j === a.length - 1).join("–")} can` : p.caps ? `${p.caps} caps` : `${short(bbCoins(p.coins))} coins`;
+    const p = P[i], sun = i === 4 && BB.active.day.sunday, text = sun ? "⛳ + exclusive bag" : p.can ? `${Object.keys(p.can).map(k => canById(k).name.split(" ")[0]).filter((v, j, a) => j === 0 || j === a.length - 1).join("–")} can` : p.caps ? `${p.caps} caps` : `${short(bbCoins(p.coins))} coins`;
     let x = -0.5, y = HOLE.y + 0.55; // the hole's label just behind it, to the left
     if (i < 4) { const mid = (R[i] + (R[i + 1] || HR)) / 2, a = ang[i]; x = Math.sin(a) * mid; y = HOLE.y - Math.cos(a) * mid; if (i === 3) x = Math.max(x, 0.45); }
     x = clamp(x, -HW + 0.4, HW - 0.4);
@@ -182,8 +183,8 @@ function bbStart(mode, preview = false) {
   if (preview) { S.phase = "bbpreview"; bbShowRingLabels(true); showBanner(mode === "hard" ? "Preview · HARDER" : "Preview · EASIER", 0); ui(); return; }
   bbBeginThrow();
 }
-// Like Golf Clash: first a close look at the board with what each ring is worth, then the camera pulls back to aim.
-const BB_INTRO_SECS = 3.2;
+// Like Golf Clash: first a close look at the board with what each ring is worth (it stays until you tap), then the
+// camera pulls back to aim.
 function bbBeginThrow() {
   const mode = BB.active.mode;
   showBanner(mode === "hard" ? "Bullseye Bags · HARDER" : "Bullseye Bags · EASIER", 0);
@@ -203,7 +204,7 @@ function bbEndIntro() {
 function bbPreviewPlay() {
   const A = BB.active; if (!A || !A.preview) return;
   if (!bbUseThrow()) { bbPreviewBack(); return; }
-  A.preview = false; bbShowRingLabels(false); bbBeginThrow();
+  A.preview = false; bbShowRingLabels(true); S.phase = "bbintro"; bbEndIntro(); // already seen the prizes: straight to aiming
 }
 function bbPreviewBack() { openHub(); renderBBSheet(); }
 function bbPreviewPanel() {
@@ -327,7 +328,6 @@ function bbWeather(w) {
   }
 }
 function bbTick(dt) {
-  if (S.phase === "bbintro" && (BB.introT += dt) >= BB_INTRO_SECS) bbEndIntro();
   if (BB.precip) {
     const P = BB.precip, a = P.o.geometry.attributes.position, wv = S.wind || { mph: 0, dir: 0 };
     const wx = Math.sin(wv.dir) * wv.mph * (P.rain ? 0.6 : 0.35), wz = -Math.cos(wv.dir) * wv.mph * (P.rain ? 0.6 : 0.35);
@@ -341,7 +341,7 @@ function bbTick(dt) {
   // a little "⭐ x2" tag floats over the star bag until it's in the hole or off the board
   if (S.kind === "bullseye") {
     const st = S.world.bags.find(b => b.star);
-    if (st && onSurface(st) && onBoard(st) && S.phase !== "bbintro") {
+    if (st && onSurface(st) && onBoard(st) && S.phase !== "bbintro" && S.phase !== "bbpreview") {
       if (!BB.starTag) BB.starTag = bbLabel("⭐ x2");
       BB.starTag.visible = true; BB.starTag.position.copy(W(st.x, st.y, plane(st.y) + 0.5 + 0.05 * Math.sin(S.time * 3)));
     } else if (BB.starTag) BB.starTag.visible = false;
@@ -386,7 +386,7 @@ function bbCamera(mode, narrow) {
 function bbFinish() {
   const A = BB.active; if (!A || A.done) return;
   A.done = true; bbState().used = null;
-  const b = S.world.bags.find(x => x.id === S.lastId), hit = bbHit(b, A.mode);
+  const b = S.world.bags.find(x => x.id === S.lastId), hit = S.lastId == null ? "time" : bbHit(b, A.mode); // "time": the clock ran out
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];
   const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : {}; // no ring, no prize
@@ -398,6 +398,11 @@ function bbFinish() {
   }
   else if (p.caps) { career.caps += p.caps * times; got.push({ caps: p.caps * times }); }
   else if (p.coins) { const n = bbCoins(p.coins) * times; career.coins += n; got.push({ coins: n }); }
+  // Hole-in-One Sunday: sinking the hole also wins the exclusive Hole-in-One bag (a bonus Gold can once you have it)
+  if (hit === 4 && A.day.sunday) {
+    if (!career.bags.includes("holeinone")) { career.bags.push("holeinone"); (career.newCards ||= {})["bag:holeinone"] = { unlocked: true }; got.push({ bag: "holeinone" }); }
+    else { stashCan({ id: "gold", court: topCourt() }); got.push({ can: "gold", later: true }); }
+  }
   save(); S.phase = "bbdone"; ui();
   if (hit === "miss") sfx.thud();
   A.result = { hit, doubled, got };
@@ -410,13 +415,13 @@ function renderBBResult() {
   const g0 = R.got[0], left = 5 - bbWon(A.mode).length, level = A.mode === "hard" ? "Harder" : "Easier";
   const ck = g0 && g0.can ? canById(g0.can) : null; // a can prize shows the can itself, like the can opening does
   const pic = !g0 ? "💨" : ck ? `<div class="can bbcan" style="background:linear-gradient(90deg, ${ck.color}, ${ck.rim} 35%, ${ck.color} 70%);--rim:${ck.rim}"><div class="cantop"><i class="tab"></i></div><div class="canlabel" style="color:${ck.id === "white" || ck.id === "platinum" ? "#1c2a44" : "#fff"}">${ck.name.replace(" ", "<br>")}</div></div>` : g0.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`;
-  const what = !g0 ? "Nothing this time" : g0.can ? canById(g0.can).name : g0.caps ? `${g0.caps} caps` : `${short(g0.coins)} coins`;
-  const extra = R.got.length > 1 ? `<small class="new">+ a ${esc(canById(R.got[1].can).name)} in your cooler</small>` : "";
+  const what = !g0 ? (R.hit === "time" ? "The throw ran out of time" : "Nothing this time") : g0.can ? canById(g0.can).name : g0.caps ? `${g0.caps} caps` : `${short(g0.coins)} coins`;
+  const extra = R.got.slice(1).map(g => g.bag ? `<small class="new">⛳ + the exclusive ${esc(bagById(g.bag).name)} bag!</small>` : g.can ? `<small class="new">+ a ${esc(canById(g.can).name)} in your cooler</small>` : "").join("");
   $("bbRays").style.setProperty("--ray", won ? P.c : "#8899aa"); $("bbRays").hidden = !won;
-  $("bbRevTitle").innerHTML = won ? (P.hole ? "In the hole!" : `${P.name}!`) : R.hit === "miss" ? "Off the board" : "On the board";
+  $("bbRevTitle").innerHTML = won ? (P.hole ? (A.day.sunday ? "Hole in one! ⛳" : "In the hole!") : `${P.name}!`) : R.hit === "time" ? "Out of time" : R.hit === "miss" ? "Off the board" : "On the board";
   const card = $("bbRevPrize"); card.className = "prize";
   card.innerHTML = `<div class="pic">${pic}</div><b>${what}</b>${R.doubled ? `<small class="new">⭐ Star bag in: DOUBLE!</small>` : ""}${extra}
-    <small>${won ? (can ? "Open it now!" : "That prize is gone for today.") : R.hit === "miss" ? "Only bags on the board count." : "No ring this time. Only the rings and the hole win."}</small>`;
+    <small>${won ? (can ? "Open it now!" : "That prize is gone for today.") : R.hit === "time" ? `You have ${BB_THROW_TIME} seconds for each throw.` : R.hit === "miss" ? "Only bags on the board count." : "No ring this time. Only the rings and the hole win."}</small>`;
   $("bbRevFoot").innerHTML = `<div class="bbrevleft">${left ? `${left} of 5 ${level} prizes left today` : `Every ${level} prize won today! 🎉`}</div>
     <button class="btn green go" id="bbCollect">${can ? "OPEN IT!" : won ? "COLLECT" : "OK"}</button>`;
   $("bbReveal").hidden = false;
@@ -455,6 +460,7 @@ function renderBBSheet(msg = "") {
   $("bbBody").innerHTML = `<h2>🎯 Bullseye Bags</h2>
     <div class="bbday"><b>${esc(day.scene.name)}</b><small>${esc(day.scene.sub)} · a standard 27 ft court</small></div>
     <div class="bbconds"><span>${w.icon} ${w.name}<small>${w.note || "No effect on the board"}</small></span><span>🪵 The board<small>${BB_SURF_WORDS[d.surf || 0]}</small></span><span>🟡 Golden Bag<small>Everyone throws the same bag</small></span></div>
+    ${day.sunday ? `<div class="bbsunday">⛳ <b>HOLE-IN-ONE SUNDAY</b><small>${career.bags.includes("holeinone") ? "Sink the hole today for a bonus Golden Pop can too." : "Sink the hole today to win the exclusive Hole-in-One bag. You can't get it anywhere else."}</small></div>` : ""}
     <div class="bbstar">Finish in a ring to win it; the hole is the top prize. Only bags on the board count, and won rings are gone for the day. ⭐ Knock the <b>star bag</b> in for <b>double</b>.</div>
     <div class="bbmodes">${card("easy")}${card("hard")}</div>
     <div class="bbthrows">${free ? "🎁 Your free throw for today is ready." : extra ? `You have <b>${extra}</b> throw${extra > 1 ? "s" : ""} left.` : `Next free throw in <b id="bbCount">${timeText(bbUntilMidnight())}</b>`}</div>
