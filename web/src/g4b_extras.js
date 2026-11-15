@@ -36,7 +36,7 @@ function renderHubExtras() {
       const k = canById(c.id), st = canState(c);
       b.className = `cslot full ${st}`;
       b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "locked, tap to unlock"}`);
-      // the can on the left with its name stacked beside it; what it's doing in a bar along the whole bottom
+      // the can on the left with its name stacked and centred beside it; what it's doing in a bar along the whole bottom
       b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><span class="cinfo"><span class="cname">${k.name.split(" ").join("<br>")}</span>${st === "idle" ? `<span class="cdur">${durText(openMs(c.id))}</span>` : ""}</span>
         <span class="cbar">${st === "ready" ? "OPEN!" : st === "ticking" ? `⏱ ${timeText(canLeft(c))}` : "🔒 UNLOCK"}</span>`;
       b.onclick = () => canTapped(i);
