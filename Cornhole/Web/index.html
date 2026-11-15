@@ -530,6 +530,15 @@ button.bbmode:active { transform: translateY(3px); } button.bbmode:disabled { op
 .bbmode .btn.small { font-size: 13px; padding: 7px 4px; }
 .bbsunday { text-align: center; padding: 8px 10px; border-radius: 14px; border: 2px solid var(--gold); background: linear-gradient(rgba(255,201,58,.25), rgba(255,138,31,.15)); }
 .bbsunday b { font-family: var(--font-display); font-weight: 400; font-size: 18px; color: var(--gold); display: block; } .bbsunday small { font-weight: 900; font-size: 12px; }
+/* Daily Drop prize wheel */
+.wheelwrap { position: relative; width: min(300px, 76vw); aspect-ratio: 1; margin: 6px auto 4px; }
+.wheel { position: absolute; inset: 0; border-radius: 50%; border: 6px solid #fff; box-shadow: 0 6px 0 rgba(0,0,0,.35), inset 0 0 0 4px rgba(0,0,0,.15); overflow: hidden; }
+.wheel .wl { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.wheel .wl span { position: absolute; left: 0; top: 0; transform: translate(-50%, calc(-1 * min(110px, 28vw))); display: flex; flex-direction: column; align-items: center; gap: 1px; color: #fff; font: 900 13px/1 Nunito, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.wheel .wl .coin, .wheel .wl .bcap { width: 20px; height: 20px; } .wheel .wl .minican { width: 14px; height: 24px; }
+.wheel .wsep { position: absolute; left: calc(50% - 1px); top: 0; width: 2px; height: 50%; background: rgba(255,255,255,.75); transform-origin: 50% 100%; }
+.wheel .whub { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; border: 4px solid #fff; background: linear-gradient(#2b4a80, #12203a); display: grid; place-items: center; font-family: var(--font-display); font-size: 15px; color: var(--gold); }
+.wheelptr { position: absolute; left: 50%; top: -14px; z-index: 2; width: 0; height: 0; margin-left: -14px; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 26px solid #fff; filter: drop-shadow(0 3px 0 rgba(0,0,0,.4)); }
 .bbleft { text-align: center; font-size: 12px; font-weight: 900; color: var(--ink-dim); }
 #bbLegend b { text-align: right; } #bbLegend p { margin: 3px 0 0; font-size: 11px; color: #ffe27a; }
 .bbthrows { text-align: center; font-weight: 900; font-size: 14px; }
@@ -766,7 +775,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794761320 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794761819 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -778,7 +787,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="gcname" id="gcName" hidden></div>
     <button class="seasonbadge" id="seasonBtn"></button>
     <div class="hubperks">
-      <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
+      <button class="dailybtn" id="dailyBtn"><span class="gift">🎡</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
       <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
     </div>
   </div>
@@ -796,6 +805,7 @@ s.was { opacity: .6; font-size: .8em; }
 </div>
 
 <div id="tour" hidden><div id="tourSpot"></div><div id="tourCard"></div></div>
+<div class="overlay" id="wheelSheet" hidden><div class="sheet center" id="wheelBody"></div></div>
 <div class="overlay" id="bbSheet" hidden><div class="sheet" id="bbBody"></div></div>
 <div class="overlay" id="bbReveal" hidden><div class="canstage"><div class="canrays" id="bbRays"></div><div class="cantitle" id="bbRevTitle"></div><div class="prize" id="bbRevPrize"></div><div class="bbrevfoot" id="bbRevFoot"></div></div></div>
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
@@ -2880,7 +2890,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794761320`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794761819`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4422,7 +4432,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794761320`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794761819`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4433,7 +4443,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794761320`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794761819`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6440,7 +6450,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794761320";
+const BUILD_ID = "1794761819";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6507,34 +6517,79 @@ function showSeasonResult() {
 }
 $("seasonBtn").onclick = openSeason;
 
-// ── Daily Drop: a bubble in the clubhouse, claimable once per calendar day (it resets at midnight, not 24 hours
-// after your last claim). It pays 100 coins plus a free can that opens right away (mostly the low cans).
-// It grows with your season title: more coins and better can odds at every title (Rookie 100 coins, mostly Black cans,
-// up to Hall of Famer 6,000 coins with real odds of Gold and better).
+// ── Daily Drop: a prize wheel in the clubhouse, one spin per calendar day (it resets at midnight). Common prizes have
+// big slices, the best ones thin slices. Everything grows with your season title: bigger coin and cap prizes, and the can
+// slices move up a tier every two titles (Rookie: Black, Bronze and Gold cans; Hall of Famer: Bronze, Gold and Diamond).
 const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
 const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
 const dailyCoins = () => DAILY_COINS_BY_TITLE[dailyTitle()];
-function dailyOdds() {
-  const t = dailyTitle();
-  return { black: Math.max(8, 70 - 8 * t), white: 24, bronze: 5 + 4 * t, silver: 1 + 3 * t, gold: t >= 3 ? 1.5 * (t - 2) : 0, purple: t >= 6 ? t - 5 : 0 };
+const CAN_LADDER = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
+function wheelSlices() {
+  const t = dailyTitle(), c = dailyCoins(), up = Math.min(3, t >> 1), can = k => CAN_LADDER[Math.min(CAN_LADDER.length - 1, k + up)];
+  // round the wheel in this order (big and small slices mixed); w is the slice's share of the wheel
+  return [
+    { w: 26, coins: c, col: "#2f86ff" },
+    { w: 7, can: can(2), col: "#ff8a1f" },
+    { w: 20, caps: 3 + t, col: "#2fbf71" },
+    { w: 5, coins: c * 5, col: "#ff2e88" },
+    { w: 16, can: can(0), col: "#8a4dff" },
+    { w: 2, can: can(4), col: "#ffc93a", jackpot: true },
+    { w: 14, coins: c * 2, col: "#00c2d1" },
+    { w: 10, caps: 8 + 2 * t, col: "#e8392b" },
+  ];
 }
 const dailyReady = () => testing() || career.lastDaily !== new Date().toDateString(); // tester mode: always ready
-function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once claimed
+function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
-  $("dailySub").innerHTML = ready ? `<i class="coin"></i> ${short(dailyCoins())} + a free can` : `Next in ${timeText(bbUntilMidnight())}`;
+  $("dailySub").innerHTML = ready ? "Spin the prize wheel!" : `Next in ${timeText(bbUntilMidnight())}`;
 }
-$("dailyBtn").onclick = () => {
-  if (!dailyReady()) { const t = document.createElement("div"); t.className = "toast"; t.textContent = "Your next Daily Drop is ready at midnight."; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); return; }
-  initAudio();
-  career.lastDaily = new Date().toDateString(); const coins = dailyCoins(); career.coins += coins;
-  // The free can skips the cooler limit and opens on the spot.
-  const id = rollCan(dailyOdds());
-  career.cans.push({ id, court: topCourt(), instant: true }); // opens on the spot below, so it never sits in a full cooler
-  save(); renderHub(); sfx.win(); haptic("success");
-  const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${short(coins)} coins and a free can!`;
-  $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
-  setTimeout(() => openCanSheet(career.cans.length - 1), 900);
-};
+const wheelPrizeHTML = p => p.can ? `<i class="minican" style="background:linear-gradient(90deg, ${canById(p.can).color}, ${canById(p.can).rim} 40%, ${canById(p.can).color})"></i>`
+  : p.caps ? `<i class="bcap"></i><b>${p.caps}</b>` : `<i class="coin"></i><b>${short(p.coins)}</b>`;
+let wheelSpin = null;
+function openWheel() {
+  const S8 = wheelSlices(), total = S8.reduce((t, x) => t + x.w, 0);
+  let a0 = 0; const segs = S8.map(x => { const a = x.w / total * 360, seg = { ...x, from: a0, to: a0 + a, mid: a0 + a / 2 }; a0 += a; return seg; });
+  const grad = segs.map(x => `${x.col} ${x.from}deg ${x.to}deg`).join(", ");
+  $("wheelBody").innerHTML = `<h2>🎡 Daily Drop</h2><div class="muted">One free spin a day. The smaller the slice, the better the prize.</div>
+    <div class="wheelwrap"><div class="wheelptr"></div><div class="wheel" id="wheel" style="background:conic-gradient(${grad})">
+      ${segs.map(x => `<div class="wl" style="transform:rotate(${x.mid}deg)"><span>${wheelPrizeHTML(x)}</span></div>`).join("")}
+      ${segs.map(x => `<i class="wsep" style="transform:rotate(${x.from}deg)"></i>`).join("")}<div class="whub">${dailyReady() ? "SPIN" : "✓"}</div></div></div>
+    <button class="btn green go" id="wheelGo" ${dailyReady() ? "" : "disabled"}>${dailyReady() ? "SPIN!" : `Next spin in ${timeText(bbUntilMidnight())}`}</button>
+    <button class="btn" id="wheelClose">CLOSE</button>`;
+  $("wheelSheet").hidden = false; wheelSpin = null;
+  $("wheelClose").onclick = () => { if (wheelSpin) return; $("wheelSheet").hidden = true; renderHub(); };
+  $("wheelGo").onclick = () => {
+    if (wheelSpin || !dailyReady()) return;
+    initAudio();
+    // pick the prize by slice size, pay it now (so closing the app mid-spin can't reroll it), then spin to land on it
+    let x = Math.random() * total, pick = segs[0];
+    for (const sg of segs) { x -= sg.w; if (x <= 0) { pick = sg; break; } }
+    career.lastDaily = new Date().toDateString();
+    if (pick.coins) career.coins += pick.coins; else if (pick.caps) career.caps += pick.caps; else career.cans.push({ id: pick.can, court: topCourt(), instant: true });
+    save();
+    const land = pick.from + (pick.to - pick.from) * (0.2 + Math.random() * 0.6), turn = 360 * 6 + (360 - land);
+    wheelSpin = pick; $("wheelGo").disabled = true; sfx.whoosh(); haptic("light");
+    const w = $("wheel"); w.style.transition = "transform 5s cubic-bezier(.12,.62,.1,1)"; w.style.transform = `rotate(${turn}deg)`;
+    setTimeout(() => wheelWon(pick), 5300);
+  };
+}
+function wheelWon(p) {
+  $("wheelSheet").hidden = true; wheelSpin = null;
+  const ck = p.can ? canById(p.can) : null;
+  $("bbRays").style.setProperty("--ray", p.col); $("bbRays").hidden = false;
+  $("bbRevTitle").innerHTML = p.jackpot ? "JACKPOT!" : "Daily Drop!";
+  const card = $("bbRevPrize"); card.className = "prize";
+  card.innerHTML = `<div class="pic">${ck ? `<div class="can bbcan" style="background:linear-gradient(90deg, ${ck.color}, ${ck.rim} 35%, ${ck.color} 70%);--rim:${ck.rim}"><div class="cantop"><i class="tab"></i></div><div class="canlabel" style="color:${ck.id === "white" || ck.id === "platinum" ? "#1c2a44" : "#fff"}">${ck.name.replace(" ", "<br>")}</div></div>` : p.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`}</div>
+    <b>${ck ? ck.name : p.caps ? `${p.caps} caps` : `${short(p.coins)} coins`}</b><small>${ck ? "Open it now!" : "Come back tomorrow for another spin."}</small>`;
+  $("bbRevFoot").innerHTML = `<button class="btn green go" id="bbCollect">${ck ? "OPEN IT!" : "COLLECT"}</button>`;
+  $("bbReveal").hidden = false; requestAnimationFrame(() => card.classList.add("show"));
+  sfx.win(); haptic("success");
+  $("bbCollect").onclick = () => {
+    $("bbReveal").hidden = true; renderHub();
+    if (ck) { const i = career.cans.findIndex(c => c.instant && c.id === p.can); if (i >= 0) setTimeout(() => openCanSheet(i), 250); }
+  };
+}
+$("dailyBtn").onclick = () => { initAudio(); openWheel(); };
 
 // ── Practice setup: how many players, their names, and the wind.
 function practiceCfg() {
@@ -6578,7 +6633,7 @@ const TOUR = [
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away or to buy a ticket."],
   ["#starsPill", "Stars", "Win matches to earn stars. Fill a court's stars to open the next court."],
   ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
-  ["#dailyBtn", "Daily Drop", "Coins and a free can, once a day."],
+  ["#dailyBtn", "Daily Drop", "Spin the prize wheel once a day: coins, caps or a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most. Tap one to start opening it."],
   ["#venueCard .venue.cur", "Courts", "Swipe to see each court: its buy-in, payout, stars and wind."],
@@ -8072,6 +8127,7 @@ for (const [id, close] of [
   ["livesSheet", () => { const no = $("choiceNo") || $("infoClose") || $("livesClose"); if (no && $("livesSheet").contains(no)) no.click(); else $("livesSheet").hidden = true; }],
   ["avatarSheet", () => $("avatarClose").click()],
   ["bbSheet", () => { if ($("bbClose")) $("bbClose").click(); else $("bbSheet").hidden = true; }],
+  ["wheelSheet", () => $("wheelClose") && $("wheelClose").click()], // (not while it's spinning)
   ["shop", () => $("shopClose").click()],
   ["helpSheet", () => $("helpClose").click()],
   ["practiceSheet", () => { $("practiceSheet").hidden = true; }],

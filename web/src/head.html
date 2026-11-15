@@ -518,6 +518,15 @@ button.bbmode:active { transform: translateY(3px); } button.bbmode:disabled { op
 .bbmode .btn.small { font-size: 13px; padding: 7px 4px; }
 .bbsunday { text-align: center; padding: 8px 10px; border-radius: 14px; border: 2px solid var(--gold); background: linear-gradient(rgba(255,201,58,.25), rgba(255,138,31,.15)); }
 .bbsunday b { font-family: var(--font-display); font-weight: 400; font-size: 18px; color: var(--gold); display: block; } .bbsunday small { font-weight: 900; font-size: 12px; }
+/* Daily Drop prize wheel */
+.wheelwrap { position: relative; width: min(300px, 76vw); aspect-ratio: 1; margin: 6px auto 4px; }
+.wheel { position: absolute; inset: 0; border-radius: 50%; border: 6px solid #fff; box-shadow: 0 6px 0 rgba(0,0,0,.35), inset 0 0 0 4px rgba(0,0,0,.15); overflow: hidden; }
+.wheel .wl { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.wheel .wl span { position: absolute; left: 0; top: 0; transform: translate(-50%, calc(-1 * min(110px, 28vw))); display: flex; flex-direction: column; align-items: center; gap: 1px; color: #fff; font: 900 13px/1 Nunito, system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.wheel .wl .coin, .wheel .wl .bcap { width: 20px; height: 20px; } .wheel .wl .minican { width: 14px; height: 24px; }
+.wheel .wsep { position: absolute; left: calc(50% - 1px); top: 0; width: 2px; height: 50%; background: rgba(255,255,255,.75); transform-origin: 50% 100%; }
+.wheel .whub { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; border: 4px solid #fff; background: linear-gradient(#2b4a80, #12203a); display: grid; place-items: center; font-family: var(--font-display); font-size: 15px; color: var(--gold); }
+.wheelptr { position: absolute; left: 50%; top: -14px; z-index: 2; width: 0; height: 0; margin-left: -14px; border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 26px solid #fff; filter: drop-shadow(0 3px 0 rgba(0,0,0,.4)); }
 .bbleft { text-align: center; font-size: 12px; font-weight: 900; color: var(--ink-dim); }
 #bbLegend b { text-align: right; } #bbLegend p { margin: 3px 0 0; font-size: 11px; color: #ffe27a; }
 .bbthrows { text-align: center; font-weight: 900; font-size: 14px; }
@@ -766,7 +775,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="gcname" id="gcName" hidden></div>
     <button class="seasonbadge" id="seasonBtn"></button>
     <div class="hubperks">
-      <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
+      <button class="dailybtn" id="dailyBtn"><span class="gift">🎡</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
       <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
     </div>
   </div>
@@ -784,6 +793,7 @@ s.was { opacity: .6; font-size: .8em; }
 </div>
 
 <div id="tour" hidden><div id="tourSpot"></div><div id="tourCard"></div></div>
+<div class="overlay" id="wheelSheet" hidden><div class="sheet center" id="wheelBody"></div></div>
 <div class="overlay" id="bbSheet" hidden><div class="sheet" id="bbBody"></div></div>
 <div class="overlay" id="bbReveal" hidden><div class="canstage"><div class="canrays" id="bbRays"></div><div class="cantitle" id="bbRevTitle"></div><div class="prize" id="bbRevPrize"></div><div class="bbrevfoot" id="bbRevFoot"></div></div></div>
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>

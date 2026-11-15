@@ -431,34 +431,79 @@ function showSeasonResult() {
 }
 $("seasonBtn").onclick = openSeason;
 
-// ── Daily Drop: a bubble in the clubhouse, claimable once per calendar day (it resets at midnight, not 24 hours
-// after your last claim). It pays 100 coins plus a free can that opens right away (mostly the low cans).
-// It grows with your season title: more coins and better can odds at every title (Rookie 100 coins, mostly Black cans,
-// up to Hall of Famer 6,000 coins with real odds of Gold and better).
+// ── Daily Drop: a prize wheel in the clubhouse, one spin per calendar day (it resets at midnight). Common prizes have
+// big slices, the best ones thin slices. Everything grows with your season title: bigger coin and cap prizes, and the can
+// slices move up a tier every two titles (Rookie: Black, Bronze and Gold cans; Hall of Famer: Bronze, Gold and Diamond).
 const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
 const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
 const dailyCoins = () => DAILY_COINS_BY_TITLE[dailyTitle()];
-function dailyOdds() {
-  const t = dailyTitle();
-  return { black: Math.max(8, 70 - 8 * t), white: 24, bronze: 5 + 4 * t, silver: 1 + 3 * t, gold: t >= 3 ? 1.5 * (t - 2) : 0, purple: t >= 6 ? t - 5 : 0 };
+const CAN_LADDER = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
+function wheelSlices() {
+  const t = dailyTitle(), c = dailyCoins(), up = Math.min(3, t >> 1), can = k => CAN_LADDER[Math.min(CAN_LADDER.length - 1, k + up)];
+  // round the wheel in this order (big and small slices mixed); w is the slice's share of the wheel
+  return [
+    { w: 26, coins: c, col: "#2f86ff" },
+    { w: 7, can: can(2), col: "#ff8a1f" },
+    { w: 20, caps: 3 + t, col: "#2fbf71" },
+    { w: 5, coins: c * 5, col: "#ff2e88" },
+    { w: 16, can: can(0), col: "#8a4dff" },
+    { w: 2, can: can(4), col: "#ffc93a", jackpot: true },
+    { w: 14, coins: c * 2, col: "#00c2d1" },
+    { w: 10, caps: 8 + 2 * t, col: "#e8392b" },
+  ];
 }
 const dailyReady = () => testing() || career.lastDaily !== new Date().toDateString(); // tester mode: always ready
-function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once claimed
+function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
-  $("dailySub").innerHTML = ready ? `<i class="coin"></i> ${short(dailyCoins())} + a free can` : `Next in ${timeText(bbUntilMidnight())}`;
+  $("dailySub").innerHTML = ready ? "Spin the prize wheel!" : `Next in ${timeText(bbUntilMidnight())}`;
 }
-$("dailyBtn").onclick = () => {
-  if (!dailyReady()) { const t = document.createElement("div"); t.className = "toast"; t.textContent = "Your next Daily Drop is ready at midnight."; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); return; }
-  initAudio();
-  career.lastDaily = new Date().toDateString(); const coins = dailyCoins(); career.coins += coins;
-  // The free can skips the cooler limit and opens on the spot.
-  const id = rollCan(dailyOdds());
-  career.cans.push({ id, court: topCourt(), instant: true }); // opens on the spot below, so it never sits in a full cooler
-  save(); renderHub(); sfx.win(); haptic("success");
-  const t = document.createElement("div"); t.className = "toast"; t.textContent = `+${short(coins)} coins and a free can!`;
-  $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
-  setTimeout(() => openCanSheet(career.cans.length - 1), 900);
-};
+const wheelPrizeHTML = p => p.can ? `<i class="minican" style="background:linear-gradient(90deg, ${canById(p.can).color}, ${canById(p.can).rim} 40%, ${canById(p.can).color})"></i>`
+  : p.caps ? `<i class="bcap"></i><b>${p.caps}</b>` : `<i class="coin"></i><b>${short(p.coins)}</b>`;
+let wheelSpin = null;
+function openWheel() {
+  const S8 = wheelSlices(), total = S8.reduce((t, x) => t + x.w, 0);
+  let a0 = 0; const segs = S8.map(x => { const a = x.w / total * 360, seg = { ...x, from: a0, to: a0 + a, mid: a0 + a / 2 }; a0 += a; return seg; });
+  const grad = segs.map(x => `${x.col} ${x.from}deg ${x.to}deg`).join(", ");
+  $("wheelBody").innerHTML = `<h2>🎡 Daily Drop</h2><div class="muted">One free spin a day. The smaller the slice, the better the prize.</div>
+    <div class="wheelwrap"><div class="wheelptr"></div><div class="wheel" id="wheel" style="background:conic-gradient(${grad})">
+      ${segs.map(x => `<div class="wl" style="transform:rotate(${x.mid}deg)"><span>${wheelPrizeHTML(x)}</span></div>`).join("")}
+      ${segs.map(x => `<i class="wsep" style="transform:rotate(${x.from}deg)"></i>`).join("")}<div class="whub">${dailyReady() ? "SPIN" : "✓"}</div></div></div>
+    <button class="btn green go" id="wheelGo" ${dailyReady() ? "" : "disabled"}>${dailyReady() ? "SPIN!" : `Next spin in ${timeText(bbUntilMidnight())}`}</button>
+    <button class="btn" id="wheelClose">CLOSE</button>`;
+  $("wheelSheet").hidden = false; wheelSpin = null;
+  $("wheelClose").onclick = () => { if (wheelSpin) return; $("wheelSheet").hidden = true; renderHub(); };
+  $("wheelGo").onclick = () => {
+    if (wheelSpin || !dailyReady()) return;
+    initAudio();
+    // pick the prize by slice size, pay it now (so closing the app mid-spin can't reroll it), then spin to land on it
+    let x = Math.random() * total, pick = segs[0];
+    for (const sg of segs) { x -= sg.w; if (x <= 0) { pick = sg; break; } }
+    career.lastDaily = new Date().toDateString();
+    if (pick.coins) career.coins += pick.coins; else if (pick.caps) career.caps += pick.caps; else career.cans.push({ id: pick.can, court: topCourt(), instant: true });
+    save();
+    const land = pick.from + (pick.to - pick.from) * (0.2 + Math.random() * 0.6), turn = 360 * 6 + (360 - land);
+    wheelSpin = pick; $("wheelGo").disabled = true; sfx.whoosh(); haptic("light");
+    const w = $("wheel"); w.style.transition = "transform 5s cubic-bezier(.12,.62,.1,1)"; w.style.transform = `rotate(${turn}deg)`;
+    setTimeout(() => wheelWon(pick), 5300);
+  };
+}
+function wheelWon(p) {
+  $("wheelSheet").hidden = true; wheelSpin = null;
+  const ck = p.can ? canById(p.can) : null;
+  $("bbRays").style.setProperty("--ray", p.col); $("bbRays").hidden = false;
+  $("bbRevTitle").innerHTML = p.jackpot ? "JACKPOT!" : "Daily Drop!";
+  const card = $("bbRevPrize"); card.className = "prize";
+  card.innerHTML = `<div class="pic">${ck ? `<div class="can bbcan" style="background:linear-gradient(90deg, ${ck.color}, ${ck.rim} 35%, ${ck.color} 70%);--rim:${ck.rim}"><div class="cantop"><i class="tab"></i></div><div class="canlabel" style="color:${ck.id === "white" || ck.id === "platinum" ? "#1c2a44" : "#fff"}">${ck.name.replace(" ", "<br>")}</div></div>` : p.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`}</div>
+    <b>${ck ? ck.name : p.caps ? `${p.caps} caps` : `${short(p.coins)} coins`}</b><small>${ck ? "Open it now!" : "Come back tomorrow for another spin."}</small>`;
+  $("bbRevFoot").innerHTML = `<button class="btn green go" id="bbCollect">${ck ? "OPEN IT!" : "COLLECT"}</button>`;
+  $("bbReveal").hidden = false; requestAnimationFrame(() => card.classList.add("show"));
+  sfx.win(); haptic("success");
+  $("bbCollect").onclick = () => {
+    $("bbReveal").hidden = true; renderHub();
+    if (ck) { const i = career.cans.findIndex(c => c.instant && c.id === p.can); if (i >= 0) setTimeout(() => openCanSheet(i), 250); }
+  };
+}
+$("dailyBtn").onclick = () => { initAudio(); openWheel(); };
 
 // ── Practice setup: how many players, their names, and the wind.
 function practiceCfg() {
@@ -502,7 +547,7 @@ const TOUR = [
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away or to buy a ticket."],
   ["#starsPill", "Stars", "Win matches to earn stars. Fill a court's stars to open the next court."],
   ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
-  ["#dailyBtn", "Daily Drop", "Coins and a free can, once a day."],
+  ["#dailyBtn", "Daily Drop", "Spin the prize wheel once a day: coins, caps or a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most. Tap one to start opening it."],
   ["#venueCard .venue.cur", "Courts", "Swipe to see each court: its buy-in, payout, stars and wind."],

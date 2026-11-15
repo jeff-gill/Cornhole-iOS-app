@@ -103,7 +103,7 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Win | Pot, stars, a can (if the cooler has room) and your life back |
 | Loss | Buy-in, stars and a life |
 | 4-bagger | Half a buy-in |
-| Daily Drop | Grows with your season title: 100 coins (Rookie) up to 6,000 (Hall of Famer), plus a free can that opens right away, with better can odds at every title |
+| Daily Drop | A prize wheel, one spin a day: coins (1x, 2x, 5x the title amount: 100 at Rookie up to 6,000 at Hall of Famer), caps, or a can that opens right away. Common prizes have big slices, the best thin ones; can slices move up a tier every two titles |
 | Bullseye Bags | One free throw a day (more for $0.99 / 3 for $1.99 / 5 for $2.99). See below |
 | Ticket (life) for coins | Set by your season title: 100, 250, 600, 1.5K, 4K, 10K, 25K, 60K, 150K (Rookie to Hall of Famer), but never more than a tenth of a buy-in at your highest open court |
 | Ticket (life) for caps | 15 caps |

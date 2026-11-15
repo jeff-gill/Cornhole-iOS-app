@@ -821,6 +821,7 @@ for (const [id, close] of [
   ["livesSheet", () => { const no = $("choiceNo") || $("infoClose") || $("livesClose"); if (no && $("livesSheet").contains(no)) no.click(); else $("livesSheet").hidden = true; }],
   ["avatarSheet", () => $("avatarClose").click()],
   ["bbSheet", () => { if ($("bbClose")) $("bbClose").click(); else $("bbSheet").hidden = true; }],
+  ["wheelSheet", () => $("wheelClose") && $("wheelClose").click()], // (not while it's spinning)
   ["shop", () => $("shopClose").click()],
   ["helpSheet", () => $("helpClose").click()],
   ["practiceSheet", () => { $("practiceSheet").hidden = true; }],
