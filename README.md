@@ -11,7 +11,7 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 - **Career:** twelve courts (courts 9–12 show "Coming soon" until released; remove `soon: true` in `web/src/g1_flow.js` to release one) (Backyard BBQ, Tailgate Lot, Beach Shack, Pizza Patio, Mountain Lodge, Golf Club, Island Hop, City Rooftop, Lakeside Dock, Block Party, County Fair, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with a smaller sweet spot, wind that builds a little at every court after the calm Backyard (0–1 mph at the Tailgate Lot), up to 5–7 mph at the Stadium, slicker boards and better opponents. The aim arrow swings at the same speed on every court. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
 - **Pro Shop:** spend coins on bags (Accuracy, Control and Spin stats, plus a sticky, neutral or fast slide), board designs, throw effects and cornhole effects. Every coin item can also be unlocked by collecting its cards from cans.
 - **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Dazzle, plus rare Express Pop cans. Rarer cans hold more prizes (coins, item cards, now and then a life) and take longer to open: 15 minutes for Black up to 24 hours for Diamond. Only one can opens at a time, and Express cans open right away. Each of your cornholes in a match improves the odds of a better can. Opening one sprays mist and the prizes pop out one at a time.
-- **Free Gift (🎁):** no lives or tickets: matches are limited only by coins. A free gift comes every 4 hours and up to 2 wait (about 30 coins, a 1-in-4 chance of a bottle cap and of a bag or board card), enough to keep playing the first court every day.
+- **No lives:** matches are limited only by coins. The Daily Drop gives a free prize every 4 hours (up to 2 wait), enough to keep playing the first court every day.
 - **Bottle caps:** the premium currency (a red cap with a star). Use them to open a can now (1 cap for every 10 minutes left). You start with 20, get some from cans (more often from rare ones) and 3 per 4-bagger, and can buy packs in the Store.
 - **Profile (tap your avatar):** three tabs.
   - **Avatar:** 25 hats and helmets on their own (ball cap, devil helmet, cowboy hat, police hat, fireman helmet, tiara, crown, astronaut helmet and more; several feminine picks), made in Blender (`web/tools/blender/hats.py`). 4 to start, 3 more with each court you open through Court 8. Your Game Center picture is the default when you have one.
@@ -103,7 +103,7 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Win | Pot, stars, a can (if the cooler has room) and your life back |
 | Loss | Buy-in, stars and a life |
 | 4-bagger | Half a buy-in |
-| Daily Drop | A prize wheel, one free spin a day (more: 1 / 3 / 5 for $0.99 / $1.99 / $2.99, always worth less than the same money spent in the store): coins (1x, 2x, 5x the title amount: 100 at Rookie up to 6,000 at Hall of Famer), caps, or a can that opens right away. Common prizes have big slices, the best thin ones; can slices move up a tier every four titles |
+| Daily Drop | A free prize every 4 hours, given straight away, up to 2 waiting (more: 1 / 3 / 5 for $0.99 / $1.99 / $2.99). All six a day average about 150-200 coins, 1-2 caps and 1-2 bag or board cards; a can is rare (about one every 3 days). Coins grow with your season title |
 | Bullseye Bags | One free throw a day (more for $0.99 / 3 for $1.99 / 5 for $2.99). See below |
 | Open a can now | 1 cap per 10 minutes left |
 | Caps from cans | chance 8% (Black) to 57% (Diamond); 1–3 caps (Black) to 15–29 (Diamond) |
@@ -130,7 +130,7 @@ hole. Only a bag resting on the board counts. Finish in a ring to win it, and it
 | On the board, no ring | nothing | nothing |
 | Off the board | nothing | nothing |
 
-Daily Drop spins are consumable in-app purchases too: `com.jeffgill.cornhole.wheel.1`, `.wheel.3` and `.wheel.5`.
+Extra Daily Drops are consumable in-app purchases too: `com.jeffgill.cornhole.wheel.1`, `.wheel.3` and `.wheel.5`.
 
 Each throw has a 30-second clock. Every Sunday is Hole-in-One Sunday: sinking the hole also wins the exclusive Hole-in-One
 bag (never sold; a bonus Golden Pop can once you have it).
