@@ -337,7 +337,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubtitle { margin-top: 10px; font-family: var(--font-display); text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .9; font-size: min(11vw, 50px); text-shadow: 0 4px 0 rgba(0,0,0,.4); letter-spacing: .01em; }
 .hubtitle span { display: block; color: var(--gold); font-size: 1.12em; }
 /* left alone for 5 seconds, the clubhouse slowly fades (over 5 seconds) to half so the court shows through; the first tap brings it back */
-#hub { transition: opacity .4s; } #hub.idle { opacity: .5; transition: opacity 5s ease-in-out; } /* a slow 5-second fade; a quick return on a tap */
+#hub { transition: none; } #hub.idle { opacity: .5; transition: opacity 5s ease-in-out; } /* a slow 5-second fade; back to full at once on a tap */
 /* the court's name above the inning count, in the same style as the game title (white over gold) */
 .courtname { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; text-align: center; white-space: nowrap; line-height: .9; font-size: 12px; text-shadow: 0 2px 0 rgba(0,0,0,.4); margin-bottom: 3px; }
 .courtname span { display: block; color: var(--gold); font-size: 1.12em; }
