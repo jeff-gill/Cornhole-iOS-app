@@ -243,7 +243,7 @@ function openCanSheet(i) {
   $("canTitle").textContent = can.name;
   $("prize").className = "prize"; $("prizeList").innerHTML = "";
   $("canHint").hidden = false; $("canHint").textContent = "Tap to open";
-  $("canDone").hidden = true; $("canSkip").hidden = true; $("prizeGrid").hidden = true; $("prizeGrid").innerHTML = "";
+  $("canDone").hidden = true; $("canNav").hidden = true; $("prizeGrid").hidden = true; $("prizeGrid").innerHTML = "";
   $("canSheet").hidden = false;
   can3dBuild(can);
   renderHub();
@@ -289,7 +289,7 @@ function prizeHTML(p) {
 function showPrizeSummary() {
   const R = canRun; if (!R || R.step === "done") return;
   R.step = "done"; R.shown = R.prizes.length;
-  $("prize").className = "prize"; $("canHint").hidden = true; $("canSkip").hidden = true; $("prizeList").innerHTML = "";
+  $("prize").className = "prize"; $("canHint").hidden = true; $("canNav").hidden = true; $("prizeList").innerHTML = "";
   const grid = $("prizeGrid"); grid.innerHTML = "";
   // Rows as even as possible: 4 → 2+2, 5 → 3+2, 6 → 3+3, 7 → 3+2+2, 8 → 3+3+2, 10 → 4+3+3 ...
   const n = R.prizes.length, rows = n === 4 ? 2 : Math.ceil(n / (n > 9 ? 4 : 3)), cols = Math.ceil(n / rows);
@@ -314,10 +314,10 @@ function showPrizeSummary() {
   sfx.win(); haptic("success");
 }
 $("canSkip").onclick = e => { e.stopPropagation(); showPrizeSummary(); };
+$("canNext").onclick = e => { e.stopPropagation(); nextPrize(); };
 function nextPrize() {
   const R = canRun; if (!R) return;
   if (R.shown >= R.prizes.length) { showPrizeSummary(); return; }
-  $("canSkip").hidden = R.shown >= R.prizes.length - 1;
   const p = R.prizes[R.shown++], h = prizeHTML(p), el = $("prize");
   el.className = "prize"; void el.offsetWidth;
   el.innerHTML = h.pic + h.line; el.className = "prize show";
@@ -328,7 +328,9 @@ function nextPrize() {
     else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(cv.dataset.id)); ctx.drawImage(tmp, 24, 0, 48, 96); }
   }
   if (p.unlocked || p.kind === "life") { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
-  $("canHint").hidden = false; $("canHint").textContent = R.shown < R.prizes.length ? `Tap for the next prize (${R.prizes.length - R.shown} left)` : "Tap to finish";
+  // NEXT (and COLLECT ALL while more are left) under the prize; the last one finishes
+  const more = R.shown < R.prizes.length;
+  $("canNav").hidden = false; $("canSkip").hidden = !more; $("canNext").textContent = more ? `NEXT · ${R.prizes.length - R.shown} LEFT` : "FINISH";
 }
 $("canDone").onclick = () => { $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub(); };
 

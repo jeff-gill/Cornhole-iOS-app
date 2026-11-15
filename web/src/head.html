@@ -320,7 +320,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .prize .new { color: var(--gold); }
 .prizes { position: absolute; bottom: 21%; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 92%; }
 .prizes span { background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 3px 8px; font-size: 13px; font-weight: 900; }
-.canhint { position: absolute; bottom: 12%; font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
+.canhint { position: absolute; bottom: calc(7% + 80px); font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
 #canDone { position: absolute; bottom: 7%; min-width: 200px; }
 .cangrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .cangrid div { display: grid; justify-items: center; gap: 6px; padding: 10px 4px; border-radius: 14px; background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); font-size: 12px; font-weight: 900; text-align: center; }
@@ -565,7 +565,13 @@ s.was { opacity: .6; font-size: .8em; }
 .prizegrid .ptile small { display: block; font-size: 11px; font-weight: 900; color: var(--ink-dim); }
 .prizegrid .ptile small.new { color: var(--gold); }
 @keyframes tilein { from { transform: scale(.3); opacity: 0; } }
-#canSkip { position: absolute; bottom: 7%; z-index: 3; min-width: 200px; }
+/* NEXT and COLLECT ALL side by side under the prize */
+.cannav { position: absolute; bottom: 7%; z-index: 3; display: flex; gap: 10px; }
+.cannav .btn { min-width: 150px; }
+/* the prize being shown, bigger */
+#prize { width: min(320px, 84vw); padding: 22px 18px; top: 30%; }
+#prize .pic { font-size: 72px; } #prize canvas { width: 104px; height: 104px; } #prize b { font-size: 30px; } #prize small { font-size: 16px; }
+#prize .coin.big, #prize .bcap.big { width: 88px; height: 88px; }
 .shopexit { position: fixed; left: 0; right: 0; margin: 0 auto; width: fit-content; bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 20; min-width: 170px;
   background: linear-gradient(#ff6a5a, #c8102e); border-color: #fff; box-shadow: 0 5px 0 rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.45); }
 #shop .items { padding-bottom: 84px; } /* room so the last item isn't hidden under the exit button */
@@ -799,7 +805,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="prizes" id="prizeList"></div>
     <div class="canhint" id="canHint">Tap to open</div>
     <div class="prizegrid" id="prizeGrid" hidden></div>
-    <button class="btn green" id="canSkip" hidden>COLLECT ALL</button>
+    <div class="cannav" id="canNav" hidden><button class="btn blue" id="canNext">NEXT</button><button class="btn green" id="canSkip">COLLECT ALL</button></div>
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>

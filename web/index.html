@@ -328,7 +328,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .prize .new { color: var(--gold); }
 .prizes { position: absolute; bottom: 21%; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 92%; }
 .prizes span { background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 3px 8px; font-size: 13px; font-weight: 900; }
-.canhint { position: absolute; bottom: 12%; font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
+.canhint { position: absolute; bottom: calc(7% + 80px); font-family: var(--font-display); font-size: 20px; animation: bob 1.4s ease-in-out infinite; }
 #canDone { position: absolute; bottom: 7%; min-width: 200px; }
 .cangrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .cangrid div { display: grid; justify-items: center; gap: 6px; padding: 10px 4px; border-radius: 14px; background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); font-size: 12px; font-weight: 900; text-align: center; }
@@ -573,7 +573,13 @@ s.was { opacity: .6; font-size: .8em; }
 .prizegrid .ptile small { display: block; font-size: 11px; font-weight: 900; color: var(--ink-dim); }
 .prizegrid .ptile small.new { color: var(--gold); }
 @keyframes tilein { from { transform: scale(.3); opacity: 0; } }
-#canSkip { position: absolute; bottom: 7%; z-index: 3; min-width: 200px; }
+/* NEXT and COLLECT ALL side by side under the prize */
+.cannav { position: absolute; bottom: 7%; z-index: 3; display: flex; gap: 10px; }
+.cannav .btn { min-width: 150px; }
+/* the prize being shown, bigger */
+#prize { width: min(320px, 84vw); padding: 22px 18px; top: 30%; }
+#prize .pic { font-size: 72px; } #prize canvas { width: 104px; height: 104px; } #prize b { font-size: 30px; } #prize small { font-size: 16px; }
+#prize .coin.big, #prize .bcap.big { width: 88px; height: 88px; }
 .shopexit { position: fixed; left: 0; right: 0; margin: 0 auto; width: fit-content; bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 20; min-width: 170px;
   background: linear-gradient(#ff6a5a, #c8102e); border-color: #fff; box-shadow: 0 5px 0 rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.45); }
 #shop .items { padding-bottom: 84px; } /* room so the last item isn't hidden under the exit button */
@@ -756,7 +762,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794716430 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794716856 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -807,7 +813,7 @@ s.was { opacity: .6; font-size: .8em; }
     <div class="prizes" id="prizeList"></div>
     <div class="canhint" id="canHint">Tap to open</div>
     <div class="prizegrid" id="prizeGrid" hidden></div>
-    <button class="btn green" id="canSkip" hidden>COLLECT ALL</button>
+    <div class="cannav" id="canNav" hidden><button class="btn blue" id="canNext">NEXT</button><button class="btn green" id="canSkip">COLLECT ALL</button></div>
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>
@@ -2867,7 +2873,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794716430`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794716856`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4405,7 +4411,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794716430`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794716856`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4416,7 +4422,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794716430`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794716856`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6300,7 +6306,7 @@ function openCanSheet(i) {
   $("canTitle").textContent = can.name;
   $("prize").className = "prize"; $("prizeList").innerHTML = "";
   $("canHint").hidden = false; $("canHint").textContent = "Tap to open";
-  $("canDone").hidden = true; $("canSkip").hidden = true; $("prizeGrid").hidden = true; $("prizeGrid").innerHTML = "";
+  $("canDone").hidden = true; $("canNav").hidden = true; $("prizeGrid").hidden = true; $("prizeGrid").innerHTML = "";
   $("canSheet").hidden = false;
   can3dBuild(can);
   renderHub();
@@ -6346,7 +6352,7 @@ function prizeHTML(p) {
 function showPrizeSummary() {
   const R = canRun; if (!R || R.step === "done") return;
   R.step = "done"; R.shown = R.prizes.length;
-  $("prize").className = "prize"; $("canHint").hidden = true; $("canSkip").hidden = true; $("prizeList").innerHTML = "";
+  $("prize").className = "prize"; $("canHint").hidden = true; $("canNav").hidden = true; $("prizeList").innerHTML = "";
   const grid = $("prizeGrid"); grid.innerHTML = "";
   // Rows as even as possible: 4 → 2+2, 5 → 3+2, 6 → 3+3, 7 → 3+2+2, 8 → 3+3+2, 10 → 4+3+3 ...
   const n = R.prizes.length, rows = n === 4 ? 2 : Math.ceil(n / (n > 9 ? 4 : 3)), cols = Math.ceil(n / rows);
@@ -6371,10 +6377,10 @@ function showPrizeSummary() {
   sfx.win(); haptic("success");
 }
 $("canSkip").onclick = e => { e.stopPropagation(); showPrizeSummary(); };
+$("canNext").onclick = e => { e.stopPropagation(); nextPrize(); };
 function nextPrize() {
   const R = canRun; if (!R) return;
   if (R.shown >= R.prizes.length) { showPrizeSummary(); return; }
-  $("canSkip").hidden = R.shown >= R.prizes.length - 1;
   const p = R.prizes[R.shown++], h = prizeHTML(p), el = $("prize");
   el.className = "prize"; void el.offsetWidth;
   el.innerHTML = h.pic + h.line; el.className = "prize show";
@@ -6385,7 +6391,9 @@ function nextPrize() {
     else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(cv.dataset.id)); ctx.drawImage(tmp, 24, 0, 48, 96); }
   }
   if (p.unlocked || p.kind === "life") { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
-  $("canHint").hidden = false; $("canHint").textContent = R.shown < R.prizes.length ? `Tap for the next prize (${R.prizes.length - R.shown} left)` : "Tap to finish";
+  // NEXT (and COLLECT ALL while more are left) under the prize; the last one finishes
+  const more = R.shown < R.prizes.length;
+  $("canNav").hidden = false; $("canSkip").hidden = !more; $("canNext").textContent = more ? `NEXT · ${R.prizes.length - R.shown} LEFT` : "FINISH";
 }
 $("canDone").onclick = () => { $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub(); };
 
@@ -6416,7 +6424,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794716430";
+const BUILD_ID = "1794716856";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
