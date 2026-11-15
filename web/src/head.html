@@ -399,6 +399,10 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .seasonbadge b { font-family: var(--font-display); font-weight: 400; font-size: 15px; color: var(--gold); }
 .ladder { display: grid; gap: 5px; text-align: left; }
 .rules { text-align: left; display: grid; gap: 12px; }
+/* an "i" in a circle that shows or hides a sheet's explanation */
+.infobtn { display: inline-grid; place-items: center; width: 26px; height: 26px; margin-left: 6px; vertical-align: 4px; border-radius: 50%; border: 2px solid #fff; background: rgba(255,255,255,.12); color: #fff; font: italic 900 16px/1 Georgia, serif; padding: 0; }
+.infotext { background: rgba(255,255,255,.06); border-radius: 12px; padding: 8px 10px; text-align: left; }
+#livesSheet .sheet { max-height: calc(100dvh - 32px); }
 /* clubhouse tour: a spotlight on one thing at a time, with a card beside it */
 #tour { position: fixed; inset: 0; z-index: 600; transition: background .3s; } #tour.dim { background: rgba(4,10,22,.72); }
 #tourSpot { position: absolute; border-radius: 16px; border: 3px solid var(--gold); box-shadow: 0 0 0 9999px rgba(4,10,22,.72), 0 0 18px rgba(255,201,58,.6); transition: all .3s; pointer-events: none; }
@@ -498,6 +502,13 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 .bbstrip { background: rgba(255,255,255,.06); border-radius: 12px; padding: 6px 10px; font-size: 13px; font-weight: 900; } .bbstrip b { text-align: right; }
 .bbdots { display: flex; justify-content: center; gap: 8px; padding: 2px 0; } .bbdots i { width: 16px; height: 16px; position: relative; }
 .bbdots i.won { opacity: .35; } .bbdots i.won::after { content: "✓"; position: absolute; inset: -2px; display: grid; place-items: center; color: #fff; font: 900 12px/1 Arial, sans-serif; }
+#bbReveal { background: radial-gradient(circle at 50% 45%, rgba(40,60,110,.95), rgba(4,8,18,.97)); z-index: 30; }
+.bbrevfoot { position: absolute; left: 24px; right: 24px; bottom: 9%; display: grid; gap: 12px; justify-items: center; }
+.bbrevfoot .btn { min-width: 220px; } .bbrevleft { font-weight: 900; color: var(--ink-dim); }
+#bbRevPrize .pic { display: grid; place-items: center; min-height: 80px; }
+#bbRevPrize .bbcan { width: 96px; height: 160px; margin: 12px auto 6px; } #bbRevPrize .bbcan .canlabel { top: 52px; font-size: 15px; }
+#bbRevPrize:has(.bbcan) { top: 22%; }
+.bbmode .btn.small { font-size: 13px; padding: 7px 4px; }
 .bbleft { text-align: center; font-size: 12px; font-weight: 900; color: var(--ink-dim); }
 #bbLegend b { text-align: right; } #bbLegend p { margin: 3px 0 0; font-size: 11px; color: #ffe27a; }
 .bbthrows { text-align: center; font-weight: 900; font-size: 14px; }
@@ -759,6 +770,7 @@ s.was { opacity: .6; font-size: .8em; }
 
 <div id="tour" hidden><div id="tourSpot"></div><div id="tourCard"></div></div>
 <div class="overlay" id="bbSheet" hidden><div class="sheet" id="bbBody"></div></div>
+<div class="overlay" id="bbReveal" hidden><div class="canstage"><div class="canrays" id="bbRays"></div><div class="cantitle" id="bbRevTitle"></div><div class="prize" id="bbRevPrize"></div><div class="bbrevfoot" id="bbRevFoot"></div></div></div>
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
 <div class="overlay" id="avatarSheet" hidden><div class="sheet">
   <div class="tabs ptabs"><button data-ptab="settings" class="on">SETTINGS</button><button data-ptab="avatar">AVATAR</button><button data-ptab="profile">PROFILE</button></div>

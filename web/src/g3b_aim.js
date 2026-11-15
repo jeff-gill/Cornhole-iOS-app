@@ -134,6 +134,8 @@ function updateAimRig(dt) {
   const dir = { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
   const ahead = handFloor() > 0 ? 1.2 : 4.2; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
+  // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
+  aimRig.rotation.x = handFloor() > 0 ? -Math.atan2(handFloor() - surf(to), Math.max(1, d - ahead)) : 0;
   aimBase.rotation.y = -Math.atan2(dir.x, dir.y);
   // Perfect-direction wedge.
   if (aimWedgeZone !== L.zone) {

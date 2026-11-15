@@ -4,21 +4,18 @@
 // hole sits near the back, and four coloured rings circle it, running off the back and sides of the board. Each ring and
 // the hole is a prize; only a bag resting on the board counts. Win a ring and it's gone (plain wood) for the rest of the
 // day, so later throws go after what's left. The hole is the top prize (a can that opens on the spot). Knock the star bag
-// into the hole for double. Easy and Hard (tighter rings, farther, windier, more bags in the way). One free throw a day;
-// more can be bought (1, 3 or 5). The board is a giant 5 x 10 ft board, a real board's 1:2 shape.
-const BB_BOARD = { W: 5, L: 10, FH: 0.35, BH: 1.75, HR: 0.42, HOLE_Y: 8.125 }; // hole 9" from the back on a real board, scaled
-const BB_SCENES = [
-  { id: "bb_roof", name: "Rooftop Drop", sub: "Down from a roof to the plaza", dist: [20, 30], height: 30, surf: false },
-  { id: "bb_field", name: "Long Bomb", sub: "All the way down the park", dist: [40, 58], height: 0, surf: false },
-  { id: "bb_dock", name: "Dock Drop", sub: "Off the pier to a raft on the lake", dist: [24, 34], height: 10, surf: true },
-  { id: "bb_cliff", name: "Cliff Toss", sub: "From the bluff down to the beach", dist: [26, 38], height: 40, surf: true },
-];
+// into the hole for double. Easier and Harder (tighter rings, farther, windier, more bags in the way). One free throw a day;
+// more can be bought (1, 3 or 5). The board is a regulation 2 x 4 ft board.
+const BB_BOARD = { W: 2, L: 4, FH: 0.25, BH: 1, HR: 0.25, HOLE_Y: 3.25 }; // a regulation 2 x 4 board, hole 9" from the back
+// The day's court: one of the regular courts (a standard 27 ft court on level ground, you in a pitcher's box), with
+// the bullseye board where the far board would be.
+const bbCourts = () => VENUES.filter(v => !v.soon);
 // Weather changes the throw, not just the look. mu: board friction (lower slides farther); r: how much a landing keeps.
 const BB_WEATHER = [
   { id: "sunny", name: "Sunny", icon: "☀️", w: 40, note: "" },
   { id: "cloudy", name: "Cloudy", icon: "☁️", w: 18, note: "" },
   { id: "rain", name: "Rain", icon: "🌧️", w: 16, note: "Wet board: bags slide farther", mu: 0.72, r: 0.06 },
-  { id: "snow", name: "Snow", icon: "🌨️", w: 10, note: "Snowy board: bags stop short", mu: 1.35, r: -0.14, only: ["bb_roof", "bb_field"] },
+  { id: "snow", name: "Snow", icon: "🌨️", w: 10, note: "Snowy board: bags stop short", mu: 1.35, r: -0.14, only: ["lodge"] },
   { id: "fog", name: "Fog", icon: "🌫️", w: 16, note: "Hard to see the board" },
 ];
 // The five prizes for each level: the four rings from the outside in, then the hole. Colours never change. Coins are in
@@ -31,7 +28,7 @@ const BB_PRIZES = {
 };
 // Ring edges (ft from the middle of the hole), outer to inner: prize 0 is the outer ring, prize 3 the one round the hole.
 // The outer rings run off the back and sides of the board; only the part on the board counts.
-const BB_RINGS = { easy: [3.1, 2.35, 1.65, 1.05], hard: [2.3, 1.75, 1.25, 0.82] };
+const BB_RINGS = { easy: [1.35, 1.05, 0.78, 0.52], hard: [1.0, 0.78, 0.58, 0.4] };
 const BB_CONSOLATION = { easy: 0.02, hard: 0.06 }; // on the board but in no ring (or a ring already won); off the board wins nothing
 // Plain words for the day's board (what it does to a landing bag).
 const BB_SURF_WORDS = { "-2": "Sticky: bags stop short", "-1": "Grippy: bags stop a bit short", "0": "Normal: bags slide a normal amount", "1": "Fast: bags slide farther", "2": "Slick: bags slide a long way" };
@@ -48,7 +45,7 @@ function bbToday() {
   if (bbToday.cache && bbToday.cache.key === key) return bbToday.cache;
   let h = 2166136261; for (const ch of "bullseye:" + key) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   const r = rng(h >>> 0), pick = a => a[Math.floor(r() * a.length)];
-  const scene = pick(BB_SCENES);
+  const v = pick(bbCourts()), scene = { id: v.id, name: v.name, sub: v.sub, surf: ["beach", "island", "lakeside"].includes(v.id) }, side = r() < 0.5 ? -1 : 1;
   const ws = BB_WEATHER.filter(w => !w.only || w.only.includes(scene.id));
   let x = r() * ws.reduce((t, w) => t + w.w, 0), weather = ws[0];
   for (const w of ws) { x -= w.w; if (x <= 0) { weather = w; break; } }
@@ -57,29 +54,35 @@ function bbToday() {
   for (const m of ["easy", "hard"]) {
     const hard = m === "hard", L = BB_BOARD.L, HWb = BB_BOARD.W / 2, hole = { x: 0, y: BB_BOARD.HOLE_Y };
     // the star bag sits near the hole (knock it in for double); grey bags are scattered, never on the hole
-    const bags = [], clear = p => Math.hypot(p.x - hole.x, p.y - hole.y) > 0.75 && p.y < L - 0.4 && bags.every(b => Math.hypot(b.x - p.x, b.y - p.y) > 0.7);
-    for (let tries = 0; tries < 200; tries++) { const sa = Math.PI * (0.55 + r() * 0.9), sd = 0.75 + r() * 0.55, p = { x: Math.sin(sa) * sd, y: hole.y + Math.cos(sa) * sd, star: true, angle: r() * 6 }; if (clear(p)) { bags.push(p); break; } }
-    for (let k = 0, tries = 0; k < (hard ? 4 : 1) && tries < 400; tries++) {
-      const p = { x: (r() * 2 - 1) * (HWb - 0.45), y: 2 + r() * (L - 2.6), angle: r() * 6 };
+    // Bags already on the board: 0-3 on Easier, 4-9 on Harder, spread over the whole board (about 60% on the front two
+    // thirds) but never on the bullseye (the hole and the ring round it). Plus the star bag beside the hole (x2).
+    const bull = BB_RINGS[m][3] + 0.2, bags = [];
+    const clear = (p, gap = 0.52) => Math.hypot(p.x - hole.x, p.y - hole.y) > bull && Math.abs(p.x) < HWb - 0.27 && p.y > 0.28 && p.y < L - 0.28 && bags.every(b => Math.hypot(b.x - p.x, b.y - p.y) > gap);
+    for (let tries = 0; tries < 200; tries++) { const sa = Math.PI * (0.6 + r() * 0.8), sd = BB_BOARD.HR + 0.3 + r() * 0.15, p = { x: Math.sin(sa) * sd, y: hole.y + Math.cos(sa) * sd, star: true, angle: r() * 6 }; if (Math.abs(p.x) < HWb - 0.27 && bags.every(b => Math.hypot(b.x - p.x, b.y - p.y) > 0.52)) { bags.push(p); break; } }
+    const n = hard ? 4 + Math.floor(r() * 6) : Math.floor(r() * 4);
+    for (let k = 0, tries = 0; k < n && tries < 3000; tries++) {
+      const front = r() < 0.6, y = front ? 0.28 + r() * (L * 2 / 3 - 0.28) : L * 2 / 3 + r() * (L / 3 - 0.28);
+      const p = { x: (r() * 2 - 1) * (HWb - 0.27), y, angle: r() * 6 };
       if (clear(p)) { bags.push(p); k++; }
     }
-    modes[m] = { dist: Math.round(hard ? scene.dist[1] : scene.dist[0]), wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags };
+    modes[m] = { dist: 27, wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags };
   }
-  return (bbToday.cache = { key, scene, weather, board, windDir, modes });
+  return (bbToday.cache = { key, scene, side, weather, board, windDir, modes });
 }
 
 // ── Throws: one free a day (resets at midnight), plus any you've bought. Prizes won today, per level.
 const bbState = () => (career.bb ||= { day: "", extra: 0 });
-const bbFreeReady = () => bbState().day !== bbDay();
+const bbFreeReady = () => testing() || bbState().day !== bbDay(); // tester mode: unlimited throws
 const bbCanPlay = () => bbFreeReady() || bbState().extra > 0;
 function bbWon(mode) { // indexes 0-4 (4 is the hole) won today on this level
   const s = bbState();
   if (!s.won || s.won.day !== bbDay()) s.won = { day: bbDay(), easy: [], hard: [] };
   return s.won[mode];
 }
-const bbCleared = mode => bbWon(mode).length >= 5;
+const bbCleared = mode => !testing() && bbWon(mode).length >= 5;
 function bbUseThrow() {
   const s = bbState();
+  if (testing()) { s.used = null; return true; } // tester mode: throws are free and unlimited
   if (s.day !== bbDay()) { s.day = bbDay(); s.used = "free"; }
   else if (s.extra > 0) { s.extra--; s.used = "extra"; }
   else return false;
@@ -125,14 +128,16 @@ function bbLevel() { // meters for the level, like a match (the Golden Bag is a 
   return { freq: 0.55 * (1 - 0.06 * (g.acc - 1)) * (hard ? 1.15 : 1), zone: SWEET * zone * (1 + 0.15 * (g.acc - 1)), powZone: SWEET * zone * (1 + 0.15 * (g.ctrl - 1)),
     wobble: wob * (1 - 0.15 * (g.ctrl - 1)), cpu: 0.25, preview: true, scatter: hard ? 1.6 : 1.1 };
 }
-function bbStart(mode) {
-  if (!bbCanPlay() || bbCleared(mode)) return;
+// preview: look at the court and the board first (no throw used); PLAY from there, or go back.
+function bbStart(mode, preview = false) {
+  if (bbCleared(mode) || (!preview && !bbCanPlay())) return;
   const day = bbToday(), M = day.modes[mode], sc = day.scene, L = BB_BOARD.L;
-  if (!bbUseThrow()) return;
+  if (!preview && !bbUseThrow()) return;
   initAudio();
   $("bbSheet").hidden = true; $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
-  BB.active = { mode, day, M, done: false };
-  setCourt({ FY: M.dist, BY: M.dist + L, HW: BB_BOARD.W / 2, FH: BB_BOARD.FH, BH: BB_BOARD.BH, HR: BB_BOARD.HR, hole: { x: 0, y: M.dist + BB_BOARD.HOLE_Y }, rel: { h: sc.height + 3, y: 0.5, x: 0 } });
+  BB.active = { mode, day, M, done: false, preview };
+  setCourt({ FY: M.dist, BY: M.dist + L, HW: BB_BOARD.W / 2, FH: BB_BOARD.FH, BH: BB_BOARD.BH, HR: BB_BOARD.HR, hole: { x: 0, y: M.dist + BB_BOARD.HOLE_Y }, rel: { h: 3, y: 0.5, x: 1.8 } }); // a standard court: level ground, regulation distance
+  SIDES[0] = day.side; // your pitcher's box for the day
   S.kind = "bullseye"; S.practice = null; S.online = null; S.opponent = null; S.names = [myHandle(), ""];
   S.gear = [BB_GOLDEN, { ...BB_LOOKS.grey, acc: 1, ctrl: 1, spin: 1, feel: "neutral" }];
   S.teamC = [BB_GOLDEN.c, "#9aa0aa"]; setTeamColors();
@@ -148,17 +153,35 @@ function bbStart(mode) {
   S.scores = [0, 0]; S.inning = 1; S.thrown = [0, 4]; S.lost = [[], []]; S.player = 0; S.leader = 0; S.saved = {}; S.history = []; S.feedback = [];
   S.lastId = null; S.fourBagger = [false, false]; S.result = null; S.winner = null; S.tut = { dragged: true, thrown: false }; S.clock = null; S.pauses = 0; S.awayDebt = 0; S.awayAt = null;
   S.end = null; S.landD = null; S.landPhi = 0;
-  targetBoard.visible = ownBoard.visible = false; teamCoolers.visible = false;
-  buildVenue(sc.id);
+  targetBoard.visible = false; teamCoolers.visible = false; // the bullseye board stands in for the far board; yours stays at your feet
+  buildVenue(sc.id); setBoardDesign(day.board);
   bbBuildBoard(d, mode, M); bbWeather(w);
-  sun.target.position.set(0, 0, -HOLE.y); sun.position.z += 27 - HOLE.y; // shadows around the giant board
-  setAmbience({ wind: M.wind, surf: sc.surf, crowd: false, night: false, fire: false });
-  showBanner(mode === "hard" ? "Bullseye Bags · HARD" : "Bullseye Bags", 0);
+  venueAmbience(sc.id, M.wind);
+  if (preview) { S.phase = "bbpreview"; showBanner(mode === "hard" ? "Preview · HARDER" : "Preview · EASIER", 0); ui(); return; }
+  bbBeginThrow();
+}
+function bbBeginThrow() {
+  const mode = BB.active.mode;
+  showBanner(mode === "hard" ? "Bullseye Bags · HARDER" : "Bullseye Bags · EASIER", 0);
   beginTurn();
   // aimed at the best prize still on the board to start, so the throw's path shows right away
   const won = bbWon(mode), R = BB_RINGS[mode], k = [3, 2, 1, 0].find(i => !won.includes(i)) ?? 3;
   const aim = !won.includes(4) ? { x: 0, y: HOLE.y } : { x: 0, y: HOLE.y - (R[k] + (R[k + 1] || BB_BOARD.HR)) / 2 }; // the front of the best ring left
   S.end = aim; refreshPlan(); ui();
+}
+// From the preview: use a throw and play this level, or go back to the Bullseye sheet.
+function bbPreviewPlay() {
+  const A = BB.active; if (!A || !A.preview) return;
+  if (!bbUseThrow()) { bbPreviewBack(); return; }
+  A.preview = false; bbBeginThrow();
+}
+function bbPreviewBack() { openHub(); renderBBSheet(); }
+function bbPreviewPanel() {
+  const A = BB.active, can = bbCanPlay();
+  return `<div class="center"><div class="big">${esc(A.day.scene.name)} · ${A.mode === "hard" ? "Harder" : "Easier"}</div>
+    <div class="muted">${A.M.dist} ft · ${A.M.wind} mph wind · ${A.M.bags.length} bag${A.M.bags.length > 1 ? "s" : ""} on the board. Looking doesn't use a throw.</div></div>
+    <div class="btns" style="grid-template-columns:1fr 1.6fr"><button class="btn" id="bbPrevBack">BACK</button>
+    <button class="btn go ${A.mode === "hard" ? "red" : "green"}" id="bbPrevPlay" ${can ? "" : "disabled"}>${can ? `PLAY ${A.mode === "hard" ? "HARDER" : "EASIER"}` : "NO THROWS LEFT"}</button></div>`;
 }
 // Today's prizes for a level: a colour dot, the prize, and a tick once won.
 function bbPrizeRows(mode) {
@@ -167,17 +190,17 @@ function bbPrizeRows(mode) {
 }
 // The prize key: shown on the board screen while you pick your spot, gone once you start the throw.
 function bbRenderLegend() {
-  const el = $("bbLegend"), show = S.kind === "bullseye" && S.phase === "aiming" && !!BB.active;
+  const el = $("bbLegend"), show = S.kind === "bullseye" && (S.phase === "aiming" || S.phase === "bbpreview") && !!BB.active;
   el.hidden = !show; if (!show) return;
   const mode = BB.active.mode;
   el.innerHTML = `<h4>Today's prizes <small>${5 - bbWon(mode).length} left</small></h4>${bbPrizeRows(mode)}<p>⭐ Star bag in the hole: <b>x2</b></p>`;
 }
-const markerScale = () => (S.kind === "bullseye" ? 2.2 : 1);
-const bbPanelTag = () => BB.active ? `${esc(BB.active.day.scene.name)} · ${BB.active.mode === "hard" ? "Hard" : "Easy"}` : "";
+const markerScale = () => 1;
+const bbPanelTag = () => BB.active ? `${esc(BB.active.day.scene.name)} · ${BB.active.mode === "hard" ? "Harder" : "Easier"}` : "";
 
 // Back to the regular court (on the way back to the clubhouse, or before any match).
 function bbExit() {
-  if (BB.active && !BB.active.done && S.lastId == null) bbRefundThrow(); // never thrown: you keep the throw
+  if (BB.active && !BB.active.done && !BB.active.preview && S.lastId == null) bbRefundThrow(); // never thrown: you keep the throw
   BB.active = null;
   if (BB.mesh) { scene.remove(BB.mesh); BB.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); }); BB.mesh = null; }
   if (BB.precip) { scene.remove(BB.precip.o); BB.precip.o.geometry.dispose(); BB.precip = null; }
@@ -185,7 +208,6 @@ function bbExit() {
   if (S.kind !== "bullseye") return;
   setCourt(); S.kind = "career";
   targetBoard.visible = ownBoard.visible = true; teamCoolers.visible = true;
-  sun.target.position.set(0, 0, -27);
 }
 
 // ── The giant board: wood with the bullseye rings round the hole (won ones are plain wood), a frame and legs.
@@ -200,7 +222,7 @@ function bbPaintBoard(c, w, h, d, mode, M) {
     c.beginPath(); for (let k = 0; k <= 40; k++) { const y = h * k / 40, x = x0 + Math.sin(k / 40 * f + ph) * amp; k ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
   }
   const edge = d.a === "#ffffff" ? "#1f3a6e" : d.a; // a border in the board design's colour
-  c.strokeStyle = edge; c.lineWidth = 0.22 * s; c.strokeRect(0.11 * s, 0.11 * s, w - 0.22 * s, h - 0.22 * s);
+  c.strokeStyle = edge; c.lineWidth = 0.08 * s; c.strokeRect(0.04 * s, 0.04 * s, w - 0.08 * s, h - 0.08 * s);
   const X = x => w / 2 + x * s, Y = y => h - y * s; // board feet (x across from the middle, y up from the front) to pixels
   const glyph = (p, x, y, rad) => {
     c.fillStyle = "#ffffff"; c.strokeStyle = "rgba(0,0,0,.25)"; c.lineWidth = rad * 0.06;
@@ -214,20 +236,20 @@ function bbPaintBoard(c, w, h, d, mode, M) {
     const gr = c.createRadialGradient(hx, hy - ro * 0.3, ri, hx, hy, ro); gr.addColorStop(0, shade(p.c, 0.3)); gr.addColorStop(1, p.c);
     c.fillStyle = gr; c.beginPath(); c.arc(hx, hy, ro, 0, 7); if (ri) c.arc(hx, hy, ri, 7, 0, true); c.fill("evenodd");
   }
-  c.strokeStyle = "#ffffff"; c.lineWidth = 0.07 * s;
+  c.strokeStyle = "#ffffff"; c.lineWidth = 0.03 * s;
   for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(hx, hy, RR[i] * s, 0, 7); c.stroke(); }
   for (let i = 0; i < 4; i++) { // each ring's prize symbol on its front edge, where you can see it from the throw
     if (won.includes(i)) continue;
-    glyph(P[i], hx, hy + (RR[i] + (RR[i + 1] || BB_BOARD.HR)) / 2 * s, Math.min(0.32, (RR[i] - (RR[i + 1] || BB_BOARD.HR)) * 0.45) * s);
+    glyph(P[i], hx, hy + (RR[i] + (RR[i + 1] || BB_BOARD.HR)) / 2 * s, (RR[i] - (RR[i + 1] || BB_BOARD.HR)) * 0.42 * s);
   }
   if (!won.includes(4)) { // the hole: the top prize, ringed in its colour
     const hr = BB_BOARD.HR * s;
-    c.fillStyle = "#ffffff"; c.beginPath(); c.arc(hx, hy, hr + 0.2 * s, 0, 7); c.fill();
-    c.fillStyle = P[4].c; c.beginPath(); c.arc(hx, hy, hr + 0.15 * s, 0, 7); c.fill();
+    c.fillStyle = "#ffffff"; c.beginPath(); c.arc(hx, hy, hr + 0.09 * s, 0, 7); c.fill();
+    c.fillStyle = P[4].c; c.beginPath(); c.arc(hx, hy, hr + 0.065 * s, 0, 7); c.fill();
   }
   // the border on top of the rings, so the board's edge stays crisp where they run off it
-  c.strokeStyle = edge; c.lineWidth = 0.22 * s; c.strokeRect(0.11 * s, 0.11 * s, w - 0.22 * s, h - 0.22 * s);
-  c.fillStyle = edge; for (const [x, y] of [[0.4, 0.4], [BB_BOARD.W - 0.4, 0.4], [0.4, BB_BOARD.L - 0.4], [BB_BOARD.W - 0.4, BB_BOARD.L - 0.4]]) { c.beginPath(); c.arc(x * s, y * s, 0.16 * s, 0, 7); c.fill(); }
+  c.strokeStyle = edge; c.lineWidth = 0.08 * s; c.strokeRect(0.04 * s, 0.04 * s, w - 0.08 * s, h - 0.08 * s);
+  c.fillStyle = edge; for (const [x, y] of [[0.15, 0.15], [BB_BOARD.W - 0.15, 0.15], [0.15, BB_BOARD.L - 0.15], [BB_BOARD.W - 0.15, BB_BOARD.L - 0.15]]) { c.beginPath(); c.arc(x * s, y * s, 0.05 * s, 0, 7); c.fill(); }
 }
 function bbBuildBoard(d, mode, M) {
   if (BB.mesh) { scene.remove(BB.mesh); BB.mesh = null; }
@@ -243,15 +265,15 @@ function bbBuildBoard(d, mode, M) {
   const top = new THREE.Mesh(geo, [new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55 }), new THREE.MeshStandardMaterial({ color: 0xc89a62, roughness: 0.7 })]);
   top.castShadow = top.receiveShadow = true; tilt.add(top);
   const frame = std(d.a === "#ffffff" ? 0x1f3a6e : d.a);
-  for (const [w, dd, x, z] of [[0.14, L, HW - 0.07, -L / 2], [0.14, L, -HW + 0.07, -L / 2], [2 * HW, 0.14, 0, -0.07], [2 * HW, 0.14, 0, -L + 0.07]]) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.45, dd), frame); m.position.set(x, -0.22, z); m.castShadow = true; tilt.add(m);
+  for (const [w, dd, x, z] of [[0.1, L, HW - 0.05, -L / 2], [0.1, L, -HW + 0.05, -L / 2], [2 * HW, 0.1, 0, -0.05], [2 * HW, 0.1, 0, -L + 0.05]]) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.3, dd), frame); m.position.set(x, -0.15, z); m.castShadow = true; tilt.add(m);
   }
   const tube = new THREE.Mesh(new THREE.CylinderGeometry(HR, HR, 0.5, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0x120c08, side: THREE.BackSide }));
   tube.position.set(0, -0.2, -(HOLE.y - FY)); tilt.add(tube);
   const floor = new THREE.Mesh(new THREE.CircleGeometry(HR, 40), new THREE.MeshBasicMaterial({ color: 0x050302 }));
   floor.rotation.x = -Math.PI / 2; floor.position.set(0, -0.42, -(HOLE.y - FY)); tilt.add(floor);
   const wood = std(0x9c6f3d);
-  for (const x of [-HW + 0.3, HW - 0.3, 0]) add(g, box(0.25, BH - 0.25, 0.35), x, (BH - 0.25) / 2, -(L - 0.5)).material = wood;
+  for (const x of [-HW + 0.12, HW - 0.12]) add(g, box(0.12, BH - 0.2, 0.28), x, (BH - 0.2) / 2, -(L - 0.4)).material = wood;
   g.position.z = -FY; scene.add(g); BB.mesh = g;
 }
 
@@ -288,7 +310,7 @@ function bbTick(dt) {
     const st = S.world.bags.find(b => b.star);
     if (st && onSurface(st) && onBoard(st)) {
       if (!BB.starTag) BB.starTag = bbLabel("⭐ x2");
-      BB.starTag.visible = true; BB.starTag.position.copy(W(st.x, st.y, plane(st.y) + 0.9 + 0.08 * Math.sin(S.time * 3)));
+      BB.starTag.visible = true; BB.starTag.position.copy(W(st.x, st.y, plane(st.y) + 0.5 + 0.05 * Math.sin(S.time * 3)));
     } else if (BB.starTag) BB.starTag.visible = false;
   }
 }
@@ -299,7 +321,7 @@ function bbLabel(text) {
     c.fillStyle = "#ffc93a"; c.font = "900 52px Arial Black, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(text, w / 2, h / 2 + 3);
   });
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-  sp.scale.set(1.6, 0.6, 1); sp.renderOrder = 9; scene.add(sp); return sp;
+  sp.scale.set(0.9, 0.34, 1); sp.renderOrder = 9; scene.add(sp); return sp;
 }
 
 // ── Cameras: a view over the board for aiming and watching, and one behind the thrower for the throw.
@@ -310,8 +332,9 @@ function bbCamera(mode, narrow) {
     // the camera sits over your head at the edge, looking down past the arrow to the board below.
     const high = handFloor() > 0, gz = handFloor();
     if (high) {
-      const cy = r.z + 6, cz = r.y - 0.5; // court y of the camera
-      const aB = Math.atan2(cy - top, HOLE.y - cz), aR = Math.atan2(cy - gz, r.y + 1 - cz), a = lerp(aB, aR, 0.42);
+      const cy = r.z + 10, cz = r.y - 2; // well up over your head, a couple of feet behind you (court y of the camera)
+      // look between the arrow and the board, but never so steeply that the board leaves the top of the screen
+      const aB = Math.atan2(cy - top, HOLE.y - cz), aR = Math.atan2(cy - gz, r.y + 1.2 - cz), a = Math.min(lerp(aB, aR, 0.5), aB + 0.33);
       tPos.set(r.x, cy, -cz); tLook.set(HOLE.x * 0.2, cy - 10 * Math.sin(a), -(cz + 10 * Math.cos(a)));
     } else { tPos.set(r.x, r.z + 3.4, -(r.y - 5.5)); tLook.set(lerp(r.x, HOLE.x, 0.45), lerp(gz, top, 0.45), -lerp(r.y, HOLE.y, 0.45)); }
     return { fov: narrow ? 50 : 42, k: 3 };
@@ -321,9 +344,9 @@ function bbCamera(mode, narrow) {
     if (b) { tPos.set(b.x * 0.6, Math.max(top + 3.2, b.z * 0.7 + 2.6), -b.y + 7.5); tLook.set(b.x * 0.5, Math.max(0, b.z * 0.4), -b.y - 6); return { fov: narrow ? 50 : 42, k: 5 }; }
   }
   const mid = plane(FY + (BY - FY) * 0.62); // the whole board in view, the hole near the back
-  tPos.set(0, mid + (narrow ? 17 : 13.5), -(FY - (narrow ? 4 : 3)));
-  tLook.set(0, mid - 0.8, -(FY + (BY - FY) * 0.62));
-  return { fov: narrow ? 56 : 46, k: 3 };
+  tPos.set(0, mid + (narrow ? 7.6 : 6.6), -(FY - (narrow ? 3 : 3.6)));
+  tLook.set(0, mid - 0.3, -(FY + (BY - FY) * 0.62));
+  return { fov: narrow ? 50 : 42, k: 3 };
 }
 
 // ── After the throw: what it won
@@ -334,7 +357,7 @@ function bbFinish() {
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];
   const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : hit === "board" ? { coins: BB_CONSOLATION[A.mode] } : {};
-  if (typeof hit === "number") bbWon(A.mode).push(hit); // that prize is gone for the rest of the day
+  if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); if (testing() && wl.length >= 5) wl.length = 0; } // gone for the day (tester mode: all five come back once cleared)
   if (p.can) for (let k = 0; k < times; k++) { // the first can opens on the spot; a doubled second one goes in the cooler, locked
     const id = rollCan(p.can);
     if (k === 0) career.cans.push({ id, court: topCourt(), instant: true }); else stashCan({ id, court: topCourt() });
@@ -343,29 +366,33 @@ function bbFinish() {
   else if (p.caps) { career.caps += p.caps * times; got.push({ caps: p.caps * times }); }
   else if (p.coins) { const n = bbCoins(p.coins) * times; career.coins += n; got.push({ coins: n }); }
   save(); S.phase = "bbdone"; ui();
-  if (typeof hit === "number") { sfx.win(); haptic("success"); } else if (hit === "miss") sfx.thud();
+  if (hit === "miss") sfx.thud();
   A.result = { hit, doubled, got };
   setTimeout(() => { if (BB.active === A) renderBBResult(); }, 900);
 }
+// The win, shown like a can's prize: the light rays in the prize's colour, the prize card popping up, then COLLECT
+// (or OPEN IT for a can, which goes straight to the can opening).
 function renderBBResult() {
   const A = BB.active, R = A.result, can = R.got.find(g => g.can && !g.later), won = typeof R.hit === "number", P = won ? BB_PRIZES[A.mode][R.hit] : null;
-  const prize = R.got.map(g => g.can ? `<div class="bbprize">🥫 <b>${esc(canById(g.can).name)}</b>${g.later ? "<small>In your cooler</small>" : ""}</div>` : g.caps ? `<div class="bbprize"><i class="bcap big"></i><b>${g.caps} caps</b></div>` : `<div class="bbprize"><i class="coin big"></i><b>${short(g.coins)}</b></div>`).join("");
-  const left = 5 - bbWon(A.mode).length, level = A.mode === "hard" ? "Hard" : "Easy";
-  $("bbBody").innerHTML = `<div class="lifebig">${won ? (P.hole ? "🎯" : "🏆") : R.hit === "miss" ? "💨" : "🙂"}</div>
-    <h2>${won ? (P.hole ? "In the hole!" : `${P.name}!`) : R.hit === "miss" ? "Off the board" : "On the board"}</h2>
-    ${R.doubled ? `<div class="bbdouble">⭐ You knocked the star bag in: <b>DOUBLE!</b></div>` : ""}
-    <div class="bbprizes">${prize}</div>
-    <div class="muted center">${can ? "Your can opens right now." : won ? "That prize is gone for today." : R.hit === "miss" ? "Only bags on the board count." : "A little something for landing on the board."}</div>
-    <div class="bbstrip">${bbPrizeRows(A.mode)}</div>
-    <div class="bbthrows">${left ? `${left} of 5 ${level} prizes left today.` : `You've won every ${level} prize today! 🎉`}</div>
-    <button class="btn green go" id="bbCollect">${can ? "OPEN IT!" : "COLLECT"}</button>
-    <div class="bbthrows">${bbCanPlay() ? `You have <b>${bbState().extra}</b> more throw${bbState().extra === 1 ? "" : "s"}. Collect, then tap Bullseye Bags to throw again.` : "Want another throw?"}</div>
-    ${bbBuyRow()}`;
-  $("bbSheet").hidden = false;
-  bbWireBuy(() => renderBBResult());
+  const g0 = R.got[0], left = 5 - bbWon(A.mode).length, level = A.mode === "hard" ? "Harder" : "Easier";
+  const ck = g0 && g0.can ? canById(g0.can) : null; // a can prize shows the can itself, like the can opening does
+  const pic = !g0 ? "💨" : ck ? `<div class="can bbcan" style="background:linear-gradient(90deg, ${ck.color}, ${ck.rim} 35%, ${ck.color} 70%);--rim:${ck.rim}"><div class="cantop"><i class="tab"></i></div><div class="canlabel" style="color:${ck.id === "white" || ck.id === "platinum" ? "#1c2a44" : "#fff"}">${ck.name.replace(" ", "<br>")}</div></div>` : g0.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`;
+  const what = !g0 ? "Nothing this time" : g0.can ? canById(g0.can).name : g0.caps ? `${g0.caps} caps` : `${short(g0.coins)} coins`;
+  const extra = R.got.length > 1 ? `<small class="new">+ a ${esc(canById(R.got[1].can).name)} in your cooler</small>` : "";
+  $("bbRays").style.setProperty("--ray", won ? P.c : "#8899aa"); $("bbRays").hidden = !won;
+  $("bbRevTitle").innerHTML = won ? (P.hole ? "In the hole!" : `${P.name}!`) : R.hit === "miss" ? "Off the board" : "On the board";
+  const card = $("bbRevPrize"); card.className = "prize";
+  card.innerHTML = `<div class="pic">${pic}</div><b>${what}</b>${R.doubled ? `<small class="new">⭐ Star bag in: DOUBLE!</small>` : ""}${extra}
+    <small>${won ? (can ? "Open it now!" : "That prize is gone for today.") : R.hit === "miss" ? "Only bags on the board count." : "A little something for landing on the board."}</small>`;
+  $("bbRevFoot").innerHTML = `<div class="bbrevleft">${left ? `${left} of 5 ${level} prizes left today` : `Every ${level} prize won today! 🎉`}</div>
+    <button class="btn green go" id="bbCollect">${can ? "OPEN IT!" : won ? "COLLECT" : "OK"}</button>`;
+  $("bbReveal").hidden = false;
+  requestAnimationFrame(() => card.classList.add("show"));
+  if (won) { sfx.win(); haptic("success"); }
   $("bbCollect").onclick = () => {
-    $("bbSheet").hidden = true; openHub();
-    if (can) { const i = career.cans.findIndex(c => c.instant && c.id === can.can); if (i >= 0) setTimeout(() => openCanSheet(i), 350); }
+    $("bbReveal").hidden = true; openHub();
+    if (can) { const i = career.cans.findIndex(c => c.instant && c.id === can.can); if (i >= 0) setTimeout(() => openCanSheet(i), 250); }
+    else renderBBSheet(); // back to Bullseye: what's left, throw again or buy more
   };
 }
 
@@ -387,14 +414,15 @@ function renderBBSheet(msg = "") {
   const card = mode => {
     const M = day.modes[mode], won = bbWon(mode), done = won.length >= 5;
     return `<div class="bbmode ${mode}">
-      <h3>${mode === "hard" ? "HARD" : "EASY"}</h3>
-      <div class="bbfacts"><span>📏 ${M.dist} ft</span><span>🌬️ ${M.wind} mph</span><span>🎯 ${mode === "hard" ? "Tight rings" : "Wide rings"}</span></div>
+      <h3>${mode === "hard" ? "HARDER" : "EASIER"}</h3>
+      <div class="bbfacts"><span>📏 ${M.dist} ft</span><span>🌬️ ${M.wind} mph</span><span>🎯 ${mode === "hard" ? "Tighter rings" : "Wider rings"}</span></div>
       <div class="bbdots">${BB_PRIZES[mode].map((p, i) => `<i class="${p.hole ? "hole" : ""} ${won.includes(i) ? "won" : ""}" style="--c:${p.c}"></i>`).join("")}</div>
       <div class="bbleft">${done ? "All 5 won today ✓" : `${5 - won.length} of 5 prizes left`}</div>
-      <button class="btn ${mode === "hard" ? "red" : "green"}" data-bbmode="${mode}" ${can && !done ? "" : "disabled"}>${done ? "CLEARED ✓" : `PLAY ${mode === "hard" ? "HARD" : "EASY"}`}</button></div>`;
+      <button class="btn ${mode === "hard" ? "red" : "green"}" data-bbmode="${mode}" ${can && !done ? "" : "disabled"}>${done ? "CLEARED ✓" : "PLAY"}</button>
+      ${done ? "" : `<button class="btn small" data-bbpreview="${mode}">👀 PREVIEW</button>`}</div>`;
   };
   $("bbBody").innerHTML = `<h2>🎯 Bullseye Bags</h2>
-    <div class="bbday"><b>${esc(day.scene.name)}</b><small>${esc(day.scene.sub)}${day.scene.height ? ` · ${day.scene.height} ft up` : ""}</small></div>
+    <div class="bbday"><b>${esc(day.scene.name)}</b><small>${esc(day.scene.sub)} · a standard 27 ft court</small></div>
     <div class="bbconds"><span>${w.icon} ${w.name}<small>${w.note || "No effect on the board"}</small></span><span>🪵 The board<small>${BB_SURF_WORDS[d.surf || 0]}</small></span><span>🟡 Golden Bag<small>Everyone throws the same bag</small></span></div>
     <div class="bbstar">Finish in a ring to win it; the hole is the top prize. Only bags on the board count, and won rings are gone for the day. ⭐ Knock the <b>star bag</b> in for <b>double</b>.</div>
     <div class="bbmodes">${card("easy")}${card("hard")}</div>
@@ -405,6 +433,7 @@ function renderBBSheet(msg = "") {
     ${testing() ? `<button class="linkbtn" id="bbTest">🧪 +5 throws</button>` : ""}
     <button class="btn" id="bbClose">CLOSE</button>`;
   for (const b of $("bbBody").querySelectorAll("[data-bbmode]")) b.onclick = () => bbStart(b.dataset.bbmode);
+  for (const b of $("bbBody").querySelectorAll("[data-bbpreview]")) b.onclick = () => bbStart(b.dataset.bbpreview, true);
   bbWireBuy(m => renderBBSheet(m));
   if ($("bbTest")) $("bbTest").onclick = () => { bbState().extra += 5; save(); renderBBSheet(); renderBBBtn(); };
   $("bbClose").onclick = () => { $("bbSheet").hidden = true; renderBBBtn(); };
@@ -413,85 +442,3 @@ function renderBBSheet(msg = "") {
 $("bbBtn").onclick = () => { initAudio(); renderBBSheet(); };
 setInterval(() => { const c = $("bbCount"); if (c && !$("bbSheet").hidden) { if (bbCanPlay()) renderBBSheet(); else c.textContent = timeText(bbUntilMidnight()); } }, 1000);
 
-// ── Scenes (court feet → three.js: x across, y up, -z down-range; you throw from z ≈ 0 toward -z)
-function bbScene(id, g) {
-  const r = rng(id.length * 977 + 13);
-  if (id === "bb_roof") {
-    // You're on a roof 30 ft up; the giant board is down in a paved plaza, with the street and towers around it.
-    const facade = dayWindowTex(); facade.wrapS = facade.wrapT = THREE.RepeatWrapping; facade.repeat.set(8, 3);
-    add(g, box(70, 30, 56, new THREE.MeshLambertMaterial({ map: facade, color: 0xe8e2d6 })), 0, 15, 26.5, false); // its front edge is right at your toes
-    const deckTex = groundTexture("roof"); deckTex.repeat.set(70 / 14, 56 / 14);
-    const deck = new THREE.Mesh(new THREE.PlaneGeometry(70, 56), new THREE.MeshStandardMaterial({ map: deckTex, roughness: 0.9, color: 0xe8e8ec })); deck.rotation.x = -Math.PI / 2; deck.position.set(0, 30.02, 26.5); deck.receiveShadow = true; g.add(deck);
-    const ledge = std(0x8a8c94);
-    for (const [x, z, w, d, h] of [[0, -1.3, 70, 0.4, 0.35], [-34.6, 26.5, 0.8, 56, 3], [34.6, 26.5, 0.8, 56, 3]]) add(g, box(w, h, d, ledge), x, 30 + h / 2, z);
-    add(g, box(6, 5, 6, std(0x6a6e78)), -20, 32.5, 12); add(g, box(4, 3, 8, std(0x9aa0aa)), 18, 31.5, 20); // stair hut, AC unit
-    const plaza = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), lam(0xd8d0c2)); plaza.rotation.x = -Math.PI / 2; plaza.position.set(0, 0, -45); plaza.receiveShadow = true; g.add(plaza);
-    for (let z = -5; z > -115; z -= 7) { const l = new THREE.Mesh(new THREE.PlaneGeometry(140, 0.25), lam(0xc4bcae)); l.rotation.x = -Math.PI / 2; l.position.set(0, 0.01, z); g.add(l); } // paving joints
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(600, 40), lam(0x4a4c52)); road.rotation.x = -Math.PI / 2; road.position.set(0, 0.02, -135); g.add(road);
-    for (let x = -280; x < 280; x += 16) { const m = new THREE.Mesh(new THREE.PlaneGeometry(7, 0.5), lam(0xffffff)); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.03, -135); g.add(m); }
-    const CC = [0xc8102e, 0x1f3a6e, 0xf2f2f2, 0x222222, 0x9aa4b2, 0x2f86ff, 0xffc93a];
-    for (let x = -200; x < 200; x += 18 + r() * 30) car(g, x, -135 + (r() < 0.5 ? -9 : 9), Math.PI / 2 * (r() < 0.5 ? 1 : -1), CC[Math.floor(r() * CC.length)], r() < 0.3 ? "suv" : "sedan");
-    for (const [x, z] of [[-30, -20], [30, -20], [-30, -60], [30, -60], [-30, -95], [30, -95]]) { add(g, box(6, 2, 6, std(0x9a8f80)), x, 1, z); loadBlender("tree_maple").then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 2, z); t.scale.setScalar(0.7); g.add(t); }); }
-    for (let k = 0; k < 8; k++) person(g, (r() < 0.5 ? -1 : 1) * (14 + r() * 12), -15 - r() * 80, r() * 6.28, 9100 + k, r() < 0.3 ? "cheer" : "stand");
-    for (let k = 0; k < 14; k++) { const sx = k % 2 ? 1 : -1; dayTower(g, sx * (75 + r() * 40), 20 - Math.floor(k / 2) * 38, 30 + r() * 16, 40 + r() * 90, 9200 + k); }
-    for (let k = 0; k < 9; k++) dayTower(g, -160 + k * 40 + r() * 10, -175 - r() * 30, 30 + r() * 14, 50 + r() * 140, 9300 + k);
-    for (const sx of [-1, 1]) dayTower(g, sx * 50, 28, 30, 42, 9400 + sx); // the neighbours either side of your roof
-  } else if (id === "bb_field") {
-    // A long park lawn: mowing stripes, yard lines every 10 ft, a little stand behind the board, trees all round.
-    stylizedLawn(g, 700, 4401);
-    for (let z = 10; z > -120; z -= 10) { const st = new THREE.Mesh(new THREE.PlaneGeometry(40, 5), lam(0x86cc68, { transparent: true, opacity: 0.35 })); st.rotation.x = -Math.PI / 2; st.position.set(0, 0.02, z); g.add(st); }
-    for (let d = 10; d <= 70; d += 10) {
-      const l = new THREE.Mesh(new THREE.PlaneGeometry(26, 0.3), lam(0xffffff)); l.rotation.x = -Math.PI / 2; l.position.set(0, 0.03, -d); g.add(l);
-      const tag = canvasTex(128, 64, (c, w, h) => { c.fillStyle = "#fff"; c.font = "900 44px Arial Black, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(d), w / 2, h / 2); });
-      for (const sx of [-1, 1]) { const n = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: tag, transparent: true })); n.rotation.x = -Math.PI / 2; n.position.set(sx * 10, 0.04, -d + 1.2); g.add(n); }
-    }
-    bleachers(g, 0, -96, 0, 50, 6, 4402);
-    for (let k = 0; k < 10; k++) person(g, -20 + k * 4.4 + r(), -92 - (k % 3) * 2.5, 0, 4410 + k, k % 3 === 0 ? "cheer" : "sit");
-    for (const sx of [-1, 1]) { const goal = std(0xffffff); add(g, box(0.3, 8, 0.3, goal), sx * 12, 4, -118); } add(g, box(24.3, 0.3, 0.3, std(0xffffff)), 0, 8, -118);
-    for (const [x, z] of [[-26, -30], [26, -45], [-28, -70], [27, -15]]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 3, 8), std(0x2f86ff)); add(g, t, x, 1.5, z); }
-    treeRing(g, 4403, 75, 220, 110, ["tree_oak", "tree_maple", "pine", "tree_oak"], (x, z) => Math.abs(x) < 34 && z > -150 && z < 40);
-    for (let z = 20; z > -140; z -= 14 + r() * 8) for (const sx of [-1, 1]) loadBlender(r() < 0.5 ? "tree_oak" : "tree_maple").then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(sx * (38 + r() * 14), 0, z); t.scale.setScalar(1.1 + r() * 0.5); g.add(t); });
-  } else if (id === "bb_dock") {
-    // A long pier 10 ft over a lake; the board floats on a raft out on the water. Pines and cabins on the far shore.
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(1600, 1600), new THREE.MeshStandardMaterial({ color: 0x3a8fb8, roughness: 0.18, metalness: 0.1 }));
-    water.rotation.x = -Math.PI / 2; water.position.set(0, -0.05, -300); water.receiveShadow = true; g.add(water);
-    const wood = std(0x8a6a48), dark = std(0x5a4430);
-    add(g, box(9, 0.6, 42.5, wood), 0, 9.7, 19.75); // the end of the pier is right at your toes
-    for (let z = -1; z <= 40; z += 6) for (const sx of [-4, 4]) add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 11, 8), dark), sx, 4.5, z);
-    for (const sx of [-4.3, 4.3]) { add(g, box(0.2, 0.2, 42, wood), sx, 12.6, 20); for (let z = 0; z <= 40; z += 4) add(g, box(0.25, 3, 0.25, wood), sx, 11.3, z); }
-    add(g, box(14, 0.9, 13, std(0x9a7550)), 0, -0.4, -(FY + 3.5)); // the raft under the board
-    for (const [x, z] of [[-6, -1], [6, -1], [-6, -6], [6, -6]]) add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 1.2, 12), std(0xe8e8ee)), x, -0.4, -(FY + 3.5) + z + 3);
-    const land = new THREE.Mesh(new THREE.PlaneGeometry(1600, 400), lam(0x5f9a48)); land.rotation.x = -Math.PI / 2; land.position.set(0, 0.2, 120); g.add(land); // the shore behind you
-    for (let k = 0; k < 120; k++) { const a = -Math.PI / 2 + r() * Math.PI, d = 230 + r() * 120; pine(g, Math.sin(a) * d * 1.4, -60 - Math.abs(Math.cos(a)) * d, 2 + r() * 1.5, false); }
-    const shore = new THREE.Mesh(new THREE.PlaneGeometry(1600, 300), lam(0x5a8f44)); shore.rotation.x = -Math.PI / 2; shore.position.set(0, 0.1, -420); g.add(shore);
-    for (let k = 0; k < 40; k++) pine(g, (r() - 0.5) * 300, 40 + r() * 80, 1.6 + r() * 1.4, false);
-    for (let k = 0; k < 3; k++) person(g, (r() < 0.5 ? -2 : 2.5), 8 + k * 7, Math.PI, 9500 + k, "cheer").position.y = 10;
-  } else if (id === "bb_cliff") {
-    // A sandstone bluff 40 ft over a beach; the board is on the sand, the sea beyond it, palms along the sides.
-    const rock = lam(0xb98a5e), rock2 = lam(0xa0744c);
-    add(g, box(120, 40, 70, rock), 0, 20, 33.5, false); // the edge of the bluff is right at your toes
-    for (let k = 0; k < 16; k++) { const h = 6 + r() * 16; add(g, box(6 + r() * 10, h, 4 + r() * 4, k % 2 ? rock : rock2), -60 + k * 8 + r() * 3, h / 2, -2.5 - r() * 2, false); } // rocks piled at the foot
-    const topsoil = new THREE.Mesh(new THREE.PlaneGeometry(120, 70), lam(0x8aa860)); topsoil.rotation.x = -Math.PI / 2; topsoil.position.set(0, 40.03, 33.5); g.add(topsoil);
-    const sandTex = groundTexture("sand"); sandTex.repeat.set(40, 40);
-    const sand = new THREE.Mesh(new THREE.PlaneGeometry(600, 200), new THREE.MeshStandardMaterial({ map: sandTex, color: 0xf2e2bc, roughness: 1 })); sand.rotation.x = -Math.PI / 2; sand.position.set(0, 0, -60); sand.receiveShadow = true; g.add(sand);
-    ocean(g);
-    for (let k = 0; k < 18; k++) { const sx = k % 2 ? 1 : -1; blenderPalm(g, sx * (22 + r() * 30), 0, -10 - Math.floor(k / 2) * 9 - r() * 4, 9600 + k, 0.9 + r() * 0.4); }
-    for (const sx of [-1, 1]) for (let k = 0; k < 4; k++) add(g, box(14 + r() * 10, 20 + r() * 25, 30, k % 2 ? rock : rock2), sx * (64 + k * 6), 15, 5 - k * 22, false);
-    for (let k = 0; k < 6; k++) person(g, (r() < 0.5 ? -1 : 1) * (12 + r() * 10), -18 - r() * 40, r() * 6.28, 9700 + k, r() < 0.4 ? "cheer" : "stand");
-    // a busy beach below: umbrellas and loungers down both sides, towels, surfboards, a lifeguard tower by the water
-    const SETS = [["#ff4b3a", "#ffffff"], ["#2f86ff", "#ffffff"], ["#ffc93a", "#ff6a3d"], ["#2fbf71", "#ffffff"]];
-    for (const [sx, si] of [[-1, 0], [1, 1], [-1, 2], [1, 3]]) {
-      const x0 = sx * (si < 2 ? 14 : 24), ums = [], lng = [];
-      for (let z = -8; z > -76; z -= 10) { if (r() < 0.15) continue; ums.push([x0, z, r() * 6]); lng.push([x0 + sx * 2.6, z + 1.8, sx < 0 ? Math.PI / 2 : -Math.PI / 2]); }
-      umbrellaRow(g, ums, SETS[si]); loungerRow(g, lng, [0x2f86ff, 0xffffff, 0xffc93a, 0x2fbf71][si]);
-    }
-    for (let k = 0; k < 8; k++) towel(g, (r() < 0.5 ? -1 : 1) * (9 + r() * 4), -12 - r() * 58, r() * 0.6 - 0.3, [SETS[k % 4][0], "#ffffff"]);
-    surfboard(g, 10, -60, 0.4, 0xff6a3d, 0xffffff); surfboard(g, -11, -66, -0.3, 0x2fd0c8, 0xffc93a);
-    lifeguardTower(g, 18, -74, Math.PI); lifeguardTower(g, -130, -76, Math.PI);
-    for (let k = 0; k < 8; k++) person(g, (r() < 0.5 ? -1 : 1) * (16 + r() * 14), -20 - r() * 50, r() * 6.28, 9720 + k, ["sit", "stand", "cheer"][k % 3]);
-    for (let k = 0; k < 6; k++) { const p = person(g, -40 + r() * 80, -88 - r() * 14, r() * 6.28, 9740 + k, "stand"); p.position.y = -2.5; } // out in the waves
-  }
-}
-Object.assign(VENUE_LOOK, {
-  bb_roof: VENUE_LOOK.tailgate, bb_field: VENUE_LOOK.bonfire, bb_dock: VENUE_LOOK.lakeside || VENUE_LOOK.island, bb_cliff: VENUE_LOOK.beach,
-});

@@ -41,7 +41,25 @@ function restoreOcclusion(keepRoots = new Set(), keepInst = new Set()) {
   for (const root of [...occFaded.keys()]) if (!keepRoots.has(root)) unfadeObject(root);
   for (const [key, [mesh, id, m4]] of [...occHidden]) if (!keepInst.has(key)) { mesh.setMatrixAt(id, m4); mesh.instanceMatrix.needsUpdate = true; occHidden.delete(key); }
 }
+const occRay = new THREE.Raycaster();
 function updateOcclusion(dt) {
+  if (camMode() !== "intro" && venueGroup && S.phase !== "hub") { // in play: fade anything between the camera and the board (a palm, a tent, a sign)
+    const now = performance.now(); if (now - occT < 250) return; occT = now;
+    const cam = camera.position, roots = new Set();
+    for (const tgt of [W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.3), W(0, FY + 0.3, FH + 0.2)]) {
+      const dir = tgt.clone().sub(cam), far = dir.length() - 0.8;
+      occRay.set(cam, dir.normalize()); occRay.far = Math.max(0.1, far); occRay.camera = camera;
+      for (const h of occRay.intersectObjects(venueGroup.children, true)) {
+        if (!h.object.isMesh || h.object.isInstancedMesh) continue;
+        const root = occRoot(h.object); if (root.userData.isPerson) continue;
+        if (!root.userData.occ) { const bb = new THREE.Box3().setFromObject(root); root.userData.occ = bb.isEmpty() ? { skip: true } : { c: bb.getCenter(new THREE.Vector3()), r: bb.getSize(new THREE.Vector3()).length() / 2, big: Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) > 60, low: bb.max.y < 3 }; }
+        const o = root.userData.occ; if (o.skip || o.big || o.low) continue; // never the ground, the water or the court itself
+        fadeObject(root); roots.add(root);
+      }
+    }
+    restoreOcclusion(roots, new Set());
+    return;
+  }
   if (camMode() !== "intro" || !venueGroup) { if (occFaded.size || occHidden.size) restoreOcclusion(); return; }
   const now = performance.now(); if (now - occT < 150) return; occT = now; // about 7 times a second
   // Only things right beside the camera that block the view: they fade when the camera comes close and stay faded until
@@ -69,7 +87,7 @@ function updateCamera(dt) {
   if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
-  if (S.kind === "bullseye" && mode !== "intro" && mode !== "preview") { const c = bbCamera(mode, narrow); fov = c.fov; k = c.k; }
+  if (S.kind === "bullseye" && handFloor() > 0 && mode !== "intro" && mode !== "preview") { const c = bbCamera(mode, narrow); fov = c.fov; k = c.k; } // (a standard court uses the match cameras)
   else if (mode === "preview") {
     // Shop previews: a close look at the hole, or a side-on look at a throw.
     if (S.preview.kind === "hole") { tPos.set(1.6, 4.2, -(FY - 5.5)); tLook.set(0, 0.6, -(HOLE.y + 0.5)); }
@@ -255,10 +273,13 @@ function ui() {
     $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };
   } else if (S.phase === "throw") {
-    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><button class="linkbtn" id="backBtn">Back to aiming</button></div>
+    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><button class="btn small" id="backBtn">↩ CHANGE AIM</button></div>
       <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
       <div><div class="big">Pull back and let go</div><div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div></div></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
+  } else if (S.phase === "bbpreview") {
+    panel.innerHTML = bbPreviewPanel();
+    $("bbPrevBack").onclick = bbPreviewBack; $("bbPrevPlay").onclick = bbPreviewPlay;
   } else if (S.phase === "remote") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[1])} is lining up…</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (S.phase === "cpu") {
@@ -886,4 +907,4 @@ postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own
 setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
 
 requestAnimationFrame(frame);
-window.__cornhole = { setGlow: v => { glowOn = v; }, ui, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_SCENES, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };
+window.__cornhole = { setGlow: v => { glowOn = v; }, ui, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };

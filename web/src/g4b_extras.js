@@ -135,10 +135,10 @@ function rulesHTML() {
   ${sec("🎯", "Bullseye Bags", [
     "One free throw a day at a giant bullseye board. It resets at midnight. You can buy more throws (1, 3 or 5).",
     "Everyone gets the same challenge each day: the scene, the wind, the weather, the board and where the prizes and other bags are. Everyone throws the Golden Bag.",
-    "The board is laid out like a real one: the hole near the back, with four coloured rings around it that run off the back and sides of the board.",
-    "Easy and Hard each have five prizes: the four rings and the hole. Finish in a ring to win it; then it's plain wood for the rest of the day. The hole is the top prize: a can that opens right away.",
+    "Tap PREVIEW to look at a level's court before using a throw. The board is a real 2 x 4 board: the hole near the back, with four coloured rings around it that run off the back and sides of the board.",
+    "Easier and Harder each have five prizes: the four rings and the hole. Finish in a ring to win it; then it's plain wood for the rest of the day. The hole is the top prize: a can that opens right away.",
     "Only bags resting on the board count. Off the board wins nothing.",
-    "Hard has tighter rings, farther away, in more wind, with more bags in the way, but its prizes are much bigger.",
+    "Harder has tighter rings, farther away, in more wind, with more bags in the way, but its prizes are much bigger.",
     "Knock the star bag into the hole and your prize is doubled.",
     "If you leave before throwing, you keep the throw. Once the bag is in the air, the throw counts.",
   ])}
@@ -405,9 +405,11 @@ function openSeason() {
     group = `<div class="label">Your group (${G.size} players)</div><div class="ladder group" id="groupList">${list}</div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
-  showInfo(`<h2>Season ladder</h2><div class="muted">Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
+  showInfo(`<h2>Season ladder <button class="infobtn" id="seasonInfoBtn" aria-label="How seasons work">i</button></h2>
     <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
+    <div class="muted infotext" id="seasonInfo" hidden>Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
     <div class="ladder">${rows}</div>`);
+  $("seasonInfoBtn").onclick = () => { $("seasonInfo").hidden = !$("seasonInfo").hidden; };
   const me = document.querySelector("#groupList .me"); // start the list at your own row
   if (me) { const gl = $("groupList"); gl.scrollTop = me.offsetTop - gl.offsetTop - gl.clientHeight / 2 + me.clientHeight / 2; }
 }
@@ -426,7 +428,7 @@ $("seasonBtn").onclick = openSeason;
 // ── Daily Drop: a bubble in the clubhouse, claimable once per calendar day (it resets at midnight, not 24 hours
 // after your last claim). It pays 100 coins plus a free can that opens right away (mostly the low cans).
 const DAILY_COINS = 100;
-const dailyReady = () => career.lastDaily !== new Date().toDateString();
+const dailyReady = () => testing() || career.lastDaily !== new Date().toDateString(); // tester mode: always ready
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once claimed
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
   $("dailySub").innerHTML = ready ? `<i class="coin"></i> 100 + a free can` : `Next in ${timeText(bbUntilMidnight())}`;
