@@ -433,13 +433,15 @@ $("seasonBtn").onclick = openSeason;
 
 // ── Daily Drop: a prize wheel in the clubhouse, one spin per calendar day (it resets at midnight). Common prizes have
 // big slices, the best ones thin slices. Everything grows with your season title: bigger coin and cap prizes, and the can
-// slices move up a tier every two titles (Rookie: Black, Bronze and Gold cans; Hall of Famer: Bronze, Gold and Diamond).
+// slices move up a tier every four titles (Rookie: Black, Bronze and Gold cans; Hall of Famer: Bronze, Silver and Purple).
+// Extra spins can be bought (1 / 3 / 5, like Bullseye throws). A spin is always worth less than its price in the store's
+// own coins, caps and cans (about 10% at Rookie, about 60% at Hall of Famer), so buying spins never beats buying outright.
 const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
 const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
 const dailyCoins = () => DAILY_COINS_BY_TITLE[dailyTitle()];
 const CAN_LADDER = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
 function wheelSlices() {
-  const t = dailyTitle(), c = dailyCoins(), up = Math.min(3, t >> 1), can = k => CAN_LADDER[Math.min(CAN_LADDER.length - 1, k + up)];
+  const t = dailyTitle(), c = dailyCoins(), up = Math.min(2, t >> 2), can = k => CAN_LADDER[Math.min(CAN_LADDER.length - 1, k + up)];
   // round the wheel in this order (big and small slices mixed); w is the slice's share of the wheel
   return [
     { w: 26, coins: c, col: "#2f86ff" },
@@ -452,15 +454,21 @@ function wheelSlices() {
     { w: 10, caps: 8 + 2 * t, col: "#e8392b" },
   ];
 }
-const dailyReady = () => testing() || career.lastDaily !== new Date().toDateString(); // tester mode: always ready
+const dailyFree = () => testing() || career.lastDaily !== new Date().toDateString(); // tester mode: always ready
+const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
-  $("dailySub").innerHTML = ready ? "Spin the prize wheel!" : `Next in ${timeText(bbUntilMidnight())}`;
+  $("dailySub").innerHTML = dailyFree() ? "Spin the prize wheel!" : ready ? `${career.spins} spin${career.spins > 1 ? "s" : ""} left` : `Next in ${timeText(bbUntilMidnight())}`;
 }
 const wheelPrizeHTML = p => p.can ? `<i class="minican" style="background:linear-gradient(90deg, ${canById(p.can).color}, ${canById(p.can).rim} 40%, ${canById(p.can).color})"></i>`
   : p.caps ? `<i class="bcap"></i><b>${p.caps}</b>` : `<i class="coin"></i><b>${short(p.coins)}</b>`;
 let wheelSpin = null;
-function openWheel() {
+const WHEEL_STORE = ["wheel.1", "wheel.3", "wheel.5"].map(PID);
+function wheelBuyRow() {
+  const price = id => storePrices[id] || STORE.find(x => x.id === id).price;
+  return `<div class="bbbuy">${WHEEL_STORE.map(id => { const it = STORE.find(x => x.id === id); return `<button class="btn blue" data-wbuy="${id}" ${pendingBuy === id ? "disabled" : ""}><b>${it.spins}</b> spin${it.spins > 1 ? "s" : ""}<small>${pendingBuy === id ? "…" : price(id)}</small></button>`; }).join("")}</div>`;
+}
+function openWheel(msg = "") {
   const S8 = wheelSlices(), total = S8.reduce((t, x) => t + x.w, 0);
   let a0 = 0; const segs = S8.map(x => { const a = x.w / total * 360, seg = { ...x, from: a0, to: a0 + a, mid: a0 + a / 2 }; a0 += a; return seg; });
   const grad = segs.map(x => `${x.col} ${x.from}deg ${x.to}deg`).join(", ");
@@ -468,8 +476,15 @@ function openWheel() {
     <div class="wheelwrap"><div class="wheelptr"></div><div class="wheel" id="wheel" style="background:conic-gradient(${grad})">
       ${segs.map(x => `<div class="wl" style="transform:rotate(${x.mid}deg)"><span>${wheelPrizeHTML(x)}</span></div>`).join("")}
       ${segs.map(x => `<i class="wsep" style="transform:rotate(${x.from}deg)"></i>`).join("")}<div class="whub">${dailyReady() ? "SPIN" : "✓"}</div></div></div>
-    <button class="btn green go" id="wheelGo" ${dailyReady() ? "" : "disabled"}>${dailyReady() ? "SPIN!" : `Next spin in ${timeText(bbUntilMidnight())}`}</button>
+    <button class="btn green go" id="wheelGo" ${dailyReady() ? "" : "disabled"}>${dailyFree() ? "FREE SPIN!" : dailyReady() ? `SPIN · ${career.spins} left` : `Next free spin in ${timeText(bbUntilMidnight())}`}</button>
+    <div class="label center">More spins</div>${wheelBuyRow()}
+    ${msg ? `<div class="muted center">${esc(msg)}</div>` : ""}
     <button class="btn" id="wheelClose">CLOSE</button>`;
+  for (const b of $("wheelBody").querySelectorAll("[data-wbuy]")) b.onclick = () => {
+    if (wheelSpin) return;
+    if (!canBuy()) { openWheel("Purchases are available in the iPhone app."); return; }
+    pendingBuy = b.dataset.wbuy; postNative("purchase", pendingBuy); openWheel();
+  };
   $("wheelSheet").hidden = false; wheelSpin = null;
   $("wheelClose").onclick = () => { if (wheelSpin) return; $("wheelSheet").hidden = true; renderHub(); };
   $("wheelGo").onclick = () => {
@@ -478,7 +493,7 @@ function openWheel() {
     // pick the prize by slice size, pay it now (so closing the app mid-spin can't reroll it), then spin to land on it
     let x = Math.random() * total, pick = segs[0];
     for (const sg of segs) { x -= sg.w; if (x <= 0) { pick = sg; break; } }
-    career.lastDaily = new Date().toDateString();
+    if (dailyFree()) career.lastDaily = new Date().toDateString(); else career.spins--; // the free spin first, then bought ones
     if (pick.coins) career.coins += pick.coins; else if (pick.caps) career.caps += pick.caps; else career.cans.push({ id: pick.can, court: topCourt(), instant: true });
     save();
     const land = pick.from + (pick.to - pick.from) * (0.2 + Math.random() * 0.6), turn = 360 * 6 + (360 - land);

@@ -586,9 +586,9 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "spins" ? `+${item.spins} Daily Drop spin${item.spins > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
-  renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message);
+  renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message); if (!$("wheelSheet").hidden && !wheelSpin) openWheel(ok ? "" : message);
 };
 window.__restoreDone = count => { shopMsg = count ? "Purchases restored" : "Nothing to restore"; renderShop(); renderHub(); };
 function buy(id) {

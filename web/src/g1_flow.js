@@ -96,6 +96,9 @@ const STORE = [
   { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Book of Tickets", icon: "🎟️", blurb: "+5 lives, even past the usual 5" },
   { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Pop can", icon: "🥫", blurb: "5 prizes: coins and cards" },
   { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Sparkle can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
+  { id: PID("wheel.1"), kind: "spins", spins: 1, price: "$0.99", title: "1 Daily Drop spin", hidden: true },
+  { id: PID("wheel.3"), kind: "spins", spins: 3, price: "$1.99", title: "3 Daily Drop spins", hidden: true },
+  { id: PID("wheel.5"), kind: "spins", spins: 5, price: "$2.99", title: "5 Daily Drop spins", hidden: true },
   { id: PID("bullseye.1"), kind: "throws", throws: 1, price: "$0.99", title: "1 Bullseye throw", hidden: true },
   { id: PID("bullseye.3"), kind: "throws", throws: 3, price: "$1.99", title: "3 Bullseye throws", hidden: true },
   { id: PID("bullseye.5"), kind: "throws", throws: 5, price: "$2.99", title: "5 Bullseye throws", hidden: true },
@@ -218,6 +221,7 @@ function grantPurchase(id, restored) {
   if (!item) return null;
   if (item.kind === "coins") { if (!restored) career.coins += item.coins; save(); return item; }
   if (item.kind === "caps") { if (!restored) career.caps += item.caps; save(); return item; }
+  if (item.kind === "spins") { if (!restored) career.spins = (career.spins || 0) + item.spins; save(); return item; }
   if (item.kind === "throws") { if (!restored) bbState().extra += item.throws; save(); return item; }
   if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
   if (item.kind === "can") { // a bought can waits outside the cooler if it's full

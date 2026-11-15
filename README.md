@@ -103,7 +103,7 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Win | Pot, stars, a can (if the cooler has room) and your life back |
 | Loss | Buy-in, stars and a life |
 | 4-bagger | Half a buy-in |
-| Daily Drop | A prize wheel, one spin a day: coins (1x, 2x, 5x the title amount: 100 at Rookie up to 6,000 at Hall of Famer), caps, or a can that opens right away. Common prizes have big slices, the best thin ones; can slices move up a tier every two titles |
+| Daily Drop | A prize wheel, one free spin a day (more: 1 / 3 / 5 for $0.99 / $1.99 / $2.99, always worth less than the same money spent in the store): coins (1x, 2x, 5x the title amount: 100 at Rookie up to 6,000 at Hall of Famer), caps, or a can that opens right away. Common prizes have big slices, the best thin ones; can slices move up a tier every four titles |
 | Bullseye Bags | One free throw a day (more for $0.99 / 3 for $1.99 / 5 for $2.99). See below |
 | Ticket (life) for coins | Set by your season title: 100, 250, 600, 1.5K, 4K, 10K, 25K, 60K, 150K (Rookie to Hall of Famer), but never more than a tenth of a buy-in at your highest open court |
 | Ticket (life) for caps | 15 caps |
@@ -131,6 +131,8 @@ hole. Only a bag resting on the board counts. Finish in a ring to win it, and it
 | The hole | Silver–Purple can, opens right away | Purple–Diamond can, opens right away |
 | On the board, no ring | nothing | nothing |
 | Off the board | nothing | nothing |
+
+Daily Drop spins are consumable in-app purchases too: `com.jeffgill.cornhole.wheel.1`, `.wheel.3` and `.wheel.5`.
 
 Each throw has a 30-second clock. Every Sunday is Hole-in-One Sunday: sinking the hole also wins the exclusive Hole-in-One
 bag (never sold; a bonus Golden Pop can once you have it).
