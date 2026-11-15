@@ -504,9 +504,10 @@ function renderHub() {
   const prev = hubVenue ? VENUES[hubVenue - 1] : null;
   const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? (VENUES[hubVenue + 1].soon ? "Court " + (hubVenue + 2) + " coming soon" : "to open Court " + (hubVenue + 2)) : "to finish the tour"}</span></div>`;
   // A carousel: this court in the middle, the previous and next ones peeking in at the sides. Swipe to move.
-  const peek = (i, cls) => i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3><div class="muted">${VENUES[i].soon ? "Coming soon" : esc(VENUES[i].sub)}</div></div>`;
-  $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+  // The side cards show the same top as the front card (centred label and name), so nothing jumps as they swipe in.
+  const peek = (i, cls) => i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
+  $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars (W/L)", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : v.soon ? `<div class="locked">🚧 Coming soon</div>` : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
     <div class="vdots">${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;

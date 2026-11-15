@@ -400,11 +400,10 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .bcap.big { width: 64px; height: 64px; }
 .cappill { color: #fff; font: inherit; }
 .vcarousel { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
-.vcarousel .venue { box-sizing: border-box; width: 86%; margin: 0 auto; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
+.vcarousel .venue { box-sizing: border-box; width: 86%; margin: 0 auto; text-align: center; transition: transform .28s cubic-bezier(.3,.8,.4,1), opacity .28s; }
 .vcarousel .venue.side { position: absolute; top: 0; bottom: 0; opacity: .5; overflow: hidden; padding: 14px 16px; cursor: pointer; }
-.vcarousel .venue.side h3 { font-size: 22px; }
 .vcarousel .venue .go { margin-top: 10px; width: 100%; font-size: 22px; }
-.vcarousel .venue.side.prev { left: calc(-79% - 12px); text-align: right; }
+.vcarousel .venue.side.prev { left: calc(-79% - 12px); }
 .vcarousel .venue.side.next { left: calc(93% + 12px); }
 .vcarousel .venue.side .lvlno, .vcarousel .venue.side h3 { white-space: nowrap; }
 .vcarousel.dragging .venue { transition: none; }
@@ -589,7 +588,7 @@ s.was { opacity: .6; font-size: .8em; }
   background: linear-gradient(#ff6a5a, #c8102e); border-color: #fff; box-shadow: 0 5px 0 rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.45); }
 #shop .items { padding-bottom: 84px; } /* room so the last item isn't hidden under the exit button */
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
-.venue h3 { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: 30px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.venue h3 { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 400; font-size: 36px; line-height: 1; white-space: nowrap; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
 .venue .lvlno { font-size: 12px; letter-spacing: .12em; color: var(--gold); text-transform: uppercase; }
 .venue .facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
 .venue .facts .chip { padding: 4px 3px; min-width: 0; text-align: center; overflow: hidden; } .venue .facts .chip small { white-space: nowrap; font-size: 9px; letter-spacing: .04em; } .venue .facts .chip b { display: inline-block; font-size: 14px; white-space: nowrap; letter-spacing: -.02em; } .venue .facts .chip b .coin { margin-right: 1px; }
@@ -767,7 +766,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794760433 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794760753 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2881,7 +2880,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794760433`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794760753`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4423,7 +4422,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794760433`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794760753`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4434,7 +4433,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794760433`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794760753`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6441,7 +6440,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794760433";
+const BUILD_ID = "1794760753";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -7756,9 +7755,10 @@ function renderHub() {
   const prev = hubVenue ? VENUES[hubVenue - 1] : null;
   const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? (VENUES[hubVenue + 1].soon ? "Court " + (hubVenue + 2) + " coming soon" : "to open Court " + (hubVenue + 2)) : "to finish the tour"}</span></div>`;
   // A carousel: this court in the middle, the previous and next ones peeking in at the sides. Swipe to move.
-  const peek = (i, cls) => i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3><div class="muted">${VENUES[i].soon ? "Coming soon" : esc(VENUES[i].sub)}</div></div>`;
-  $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3><div class="muted">${esc(v.sub)}</div>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
+  // The side cards show the same top as the front card (centred label and name), so nothing jumps as they swipe in.
+  const peek = (i, cls) => i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
+  $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars (W/L)", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : v.soon ? `<div class="locked">🚧 Coming soon</div>` : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
     <div class="vdots">${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
