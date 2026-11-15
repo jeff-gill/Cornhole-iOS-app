@@ -9,7 +9,7 @@
 const BB_BOARD = { W: 2, L: 4, FH: 0.25, BH: 1, HR: 0.25, HOLE_Y: 3.25 }; // a regulation 2 x 4 board, hole 9" from the back
 // The day's court: one of the regular courts (a standard 27 ft court on level ground, you in a pitcher's box), with
 // the bullseye board where the far board would be.
-const bbCourts = () => VENUES.filter(v => !v.soon && v.id !== "island"); // flat, level courts only (Island Hop stands on raised islands)
+const bbCourts = () => VENUES; // any of the 12 regular courts (the view only; the court is always a standard 27 ft court)
 // Weather changes the throw, not just the look. mu: board friction (lower slides farther); r: how much a landing keeps.
 const BB_WEATHER = [
   { id: "sunny", name: "Sunny", icon: "☀️", w: 40, note: "" },
