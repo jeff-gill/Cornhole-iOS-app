@@ -713,7 +713,11 @@ function person(g, x, z, rotY, seed, pose = "stand") {
     m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; if (look[o.material.name]) { o.material = o.material.clone(); o.material.color.set(look[o.material.name]); } } });
     m.scale.setScalar(k); m.position.y = -gl.base * k + (pose === "sit" ? 0.35 : 0); p.add(m);
     const mixer = new THREE.AnimationMixer(m), clip = gl.animations.find(c => c.name === anim) || gl.animations[0], act = mixer.clipAction(clip);
-    act.play(); act.time = phase * clip.duration; an.mixer = mixer;
+    // The "Sit" clip is the sit-down motion (standing at the start, seated at the end): looping it made seated people
+    // pop up and drop back down. Seated people start at the end of it and hold there.
+    if (anim === "Sit") { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; act.play(); act.time = clip.duration - 0.02; }
+    else { act.play(); act.time = phase * clip.duration; }
+    an.mixer = mixer;
   });
   return p;
 }
@@ -1728,7 +1732,9 @@ function animPerson(g, x, z, rotY, seed, anim = "Idle", y = 0) {
     m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; if (look[o.material.name]) { o.material = o.material.clone(); o.material.color.set(look[o.material.name]); } } });
     const k = h / gl.tall; m.position.set(x, y - gl.base * k, z); m.rotation.y = rotY; m.scale.setScalar(k); g.add(m);
     const mixer = new THREE.AnimationMixer(m), clip = gl.animations.find(c => c.name === anim) || gl.animations[0];
-    const act = mixer.clipAction(clip); act.play(); act.time = phase * clip.duration / 3;
+    const act = mixer.clipAction(clip);
+    if (anim === "Sit") { act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; act.play(); act.time = clip.duration - 0.02; } // held seated (see person())
+    else { act.play(); act.time = phase * clip.duration / 3; }
     venueAnim.push({ kind: "mixer", mixer });
   });
 }
