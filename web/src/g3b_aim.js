@@ -177,3 +177,7 @@ function fireAim() {
   g.position.copy(aimRig.position).add(new THREE.Vector3(0, 0.3, 0)); g.scale.setScalar(3); scene.add(g);
   fx.push({ o: g, life: 0.35, max: 0.35, kind: "flash" });
 }
+// The arrow and power ring always draw on top: on a court with raised ground (Island Hop's islands, say) they'd
+// otherwise sink into the terrain and vanish.
+for (const m of [arrowMat, outlineMat, whiteMat, shadowMat, wedgeMat, ringMat]) m.depthTest = false;
+aimRig.traverse(o => { if (o.material) o.material.depthTest = false; });

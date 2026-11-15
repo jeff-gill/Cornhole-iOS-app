@@ -345,6 +345,8 @@ if (testing() && career.testBuild !== BUILD_ID) {
 }
 if (testing()) { // Max stars: fill every court's star track, which opens all the courts (and their avatars)
   $("maxStarsBtn").hidden = false;
+  $("refillDropsBtn").hidden = false; // tester: back to 2 Daily Drops (the real rules still apply: never more than 2)
+  $("refillDropsBtn").onclick = () => { const g = giftState(); g.n = GIFT_MAX; g.at = Date.now(); save(); renderHub(); };
   $("maxStarsBtn").onclick = () => {
     for (const v of VENUES) career.courtStars[v.id] = v.max;
     updateUnlocks(); save(); renderHub();
@@ -438,7 +440,7 @@ function wheelCard() {
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
   return { cat: cat.key, it, ...addCards(cat, it, 1) };
 }
-const dailyFree = () => testing() || giftState().n > 0; // a free spin waiting (tester mode: always)
+const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never more than 2; tester mode too)
 const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
@@ -454,13 +456,18 @@ function takeDrop() {
   const segs = wheelSlices(), total = segs.reduce((t, x) => t + x.w, 0);
   let x = Math.random() * total, pick = segs[0];
   for (const sg of segs) { x -= sg.w; if (x <= 0) { pick = sg; break; } }
-  if (!testing() && !useFreeSpin()) career.spins--; // a free drop first, then bought ones
+  if (!useFreeSpin()) career.spins--; // a free drop first, then bought ones
   pick = { ...pick };
   if (pick.coins) career.coins += pick.coins; else if (pick.caps) career.caps += pick.caps;
   else if (pick.card) pick.got = wheelCard();
   else career.cans.push({ id: pick.can, court: topCourt(), instant: true });
   save(); renderHub();
   wheelWon(pick);
+}
+const WHEEL_STORE = ["wheel.1", "wheel.3", "wheel.5"].map(PID); // extra Daily Drops
+function wheelBuyRow() {
+  const price = id => storePrices[id] || STORE.find(x => x.id === id).price;
+  return `<div class="bbbuy">${WHEEL_STORE.map(id => { const it = STORE.find(x => x.id === id); return `<button class="btn blue" data-wbuy="${id}" ${pendingBuy === id ? "disabled" : ""}><b>${it.spins}</b> drop${it.spins > 1 ? "s" : ""}<small>${pendingBuy === id ? "…" : price(id)}</small></button>`; }).join("")}</div>`;
 }
 function openWheel(msg = "") {
   if (!msg && dailyReady()) { takeDrop(); return; }

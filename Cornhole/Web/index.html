@@ -768,7 +768,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794762744 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794770706 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -793,7 +793,7 @@ s.was { opacity: .6; font-size: .8em; }
       <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button></div>
+    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button><button class="linkbtn" id="refillDropsBtn" hidden>🧪 Refill Daily Drops</button></div>
   </div>
 </div>
 
@@ -2881,7 +2881,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794762744`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794770706`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4423,7 +4423,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794762744`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794770706`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4434,7 +4434,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794762744`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794770706`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -5932,6 +5932,10 @@ function fireAim() {
   g.position.copy(aimRig.position).add(new THREE.Vector3(0, 0.3, 0)); g.scale.setScalar(3); scene.add(g);
   fx.push({ o: g, life: 0.35, max: 0.35, kind: "flash" });
 }
+// The arrow and power ring always draw on top: on a court with raised ground (Island Hop's islands, say) they'd
+// otherwise sink into the terrain and vanish.
+for (const m of [arrowMat, outlineMat, whiteMat, shadowMat, wedgeMat, ringMat]) m.depthTest = false;
+aimRig.traverse(o => { if (o.material) o.material.depthTest = false; });
 
 // ───────────────────────── Cornhole celebrations (shop "Effects" tab)
 // Each effect plays at the hole when your bag drops in; the 2/3/4-bagger build-up layers on top.
@@ -6414,7 +6418,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794762744";
+const BUILD_ID = "1794770706";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6422,6 +6426,8 @@ if (testing() && career.testBuild !== BUILD_ID) {
 }
 if (testing()) { // Max stars: fill every court's star track, which opens all the courts (and their avatars)
   $("maxStarsBtn").hidden = false;
+  $("refillDropsBtn").hidden = false; // tester: back to 2 Daily Drops (the real rules still apply: never more than 2)
+  $("refillDropsBtn").onclick = () => { const g = giftState(); g.n = GIFT_MAX; g.at = Date.now(); save(); renderHub(); };
   $("maxStarsBtn").onclick = () => {
     for (const v of VENUES) career.courtStars[v.id] = v.max;
     updateUnlocks(); save(); renderHub();
@@ -6515,7 +6521,7 @@ function wheelCard() {
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
   return { cat: cat.key, it, ...addCards(cat, it, 1) };
 }
-const dailyFree = () => testing() || giftState().n > 0; // a free spin waiting (tester mode: always)
+const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never more than 2; tester mode too)
 const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
@@ -6531,13 +6537,18 @@ function takeDrop() {
   const segs = wheelSlices(), total = segs.reduce((t, x) => t + x.w, 0);
   let x = Math.random() * total, pick = segs[0];
   for (const sg of segs) { x -= sg.w; if (x <= 0) { pick = sg; break; } }
-  if (!testing() && !useFreeSpin()) career.spins--; // a free drop first, then bought ones
+  if (!useFreeSpin()) career.spins--; // a free drop first, then bought ones
   pick = { ...pick };
   if (pick.coins) career.coins += pick.coins; else if (pick.caps) career.caps += pick.caps;
   else if (pick.card) pick.got = wheelCard();
   else career.cans.push({ id: pick.can, court: topCourt(), instant: true });
   save(); renderHub();
   wheelWon(pick);
+}
+const WHEEL_STORE = ["wheel.1", "wheel.3", "wheel.5"].map(PID); // extra Daily Drops
+function wheelBuyRow() {
+  const price = id => storePrices[id] || STORE.find(x => x.id === id).price;
+  return `<div class="bbbuy">${WHEEL_STORE.map(id => { const it = STORE.find(x => x.id === id); return `<button class="btn blue" data-wbuy="${id}" ${pendingBuy === id ? "disabled" : ""}><b>${it.spins}</b> drop${it.spins > 1 ? "s" : ""}<small>${pendingBuy === id ? "…" : price(id)}</small></button>`; }).join("")}</div>`;
 }
 function openWheel(msg = "") {
   if (!msg && dailyReady()) { takeDrop(); return; }
@@ -6824,7 +6835,7 @@ window.addEventListener("resize", () => { if (C3.r) can3dResize(); });
 const BB_BOARD = { W: 2, L: 4, FH: 0.25, BH: 1, HR: 0.25, HOLE_Y: 3.25 }; // a regulation 2 x 4 board, hole 9" from the back
 // The day's court: one of the regular courts (a standard 27 ft court on level ground, you in a pitcher's box), with
 // the bullseye board where the far board would be.
-const bbCourts = () => VENUES.filter(v => !v.soon);
+const bbCourts = () => VENUES.filter(v => !v.soon && v.id !== "island"); // flat, level courts only (Island Hop stands on raised islands)
 // Weather changes the throw, not just the look. mu: board friction (lower slides farther); r: how much a landing keeps.
 const BB_WEATHER = [
   { id: "sunny", name: "Sunny", icon: "☀️", w: 40, note: "" },
@@ -7024,7 +7035,7 @@ function bbPreviewPlay() {
 function bbPreviewBack() { openHub(); renderBBSheet(); }
 function bbPreviewPanel() {
   const A = BB.active, can = bbCanPlay();
-  return `<div class="center"><div class="big">${esc(A.day.scene.name)} · ${A.mode === "hard" ? "Harder" : "Easier"}</div>
+  return `<div class="center"><div class="big">${A.mode === "hard" ? "Harder" : "Easier"}</div>
     <div class="muted">${A.M.dist} ft · ${A.M.wind} mph wind · ${A.M.bags.length} bag${A.M.bags.length > 1 ? "s" : ""} on the board. Looking doesn't use a throw.</div></div>
     <div class="btns" style="grid-template-columns:1fr 1.6fr"><button class="btn" id="bbPrevBack">BACK</button>
     <button class="btn go ${A.mode === "hard" ? "red" : "green"}" id="bbPrevPlay" ${can ? "" : "disabled"}>${can ? `PLAY ${A.mode === "hard" ? "HARDER" : "EASIER"}` : "NO THROWS LEFT"}</button></div>`;
@@ -7042,7 +7053,7 @@ function bbRenderLegend() {
   el.innerHTML = `<h4>Today's prizes <small>${5 - bbWon(mode).length} left</small></h4>${bbPrizeRows(mode)}<p>⭐ Star bag in the hole: <b>x2</b></p>`;
 }
 const markerScale = () => 1;
-const bbPanelTag = () => BB.active ? `${esc(BB.active.day.scene.name)} · ${BB.active.mode === "hard" ? "Harder" : "Easier"}` : "";
+const bbPanelTag = () => BB.active ? `Bullseye · ${BB.active.mode === "hard" ? "Harder" : "Easier"}` : ""; // (no court name: it's just a standard court with a different view each day)
 
 // Back to the regular court (on the way back to the clubhouse, or before any match).
 function bbExit() {
@@ -7273,7 +7284,7 @@ function renderBBSheet(msg = "") {
       <div class="bbtap">${done ? "CLEARED ✓" : "TAP TO LOOK 👀"}</div></button>`;
   };
   $("bbBody").innerHTML = `<h2>🎯 Bullseye Bags</h2>
-    <div class="bbday"><b>${esc(day.scene.name)}</b><small>${esc(day.scene.sub)} · a standard 27 ft court</small></div>
+    <div class="bbday"><small>A standard 27 ft court · a new view every day · the same for everyone</small></div>
     <div class="bbconds"><span>${w.icon} ${w.name}<small>${w.note || "No effect on the board"}</small></span><span>🪵 The board<small>${BB_SURF_WORDS[d.surf || 0]}</small></span><span>🟡 Golden Bag<small>Everyone throws the same bag</small></span></div>
     ${day.sunday ? `<div class="bbsunday">⛳ <b>HOLE-IN-ONE SUNDAY</b><small>${career.bags.includes("holeinone") ? "Sink the hole today for a bonus Golden Pop can too." : "Sink the hole today to win the exclusive Hole-in-One bag. You can't get it anywhere else."}</small></div>` : ""}
     <div class="bbstar">Finish in a ring to win it; the hole is the top prize. Only bags on the board count, and won rings are gone for the day. ⭐ Knock the <b>star bag</b> in for <b>double</b>.</div>

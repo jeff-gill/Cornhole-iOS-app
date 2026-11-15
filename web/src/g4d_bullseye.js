@@ -9,7 +9,7 @@
 const BB_BOARD = { W: 2, L: 4, FH: 0.25, BH: 1, HR: 0.25, HOLE_Y: 3.25 }; // a regulation 2 x 4 board, hole 9" from the back
 // The day's court: one of the regular courts (a standard 27 ft court on level ground, you in a pitcher's box), with
 // the bullseye board where the far board would be.
-const bbCourts = () => VENUES.filter(v => !v.soon);
+const bbCourts = () => VENUES.filter(v => !v.soon && v.id !== "island"); // flat, level courts only (Island Hop stands on raised islands)
 // Weather changes the throw, not just the look. mu: board friction (lower slides farther); r: how much a landing keeps.
 const BB_WEATHER = [
   { id: "sunny", name: "Sunny", icon: "☀️", w: 40, note: "" },
@@ -209,7 +209,7 @@ function bbPreviewPlay() {
 function bbPreviewBack() { openHub(); renderBBSheet(); }
 function bbPreviewPanel() {
   const A = BB.active, can = bbCanPlay();
-  return `<div class="center"><div class="big">${esc(A.day.scene.name)} · ${A.mode === "hard" ? "Harder" : "Easier"}</div>
+  return `<div class="center"><div class="big">${A.mode === "hard" ? "Harder" : "Easier"}</div>
     <div class="muted">${A.M.dist} ft · ${A.M.wind} mph wind · ${A.M.bags.length} bag${A.M.bags.length > 1 ? "s" : ""} on the board. Looking doesn't use a throw.</div></div>
     <div class="btns" style="grid-template-columns:1fr 1.6fr"><button class="btn" id="bbPrevBack">BACK</button>
     <button class="btn go ${A.mode === "hard" ? "red" : "green"}" id="bbPrevPlay" ${can ? "" : "disabled"}>${can ? `PLAY ${A.mode === "hard" ? "HARDER" : "EASIER"}` : "NO THROWS LEFT"}</button></div>`;
@@ -227,7 +227,7 @@ function bbRenderLegend() {
   el.innerHTML = `<h4>Today's prizes <small>${5 - bbWon(mode).length} left</small></h4>${bbPrizeRows(mode)}<p>⭐ Star bag in the hole: <b>x2</b></p>`;
 }
 const markerScale = () => 1;
-const bbPanelTag = () => BB.active ? `${esc(BB.active.day.scene.name)} · ${BB.active.mode === "hard" ? "Harder" : "Easier"}` : "";
+const bbPanelTag = () => BB.active ? `Bullseye · ${BB.active.mode === "hard" ? "Harder" : "Easier"}` : ""; // (no court name: it's just a standard court with a different view each day)
 
 // Back to the regular court (on the way back to the clubhouse, or before any match).
 function bbExit() {
@@ -458,7 +458,7 @@ function renderBBSheet(msg = "") {
       <div class="bbtap">${done ? "CLEARED ✓" : "TAP TO LOOK 👀"}</div></button>`;
   };
   $("bbBody").innerHTML = `<h2>🎯 Bullseye Bags</h2>
-    <div class="bbday"><b>${esc(day.scene.name)}</b><small>${esc(day.scene.sub)} · a standard 27 ft court</small></div>
+    <div class="bbday"><small>A standard 27 ft court · a new view every day · the same for everyone</small></div>
     <div class="bbconds"><span>${w.icon} ${w.name}<small>${w.note || "No effect on the board"}</small></span><span>🪵 The board<small>${BB_SURF_WORDS[d.surf || 0]}</small></span><span>🟡 Golden Bag<small>Everyone throws the same bag</small></span></div>
     ${day.sunday ? `<div class="bbsunday">⛳ <b>HOLE-IN-ONE SUNDAY</b><small>${career.bags.includes("holeinone") ? "Sink the hole today for a bonus Golden Pop can too." : "Sink the hole today to win the exclusive Hole-in-One bag. You can't get it anywhere else."}</small></div>` : ""}
     <div class="bbstar">Finish in a ring to win it; the hole is the top prize. Only bags on the board count, and won rings are gone for the day. ⭐ Knock the <b>star bag</b> in for <b>double</b>.</div>
