@@ -20,11 +20,12 @@ const clockText = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s
 const topCourt = () => VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 
 function renderHubExtras() {
-  tickLives(); testerTopUp();
+  testerTopUp();
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
-  $("lives").textContent = career.lives;
+  const gift = giftState(); // the Free Gift pill: how many are waiting, and when the next one comes
+  $("giftCount").textContent = gift.n; $("giftBtn").classList.toggle("ready", gift.n > 0);
+  $("giftTimer").textContent = gift.n < GIFT_MAX ? ` · ${timeText(giftNextIn())}` : " · full";
   $("caps").textContent = bigNum(career.caps);
-  $("livesTimer").textContent = career.lives < MAX_LIVES ? ` · ${clockText(nextLifeIn())}` : "";
   fillCooler();
   const cooler = $("cooler"); cooler.innerHTML = "";
   const slots = COOLER_SIZE;
@@ -45,36 +46,27 @@ function renderHubExtras() {
   }
 }
 
-// ── Lives sheet
-function openLives() { renderLives(); $("livesSheet").hidden = false; }
-function renderLives() {
-  tickLives();
-  const price = lifePrice(), full = career.lives >= MAX_LIVES;
-  $("livesBody").innerHTML = `<div class="lifebig"><i class="tkt big"></i></div><h2>Lives: ${career.lives}</h2>
-    <div class="liferow">${Array.from({ length: Math.max(MAX_LIVES, career.lives) }, (_, i) => `<span class="${i < career.lives ? "" : "gone"}"><i class="tkt"></i></span>`).join("")}</div>
-    <div class="muted">Each match uses a ticket. Win and you get it back. One refills every hour, up to ${MAX_LIVES}.</div>
-    <div class="big">${full ? "Full!" : `Next one in ${clockText(nextLifeIn())}`}</div>
-    <button class="btn green" id="lifeBuy" ${career.coins >= price ? "" : "disabled"}>+1 <i class="tkt"></i> · <i class="coin"></i> ${short(price)}</button>
-    <button class="btn green" id="lifeCaps" ${career.caps >= LIFE_CAPS ? "" : "disabled"}>+1 <i class="tkt"></i> · <i class="bcap"></i> ${LIFE_CAPS}</button>
-    <button class="btn blue" id="lifeStore">MORE IN THE STORE</button>
-    <button class="btn ghost" id="alertsBtn">🔔 Tell me when they're full: ${career.alerts ? "ON" : "OFF"}</button>
-    <button class="btn" id="livesClose">DONE</button>`;
-  $("lifeBuy").onclick = () => { if (career.coins < price) return; career.coins -= price; career.lives++; save(); scheduleLivesAlert(); sfx.tick(); renderLives(); renderHub(); };
-  $("lifeCaps").onclick = () => { if (career.caps < LIFE_CAPS) return; career.caps -= LIFE_CAPS; career.lives++; save(); scheduleLivesAlert(); sfx.tick(); renderLives(); renderHub(); };
-  $("lifeStore").onclick = () => { $("livesSheet").hidden = true; shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; };
-  $("alertsBtn").onclick = () => {
-    career.alerts = !career.alerts; save();
-    if (career.alerts) postNative("notify", JSON.stringify({ op: "permission" }));
-    scheduleLivesAlert(); renderLives();
-  };
-  $("livesClose").onclick = () => { $("livesSheet").hidden = true; };
-}
-$("livesBtn").onclick = openLives;
+// (The lives sheet is gone: there are no lives any more. #livesSheet is still the frame for showInfo / showChoice.)
+// Collecting a Free Gift: its coins, and any cap or card, shown on the light-ray prize screen.
+$("giftBtn").onclick = () => {
+  initAudio();
+  if (giftState().n <= 0) { showInfo(`<div class="lifebig">🎁</div><h2>Free Gift</h2><div class="muted">A new gift comes every 4 hours, and up to 2 wait for you. Coins, sometimes a bottle cap or a bag or board card.</div><div class="big">Next one in ${timeText(giftNextIn())}</div>`); return; }
+  const got = claimGift(); if (!got) return;
+  const line = g => g.kind === "coins" ? `<div class="bbprize"><i class="coin big"></i><b>+${g.n}</b></div>` : g.kind === "caps" ? `<div class="bbprize"><i class="bcap big"></i><b>+${g.n} cap</b></div>`
+    : `<div class="bbprize"><span style="font-size:40px">🃏</span><b>${esc(g.name)}</b><small>${g.unlocked ? "UNLOCKED!" : g.owned ? `+${g.coins} coins (owned)` : `${g.have}/${g.need} cards`}</small></div>`;
+  $("bbRays").style.setProperty("--ray", "#ffc93a"); $("bbRays").hidden = false;
+  $("bbRevTitle").innerHTML = "Free Gift!";
+  const card = $("bbRevPrize"); card.className = "prize";
+  card.innerHTML = `<div class="bbprizes">${got.map(line).join("")}</div><small>${giftState().n ? "Another gift is waiting!" : `Next gift in ${timeText(giftNextIn())}`}</small>`;
+  $("bbRevFoot").innerHTML = `<button class="btn green go" id="bbCollect">COLLECT</button>`;
+  $("bbReveal").hidden = false; requestAnimationFrame(() => card.classList.add("show"));
+  sfx.win(); haptic("success");
+  $("bbCollect").onclick = () => { $("bbReveal").hidden = true; renderHub(); };
+};
 $("coinsBtn").onclick = e => showExact(e.currentTarget, career.coins, "coins");
 $("shopCoinsBtn").onclick = e => showExact(e.currentTarget, career.coins, "coins");
 $("shopCapsBtn").onclick = e => showExact(e.currentTarget, career.caps, "bottle caps");
 $("capsBtn").onclick = e => showExact(e.currentTarget, career.caps, "bottle caps");
-const LIFE_CAPS = 15;
 
 // Tapping a can: open it if it's ready, start it if nothing else is opening, or show how long is left.
 function canTapped(i) {
@@ -122,7 +114,7 @@ function rulesHTML() {
     `At the Backyard BBQ, the first ${QUIT_WARNINGS} times this happens you get a warning and a refund instead.`,
   ])}
   ${sec("🛟", "Glitches and refunds", [
-    "If the game freezes or crashes while it's on your screen, the match is stopped and refunded: your buy-in and ticket come back and no stars are lost.",
+    "If the game freezes or crashes while it's on your screen, the match is stopped and refunded: your buy-in comes back and no stars are lost.",
     "If you were out of the app when it closed, there's no refund (see Leaving the app).",
   ])}
   ${sec("🌬️", "Wind", [
@@ -146,9 +138,9 @@ function rulesHTML() {
     "Knock the star bag into the hole and your prize is doubled.",
     "If you leave before throwing, you keep the throw. Once the bag is in the air, the throw counts.",
   ])}
-  ${sec("🎟️", "Tickets", [
-    `Every match uses a ticket. You can hold ${MAX_LIVES}, and one comes back every hour.`,
-    "Win and you get your ticket back.",
+  ${sec("🎁", "Free Gift", [
+    "A free gift comes every 4 hours, and up to 2 wait for you. Tap the 🎁 at the top to collect.",
+    "Each has some coins, and sometimes a bottle cap or a bag or board card: enough to keep playing the first court every day.",
   ])}
   ${sec("🥫", "Prize cans", [
     `Win a match to get a prize can. Your Prize Cooler holds ${COOLER_SIZE}.`,
@@ -212,7 +204,7 @@ function renderProfile() {
       <div class="setrow vol"><span>🎵 Music</span><input type="range" id="musicVolIn" min="0" max="100" value="${Math.round(musicVol * 100)}" aria-label="Music volume"><button class="btn small" id="setMusic">${musicOn ? "ON" : "OFF"}</button></div>
       <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
-      <div class="setrow"><span>🔔 Alerts (tickets full, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
+      <div class="setrow"><span>🔔 Alerts (free gifts, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
       ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>`;
@@ -531,7 +523,7 @@ function openPractice() { renderPractice(); $("practiceSheet").hidden = false; }
 function renderPractice() {
   const P = practiceCfg(), v = VENUES[hubVenue];
   const slots = P.players === 1 ? [["You", 0]] : P.players === 2 ? [["Player 1", 0], ["Player 2", 1]] : [["Team 1 · A", 0], ["Team 2 · A", 1], ["Team 1 · B", 0], ["Team 2 · B", 1]];
-  $("practiceBody").innerHTML = `<h2>Practice</h2><div class="muted">${esc(v.name)} · no buy-in, tickets or stars</div>
+  $("practiceBody").innerHTML = `<h2>Practice</h2><div class="muted">${esc(v.name)} · no buy-in or stars</div>
     <div class="label">Players</div>
     <div class="seg" id="pPlayers">${[1, 2, 4].map(n => `<button data-n="${n}" class="${P.players === n ? "on" : ""}">${n}</button>`).join("")}</div>
     <div class="label">Names</div>
@@ -557,9 +549,9 @@ function renderPractice() {
 const TOUR = [
   [null, "👋 Welcome!", "Here's a quick look around the clubhouse. You can skip it any time."],
   ["#avatarBtn", "Your avatar", "Tap it for <b>Settings</b>, your avatar and your profile. How to Play & Rules is in Settings."],
-  ["#livesBtn", "Tickets", "Every match uses a ticket. You can hold 5, and one comes back every hour. Win and you get yours back."],
+  ["#giftBtn", "Free Gift", "A free gift every 4 hours, and up to 2 wait for you: coins, sometimes a bottle cap or a card."],
   ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot. Spend them in the shop."],
-  ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away or to buy a ticket."],
+  ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away."],
   ["#starsPill", "Stars", "Win matches to earn stars. Fill a court's stars to open the next court."],
   ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "Spin the prize wheel once a day: coins, caps or a can."],

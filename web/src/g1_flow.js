@@ -46,7 +46,7 @@ const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
 // Stars needed in total (all courts so far) to open court vi: the "Total to advance" column.
 const starsToReach = vi => VENUES.slice(0, vi).reduce((t, v) => t + v.max, 0);
 // The house covers your Backyard buy-in if you're short, so you can never get stuck.
-const houseCovers = vi => vi === 0 && career.coins < VENUES[0].fee;
+const houseCovers = vi => false; // (no free "on the house" matches any more: the Free Gift covers the first court)
 // Twenty coin bags. Prices about double each step (100 coins to 100 million), so each court's winnings buy the next tier
 // or two; the Gold Standard takes a few wins at the last court. Stats rise gradually; a few mid-price bags are specialists.
 const BAGS = [
@@ -93,7 +93,6 @@ const STORE = [
   { id: PID("caps.450"), kind: "caps", caps: 450, price: "$4.99", title: "Bucket of Caps", tag: "BEST VALUE" },
   { id: PID("caps.1000"), kind: "caps", caps: 1000, price: "$9.99", title: "Crate of Caps" },
   { id: PID("caps.2200"), kind: "caps", caps: 2200, price: "$19.99", title: "Mountain of Caps" },
-  { id: PID("lives5"), kind: "lives", lives: 5, price: "$1.99", title: "Book of Tickets", icon: "🎟️", blurb: "+5 lives, even past the usual 5" },
   { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Pop can", icon: "🥫", blurb: "5 prizes: coins and cards" },
   { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Sparkle can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
   { id: PID("wheel.1"), kind: "spins", spins: 1, price: "$0.99", title: "1 Daily Drop spin", hidden: true },

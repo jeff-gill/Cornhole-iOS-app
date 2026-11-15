@@ -11,8 +11,8 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 - **Career:** twelve courts (courts 9–12 show "Coming soon" until released; remove `soon: true` in `web/src/g1_flow.js` to release one) (Backyard BBQ, Tailgate Lot, Beach Shack, Pizza Patio, Mountain Lodge, Golf Club, Island Hop, City Rooftop, Lakeside Dock, Block Party, County Fair, Stadium Finals). The clubhouse shows each one in a slow 360° flyaround with both boards in view. Each one is a new 3D location with a smaller sweet spot, wind that builds a little at every court after the calm Backyard (0–1 mph at the Tailgate Lot), up to 5–7 mph at the Stadium, slicker boards and better opponents. The aim arrow swings at the same speed on every court. A win earns stars and the venue prize, and a loss costs some stars. Stars unlock the next venue.
 - **Pro Shop:** spend coins on bags (Accuracy, Control and Spin stats, plus a sticky, neutral or fast slide), board designs, throw effects and cornhole effects. Every coin item can also be unlocked by collecting its cards from cans.
 - **Cans:** win a match to get a can (the cooler holds 4), plus one free can a day. There are eight tiers, from Backyard Black to Diamond Dazzle, plus rare Express Pop cans. Rarer cans hold more prizes (coins, item cards, now and then a life) and take longer to open: 15 minutes for Black up to 24 hours for Diamond. Only one can opens at a time, and Express cans open right away. Each of your cornholes in a match improves the odds of a better can. Opening one sprays mist and the prizes pop out one at a time.
-- **Lives (🎟️ raffle tickets):** up to 5. A match uses one, and a win gives it back. One refills every hour. Extra tickets come from the Store, from coins (at a steep price), from 15 bottle caps, or rarely from a can. The iPhone app can notify you when they're full.
-- **Bottle caps:** the premium currency (a red cap with a star). Use them to open a can now (1 cap for every 10 minutes left) or to buy a ticket. You start with 20, get some from cans (more often from rare ones) and 3 per 4-bagger, and can buy packs in the Store.
+- **Free Gift (🎁):** no lives or tickets: matches are limited only by coins. A free gift comes every 4 hours and up to 2 wait (about 30 coins, a 1-in-4 chance of a bottle cap and of a bag or board card), enough to keep playing the first court every day.
+- **Bottle caps:** the premium currency (a red cap with a star). Use them to open a can now (1 cap for every 10 minutes left). You start with 20, get some from cans (more often from rare ones) and 3 per 4-bagger, and can buy packs in the Store.
 - **Profile (tap your avatar):** three tabs.
   - **Avatar:** 25 hats and helmets on their own (ball cap, devil helmet, cowboy hat, police hat, fireman helmet, tiara, crown, astronaut helmet and more; several feminine picks), made in Blender (`web/tools/blender/hats.py`). 4 to start, 3 more with each court you open through Court 8. Your Game Center picture is the default when you have one.
   - **Profile:** your handle and stats. New players are "guest-" plus 10 digits, or their Game Center name, until they choose a handle (3–16 letters, numbers, dots, dashes or underscores). Live opponents see your handle.
@@ -105,8 +105,6 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | 4-bagger | Half a buy-in |
 | Daily Drop | A prize wheel, one free spin a day (more: 1 / 3 / 5 for $0.99 / $1.99 / $2.99, always worth less than the same money spent in the store): coins (1x, 2x, 5x the title amount: 100 at Rookie up to 6,000 at Hall of Famer), caps, or a can that opens right away. Common prizes have big slices, the best thin ones; can slices move up a tier every four titles |
 | Bullseye Bags | One free throw a day (more for $0.99 / 3 for $1.99 / 5 for $2.99). See below |
-| Ticket (life) for coins | Set by your season title: 100, 250, 600, 1.5K, 4K, 10K, 25K, 60K, 150K (Rookie to Hall of Famer), but never more than a tenth of a buy-in at your highest open court |
-| Ticket (life) for caps | 15 caps |
 | Open a can now | 1 cap per 10 minutes left |
 | Caps from cans | chance 8% (Black) to 57% (Diamond); 1–3 caps (Black) to 15–29 (Diamond) |
 | Caps per 4-bagger | 3 |
@@ -170,13 +168,13 @@ The odds are not shown in the game. The App Store requires the odds for paid loo
 ### Glitch protection
 - A career match is remembered from the buy-in until it ends. If the game freezes (a bag that never lands, a throw
   clock that stops counting, a CPU that never throws, or the game loop dying) the watchdog stops the match and refunds
-  the buy-in and the ticket; no stars are lost.
+  the buy-in; no stars are lost.
 - Leaving the app mid-match (switching apps, locking the phone) doesn't end it: the throw clock keeps running while
   you're away, and when you come back the time is taken off your turns (each turn that runs out loses that bag).
   Four of your bags lost to the clock in one inning loses the match.
 - If the app is closed while you're out of it (force quit, iPhone closing it to free memory, power off), the next
   launch counts the match as a quit: a loss. The Backyard BBQ forgives this 3 times, with a warning each time.
-- If the game crashes or freezes while it's on screen, the match is refunded (buy-in and ticket back, no stars lost).
+- If the game crashes or freezes while it's on screen, the match is refunded (buy-in back, no stars lost).
 - Quitting from the pause menu is still a loss.
 - Pausing on your throw: the first pause of a match stops the throw clock for 5 seconds, then it runs again; later
   pauses leave it running, with a warning on the pause screen. A bag lost to the clock shows as a red ✕ in your tile.

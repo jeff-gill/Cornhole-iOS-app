@@ -354,6 +354,8 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubleft, .hubright { gap: 5px; min-width: 0; }
 .hubtop .avatarbtn { width: 38px; height: 38px; flex: none; }
 .livespill small { white-space: nowrap; }
+.giftpill .gico { font-size: 20px; line-height: 1; }
+.giftpill.ready { border-color: var(--gold); box-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 12px rgba(255,201,58,.7); animation: canbob 1.4s ease-in-out infinite; }
 #splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 22px; background: radial-gradient(circle at 50% 35%, #2b4a80, #0b1528 75%); transition: opacity .5s ease; }
 #splash.out { opacity: 0; pointer-events: none; }
 .splashtitle { font-family: var(--font-display); text-transform: uppercase; text-align: center; line-height: .9; font-size: min(12.5vw, 76px); text-shadow: 0 6px 0 rgba(0,0,0,.4); animation: splashin .8s cubic-bezier(.3,1.6,.5,1) both; }
@@ -768,7 +770,7 @@ s.was { opacity: .6; font-size: .8em; }
 <div class="overlay" id="hub">
   <div class="hubhead">
     <div class="hubtop">
-      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill" id="livesBtn"><i class="tkt"></i><b id="lives">5</b><small id="livesTimer"></small></button></div>
+      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button><button class="pill livespill giftpill" id="giftBtn" aria-label="Free gift"><span class="gico">🎁</span><b id="giftCount">1</b><small id="giftTimer"></small></button></div>
       <div class="hubright"><button class="pill cappill" id="coinsBtn"><i class="coin"></i><b id="coins">0</b></button><button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button><div class="pill" id="starsPill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
     </div>
     <div class="hubtitle" id="hubTitle">__GAME_TITLE_HTML__</div>

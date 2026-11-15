@@ -513,13 +513,13 @@ function renderHub() {
     <div class="vdots">${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
   fitChips($("venueCard")); document.fonts?.ready.then(() => fitChips($("venueCard")));
-  $("playBtn").onclick = () => { initAudio(); tickLives(); if (career.lives <= 0) { openLives(); return; } playCourt(hubVenue); };
+  $("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
   const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
-  const noLives = career.lives <= 0;
+  const noLives = false; // (no lives any more)
   play.disabled = !open || (!afford && !noLives);
-  play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? "NOT ENOUGH COINS" : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
+  play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? (giftState().n ? "NOT ENOUGH COINS · TAP 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
   $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
@@ -792,7 +792,7 @@ function tickPausedClock(dt) {
 $("forfeitBtn").onclick = () => {
   const careerMatch = S.kind === "career", fee = career.activeMatch ? career.activeMatch.fee : 0;
   const lose = careerMatch
-    ? [`−${starsForLoss(S.venue)} ⭐ at ${esc(venue().name)}`, fee ? `Your buy-in: <i class="coin"></i> ${short(fee)} (your opponent takes the pot)` : null, "The ticket you used for this match"].filter(Boolean)
+    ? [`−${starsForLoss(S.venue)} ⭐ at ${esc(venue().name)}`, fee ? `Your buy-in: <i class="coin"></i> ${short(fee)} (your opponent takes the pot)` : null].filter(Boolean)
     : S.kind === "bullseye" ? [S.lastId == null ? "Nothing: you haven't thrown yet, so you keep this throw." : "This throw (your bag is already in the air)."]
     : ["Nothing: practice games are free. This one just ends."];
   $("pause").hidden = true;
@@ -881,7 +881,7 @@ function step(now) {
     if (left !== before && $("innCount")) $("innCount").textContent = Math.max(0, left);
     if (S.innT >= INNING_CARD_SECS) { S.innT = 0; dismissScorecard(0, -1); }
   } else S.innT = 0;
-  if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); renderBBBtn(); renderDaily(); if (career.lives <= 0) renderHub(); }
+  if (S.phase === "hub" && Math.floor(S.time) !== Math.floor(S.time - dt)) { renderHubExtras(); renderBBBtn(); renderDaily(); }
   updatePreview(dt);
   updateFx(dt);
   updateWindStreaks(dt);
@@ -917,15 +917,15 @@ function glitchOut() {
   const career_ = S.kind === "career", r = career_ ? refundMatch() : null;
   glitching = true; try { openHub(); } finally { glitching = false; }
   showInfo(`<div class="lifebig">🛠️</div><h2>Sorry about that!</h2><div class="muted">Something went wrong and the ${career_ ? "match" : "game"} got stuck, so we stopped it.${
-    r ? ` Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.` : ""}</div>`);
+    r ? ` ${r.fee ? `Your buy-in (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.` : ""}</div>`);
 }
 // A match that never finished last time (the app was closed or crashed in the middle of it).
 function settleInterruptedMatch() {
   const r = refundMatch(); if (!r) return;
   showInfo(r.refunded
     ? r.warning
-      ? `<div class="lifebig">⚠️</div><h2>Warning ${r.warning} of ${QUIT_WARNINGS}</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app. This time your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back and no stars were lost, but closing the app mid-match counts as a quit${r.warning < QUIT_WARNINGS ? "" : " from now on"}.</div>`
-      : `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. Your ${r.fee ? `buy-in (<i class="coin"></i> ${short(r.fee)}) and ` : ""}ticket are back, and no stars were lost.</div>`
+      ? `<div class="lifebig">⚠️</div><h2>Warning ${r.warning} of ${QUIT_WARNINGS}</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app. This time ${r.fee ? `your buy-in (<i class="coin"></i> ${short(r.fee)}) is back and ` : ""}no stars were lost, but closing the app mid-match counts as a quit${r.warning < QUIT_WARNINGS ? "" : " from now on"}.</div>`
+      : `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. ${r.fee ? `Your buy-in (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.</div>`
     : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app, so it counts as a loss (−${r.stars} ⭐).</div>`);
 }
 

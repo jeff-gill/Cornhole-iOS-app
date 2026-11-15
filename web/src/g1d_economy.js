@@ -1,5 +1,5 @@
 
-// ───────────────────────── Economy: cans, cards, lives, avatars
+// ───────────────────────── Economy: cans, cards, free gifts, avatars
 // The money loop is deliberately tight. A win pays the pot (net +1 buy-in) and a can; a loss costs the buy-in and a
 // life. At an even win rate coins barely grow, so moving up takes real skill, and a court's winnings buy the shop tier
 // or two that match it. Cans are the treat: mostly small, now and then big. See README "Economy" for the numbers.
@@ -141,7 +141,7 @@ function openCan(index) {
   let cards = Math.round((can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5) * titleCardBonus());
   const stacks = Math.min(can.pulls - 1, MAX_CAN_PRIZES - prizes.length); // never more than 9 prizes in all (they fit one screen)
   for (let k = 0; k < stacks; k++) {
-    if (Math.random() < can.life) { career.lives += 1; prizes.push({ kind: "life", n: 1 }); continue; }
+    if (Math.random() < can.life) { const n = 2 + Math.floor(Math.random() * 2); career.caps += n; prizes.push({ kind: "caps", n }); continue; } // (used to be a ticket)
     const n = k === stacks - 1 ? Math.max(1, cards) : Math.max(1, Math.round(cards * (0.2 + Math.random() * 0.5)));
     cards = Math.max(0, cards - n);
     const { cat, it } = pickCardItem(can.bias), res = addCards(cat, it, n);
@@ -151,30 +151,56 @@ function openCan(index) {
   return { can, prizes };
 }
 
-// ── Lives: you hold up to 5 raffle tickets; one refills every hour. A match takes one up front and gives it back if
-// you win, so closing the app mid-match can't dodge a loss. Bought lives can go past 5.
-const MAX_LIVES = 5, LIFE_MS = 60 * 60 * 1000;
-function tickLives() {
+// ── No more lives (tickets). Matches are limited only by coins; the Free Gift (below) keeps everyone able to play the
+// first court. These stubs keep the old call sites harmless (a match never uses up anything but its buy-in).
+const MAX_LIVES = 5;
+function tickLives() { if (!(career.lives >= 1)) career.lives = MAX_LIVES; }
+const nextLifeIn = () => 0;
+function useLife() { return true; }
+function refundLife() {}
+tickLives(); // an old save that ran out of tickets is never blocked
+
+// ── Free Gift: one every 4 hours, and up to 2 wait for you (like Golf Clash's free chest). Each is about 30 coins with
+// a 1-in-4 chance of a bottle cap and a 1-in-4 chance of a bag or board card: collecting all six in a day comes to
+// about 180 coins (3-4 games at the first court), 1-2 caps and 1-2 cards. Caps are worth more than coins (one cap is
+// about 250 coins at store prices). Not scaled by court: it only keeps the first court in reach.
+const GIFT_MS = 4 * 60 * 60 * 1000, GIFT_MAX = 2;
+function giftState() {
+  const g = (career.gift ||= { n: 1, at: Date.now() }); // a first gift waiting on a fresh game
   const now = Date.now();
-  if (career.lives >= MAX_LIVES) { career.livesAt = now; return; }
-  const gained = Math.floor((now - (career.livesAt || now)) / LIFE_MS);
-  if (gained > 0) {
-    career.lives = Math.min(MAX_LIVES, career.lives + gained);
-    career.livesAt = career.lives >= MAX_LIVES ? now : career.livesAt + gained * LIFE_MS;
-    save(); scheduleLivesAlert();
+  while (g.n < GIFT_MAX && now >= g.at + GIFT_MS) { g.n++; g.at += GIFT_MS; }
+  if (g.n >= GIFT_MAX) g.at = now; // full: the clock waits until one is collected
+  return g;
+}
+const giftNextIn = () => { const g = giftState(); return g.n >= GIFT_MAX ? 0 : Math.max(0, g.at + GIFT_MS - Date.now()); };
+function claimGift() {
+  const g = giftState(); if (g.n <= 0) return null;
+  if (g.n >= GIFT_MAX) g.at = Date.now(); // the next one starts coming now
+  g.n--;
+  const got = [], coins = 25 + 5 * Math.floor(Math.random() * 3); // 25, 30 or 35
+  career.coins += coins; got.push({ kind: "coins", n: coins });
+  if (Math.random() < 0.25) { career.caps += 1; got.push({ kind: "caps", n: 1 }); }
+  if (Math.random() < 0.25) { // a bag or board card, mostly the cheaper ones
+    const cat = CARD_CATS.find(c => c.key === (Math.random() < 0.5 ? "bag" : "board"));
+    const items = cardItems(cat), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
+    let y = Math.random() * w.reduce((t, v) => t + v, 0), it = items[0];
+    for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
+    const res = addCards(cat, it, 1); got.push({ kind: "cards", cat: cat.key, id: it.id, name: it.name, n: 1, ...res });
   }
+  save(); scheduleGiftAlert();
+  return got;
 }
-const nextLifeIn = () => (career.lives >= MAX_LIVES ? 0 : Math.max(0, career.livesAt + LIFE_MS - Date.now()));
-const fullLivesAt = () => career.livesAt + (MAX_LIVES - career.lives) * LIFE_MS;
-function useLife() {
-  tickLives();
-  if (career.lives <= 0) return false;
-  if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); // the refill clock starts when you drop below full
-  career.lives--; save(); scheduleLivesAlert();
-  return true;
+// iPhone app: a local notification when both gifts are waiting (if the player turned alerts on).
+function scheduleGiftAlert() {
+  if (!career.alerts) { postNative("notify", JSON.stringify({ op: "cancel" })); return; }
+  const g = giftState();
+  if (g.n >= GIFT_MAX) postNative("notify", JSON.stringify({ op: "cancel" }));
+  else postNative("notify", JSON.stringify({ op: "schedule", at: g.at + (GIFT_MAX - g.n) * GIFT_MS, title: "Your free gifts are waiting! 🎁", body: "Coins, caps and cards. Come and collect them." }));
 }
+const scheduleLivesAlert = scheduleGiftAlert; // (old name, still called in a few places)
+
 // ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends.
-// If it never ends properly while the game was on screen (it crashed or froze), the buy-in and the ticket come back and
+// If it never ends properly while the game was on screen (it crashed or froze), the buy-in comes back and
 // no stars are lost. If the app had gone to the background (career.activeMatch.bg) and never came back, that's treated
 // as a quit: a loss, like quitting from the pause menu.
 const QUIT_WARNINGS = 3;
@@ -198,21 +224,6 @@ document.addEventListener("visibilitychange", () => {
   if (!career.activeMatch) return;
   career.activeMatch.bg = document.hidden; save();
 });
-function refundLife() { career.lives++; if (career.lives >= MAX_LIVES) career.livesAt = Date.now(); save(); scheduleLivesAlert(); }
-// A ticket for coins is priced by your season title (it goes up when you're promoted and down when you're moved down),
-// but never more than a tenth of a buy-in at your highest open court, so a new player is never priced out.
-const TICKET_BY_TITLE = [100, 250, 600, 1500, 4000, 10000, 25000, 60000, 150000];
-const lifePrice = () => {
-  const t = career.season ? career.season.title : 0;
-  const courtCap = Math.round(VENUES.reduce((m, v, i) => (venueUnlocked(i) ? v : m), VENUES[0]).fee / 10);
-  return Math.max(100, Math.min(TICKET_BY_TITLE[t], courtCap));
-};
-// iPhone app: a local notification when the lives are full again (if the player turned alerts on).
-function scheduleLivesAlert() {
-  if (!career.alerts) { postNative("notify", JSON.stringify({ op: "cancel" })); return; }
-  if (career.lives >= MAX_LIVES) postNative("notify", JSON.stringify({ op: "cancel" }));
-  else postNative("notify", JSON.stringify({ op: "schedule", at: fullLivesAt(), title: "Your tickets are full! 🎟️", body: "5 lives ready. Time to throw some bags." }));
-}
 
 // ── Avatars: 4 to start, 2 more with every court you open.
 // Headgear avatars made in Blender (web/tools/blender/hats.py): 4 to start, 3 more with each court you open, the

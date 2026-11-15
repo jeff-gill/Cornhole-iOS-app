@@ -13,7 +13,6 @@ const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutoria
 const bracket = vi => (vi + 1) * 100 + VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 const randomPick = () => ({ name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id });
 function playCourt(vi, confirmed = false) {
-  tickLives(); if (career.lives <= 0) { openLives(); return; }
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
   if (coolerFull() && !confirmed) { // a full cooler means a win can't drop a new can: say so first
@@ -130,7 +129,6 @@ function opponentLeft() {
 function wantRematch() {
   const O = S.online; if (!O || O.gone || O.rematch.me) return;
   if (career.coins < venue().fee && !houseCovers(S.venue)) return;
-  if (career.lives <= 0) { openLives(); return; }
   O.rematch.me = true; netSend({ t: "rematch" }); renderInningSheet(); tryRematch();
 }
 function tryRematch() {
@@ -142,7 +140,6 @@ function tryRematch() {
     netSend({ t: "resetup", ...R.setup });
   }
   if (!R.setup) return;
-  if (career.lives <= 0) { O.gone = true; renderInningSheet(); return; }
   const { name, bag, trail, effect, host, avatar } = O;
   $("inningSheet").hidden = true;
   startMatch("career", S.venue, { ...R.setup, name, bag, trail, effect, host, avatar });
