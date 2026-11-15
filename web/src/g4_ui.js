@@ -464,9 +464,6 @@ function openHub() {
   $("inningSheet").hidden = true; $("pause").hidden = true;
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
-  // the title shows big for a moment, then shrinks to give the court more room (after the splash, on first launch)
-  $("hub").classList.remove("compact"); clearTimeout(openHub.shrink);
-  openHub.shrink = setTimeout(() => $("hub").classList.add("compact"), $("splash") ? 5400 : 3000); // big for 3 seconds, then a 3-second shrink
   hubWake();
 
 }
