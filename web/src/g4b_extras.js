@@ -121,6 +121,7 @@ function rulesHTML() {
   ])}
   ${sec("🎡", "Daily Drop", [
     "A free Daily Drop every 4 hours, and up to 2 wait for you. Tap it for coins, bottle caps, bag and board cards, and now and then a can.",
+    "Open 4 Daily Drops in a row for a bonus can. If 2 are left waiting, the streak starts over.",
     "There are no lives: you can play as long as you can afford the buy-in, and the Daily Drops keep the first court in reach.",
   ])}
   ${sec("🥫", "Prize cans", [
@@ -308,7 +309,11 @@ function nextPrize() {
   const more = R.shown < R.prizes.length;
   $("canNav").hidden = false; $("canSkip").hidden = !more; $("canNext").textContent = more ? `NEXT · ${R.prizes.length - R.shown} LEFT` : "FINISH";
 }
-$("canDone").onclick = () => { $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub(); };
+$("canDone").onclick = () => {
+  $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub();
+  const i = career.cans.findIndex(c => c.bonus); // a Daily Drop streak bonus waiting: open it next
+  if (i >= 0) { delete career.cans[i].bonus; save(); const t = document.createElement("div"); t.className = "toast"; t.textContent = "4 in a row! Here's a bonus can 🎉"; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); setTimeout(() => openCanSheet(i), 700); }
+};
 
 // ── Testing tools: the browser preview and Xcode debug builds (the app sets window.__debugBuild), never the App Store.
 // Tester mode keeps coins and bottle caps topped up and the stars maxed so everything can be tried; it's on until switched off.
@@ -444,8 +449,9 @@ const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never m
 const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
-  const n = giftState().n;
-  $("dailySub").innerHTML = dailyFree() ? (n > 1 ? "2 ready to open!" : "Ready to open!") : ready ? `${career.spins} extra left` : `Next in ${timeText(giftNextIn())}`;
+  const g = giftState(), n = g.n, st = g.streak || 0;
+  $("dailySub").innerHTML = (dailyFree() ? (n > 1 ? "2 ready to open!" : "Ready to open!") : ready ? `${career.spins} extra left` : `Next in ${timeText(giftNextIn())}`)
+    + `<span class="dstreak" title="Open 4 in a row for a bonus can">${[0, 1, 2, 3].map(i => `<i class="${i < st ? "on" : ""}"></i>`).join("")}</span>`;
 }
 const wheelPrizeHTML = p => p.can ? canPic(p.can)
   : p.card ? `<span style="font-size:18px">🃏</span><b>card</b>` : p.caps ? `<i class="bcap"></i><b>${p.caps}</b>` : `<i class="coin"></i><b>${short(p.coins)}</b>`;
@@ -461,8 +467,11 @@ function takeDrop() {
   // the prize can itself.
   if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true });
   else career.cans.push({ id: "daily", court: topCourt(), instant: true, drop: pick.card ? { card: wheelCard() } : { coins: pick.coins, caps: pick.caps } });
+  // Streak: every 4th Daily Drop in a row also drops a bonus can (opened right after); letting 2 pile up resets it
+  const g = giftState(); g.streak = (g.streak || 0) + 1;
+  if (g.streak >= 4) { g.streak = 0; career.cans.push({ id: rollCan({ bronze: 55, silver: 35, gold: 10 }), court: topCourt(), instant: true, bonus: true }); }
   save(); renderHub();
-  openCanSheet(career.cans.length - 1);
+  openCanSheet(career.cans.findIndex(c => c.instant && !c.bonus && (c.id === "daily" || c.id === pick.can)));
 }
 const WHEEL_STORE = ["wheel.1", "wheel.3", "wheel.5"].map(PID); // extra Daily Drops
 function wheelBuyRow() {

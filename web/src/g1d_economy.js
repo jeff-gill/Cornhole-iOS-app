@@ -169,13 +169,14 @@ function useLife() { return true; }
 function refundLife() {}
 tickLives(); // an old save that ran out of tickets is never blocked
 
-// ── Daily Drop free spins: one every 4 hours, and up to 2 wait for you (like Golf Clash's free chest). The wheel itself
+// ── Daily Drop free spins: one every 4 hours, and up to 2 wait for you (like Golf Clash's free chest). Open 4 in a row
+// for a bonus can; letting 2 pile up resets the streak (g.streak, 0-3). The wheel itself
 // is in g4b_extras.js. (Kept as career.gift so saves carry over.)
 const GIFT_MS = 4 * 60 * 60 * 1000, GIFT_MAX = 2;
 function giftState() {
   const g = (career.gift ||= { n: 1, at: Date.now() }); // a first free spin waiting on a fresh game
   const now = Date.now();
-  while (g.n < GIFT_MAX && now >= g.at + GIFT_MS) { g.n++; g.at += GIFT_MS; }
+  while (g.n < GIFT_MAX && now >= g.at + GIFT_MS) { g.n++; g.at += GIFT_MS; if (g.n >= GIFT_MAX) g.streak = 0; } // both waiting: the streak resets
   if (g.n >= GIFT_MAX) g.at = now; // full: the clock waits until one is used
   return g;
 }
