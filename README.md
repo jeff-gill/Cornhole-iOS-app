@@ -103,7 +103,7 @@ The aim is slow, earned progress: no easy maxing out and no runaway bank balance
 | Win | Pot, stars, a can (if the cooler has room) and your life back |
 | Loss | Buy-in, stars and a life |
 | 4-bagger | Half a buy-in |
-| Daily Drop | A free prize every 4 hours, given straight away, up to 2 waiting (more: 1 / 3 / 5 for $0.99 / $1.99 / $2.99). All six a day average about 150-200 coins, 1-2 caps and 1-2 bag or board cards; a can is rare (about one every 3 days). Coins grow with your season title |
+| Daily Drop | A free prize every 4 hours, in its own red Daily Drop can that you open, up to 2 waiting (more: 1 / 3 / 5 for $0.99 / $1.99 / $2.99). All six a day average about 150-200 coins, 1-2 caps and 1-2 bag or board cards; a can is rare (about one every 3 days). Coins grow with your season title |
 | Bullseye Bags | One free throw a day (more for $0.99 / 3 for $1.99 / 5 for $2.99). See below |
 | Open a can now | 1 cap per 10 minutes left |
 | Caps from cans | chance 8% (Black) to 57% (Diamond); 1–3 caps (Black) to 15–29 (Diamond) |

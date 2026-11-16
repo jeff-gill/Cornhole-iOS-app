@@ -254,7 +254,7 @@ function mistFrame(now) {
 }
 function prizeHTML(p) {
   if (p.kind === "coins") return { pic: `<div class="pic"><i class="coin big"></i></div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `<i class="coin"></i> ${short(p.n)}` };
-  if (p.kind === "caps") return { pic: `<div class="pic"><i class="bcap big"></i></div>`, line: `<b>+${p.n} bottle caps</b><small>Open cans early with these</small>`, chip: `<i class="bcap"></i> ${p.n}` };
+  if (p.kind === "caps") return { pic: `<div class="pic"><i class="bcap big"></i></div>`, line: `<b>+${p.n} bottle cap${p.n === 1 ? "" : "s"}</b><small>Open cans early with these</small>`, chip: `<i class="bcap"></i> ${p.n}` };
   if (p.kind === "life") return { pic: `<div class="pic"><i class="tkt big"></i></div>`, line: `<b>+1 life!</b><small>A bonus ticket</small>`, chip: '<i class="tkt"></i> +1' };
   const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
   const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];
@@ -433,12 +433,12 @@ function wheelSlices() {
   ];
 }
 // a bag or board card from the wheel, mostly the cheaper ones
-function wheelCard() {
+function wheelCard() { // which card (paid when the Daily Drop can opens)
   const key = Math.random() < 0.5 ? "bag" : "board", cat = CARD_CATS.find(c => c.key === key); // (pick once, then look it up)
   const items = cardItems(cat), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
   let y = Math.random() * w.reduce((t, v) => t + v, 0), it = items[0];
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
-  return { cat: cat.key, it, ...addCards(cat, it, 1) };
+  return { cat: cat.key, id: it.id };
 }
 const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never more than 2; tester mode too)
 const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
@@ -457,12 +457,12 @@ function takeDrop() {
   let x = Math.random() * total, pick = segs[0];
   for (const sg of segs) { x -= sg.w; if (x <= 0) { pick = sg; break; } }
   if (!useFreeSpin()) career.spins--; // a free drop first, then bought ones
-  pick = { ...pick };
-  if (pick.coins) career.coins += pick.coins; else if (pick.caps) career.caps += pick.caps;
-  else if (pick.card) pick.got = wheelCard();
-  else career.cans.push({ id: pick.can, court: topCourt(), instant: true });
+  // A can drops and you open it, like every other prize: the red Daily Drop can holding its one prize, or (now and then)
+  // the prize can itself.
+  if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true });
+  else career.cans.push({ id: "daily", court: topCourt(), instant: true, drop: pick.card ? { card: wheelCard() } : { coins: pick.coins, caps: pick.caps } });
   save(); renderHub();
-  wheelWon(pick);
+  openCanSheet(career.cans.length - 1);
 }
 const WHEEL_STORE = ["wheel.1", "wheel.3", "wheel.5"].map(PID); // extra Daily Drops
 function wheelBuyRow() {

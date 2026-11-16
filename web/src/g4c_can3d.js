@@ -2,7 +2,7 @@
 // ───────────────────────── The can opening, in 3D (and the small can pictures made from the same model)
 // A glossy metal can (lathe-shaped body, printed label, lid and pull tab) spins in front of light rays in its rarity
 // colour. Tap: it shakes harder and harder, the tab snaps up and a burst of fizz sprays out with a flash.
-const RARITY_GLOW = { black: "#9aa4b2", white: "#e8f0ff", bronze: "#ffb070", silver: "#d8e8ff", gold: "#ffd84a", purple: "#c48cff", platinum: "#ffffff", diamond: "#7fe8ff", express: "#ff7ac0" };
+const RARITY_GLOW = { daily: "#ff6a5a", black: "#9aa4b2", white: "#e8f0ff", bronze: "#ffb070", silver: "#d8e8ff", gold: "#ffd84a", purple: "#c48cff", platinum: "#ffffff", diamond: "#7fe8ff", express: "#ff7ac0" };
 const C3 = { r: null, scene: null, cam: null, can: null, tab: null, glow: null, flash: null, fizz: null, sparkle: null, state: "off", t: 0, last: 0, raf: 0 };
 function can3dInit() {
   if (C3.r) return;
@@ -28,7 +28,7 @@ function canLabelTex(can) {
       c.fillStyle = ink; c.textAlign = "center"; c.font = "bold 74px 'Lilita One', Arial Black, sans-serif";
       const words = can.name.split(" "); words.forEach((wd, i) => c.fillText(wd.toUpperCase(), cx, h / 2 - 22 + (i - (words.length - 1) / 2) * 78));
       const rank = can.express ? 0 : CANS.indexOf(can) + 1;
-      c.font = "bold 34px Arial, sans-serif"; c.fillText(can.express ? "⚡ EXPRESS ⚡" : "★".repeat(Math.min(rank, 8)), cx, h / 2 + 108);
+      c.font = "bold 34px Arial, sans-serif"; c.fillText(can.daily ? "🎁 FREE 🎁" : can.express ? "⚡ EXPRESS ⚡" : "★".repeat(Math.min(rank, 8)), cx, h / 2 + 108);
       c.font = "bold 22px Arial, sans-serif"; c.fillText("PRIZE CAN", cx, h / 2 - 118);
     }
   });

@@ -772,7 +772,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794854133 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794854790 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2426,7 +2426,9 @@ function startCan(i) {
   return true;
 }
 const COOLER_SIZE = 4;
-const canById = id => CANS.find(c => c.id === id) || CANS[0];
+// The Daily Drop's own can: red with grey trim. It isn't one of the cans you win; it holds that drop's one prize.
+const DAILY_CAN = { id: "daily", name: "Daily Drop", color: "#c8102e", rim: "#9aa0aa", odds: 0, pulls: 1, coins: [0, 0], cards: [0, 0], bias: 5, life: 0, daily: true };
+const canById = id => (id === "daily" ? DAILY_CAN : CANS.find(c => c.id === id) || CANS[0]);
 // Daily free can: mostly the low tiers.
 const DAILY_ODDS = { black: 70, white: 24, bronze: 5, silver: 1 }; // the daily can opens instantly and leans low
 // boost: your cornholes in the match. Each one tilts the odds toward the rarer cans (capped at 30).
@@ -2506,6 +2508,13 @@ function openCan(index) {
   const slot = career.cans[index]; if (!slot) return null;
   const can = canById(slot.id), fee = VENUES[clamp(slot.court | 0, 0, VENUES.length - 1)].fee;
   career.cans.splice(index, 1);
+  if (slot.drop) { // a Daily Drop can: its one prize was picked when it dropped; it's paid as it opens
+    const d = slot.drop, prizes = [];
+    if (d.coins) { career.coins += d.coins; prizes.push({ kind: "coins", n: d.coins }); }
+    else if (d.caps) { career.caps += d.caps; prizes.push({ kind: "caps", n: d.caps }); }
+    else if (d.card) { const cat = catByKey(d.card.cat), it = cat.list().find(x => x.id === d.card.id); prizes.push({ kind: "cards", cat: cat.key, id: it.id, name: it.name, n: 1, ...addCards(cat, it, 1) }); }
+    save(); return { can, prizes };
+  }
   const prizes = [];
   // Coins: one pile, anywhere in the can's range (often near the bottom).
   const coinRoll = can.coins[0] + (can.coins[1] - can.coins[0]) * Math.random() ** 1.8;
@@ -2885,7 +2894,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794854133`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794854790`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4502,7 +4511,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794854133`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794854790`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4513,7 +4522,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794854133`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794854790`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6424,7 +6433,7 @@ function mistFrame(now) {
 }
 function prizeHTML(p) {
   if (p.kind === "coins") return { pic: `<div class="pic"><i class="coin big"></i></div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `<i class="coin"></i> ${short(p.n)}` };
-  if (p.kind === "caps") return { pic: `<div class="pic"><i class="bcap big"></i></div>`, line: `<b>+${p.n} bottle caps</b><small>Open cans early with these</small>`, chip: `<i class="bcap"></i> ${p.n}` };
+  if (p.kind === "caps") return { pic: `<div class="pic"><i class="bcap big"></i></div>`, line: `<b>+${p.n} bottle cap${p.n === 1 ? "" : "s"}</b><small>Open cans early with these</small>`, chip: `<i class="bcap"></i> ${p.n}` };
   if (p.kind === "life") return { pic: `<div class="pic"><i class="tkt big"></i></div>`, line: `<b>+1 life!</b><small>A bonus ticket</small>`, chip: '<i class="tkt"></i> +1' };
   const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
   const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];
@@ -6507,7 +6516,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794854133";
+const BUILD_ID = "1794854790";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6603,12 +6612,12 @@ function wheelSlices() {
   ];
 }
 // a bag or board card from the wheel, mostly the cheaper ones
-function wheelCard() {
+function wheelCard() { // which card (paid when the Daily Drop can opens)
   const key = Math.random() < 0.5 ? "bag" : "board", cat = CARD_CATS.find(c => c.key === key); // (pick once, then look it up)
   const items = cardItems(cat), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
   let y = Math.random() * w.reduce((t, v) => t + v, 0), it = items[0];
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
-  return { cat: cat.key, it, ...addCards(cat, it, 1) };
+  return { cat: cat.key, id: it.id };
 }
 const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never more than 2; tester mode too)
 const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
@@ -6627,12 +6636,12 @@ function takeDrop() {
   let x = Math.random() * total, pick = segs[0];
   for (const sg of segs) { x -= sg.w; if (x <= 0) { pick = sg; break; } }
   if (!useFreeSpin()) career.spins--; // a free drop first, then bought ones
-  pick = { ...pick };
-  if (pick.coins) career.coins += pick.coins; else if (pick.caps) career.caps += pick.caps;
-  else if (pick.card) pick.got = wheelCard();
-  else career.cans.push({ id: pick.can, court: topCourt(), instant: true });
+  // A can drops and you open it, like every other prize: the red Daily Drop can holding its one prize, or (now and then)
+  // the prize can itself.
+  if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true });
+  else career.cans.push({ id: "daily", court: topCourt(), instant: true, drop: pick.card ? { card: wheelCard() } : { coins: pick.coins, caps: pick.caps } });
   save(); renderHub();
-  wheelWon(pick);
+  openCanSheet(career.cans.length - 1);
 }
 const WHEEL_STORE = ["wheel.1", "wheel.3", "wheel.5"].map(PID); // extra Daily Drops
 function wheelBuyRow() {
@@ -6768,7 +6777,7 @@ function visibleEl(sel) { const el = document.querySelector(sel); if (!el) retur
 // ───────────────────────── The can opening, in 3D (and the small can pictures made from the same model)
 // A glossy metal can (lathe-shaped body, printed label, lid and pull tab) spins in front of light rays in its rarity
 // colour. Tap: it shakes harder and harder, the tab snaps up and a burst of fizz sprays out with a flash.
-const RARITY_GLOW = { black: "#9aa4b2", white: "#e8f0ff", bronze: "#ffb070", silver: "#d8e8ff", gold: "#ffd84a", purple: "#c48cff", platinum: "#ffffff", diamond: "#7fe8ff", express: "#ff7ac0" };
+const RARITY_GLOW = { daily: "#ff6a5a", black: "#9aa4b2", white: "#e8f0ff", bronze: "#ffb070", silver: "#d8e8ff", gold: "#ffd84a", purple: "#c48cff", platinum: "#ffffff", diamond: "#7fe8ff", express: "#ff7ac0" };
 const C3 = { r: null, scene: null, cam: null, can: null, tab: null, glow: null, flash: null, fizz: null, sparkle: null, state: "off", t: 0, last: 0, raf: 0 };
 function can3dInit() {
   if (C3.r) return;
@@ -6794,7 +6803,7 @@ function canLabelTex(can) {
       c.fillStyle = ink; c.textAlign = "center"; c.font = "bold 74px 'Lilita One', Arial Black, sans-serif";
       const words = can.name.split(" "); words.forEach((wd, i) => c.fillText(wd.toUpperCase(), cx, h / 2 - 22 + (i - (words.length - 1) / 2) * 78));
       const rank = can.express ? 0 : CANS.indexOf(can) + 1;
-      c.font = "bold 34px Arial, sans-serif"; c.fillText(can.express ? "⚡ EXPRESS ⚡" : "★".repeat(Math.min(rank, 8)), cx, h / 2 + 108);
+      c.font = "bold 34px Arial, sans-serif"; c.fillText(can.daily ? "🎁 FREE 🎁" : can.express ? "⚡ EXPRESS ⚡" : "★".repeat(Math.min(rank, 8)), cx, h / 2 + 108);
       c.font = "bold 22px Arial, sans-serif"; c.fillText("PRIZE CAN", cx, h / 2 - 118);
     }
   });

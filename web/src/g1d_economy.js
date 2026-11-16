@@ -49,7 +49,9 @@ function startCan(i) {
   return true;
 }
 const COOLER_SIZE = 4;
-const canById = id => CANS.find(c => c.id === id) || CANS[0];
+// The Daily Drop's own can: red with grey trim. It isn't one of the cans you win; it holds that drop's one prize.
+const DAILY_CAN = { id: "daily", name: "Daily Drop", color: "#c8102e", rim: "#9aa0aa", odds: 0, pulls: 1, coins: [0, 0], cards: [0, 0], bias: 5, life: 0, daily: true };
+const canById = id => (id === "daily" ? DAILY_CAN : CANS.find(c => c.id === id) || CANS[0]);
 // Daily free can: mostly the low tiers.
 const DAILY_ODDS = { black: 70, white: 24, bronze: 5, silver: 1 }; // the daily can opens instantly and leans low
 // boost: your cornholes in the match. Each one tilts the odds toward the rarer cans (capped at 30).
@@ -129,6 +131,13 @@ function openCan(index) {
   const slot = career.cans[index]; if (!slot) return null;
   const can = canById(slot.id), fee = VENUES[clamp(slot.court | 0, 0, VENUES.length - 1)].fee;
   career.cans.splice(index, 1);
+  if (slot.drop) { // a Daily Drop can: its one prize was picked when it dropped; it's paid as it opens
+    const d = slot.drop, prizes = [];
+    if (d.coins) { career.coins += d.coins; prizes.push({ kind: "coins", n: d.coins }); }
+    else if (d.caps) { career.caps += d.caps; prizes.push({ kind: "caps", n: d.caps }); }
+    else if (d.card) { const cat = catByKey(d.card.cat), it = cat.list().find(x => x.id === d.card.id); prizes.push({ kind: "cards", cat: cat.key, id: it.id, name: it.name, n: 1, ...addCards(cat, it, 1) }); }
+    save(); return { can, prizes };
+  }
   const prizes = [];
   // Coins: one pile, anywhere in the can's range (often near the bottom).
   const coinRoll = can.coins[0] + (can.coins[1] - can.coins[0]) * Math.random() ** 1.8;
