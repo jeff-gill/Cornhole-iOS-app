@@ -768,7 +768,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794853511 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794854133 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2881,7 +2881,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794853511`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794854133`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4175,10 +4175,11 @@ function drivingRange(g, cg) {
     if (on || r() < 0.3) golfBag(cg, x0 - 2.1, z - 1.9, BAGC[Math.floor(r() * BAGC.length)], r() * 6.28);
     if (!on) continue;
     add(cg, new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.35, 0.8, 10), std(0x2f86ff)), x0 - 1.6, 0.4, z + 1.6);
-    // side-on to the range, set up over a ball: right-handers face one way (the range on their left), and the 1 or 2
-    // left-handers are the last golfers down the line facing the other way, so nobody ends up face to face
+    // side-on to the range, set up over a ball: a right-hander's left shoulder points down the range, a left-hander's right
+    // shoulder. Right-handers face up the line and left-handers down it, so the 1 or 2 left-handers go at the far end of
+    // the line (backs to the right-handers): nobody ends up face to face. Which mats are used is random.
     const order = [...taken].sort((m, n) => m - n), lefty = order.indexOf(k) >= order.length - lefties;
-    golfClub(person(cg, x0 - 0.2, z, lefty ? 0 : Math.PI, 980 + k, "stand"), ["driver", "wood", "hybrid", "iron", "wedge"][(k + taken.length) % 5]);
+    golfClub(person(cg, x0 - 0.2, z, lefty ? Math.PI : 0, 980 + k, "stand"), ["driver", "wood", "hybrid", "iron", "wedge"][(k + taken.length) % 5]);
     add(cg, new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), std(0xffffff)), x0 - 0.2, 0.18, z + (lefty ? -1.0 : 1.0)); // the ball, just in front
   }
   const sign = yd => canvasTex(160, 96, (c, w, h) => { c.fillStyle = "#ffffff"; c.fillRect(0, 0, w, h); c.strokeStyle = "#1f4a2e"; c.lineWidth = 8; c.strokeRect(4, 4, w - 8, h - 8); c.fillStyle = "#1f4a2e"; c.font = "900 54px Arial Black, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(yd), w / 2, h / 2 + 3); });
@@ -4497,7 +4498,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794853511`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794854133`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4508,7 +4509,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794853511`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794854133`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6502,7 +6503,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794853511";
+const BUILD_ID = "1794854133";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));

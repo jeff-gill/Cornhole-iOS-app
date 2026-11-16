@@ -1455,10 +1455,11 @@ function drivingRange(g, cg) {
     if (on || r() < 0.3) golfBag(cg, x0 - 2.1, z - 1.9, BAGC[Math.floor(r() * BAGC.length)], r() * 6.28);
     if (!on) continue;
     add(cg, new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.35, 0.8, 10), std(0x2f86ff)), x0 - 1.6, 0.4, z + 1.6);
-    // side-on to the range, set up over a ball: right-handers face one way (the range on their left), and the 1 or 2
-    // left-handers are the last golfers down the line facing the other way, so nobody ends up face to face
+    // side-on to the range, set up over a ball: a right-hander's left shoulder points down the range, a left-hander's right
+    // shoulder. Right-handers face up the line and left-handers down it, so the 1 or 2 left-handers go at the far end of
+    // the line (backs to the right-handers): nobody ends up face to face. Which mats are used is random.
     const order = [...taken].sort((m, n) => m - n), lefty = order.indexOf(k) >= order.length - lefties;
-    golfClub(person(cg, x0 - 0.2, z, lefty ? 0 : Math.PI, 980 + k, "stand"), ["driver", "wood", "hybrid", "iron", "wedge"][(k + taken.length) % 5]);
+    golfClub(person(cg, x0 - 0.2, z, lefty ? Math.PI : 0, 980 + k, "stand"), ["driver", "wood", "hybrid", "iron", "wedge"][(k + taken.length) % 5]);
     add(cg, new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), std(0xffffff)), x0 - 0.2, 0.18, z + (lefty ? -1.0 : 1.0)); // the ball, just in front
   }
   const sign = yd => canvasTex(160, 96, (c, w, h) => { c.fillStyle = "#ffffff"; c.fillRect(0, 0, w, h); c.strokeStyle = "#1f4a2e"; c.lineWidth = 8; c.strokeRect(4, 4, w - 8, h - 8); c.fillStyle = "#1f4a2e"; c.font = "900 54px Arial Black, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(yd), w / 2, h / 2 + 3); });
