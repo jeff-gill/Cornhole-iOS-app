@@ -619,7 +619,7 @@ function storeHTML() {
   for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Lives and cans</div>`);
   for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
-    const ic = it.kind === "can" ? `<i class="minican" style="width:30px;height:46px;background:linear-gradient(90deg, ${canById(it.can).color}, ${canById(it.can).rim} 40%, ${canById(it.can).color})"></i>` : it.kind === "lives" ? `<i class="tkt" style="width:46px;height:34px"></i>` : it.icon;
+    const ic = it.kind === "can" ? canPic(it.can, "store") : it.kind === "lives" ? `<i class="tkt" style="width:46px;height:34px"></i>` : it.icon;
     parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
   }
   parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);

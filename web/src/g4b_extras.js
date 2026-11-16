@@ -35,7 +35,7 @@ function renderHubExtras() {
       b.className = `cslot full ${st}`;
       b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "locked, tap to unlock"}`);
       // the can on the left with its name stacked and centred beside it; what it's doing in a bar along the whole bottom
-      b.innerHTML = `<i class="minican" style="background:linear-gradient(90deg, ${k.color}, ${k.rim} 40%, ${k.color})"></i><span class="cinfo"><span class="cname">${k.name.split(" ").join("<br>")}</span>${st === "idle" ? `<span class="cdur">${durText(openMs(c.id))}</span>` : ""}</span>
+      b.innerHTML = `${canPic(c.id)}<span class="cinfo"><span class="cname">${k.name.split(" ").join("<br>")}</span>${st === "idle" ? `<span class="cdur">${durText(openMs(c.id))}</span>` : ""}</span>
         <span class="cbar">${st === "ready" ? "OPEN!" : st === "ticking" ? `⏱ ${timeText(canLeft(c))}` : "🔒 UNLOCK"}</span>`;
       b.onclick = () => canTapped(i);
     } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
@@ -145,7 +145,7 @@ function showChoice(html, yes, onYes, no = "CANCEL", onNo = null, yesClass = "gr
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
   return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Open one at a time: the better the can, the longer it takes, and Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
-    <div class="cangrid">${CANS.map(c => `<div><i class="minican" style="background:linear-gradient(90deg, ${c.color}, ${c.rim} 40%, ${c.color})"></i><span>${c.name}</span></div>`).join("")}</div>`;
+    <div class="cangrid">${CANS.map(c => `<div>${canPic(c.id)}<span>${c.name}</span></div>`).join("")}</div>`;
 }
 
 
@@ -447,7 +447,7 @@ function renderDaily() { // always there: bobbing when it's ready, still (with a
   const n = giftState().n;
   $("dailySub").innerHTML = dailyFree() ? (n > 1 ? "2 ready to open!" : "Ready to open!") : ready ? `${career.spins} extra left` : `Next in ${timeText(giftNextIn())}`;
 }
-const wheelPrizeHTML = p => p.can ? `<i class="minican" style="background:linear-gradient(90deg, ${canById(p.can).color}, ${canById(p.can).rim} 40%, ${canById(p.can).color})"></i>`
+const wheelPrizeHTML = p => p.can ? canPic(p.can)
   : p.card ? `<span style="font-size:18px">🃏</span><b>card</b>` : p.caps ? `<i class="bcap"></i><b>${p.caps}</b>` : `<i class="coin"></i><b>${short(p.coins)}</b>`;
 let wheelSpin = null; // (kept for the purchase handler: there's no spinning any more)
 // Tapping Daily Drop: if a drop is ready (a free one every 4 hours, up to 2 waiting, or a bought one), the prize comes
@@ -499,7 +499,7 @@ function wheelWon(p) {
     $("bbCollect").onclick = () => { $("bbReveal").hidden = true; renderHub(); };
     return;
   }
-  card.innerHTML = `<div class="pic">${ck ? `<div class="can bbcan" style="background:linear-gradient(90deg, ${ck.color}, ${ck.rim} 35%, ${ck.color} 70%);--rim:${ck.rim}"><div class="cantop"><i class="tab"></i></div><div class="canlabel" style="color:${ck.id === "white" || ck.id === "platinum" ? "#1c2a44" : "#fff"}">${ck.name.replace(" ", "<br>")}</div></div>` : p.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`}</div>
+  card.innerHTML = `<div class="pic">${ck ? canPic(ck.id, "big") : p.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`}</div>
     <b>${ck ? ck.name : p.caps ? `${p.caps} cap${p.caps > 1 ? "s" : ""}` : `${short(p.coins)} coins`}</b><small>${ck ? "Open it now!" : giftState().n ? "Another Daily Drop is waiting!" : `Next free one in ${timeText(giftNextIn())}`}</small>`;
   $("bbRevFoot").innerHTML = `<button class="btn green go" id="bbCollect">${ck ? "OPEN IT!" : "COLLECT"}</button>`;
   $("bbReveal").hidden = false; requestAnimationFrame(() => card.classList.add("show"));

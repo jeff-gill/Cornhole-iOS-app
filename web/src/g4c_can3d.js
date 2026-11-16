@@ -1,5 +1,5 @@
 
-// ───────────────────────── The can opening, in 3D
+// ───────────────────────── The can opening, in 3D (and the small can pictures made from the same model)
 // A glossy metal can (lathe-shaped body, printed label, lid and pull tab) spins in front of light rays in its rarity
 // colour. Tap: it shakes harder and harder, the tab snaps up and a burst of fizz sprays out with a flash.
 const RARITY_GLOW = { black: "#9aa4b2", white: "#e8f0ff", bronze: "#ffb070", silver: "#d8e8ff", gold: "#ffd84a", purple: "#c48cff", platinum: "#ffffff", diamond: "#7fe8ff", express: "#ff7ac0" };
@@ -33,9 +33,8 @@ function canLabelTex(can) {
     }
   });
 }
-function can3dBuild(can) {
-  can3dInit();
-  if (C3.can) { C3.scene.remove(C3.can); C3.can.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
+// The can itself (body, printed label, lid and pull tab): used by the opening and by the small can pictures.
+function makeCanModel(can) {
   const g = new THREE.Group();
   const prof = [[0, 0], [0.72, 0], [0.9, 0.05], [0.98, 0.22], [1, 0.4], [1, 3.05], [0.9, 3.38], [0.84, 3.5], [0.86, 3.58], [0.8, 3.62], [0.02, 3.56]].map(([x, y]) => new THREE.Vector2(x, y));
   const metal = new THREE.MeshPhysicalMaterial({ color: can.rim, metalness: 0.95, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.08, transparent: true });
@@ -50,12 +49,18 @@ function can3dBuild(can) {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.04, 10, 24), tabMat); ring.rotation.x = Math.PI / 2; ring.position.z = 0.22; tab.add(ring);
   const plate = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.03, 0.26), tabMat); plate.position.z = 0.06; tab.add(plate);
   g.add(tab);
+  return { g, tab, mats: [metal, label.material, lid.material, tabMat] };
+}
+function can3dBuild(can) {
+  can3dInit();
+  if (C3.can) { C3.scene.remove(C3.can); C3.can.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
+  const { g, tab, mats } = makeCanModel(can);
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: RARITY_GLOW[can.id] || "#fff", blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.55 }));
   glow.position.set(0, 1.8, -1.2); glow.scale.setScalar(7.5); C3.scene.add(glow);
   if (C3.glow) C3.scene.remove(C3.glow);
   g.rotation.x = 0.08;
   C3.scene.add(g);
-  Object.assign(C3, { can: g, tab, glow, mats: [metal, label.material, lid.material, tabMat], state: "idle", t: 0, shake: 0, popT: 0, kind: can });
+  Object.assign(C3, { can: g, tab, glow, mats, state: "idle", t: 0, shake: 0, popT: 0, kind: can });
   $("canRays").style.setProperty("--ray", RARITY_GLOW[can.id] || "#fff");
   can3dStart();
 }
@@ -147,3 +152,28 @@ function can3dFrame(now) {
   C3.raf = requestAnimationFrame(can3dFrame);
 }
 window.addEventListener("resize", () => { if (C3.r) can3dResize(); });
+
+// Small can pictures: the same 3D can, rendered once per kind into an image, so every small can (cooler, prize screens,
+// store, the can list) looks exactly like the big one being opened. Redrawn once the label font has loaded.
+const CAN_PIC = { r: null, scene: null, cam: null, cache: new Map() };
+function canSnap(id) {
+  if (CAN_PIC.cache.has(id)) return CAN_PIC.cache.get(id);
+  if (!CAN_PIC.r) {
+    const cv = document.createElement("canvas"); cv.width = 180; cv.height = 290;
+    const r = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, preserveDrawingBuffer: true });
+    r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.15;
+    const scene = new THREE.Scene(), pm = new THREE.PMREMGenerator(r);
+    scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+    const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(3, 4, 5); scene.add(key);
+    const rimL = new THREE.DirectionalLight(0x9fd0ff, 1.4); rimL.position.set(-4, 2, -3); scene.add(rimL);
+    const cam = new THREE.PerspectiveCamera(26, cv.width / cv.height, 0.1, 100); cam.position.set(0, 2.6, 11); cam.lookAt(0, 1.78, 0);
+    Object.assign(CAN_PIC, { r, scene, cam });
+  }
+  const { g } = makeCanModel(canById(id)); g.rotation.x = 0.08; g.rotation.y = -Math.PI / 2; // label facing straight out
+  CAN_PIC.scene.add(g); CAN_PIC.r.render(CAN_PIC.scene, CAN_PIC.cam);
+  const url = CAN_PIC.r.domElement.toDataURL("image/png");
+  CAN_PIC.scene.remove(g); g.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+  CAN_PIC.cache.set(id, url); return url;
+}
+const canPic = (id, cls = "") => `<img class="canpic ${cls}" src="${canSnap(id)}" alt="${esc(canById(id).name)}">`;
+document.fonts?.ready.then(() => { CAN_PIC.cache.clear(); if (typeof renderHub === "function" && !$("hub").hidden) renderHub(); });

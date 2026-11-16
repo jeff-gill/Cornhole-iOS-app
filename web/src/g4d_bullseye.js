@@ -414,7 +414,7 @@ function renderBBResult() {
   const A = BB.active, R = A.result, can = R.got.find(g => g.can && !g.later), won = typeof R.hit === "number", P = won ? BB_PRIZES[A.mode][R.hit] : null;
   const g0 = R.got[0], left = 5 - bbWon(A.mode).length, level = A.mode === "hard" ? "Harder" : "Easier";
   const ck = g0 && g0.can ? canById(g0.can) : null; // a can prize shows the can itself, like the can opening does
-  const pic = !g0 ? "💨" : ck ? `<div class="can bbcan" style="background:linear-gradient(90deg, ${ck.color}, ${ck.rim} 35%, ${ck.color} 70%);--rim:${ck.rim}"><div class="cantop"><i class="tab"></i></div><div class="canlabel" style="color:${ck.id === "white" || ck.id === "platinum" ? "#1c2a44" : "#fff"}">${ck.name.replace(" ", "<br>")}</div></div>` : g0.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`;
+  const pic = !g0 ? "💨" : ck ? canPic(ck.id, "big") : g0.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`;
   const what = !g0 ? (R.hit === "time" ? "The throw ran out of time" : "Nothing this time") : g0.can ? canById(g0.can).name : g0.caps ? `${g0.caps} caps` : `${short(g0.coins)} coins`;
   const extra = R.got.slice(1).map(g => g.bag ? `<small class="new">⛳ + the exclusive ${esc(bagById(g.bag).name)} bag!</small>` : g.can ? `<small class="new">+ a ${esc(canById(g.can).name)} in your cooler</small>` : "").join("");
   $("bbRays").style.setProperty("--ray", won ? P.c : "#8899aa"); $("bbRays").hidden = !won;
