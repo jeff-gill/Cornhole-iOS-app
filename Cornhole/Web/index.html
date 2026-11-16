@@ -772,7 +772,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794835406 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794835979 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2885,7 +2885,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794835406`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794835979`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4160,6 +4160,38 @@ function pond(g, x, z, w, d) {
   const jet = new THREE.Mesh(new THREE.ConeGeometry(1.2, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false }));
   jet.position.set(x, 4.5, z); g.add(jet);
 }
+// A driving range beside the Golf Club's lane (in court coords: x across, -z down the lane): a row of golfers on mats
+// hitting away from the lane, the range's mown stripes, yardage signs dotted at different distances, target greens
+// with flags, balls everywhere, and trees at the far end. g is the venue group (for the async tree check), cg where to add.
+function drivingRange(g, cg) {
+  const x0 = 22, YD = 3, r = rng(2027); // the tee line, feet per yard
+  const turf = new THREE.Mesh(new THREE.PlaneGeometry(700, 170), lam(0x6cc451)); turf.rotation.x = -Math.PI / 2; turf.position.set(x0 + 345, 0.02, -20); cg.add(turf);
+  for (let k = 0; k < 14; k++) { const st = new THREE.Mesh(new THREE.PlaneGeometry(25, 170), lam(0x7ad35d)); st.rotation.x = -Math.PI / 2; st.position.set(x0 + 20 + k * 50, 0.03, -20); cg.add(st); } // mowing stripes
+  const tee = new THREE.Mesh(new THREE.PlaneGeometry(10, 74), lam(0x58a843)); tee.rotation.x = -Math.PI / 2; tee.position.set(x0 - 1, 0.04, -17); cg.add(tee);
+  for (let k = 0; k < 9; k++) { // golfers on their mats, spread along the tee line, each with a bucket of balls
+    const z = 16 - k * 8 + (r() - 0.5) * 1.5;
+    add(cg, box(3, 0.08, 5, lam(0x2f6b3a)), x0, 0.06, z, false);
+    add(cg, new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.35, 0.8, 10), std(0x2f86ff)), x0 - 1.6, 0.4, z + 1.6);
+    putter(person(cg, x0 - 0.6, z, -Math.PI / 2, 980 + k, "stand")); // facing down the range
+  }
+  const sign = yd => canvasTex(160, 96, (c, w, h) => { c.fillStyle = "#ffffff"; c.fillRect(0, 0, w, h); c.strokeStyle = "#1f4a2e"; c.lineWidth = 8; c.strokeRect(4, 4, w - 8, h - 8); c.fillStyle = "#1f4a2e"; c.font = "900 54px Arial Black, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(String(yd), w / 2, h / 2 + 3); });
+  for (const [yd, z] of [[50, -2], [75, -48], [100, 18], [125, -30], [150, 6], [175, -60], [200, -18], [250, 10]]) { // small white yardage signs, dotted about
+    const x = x0 + yd * YD, post = std(0xdddddd);
+    add(cg, box(0.15, 2.4, 0.15, post), x, 1.2, z);
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.6), new THREE.MeshBasicMaterial({ map: sign(yd), side: THREE.DoubleSide })); s.position.set(x, 2.6, z); s.rotation.y = -Math.PI / 2; cg.add(s);
+  }
+  for (const [yd, z, rad, col] of [[100, -20, 14, 0xff3b30], [150, 24, 12, 0xffc93a], [200, -40, 16, 0x2f86ff]]) { // target greens with flags
+    const x = x0 + yd * YD; puttingGreen(cg, x, z, rad);
+    add(cg, new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 7, 6), std(0xffffff)), x, 3.5, z);
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.4), new THREE.MeshLambertMaterial({ color: col, side: THREE.DoubleSide })); flag.position.set(x, 6.3, z + 1.1); flag.rotation.y = Math.PI / 2; cg.add(flag);
+  }
+  const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(0.12, 6, 4), new THREE.MeshLambertMaterial({ color: 0xffffff }), 260), m4 = new THREE.Matrix4();
+  for (let i = 0; i < 260; i++) { const d = 30 + Math.pow(r(), 0.8) * 620; m4.makeTranslation(x0 + d, 0.12, -20 + (r() - 0.5) * 150); balls.setMatrixAt(i, m4); }
+  cg.add(balls);
+  for (const sx of [-1, 1]) for (let x = x0 + 20; x < x0 + 700; x += 40) add(cg, box(0.3, 14, 0.3, std(0x3a3f46)), x, 7, -20 + sx * 86); // net poles down both sides
+  for (let k = 0; k < 24; k++) { const x = x0 + 720 + r() * 60, z = -110 + k * 9 + r() * 4, kind = r() < 0.5 ? "pine" : "tree_oak"; // trees at the far end
+    if (kind === "pine") pine(cg, x, z, 2 + r(), false); else loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.scale.setScalar(1.6); cg.add(t); }); }
+}
 function putter(p) { // a putter in a golfer's hand, head on the grass
   const s = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.2, 5), std(0xbfc4cc, { metalness: 0.7 })); s.position.set(0.35, 1.6, 0.6); s.rotation.x = 0.25; p.add(s);
   add(p, box(0.25, 0.2, 0.8, std(0x333333)), 0.35, 0.1, 1.05, false);
@@ -4427,7 +4459,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794835406`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794835979`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4438,7 +4470,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794835406`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794835979`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -5024,8 +5056,11 @@ function buildVenue(id) {
     snowman(g, -9, 12, Math.PI + 0.4);
     snowfall(g, 1300);
   } else if (id === "bonfire") { // (the id is kept from the old court so saves carry over): the Golf Club
-    // The 18th at Oak Hollow Club late in the afternoon: the clubhouse and its patio, the putting green beside the lane,
-    // bunkers, a pond with a fountain, carts parked by the clubhouse, and fairways lined with trees.
+    // The 18th at Oak Hollow Club: the clubhouse and its patio, the putting green, bunkers, a pond with a fountain, carts
+    // parked by the clubhouse, and fairways lined with trees. The course is laid out below as if the lane ran toward the
+    // clubhouse, then the whole thing is turned 90 degrees round the court (end of this branch), so the clubhouse is off
+    // to one side; the driving range fills the other side, so the lane runs between the range and the clubhouse.
+    const range = (x, z) => x > -60 && x < 75 && z > 0; // (course coords) where the driving range ends up: kept clear
     stylizedLawn(g, 900, 7);
     clubhouse(g, 0, -110);
     puttingGreen(g, 30, -40, 14);
@@ -5040,24 +5075,31 @@ function buildVenue(id) {
     // golfers: a few on the putting green, some by the carts, some watching the game
     const pr = rng(19);
     for (const [x, z, f] of [[26, -36, 2.6], [36, -44, -2.2], [22, -48, 0.6]]) putter(person(g, x, z, f, 900 + Math.round(x + z), "stand"));
-    for (const [x, z] of [[-26, -72], [-12, -73], [-20, -84], [14, -14], [16, 6], [-16, -6], [-18, 14]]) person(g, x, z, Math.atan2(-x, -15 - z) + (pr() - 0.5) * 0.5, 950 + Math.round(x * 3 + z), pr() < 0.2 ? "cheer" : "stand");
+    for (const [x, z] of [[-26, -72], [-12, -73], [-20, -84]]) person(g, x, z, Math.atan2(-x, -15 - z) + (pr() - 0.5) * 0.5, 950 + Math.round(x * 3 + z), pr() < 0.2 ? "cheer" : "stand");
     // trees down both sides and behind the clubhouse
     const tk = ["tree_oak", "tree_maple", "tree_oak", "tree_pine"], spots = [];
     for (let z = 40; z > -320; z -= 14 + pr() * 8) { spots.push([-110 - pr() * 30, z]); spots.push([70 + pr() * 30, z]); }
     for (let x = -100; x <= 100; x += 16 + pr() * 10) spots.push([x, -160 - pr() * 20]);
-    for (const [x, z] of spots) { const kind = tk[Math.floor(pr() * tk.length)], rot = pr() * 6.28, sc = 1.4 + pr() * 0.8; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); }); }
+    for (const [x, z] of spots.filter(([x, z]) => !range(x, z))) { const kind = tk[Math.floor(pr() * tk.length)], rot = pr() * 6.28, sc = 1.4 + pr() * 0.8; loadBlender(kind).then(src => { if (!src || venueGroup !== g) return; const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t); }); }
     // the rest of the course, all the way round: fairways, more greens and flags, groups out playing, trees everywhere
     const fairway = lam(0x74cc56);
-    for (const [x, z, w, d, rz] of [[-200, -40, 60, 360, 0.2], [190, -60, 60, 360, -0.15], [0, 200, 320, 60, 0.05], [-60, -300, 300, 60, -0.1], [200, 180, 60, 220, 0.3]]) {
+    for (const [x, z, w, d, rz] of [[-200, -40, 60, 360, 0.2], [190, -60, 60, 360, -0.15], [-60, -300, 300, 60, -0.1], [200, 180, 60, 220, 0.3]]) {
       const f = new THREE.Mesh(new THREE.PlaneGeometry(w, d), fairway); f.rotation.x = -Math.PI / 2; f.rotation.z = rz; f.position.set(x, 0.03, z); g.add(f);
     }
     for (const [x, z, r] of [[-210, -180, 12], [200, -200, 11], [-90, 210, 12], [120, 210, 10], [-230, 120, 11], [240, 60, 12]]) puttingGreen(g, x, z, r);
-    for (const [x, z, s2] of [[-200, -150, 3], [-190, 60, 5], [190, -170, 7], [210, 20, 9], [-60, 190, 11], [90, 180, 13], [-230, 150, 15], [250, 100, 17]]) golfGroup(g, x, z, (s2 % 4) * 1.4, s2);
-    bunker(g, -180, -120, 10, 5, 0.3); bunker(g, 170, -150, 9, 4, -0.4); bunker(g, -40, 180, 12, 5, 0.1); bunker(g, 230, 90, 8, 4, 0.6);
+    for (const [x, z, s2] of [[-200, -150, 3], [-190, 60, 5], [190, -170, 7], [210, 20, 9], [-90, 190, 11], [110, 180, 13], [-230, 150, 15], [250, 100, 17]]) golfGroup(g, x, z, (s2 % 4) * 1.4, s2);
+    bunker(g, -180, -120, 10, 5, 0.3); bunker(g, 170, -150, 9, 4, -0.4); bunker(g, -100, 180, 12, 5, 0.1); bunker(g, 230, 90, 8, 4, 0.6);
     // scattered evergreen and leafy trees in every direction, then a fuller ring further out so the view always ends in green
-    const keepClear = (x, z) => (Math.abs(x) < 70 && z > -140 && z < 70) || (Math.abs(x) < 64 && z < -60 && z > -140);
+    const keepClear = (x, z) => (Math.abs(x) < 70 && z > -140 && z < 70) || (Math.abs(x) < 64 && z < -60 && z > -140) || range(x, z);
     treeRing(g, 61, 90, 260, 120, ["tree_oak", "tree_maple", "pine", "tree_oak", "pine"], keepClear);
-    treeRing(g, 67, 300, 380, 90, ["tree_oak", "tree_maple", "pine", "pine"]);
+    treeRing(g, 67, 300, 380, 90, ["tree_oak", "tree_maple", "pine", "pine"], range);
+    // Turn the course a quarter turn round the court (the lane stays where it is): the clubhouse ends up to your left.
+    { const P = new THREE.Vector3(0, 0, -15), a = Math.PI / 2; g.rotation.y = a; g.position.copy(P).sub(P.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), a)); }
+    // Everything from here on is placed in court coords (a group that undoes the turn): the driving range on your right,
+    // running away from the lane, and a few people watching the game from beside it.
+    const cg = new THREE.Group(); cg.rotation.y = -g.rotation.y; cg.position.copy(g.position).applyAxisAngle(new THREE.Vector3(0, 1, 0), -g.rotation.y).negate(); g.add(cg);
+    drivingRange(g, cg);
+    for (const [x, z, f, sd] of [[-13, -8, 1.3, 961], [-14, -22, 1.6, 962], [-12, 4, 1.0, 963], [14, -2, -1.4, 964]]) person(cg, x, z, f, sd, "stand");
     loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
       if (!sky || venueId !== "bonfire") return;
       scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
@@ -6422,7 +6464,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794835406";
+const BUILD_ID = "1794835979";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
