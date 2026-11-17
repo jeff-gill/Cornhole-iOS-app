@@ -383,6 +383,15 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .splashbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #fff1a8); animation: splashload 2.6s ease-out forwards; }
 @keyframes splashload { to { width: 100%; } }
 .splashtag { font-weight: 900; color: var(--ink-dim); letter-spacing: .06em; }
+.streaknote { margin-top: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255,201,58,.14); border: 2px solid rgba(255,201,58,.5); font-size: 13px; font-weight: 900; line-height: 1.35; color: #fff; text-align: center; }
+.streaknote b { color: var(--gold); }
+#prizeGrid .streaknote { max-width: 320px; margin: 10px auto 0; }
+.unlockbig { font-size: 54px; line-height: 1; text-align: center; }
+.unlocklist { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.unlocklist div { display: grid; justify-items: center; gap: 4px; padding: 10px 12px; border-radius: 16px; border: 2px solid var(--gold); background: rgba(255,201,58,.14); min-width: 110px; }
+.unlocklist b { font-family: var(--font-display); font-weight: 400; font-size: 18px; }
+.unlocklist small { color: var(--ink-dim); font-weight: 900; }
+.unlockpic { width: 72px; height: 72px; font-size: 52px; line-height: 72px; text-align: center; }
 .cooler { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
 .cslot { height: 80px; min-width: 0; border-radius: 12px; border: 2px dashed rgba(255,255,255,.35); background: rgba(6,12,24,.45); display: flex; align-items: center; justify-content: center; padding: 0 4px; color: #fff; font: 900 12px/1.1 Nunito, system-ui, sans-serif; overflow: hidden; }
 .cslot.full { border: 2px solid rgba(255,255,255,.85); background: rgba(10,20,38,.7); display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr auto; align-items: center; column-gap: 3px; padding: 6px 4px 0; }
@@ -772,7 +781,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794953896 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794954056 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2470,11 +2479,18 @@ const cardKey = (cat, it) => `${cat.key}:${it.id}`;
 const catByKey = k => CARD_CATS.find(c => c.key === k);
 // A duplicate card (the item is already yours) pays a little: 0.1% of the item's price.
 const dupCoins = it => Math.max(1, Math.round(it.price * 0.001));
+// Cards only come for the part of each list that matches how far you've got: the cheapest 30% at the first court,
+// growing with every court you open, the whole list from the last one. So nobody on an early court collects toward
+// the best items. (Items stay in their list order, cheapest first, so this also keeps the costliest out of reach.)
+function cardReach(items) {
+  const k = Math.min(1, 0.3 + 0.7 * topCourt() / (VENUES.length - 1));
+  return items.slice(0, Math.max(1, Math.ceil(items.length * k)));
+}
 // Pick an item for a card stack: cheap items are common; a can's bias decides how often rare ones show up.
 function pickCardItem(bias) {
   let x = Math.random() * CARD_CATS.reduce((t, c) => t + c.weight, 0), cat = CARD_CATS[0];
   for (const c of CARD_CATS) { x -= c.weight; if (x <= 0) { cat = c; break; } }
-  const items = cardItems(cat), w = items.map((_, i) => Math.exp(-bias * i / Math.max(1, items.length - 1)));
+  const items = cardReach(cardItems(cat)), w = items.map((_, i) => Math.exp(-bias * i / Math.max(1, items.length - 1)));
   let y = Math.random() * w.reduce((t, v) => t + v, 0);
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) return { cat, it: items[i] }; }
   return { cat, it: items[0] };
@@ -2514,7 +2530,7 @@ function openCan(index) {
     if (d.coins) { career.coins += d.coins; prizes.push({ kind: "coins", n: d.coins }); }
     else if (d.caps) { career.caps += d.caps; prizes.push({ kind: "caps", n: d.caps }); }
     else if (d.card) { const cat = catByKey(d.card.cat), it = cat.list().find(x => x.id === d.card.id); prizes.push({ kind: "cards", cat: cat.key, id: it.id, name: it.name, n: 1, ...addCards(cat, it, 1) }); }
-    save(); return { can, prizes };
+    save(); return { can, prizes, streak: slot.streak };
   }
   const prizes = [];
   // Coins: one pile, anywhere in the can's range (often near the bottom).
@@ -2535,7 +2551,7 @@ function openCan(index) {
     prizes.push({ kind: "cards", cat: cat.key, id: it.id, name: it.name, n, ...res });
   }
   save();
-  return { can, prizes };
+  return { can, prizes, streak: slot.streak };
 }
 
 // ── No more lives (tickets). Matches are limited only by coins; the Free Gift (below) keeps everyone able to play the
@@ -2900,7 +2916,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794953896`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794954056`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4517,7 +4533,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794953896`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794954056`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4528,7 +4544,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794953896`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794954056`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6643,7 +6659,8 @@ function showPrizeSummary() {
     }
     rowOf(i).appendChild(t);
   });
-  grid.hidden = false; $("canDone").hidden = false; $("canTitle").textContent = `${R.prizes.length} prizes!`;
+  grid.hidden = false; $("canDone").hidden = false; $("canTitle").textContent = `${R.prizes.length} prize${R.prizes.length === 1 ? "" : "s"}!`;
+  if (R.streak) grid.insertAdjacentHTML("beforeend", streakNote(R));
   sfx.win(); haptic("success");
 }
 $("canSkip").onclick = e => { e.stopPropagation(); showPrizeSummary(); };
@@ -6653,7 +6670,7 @@ function nextPrize() {
   if (R.shown >= R.prizes.length) { showPrizeSummary(); return; }
   const p = R.prizes[R.shown++], h = prizeHTML(p), el = $("prize");
   el.className = "prize"; void el.offsetWidth;
-  el.innerHTML = h.pic + h.line; el.className = "prize show";
+  el.innerHTML = h.pic + h.line + streakNote(R); el.className = "prize show";
   const cv = el.querySelector("canvas");
   if (cv) {
     const ctx = cv.getContext("2d");
@@ -6665,8 +6682,33 @@ function nextPrize() {
   const more = R.shown < R.prizes.length;
   $("canNav").hidden = false; $("canSkip").hidden = !more; $("canNext").textContent = more ? `NEXT · ${R.prizes.length - R.shown} LEFT` : "FINISH";
 }
+// A Daily Drop's streak, under its prize: how many in a row so far, and what 4 in a row gets you.
+function streakNote(R) {
+  if (!R.streak) return "";
+  const st = R.streak, dots = [1, 2, 3, 4].map(k => k <= st ? "🔥" : "⚪").join("");
+  return `<div class="streaknote">${dots}<br>${st >= 4 ? "<b>4 in a row!</b> A bonus can is next." : `<b>${st} of 4 in a row.</b> Open 4 Daily Drops in a row for a bonus can. Letting 2 pile up starts it over.`}</div>`;
+}
+// After the prizes: a pop-up for every item your cards just unlocked.
+function showUnlocks(prizes) {
+  const got = prizes.filter(p => p.kind === "cards" && p.unlocked);
+  if (!got.length) return false;
+  const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" };
+  const pic = p => {
+    if (p.cat === "trail" || p.cat === "fx") return `<div class="unlockpic">${((p.cat === "trail" ? TRAILS : EFFECTS).find(t => t.id === p.id) || {}).icon || "🎁"}</div>`;
+    const c = document.createElement("canvas"); c.width = 96; c.height = 96; const ctx = c.getContext("2d");
+    if (p.cat === "bag") paintBag(ctx, 96, 96, bagById(p.id));
+    else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(p.id)); ctx.drawImage(tmp, 24, 0, 48, 96); }
+    return `<img class="unlockpic" src="${c.toDataURL()}" alt="">`;
+  };
+  showInfo(`<div class="unlockbig">🎉</div><h2>Unlocked!</h2><div class="muted">You collected all the cards, so ${got.length === 1 ? "this is" : "these are"} yours now. Pick ${got.length === 1 ? "it" : "them"} in the Shop.</div>
+    <div class="unlocklist">${got.map(p => `<div>${pic(p)}<b>${esc(p.name)}</b><small>${kind[p.cat]}</small></div>`).join("")}</div>`);
+  sfx.win(); haptic("success");
+  return true;
+}
 $("canDone").onclick = () => {
+  const prizes = canRun ? canRun.prizes : [];
   $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub();
+  showUnlocks(prizes);
   const i = career.cans.findIndex(c => c.bonus); // a Daily Drop streak bonus waiting: open it next
   if (i >= 0) { delete career.cans[i].bonus; save(); const t = document.createElement("div"); t.className = "toast"; t.textContent = "4 in a row! Here's a bonus can 🎉"; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); setTimeout(() => openCanSheet(i), 700); }
 };
@@ -6698,7 +6740,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794953896";
+const BUILD_ID = "1794954056";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -6796,7 +6838,7 @@ function wheelSlices() {
 // a bag or board card from the wheel, mostly the cheaper ones
 function wheelCard() { // which card (paid when the Daily Drop can opens)
   const key = Math.random() < 0.5 ? "bag" : "board", cat = CARD_CATS.find(c => c.key === key); // (pick once, then look it up)
-  const items = cardItems(cat), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
+  const items = cardReach(cardItems(cat)), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
   let y = Math.random() * w.reduce((t, v) => t + v, 0), it = items[0];
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
   return { cat: cat.key, id: it.id };
@@ -6820,11 +6862,13 @@ function takeDrop() {
   if (!useFreeSpin()) career.spins--; // a free drop first, then bought ones
   // A can drops and you open it, like every other prize: the red Daily Drop can holding its one prize, or (now and then)
   // the prize can itself.
-  if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true });
-  else career.cans.push({ id: "daily", court: topCourt(), instant: true, drop: pick.card ? { card: wheelCard() } : { coins: pick.coins, caps: pick.caps } });
-  // Streak: every 4th Daily Drop in a row also drops a bonus can (opened right after); letting 2 pile up resets it
+  // Streak: every 4th Daily Drop in a row also drops a bonus can (opened right after); letting 2 pile up resets it.
+  // The drop remembers where the streak stands, so its prize reveal can say so.
   const g = giftState(); g.streak = (g.streak || 0) + 1;
-  if (g.streak >= 4) { g.streak = 0; career.cans.push({ id: rollCan({ bronze: 55, silver: 35, gold: 10 }), court: topCourt(), instant: true, bonus: true }); }
+  const bonus = g.streak >= 4, streak = bonus ? 4 : g.streak;
+  if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true, streak });
+  else career.cans.push({ id: "daily", court: topCourt(), instant: true, streak, drop: pick.card ? { card: wheelCard() } : { coins: pick.coins, caps: pick.caps } });
+  if (bonus) { g.streak = 0; career.cans.push({ id: rollCan({ bronze: 55, silver: 35, gold: 10 }), court: topCourt(), instant: true, bonus: true }); }
   save(); renderHub();
   openCanSheet(career.cans.findIndex(c => c.instant && !c.bonus && (c.id === "daily" || c.id === pick.can)));
 }
@@ -8557,7 +8601,7 @@ postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own
 setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
 
 requestAnimationFrame(frame);
-window.__cornhole = { setGlow: v => { glowOn = v; }, ui, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };
+window.__cornhole = { setGlow: v => { glowOn = v; }, ui, showUnlocks, takeDrop, openCanSheet, BAGS, TRAILS, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };
 </script>
 
 </body>

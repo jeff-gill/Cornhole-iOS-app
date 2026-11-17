@@ -287,7 +287,8 @@ function showPrizeSummary() {
     }
     rowOf(i).appendChild(t);
   });
-  grid.hidden = false; $("canDone").hidden = false; $("canTitle").textContent = `${R.prizes.length} prizes!`;
+  grid.hidden = false; $("canDone").hidden = false; $("canTitle").textContent = `${R.prizes.length} prize${R.prizes.length === 1 ? "" : "s"}!`;
+  if (R.streak) grid.insertAdjacentHTML("beforeend", streakNote(R));
   sfx.win(); haptic("success");
 }
 $("canSkip").onclick = e => { e.stopPropagation(); showPrizeSummary(); };
@@ -297,7 +298,7 @@ function nextPrize() {
   if (R.shown >= R.prizes.length) { showPrizeSummary(); return; }
   const p = R.prizes[R.shown++], h = prizeHTML(p), el = $("prize");
   el.className = "prize"; void el.offsetWidth;
-  el.innerHTML = h.pic + h.line; el.className = "prize show";
+  el.innerHTML = h.pic + h.line + streakNote(R); el.className = "prize show";
   const cv = el.querySelector("canvas");
   if (cv) {
     const ctx = cv.getContext("2d");
@@ -309,8 +310,33 @@ function nextPrize() {
   const more = R.shown < R.prizes.length;
   $("canNav").hidden = false; $("canSkip").hidden = !more; $("canNext").textContent = more ? `NEXT · ${R.prizes.length - R.shown} LEFT` : "FINISH";
 }
+// A Daily Drop's streak, under its prize: how many in a row so far, and what 4 in a row gets you.
+function streakNote(R) {
+  if (!R.streak) return "";
+  const st = R.streak, dots = [1, 2, 3, 4].map(k => k <= st ? "🔥" : "⚪").join("");
+  return `<div class="streaknote">${dots}<br>${st >= 4 ? "<b>4 in a row!</b> A bonus can is next." : `<b>${st} of 4 in a row.</b> Open 4 Daily Drops in a row for a bonus can. Letting 2 pile up starts it over.`}</div>`;
+}
+// After the prizes: a pop-up for every item your cards just unlocked.
+function showUnlocks(prizes) {
+  const got = prizes.filter(p => p.kind === "cards" && p.unlocked);
+  if (!got.length) return false;
+  const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" };
+  const pic = p => {
+    if (p.cat === "trail" || p.cat === "fx") return `<div class="unlockpic">${((p.cat === "trail" ? TRAILS : EFFECTS).find(t => t.id === p.id) || {}).icon || "🎁"}</div>`;
+    const c = document.createElement("canvas"); c.width = 96; c.height = 96; const ctx = c.getContext("2d");
+    if (p.cat === "bag") paintBag(ctx, 96, 96, bagById(p.id));
+    else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(p.id)); ctx.drawImage(tmp, 24, 0, 48, 96); }
+    return `<img class="unlockpic" src="${c.toDataURL()}" alt="">`;
+  };
+  showInfo(`<div class="unlockbig">🎉</div><h2>Unlocked!</h2><div class="muted">You collected all the cards, so ${got.length === 1 ? "this is" : "these are"} yours now. Pick ${got.length === 1 ? "it" : "them"} in the Shop.</div>
+    <div class="unlocklist">${got.map(p => `<div>${pic(p)}<b>${esc(p.name)}</b><small>${kind[p.cat]}</small></div>`).join("")}</div>`);
+  sfx.win(); haptic("success");
+  return true;
+}
 $("canDone").onclick = () => {
+  const prizes = canRun ? canRun.prizes : [];
   $("canSheet").hidden = true; $("prizeGrid").hidden = true; canRun = null; renderHub();
+  showUnlocks(prizes);
   const i = career.cans.findIndex(c => c.bonus); // a Daily Drop streak bonus waiting: open it next
   if (i >= 0) { delete career.cans[i].bonus; save(); const t = document.createElement("div"); t.className = "toast"; t.textContent = "4 in a row! Here's a bonus can 🎉"; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); setTimeout(() => openCanSheet(i), 700); }
 };
@@ -440,7 +466,7 @@ function wheelSlices() {
 // a bag or board card from the wheel, mostly the cheaper ones
 function wheelCard() { // which card (paid when the Daily Drop can opens)
   const key = Math.random() < 0.5 ? "bag" : "board", cat = CARD_CATS.find(c => c.key === key); // (pick once, then look it up)
-  const items = cardItems(cat), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
+  const items = cardReach(cardItems(cat)), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
   let y = Math.random() * w.reduce((t, v) => t + v, 0), it = items[0];
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
   return { cat: cat.key, id: it.id };
@@ -464,11 +490,13 @@ function takeDrop() {
   if (!useFreeSpin()) career.spins--; // a free drop first, then bought ones
   // A can drops and you open it, like every other prize: the red Daily Drop can holding its one prize, or (now and then)
   // the prize can itself.
-  if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true });
-  else career.cans.push({ id: "daily", court: topCourt(), instant: true, drop: pick.card ? { card: wheelCard() } : { coins: pick.coins, caps: pick.caps } });
-  // Streak: every 4th Daily Drop in a row also drops a bonus can (opened right after); letting 2 pile up resets it
+  // Streak: every 4th Daily Drop in a row also drops a bonus can (opened right after); letting 2 pile up resets it.
+  // The drop remembers where the streak stands, so its prize reveal can say so.
   const g = giftState(); g.streak = (g.streak || 0) + 1;
-  if (g.streak >= 4) { g.streak = 0; career.cans.push({ id: rollCan({ bronze: 55, silver: 35, gold: 10 }), court: topCourt(), instant: true, bonus: true }); }
+  const bonus = g.streak >= 4, streak = bonus ? 4 : g.streak;
+  if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true, streak });
+  else career.cans.push({ id: "daily", court: topCourt(), instant: true, streak, drop: pick.card ? { card: wheelCard() } : { coins: pick.coins, caps: pick.caps } });
+  if (bonus) { g.streak = 0; career.cans.push({ id: rollCan({ bronze: 55, silver: 35, gold: 10 }), court: topCourt(), instant: true, bonus: true }); }
   save(); renderHub();
   openCanSheet(career.cans.findIndex(c => c.instant && !c.bonus && (c.id === "daily" || c.id === pick.can)));
 }
