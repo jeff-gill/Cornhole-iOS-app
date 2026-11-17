@@ -1,11 +1,4 @@
 using UnityEngine;
-#if UNITY_6000_0_OR_NEWER
-using PhysMat = UnityEngine.PhysicsMaterial;
-using PhysCombine = UnityEngine.PhysicsMaterialCombine;
-#else
-using PhysMat = UnityEngine.PhysicMaterial;
-using PhysCombine = UnityEngine.PhysicMaterialCombine;
-#endif
 
 namespace CornholeThrowdown
 {
@@ -65,51 +58,13 @@ namespace CornholeThrowdown
             bool collide = false, Vector3? euler = null)
             => Shape(PrimitiveType.Cube, name, parent, localPos, size, mat, collide, euler);
 
-        public static Vector3 Velocity(Rigidbody rb)
+        // Flat colour that ignores lighting, with see-through support: for the aiming guides, arrow and ring.
+        static Shader unlitShader;
+
+        public static Material Unlit(Color color)
         {
-#if UNITY_6000_0_OR_NEWER
-            return rb.linearVelocity;
-#else
-            return rb.velocity;
-#endif
+            if (unlitShader == null) unlitShader = Shader.Find("Sprites/Default") ?? Lit;
+            return new Material(unlitShader) { color = color };
         }
-
-        public static void SetVelocity(Rigidbody rb, Vector3 v)
-        {
-#if UNITY_6000_0_OR_NEWER
-            rb.linearVelocity = v;
-#else
-            rb.velocity = v;
-#endif
-        }
-
-        public static void SetAngularDamping(Rigidbody rb, float d)
-        {
-#if UNITY_6000_0_OR_NEWER
-            rb.angularDamping = d;
-#else
-            rb.angularDrag = d;
-#endif
-        }
-    }
-
-    // A physics surface (friction, no bounce) that can be put on colliders.
-    public class Surface
-    {
-        readonly PhysMat mat;
-
-        public Surface(string name, float dynamicFriction, float staticFriction, bool useHighest = false)
-        {
-            mat = new PhysMat(name)
-            {
-                dynamicFriction = dynamicFriction,
-                staticFriction = staticFriction,
-                bounciness = 0f,
-                frictionCombine = useHighest ? PhysCombine.Maximum : PhysCombine.Average,
-                bounceCombine = PhysCombine.Minimum,
-            };
-        }
-
-        public void Apply(Collider c) => c.sharedMaterial = mat;
     }
 }

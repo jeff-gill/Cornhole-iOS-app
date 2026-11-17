@@ -6,16 +6,20 @@ This folder is a trial rebuild of the game in the Unity engine. It lives only on
 
 ## What works so far
 
-- **Court 1, Backyard BBQ**, built all the way around: lawn, wooden fence, the home behind the
-  target board, neighbours' houses, trees, a brick patio with a picnic table and grill, lawn chairs.
-- **Regulation boards**: 2 ft x 4 ft, 27 ft apart, sloped, with a real 6" hole 9" from the back.
-- **Throwing a bag**: press anywhere and pull down for power. The arrow on the grass swings side
-  to side, faster the harder you pull (it turns gold when it's straight). Let go with the power in the
-  gold band on the meter. Pulling into the red overdrive zone makes the throw wild.
-- **Scoring**: 3 in the hole, 1 on the board, 4 bags a round, then THROW AGAIN.
+- **Your real gameplay**, ported from the web game:
+  - The physics engine (`Engine.cs`) is a line-for-line translation of `web/src/engine.js`. Test throws give
+    identical results in both.
+  - Aiming: tap the board where the bag should finish, drag the yellow landing ring (or tap STICK), with the
+    landing zone fan and the predicted flight, slide and push paths. Then tap THROW.
+  - The throw: pull down anywhere. The power ring fills and the arrow swings. Let go with the ring at the
+    green line and the arrow straight. Red is overdrive.
+  - A full match against a computer opponent: coin flip for pitcher's boxes, 4 bags each per inning,
+    cancellation scoring to 21, banners (SWISH!, CORNHOLE!, 4-BAGGER!), and the 25-second throw clock.
+  - The web game's cameras for aiming, throwing, following the bag and watching.
+- **Court 1, Backyard BBQ**, built all the way around.
 
-Not yet: menus, the other courts, opponents, wind, and the shop. The art in `Assets/Art/` (trees,
-people, hats) isn't in the scene yet; the court uses simple shapes plus Poly Haven textures.
+Not yet: the improved graphics (lighting effects and real 3D models), menus, the other courts, wind,
+the board check and the shop.
 
 ## Trying it
 
@@ -30,9 +34,9 @@ Unity runs on your Mac, not in the cloud session.
 
 ## Files
 
-- `Assets/Scripts/Court.cs`: builds the Backyard BBQ.
-- `Assets/Scripts/Board.cs`: the boards, including the top with the round hole.
-- `Assets/Scripts/Bag.cs`: bag physics (no bounce, short slide, drops in the hole) and scoring.
-- `Assets/Scripts/ThrowController.cs`: the pull-back throw, aim arrow, power meter and score display.
+- `Assets/Scripts/Engine.cs`: the physics engine (from web/src/engine.js).
+- `Assets/Scripts/Match.cs`: turns, aiming, the throw, the computer opponent, scoring, cameras.
+- `Assets/Scripts/AimRig.cs`: the arrow and power ring. `Views.cs`: bags and aiming guides. `Hud.cs`: the on-screen display.
+- `Assets/Scripts/Court.cs` and `Board.cs`: the Backyard BBQ and the boards.
 - `Assets/Resources/Tex/`: the Poly Haven textures (CC0) the court uses.
 - `Assets/Art/`: the rest of the current game's art, for later.

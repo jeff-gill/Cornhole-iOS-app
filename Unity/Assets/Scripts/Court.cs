@@ -4,15 +4,15 @@ namespace CornholeThrowdown
 {
     // Court 1, Backyard BBQ: a sunny fenced yard, built all the way around (360°).
     // Boards face each other 27 ft apart (front edge to front edge), along +z.
-    public class Court
+    public static class Court
     {
-        public const float BoardGap = 8.23f;
-        public Board near, far;
-        public Surface bagSurface;
+        public const float M = Board.M;
 
-        public static Court BuildBackyard()
+        // Court units are feet (as in the engine); Unity is metres with +z down-range.
+        public static Vector3 U(double x, double y, double z) => new Vector3((float)x, (float)z, (float)y) * M;
+
+        public static void BuildBackyard()
         {
-            var court = new Court();
             var root = new GameObject("Backyard BBQ").transform;
 
             // Replace the default scene light with a warm afternoon sun.
@@ -27,25 +27,20 @@ namespace CornholeThrowdown
             RenderSettings.sun = sun;
             QualitySettings.shadowDistance = 45f;
 
-            var boardSurface = new Surface("Board", 0.32f, 0.40f);
-            var grassSurface = new Surface("Grass", 1.2f, 1.4f, true);
-            court.bagSurface = new Surface("Bag", 0.5f, 0.6f);
-
             // Lawn.
-            var ground = Kit.Shape(PrimitiveType.Plane, "Ground", root, new Vector3(0f, 0f, 4f), new Vector3(9f, 1f, 9f),
-                Kit.Mat(new Color(0.78f, 0.92f, 0.62f), "sparse_grass", 30f, 30f), true);
-            grassSurface.Apply(ground.GetComponent<Collider>());
+            Kit.Shape(PrimitiveType.Plane, "Ground", root, new Vector3(0f, 0f, 4f), new Vector3(9f, 1f, 9f),
+                Kit.Mat(new Color(0.78f, 0.92f, 0.62f), "sparse_grass", 30f, 30f));
 
-            // Boards: the player's at the near end (facing away), the target 27 ft away facing back.
+            // Boards: the target 27 ft away, and the thrower's own board (facing it) at the near end.
             var wood = Kit.Mat(new Color(1f, 0.93f, 0.82f), "plywood");
-            court.near = Board.Build("Near board", Vector3.zero, 180f, wood, Kit.Mat(new Color(0.75f, 0.16f, 0.14f)), boardSurface);
-            court.far = Board.Build("Target board", new Vector3(0f, 0f, BoardGap), 0f, wood, Kit.Mat(new Color(0.16f, 0.32f, 0.72f)), boardSurface);
+            var inside = Kit.Mat(new Color(0.08f, 0.06f, 0.05f));
+            Board.Build("Target board", U(0, Eng.FY, 0), 0f, wood, Kit.Mat(new Color(0.16f, 0.32f, 0.72f)), inside);
+            Board.Build("Own board", Vector3.zero, 180f, wood, Kit.Mat(new Color(0.75f, 0.16f, 0.14f)), inside);
 
             BuildFence(root);
             BuildHouses(root);
             BuildPatio(root);
             BuildTrees(root);
-            return court;
         }
 
         static void BuildFence(Transform root)
@@ -61,7 +56,7 @@ namespace CornholeThrowdown
                 s.SetParent(fence, false);
                 s.localPosition = new Vector3(0f, 0f, cz);
                 s.localRotation = Quaternion.Euler(0f, side * 90f, 0f);
-                Kit.Box("Panel", s, new Vector3(0f, h / 2f, half), new Vector3(half * 2f, h, 0.05f), planks, true);
+                Kit.Box("Panel", s, new Vector3(0f, h / 2f, half), new Vector3(half * 2f, h, 0.05f), planks);
                 for (float x = -half; x <= half + 0.01f; x += 2.5f)
                     Kit.Box("Post", s, new Vector3(x, h / 2f + 0.05f, half - 0.06f), new Vector3(0.1f, h + 0.1f, 0.1f), post);
             }
@@ -141,7 +136,7 @@ namespace CornholeThrowdown
 
             // Lawn chairs by the court.
             var chair = Kit.Mat(new Color(0.15f, 0.55f, 0.65f));
-            foreach (var p in new[] { new Vector3(3.2f, 0f, 1.5f), new Vector3(-3.2f, 0f, 6.5f), new Vector3(3.4f, 0f, 9.5f) })
+            foreach (var p in new[] { new Vector3(5.5f, 0f, 3f), new Vector3(-5f, 0f, 7f), new Vector3(5.2f, 0f, 10.5f) })
             {
                 var c = new GameObject("Chair").transform;
                 c.SetParent(root, false);
