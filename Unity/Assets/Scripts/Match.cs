@@ -65,6 +65,7 @@ namespace CornholeThrowdown
             }
             cam.nearClipPlane = 0.05f;
             cam.farClipPlane = 400f;
+            Look.Backyard(cam);
             BuildGuides();
             BuildAimRig();
             NewMatch();

@@ -22,15 +22,47 @@ namespace CornholeThrowdown
             bagViews.Clear();
         }
 
+        static Mesh pillow;
+
+        // A filled 6" cloth bag: puffed up in the middle, pinched flat at the seams (in feet).
+        static Mesh Pillow()
+        {
+            if (pillow != null) return pillow;
+            const int n = 12;
+            float half = (float)Eng.BAG / 2f;
+            var v = new List<Vector3>(); var t = new List<int>();
+            for (int side = 0; side < 2; side++)
+            {
+                int b0 = v.Count;
+                for (int j = 0; j <= n; j++)
+                    for (int i = 0; i <= n; i++)
+                    {
+                        float u = -1f + 2f * i / n, w = -1f + 2f * j / n;
+                        float puff = Mathf.Sqrt(Mathf.Max(0f, (1f - Mathf.Pow(Mathf.Abs(u), 4f)) * (1f - Mathf.Pow(Mathf.Abs(w), 4f))));
+                        float y = side == 0 ? 0.035f + 0.075f * puff : 0.035f - 0.03f * puff;
+                        v.Add(new Vector3(u * half * (1f - 0.04f * puff), y, w * half * (1f - 0.04f * puff)));
+                        if (i < n && j < n)
+                        {
+                            int a = b0 + j * (n + 1) + i;
+                            t.AddRange(side == 0 ? new[] { a, a + n + 1, a + 1, a + 1, a + n + 1, a + n + 2 } : new[] { a, a + 1, a + n + 1, a + 1, a + n + 2, a + n + 1 });
+                        }
+                    }
+            }
+            pillow = new Mesh { name = "Bag" };
+            pillow.SetVertices(v); pillow.SetTriangles(t, 0); pillow.RecalculateNormals(); pillow.RecalculateBounds();
+            return pillow;
+        }
+
         Transform MakeBag(int owner)
         {
             if (bagMats == null)
-                bagMats = new[] { Kit.Mat(TeamColor[0], null, 1f, 1f, 0.12f), Kit.Mat(TeamColor[1], null, 1f, 1f, 0.12f) };
+                bagMats = new[] { Kit.Mat(TeamColor[0], null, 1f, 1f, 0.08f), Kit.Mat(TeamColor[1], null, 1f, 1f, 0.08f) };
             var root = new GameObject("Bag").transform;
-            float M = Board.M;
-            // A filled cloth bag: a flat square with a puffed-up middle.
-            Kit.Box("Cloth", root, new Vector3(0f, 0.04f, 0f) * M, new Vector3(0.48f, 0.07f, 0.48f) * M, bagMats[owner]);
-            Kit.Shape(PrimitiveType.Sphere, "Fill", root, new Vector3(0f, 0.06f, 0f) * M, new Vector3(0.47f, 0.13f, 0.47f) * M, bagMats[owner]);
+            var body = new GameObject("Cloth").transform;
+            body.SetParent(root, false);
+            body.localScale = Vector3.one * Board.M;
+            body.gameObject.AddComponent<MeshFilter>().sharedMesh = Pillow();
+            body.gameObject.AddComponent<MeshRenderer>().sharedMaterial = bagMats[owner];
             return root;
         }
 

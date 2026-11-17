@@ -16,10 +16,21 @@ This folder is a trial rebuild of the game in the Unity engine. It lives only on
   - A full match against a computer opponent: coin flip for pitcher's boxes, 4 bags each per inning,
     cancellation scoring to 21, banners (SWISH!, CORNHOLE!, 4-BAGGER!), and the 25-second throw clock.
   - The web game's cameras for aiming, throwing, following the bag and watching.
-- **Court 1, Backyard BBQ**, built all the way around.
+- **Court 1, Backyard BBQ**, rebuilt from the web game's scene (`BackyardScene.cs`): the same trees, bushes,
+  flowers, rocks, fence, house, grill, smoker, tables and string lights, plus Unity extras:
+  - a thick lawn of grass tufts and flowers, drawn cheaply with GPU instancing
+  - the scanned Poly Haven picnic table and chairs
+  - real smoke from the grill and smoker
+  - bulbs and coals that glow
+- **Graphics** (`Look.cs` and the shaders in `Assets/Resources/Shaders/`): sun with soft high-resolution
+  shadows, sky and grass-coloured ambient light, the game's gradient sky with sun glow, distance haze,
+  smoother edges (4x MSAA), and a finishing pass with bloom, the same ACES film curve as the web game,
+  richer colour and soft dark corners.
+- **Models**: the web game's glTF models are converted by `Tools/convert_models.py` into
+  `Assets/Resources/Models/` (no Unity packages needed). The boards use the Blender frame and legs, and the
+  bags are soft filled pillows.
 
-Not yet: the improved graphics (lighting effects and real 3D models), menus, the other courts, wind,
-the board check and the shop.
+Not yet: the animated people, menus, the other courts, wind, the board check and the shop.
 
 ## Trying it
 
@@ -37,6 +48,8 @@ Unity runs on your Mac, not in the cloud session.
 - `Assets/Scripts/Engine.cs`: the physics engine (from web/src/engine.js).
 - `Assets/Scripts/Match.cs`: turns, aiming, the throw, the computer opponent, scoring, cameras.
 - `Assets/Scripts/AimRig.cs`: the arrow and power ring. `Views.cs`: bags and aiming guides. `Hud.cs`: the on-screen display.
-- `Assets/Scripts/Court.cs` and `Board.cs`: the Backyard BBQ and the boards.
+- `Assets/Scripts/Court.cs`, `BackyardScene.cs` and `Board.cs`: the Backyard BBQ and the boards.
+- `Assets/Scripts/Look.cs`: lighting, sky, haze and the finishing pass. `ModelLib.cs`: loads the converted models.
+- `Tools/convert_models.py`: re-run after changing a model in `web/assets` (`python3 Unity/Tools/convert_models.py`).
 - `Assets/Resources/Tex/`: the Poly Haven textures (CC0) the court uses.
 - `Assets/Art/`: the rest of the current game's art, for later.
