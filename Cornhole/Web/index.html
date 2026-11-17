@@ -241,6 +241,8 @@ body.inhub .score, body.inhub #panel { display: none; }
 .btn.go { font-size: 22px; }
 .btn.red { background: linear-gradient(#ff7a6a, var(--p0) 50%, var(--p0-dark)); box-shadow: 0 5px 0 #6e0c05, inset 0 2px 0 rgba(255,255,255,.35); }
 .btn.blue { background: linear-gradient(#69adff, var(--p1) 50%, var(--p1-dark)); box-shadow: 0 5px 0 #062b66, inset 0 2px 0 rgba(255,255,255,.35); }
+/* a rematch the other player turned down by leaving: grey, and it can't be tapped */
+.btn.nope, .btn.nope:disabled { background: linear-gradient(#7a8194, #565d6e); box-shadow: 0 5px 0 #2c313d, inset 0 2px 0 rgba(255,255,255,.18); color: #d6dbe6; opacity: .8; pointer-events: none; text-shadow: none; font-size: 16px !important; white-space: normal; line-height: 1.15; }
 .btn.green { background: linear-gradient(#7af0a3, var(--go) 50%, var(--go-dark)); box-shadow: 0 5px 0 #075c2b, inset 0 2px 0 rgba(255,255,255,.35); }
 .pullpad { display: flex; align-items: center; gap: 14px; }
 .pullpad .bag { width: 64px; height: 64px; flex: none; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--font-display); font-size: 26px; }
@@ -793,7 +795,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794954485 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794954704 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2307,7 +2309,7 @@ function tryStartOnline() {
 }
 function opponentLeft() {
   if (search) { cancelSearch(true); return; }
-  if (S.online && S.phase === "over") { S.online.gone = true; renderInningSheet(); return; } // no rematch now
+  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; renderInningSheet(); return; } // left instead of a rematch
   if (!S.online || S.phase === "over" || S.phase === "hub") return;
   S.online.gone = true;
   S.winner = 0; S.phase = "over"; finishMatch();
@@ -2930,7 +2932,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794954485`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794954704`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4547,7 +4549,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794954485`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794954704`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4558,7 +4560,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794954485`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794954704`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6754,7 +6756,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794954485";
+const BUILD_ID = "1794954704";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -8062,12 +8064,12 @@ function renderInningSheet() {
       : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
       : bot ? `REMATCH · <i class="coin"></i> ${short(fee)}`
       : !O ? "PLAY AGAIN" + (fee ? ` · <i class="coin"></i> ${short(fee)}` : "")
-      : O.gone ? `${who} left`
+      : O.gone ? (O.noRematch ? `${who} doesn't want a rematch` : `${who} left the match`)
       : R.me ? `WAITING FOR ${who}…`
       : R.them ? `${who} WANTS A THROWDOWN REMATCH! · <i class="coin"></i> ${short(fee)}`
       : `THROWDOWN REMATCH · <i class="coin"></i> ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go green" id="againBtn" ${O || bot ? 'style="font-size:19px"' : ""} ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
+      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || bot ? 'style="font-size:19px"' : ""} ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
@@ -8082,6 +8084,7 @@ function renderInningSheet() {
   if (hero && hero.querySelector(".vs.left, .vs.right")) setTimeout(() => { if (!sheet.hidden) { sfx.thud(); haptic("thud"); hero.classList.add("landed"); } }, 900);
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => {
+    if (S.online && S.online.gone) return; // they've gone: no rematch
     if (S.online) { wantRematch(); return; }
     if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
       S.botRematch = "asking"; renderInningSheet();

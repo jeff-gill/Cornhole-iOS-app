@@ -229,6 +229,8 @@ body.inhub .score, body.inhub #panel { display: none; }
 .btn.go { font-size: 22px; }
 .btn.red { background: linear-gradient(#ff7a6a, var(--p0) 50%, var(--p0-dark)); box-shadow: 0 5px 0 #6e0c05, inset 0 2px 0 rgba(255,255,255,.35); }
 .btn.blue { background: linear-gradient(#69adff, var(--p1) 50%, var(--p1-dark)); box-shadow: 0 5px 0 #062b66, inset 0 2px 0 rgba(255,255,255,.35); }
+/* a rematch the other player turned down by leaving: grey, and it can't be tapped */
+.btn.nope, .btn.nope:disabled { background: linear-gradient(#7a8194, #565d6e); box-shadow: 0 5px 0 #2c313d, inset 0 2px 0 rgba(255,255,255,.18); color: #d6dbe6; opacity: .8; pointer-events: none; text-shadow: none; font-size: 16px !important; white-space: normal; line-height: 1.15; }
 .btn.green { background: linear-gradient(#7af0a3, var(--go) 50%, var(--go-dark)); box-shadow: 0 5px 0 #075c2b, inset 0 2px 0 rgba(255,255,255,.35); }
 .pullpad { display: flex; align-items: center; gap: 14px; }
 .pullpad .bag { width: 64px; height: 64px; flex: none; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--font-display); font-size: 26px; }

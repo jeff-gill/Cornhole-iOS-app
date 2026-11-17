@@ -385,12 +385,12 @@ function renderInningSheet() {
       : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
       : bot ? `REMATCH · <i class="coin"></i> ${short(fee)}`
       : !O ? "PLAY AGAIN" + (fee ? ` · <i class="coin"></i> ${short(fee)}` : "")
-      : O.gone ? `${who} left`
+      : O.gone ? (O.noRematch ? `${who} doesn't want a rematch` : `${who} left the match`)
       : R.me ? `WAITING FOR ${who}…`
       : R.them ? `${who} WANTS A THROWDOWN REMATCH! · <i class="coin"></i> ${short(fee)}`
       : `THROWDOWN REMATCH · <i class="coin"></i> ${short(fee)}`;
     body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go green" id="againBtn" ${O || bot ? 'style="font-size:19px"' : ""} ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
+      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || bot ? 'style="font-size:19px"' : ""} ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
       <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
@@ -405,6 +405,7 @@ function renderInningSheet() {
   if (hero && hero.querySelector(".vs.left, .vs.right")) setTimeout(() => { if (!sheet.hidden) { sfx.thud(); haptic("thud"); hero.classList.add("landed"); } }, 900);
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
   if ($("againBtn")) $("againBtn").onclick = () => {
+    if (S.online && S.online.gone) return; // they've gone: no rematch
     if (S.online) { wantRematch(); return; }
     if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
       S.botRematch = "asking"; renderInningSheet();

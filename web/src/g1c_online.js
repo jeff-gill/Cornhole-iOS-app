@@ -117,7 +117,7 @@ function tryStartOnline() {
 }
 function opponentLeft() {
   if (search) { cancelSearch(true); return; }
-  if (S.online && S.phase === "over") { S.online.gone = true; renderInningSheet(); return; } // no rematch now
+  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; renderInningSheet(); return; } // left instead of a rematch
   if (!S.online || S.phase === "over" || S.phase === "hub") return;
   S.online.gone = true;
   S.winner = 0; S.phase = "over"; finishMatch();
