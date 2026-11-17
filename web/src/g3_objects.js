@@ -258,27 +258,47 @@ const landingMarker = new THREE.Group();
 for (const m of [finishMarker, landingMarker]) m.traverse(o => { if (o.isMesh) o.renderOrder = 5; });
 scene.add(finishMarker, landingMarker);
 const dotTex = canvasTex(64, 64, (c) => { const g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); });
-const arcGeo = new THREE.BufferGeometry();
-arcGeo.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(90 * 3), 3));
-arcGeo.setDrawRange(0, 0);
-const arcDots = new THREE.Points(arcGeo, new THREE.PointsMaterial({ map: dotTex, color: 0xffffff, size: 11, sizeAttenuation: false, transparent: true, depthWrite: false }));
-arcDots.renderOrder = 7; arcDots.frustumCulled = false; scene.add(arcDots);
-let zoneMesh = null, zoneLine = null, slideLine = null, pushLine = null, ghostA = null, ghostB = null;
+let zoneMesh = null, zoneLine = null, slideLine = null, pushLine = null, ghostA = null, ghostB = null, arcLine = null;
 function disposeGuide(o) { if (!o) return; guides.remove(o); o.geometry.dispose(); }
-function dashedLine(points, color, dash, gap) {
-  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineDashedMaterial({ color, dashSize: dash, gapSize: gap, transparent: true, opacity: 0.95, depthTest: false }));
-  l.computeLineDistances(); l.renderOrder = 6; return l;
+// Solid, thick guide lines (a thin tube along the points), drawn over everything so they never hide in the board.
+const guideMats = new Map();
+function guideMat(color, opacity) {
+  const k = color + ":" + opacity;
+  if (!guideMats.has(k)) guideMats.set(k, new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthTest: false, depthWrite: false }));
+  return guideMats.get(k);
 }
-function ghostSquare(p, color) {
+// taper (0..1): how thin the line starts, so a path that begins right by the camera doesn't fill the screen.
+function solidLine(points, color, radius, opacity = 0.95, taper = 1) {
+  if (points.length < 2) return null;
+  const curve = new THREE.CatmullRomCurve3(points, false, "centripetal");
+  const n = Math.min(240, points.length * 3), sides = 8, pts = curve.getSpacedPoints(n), pos = [], idx = [];
+  const up = new THREE.Vector3(0, 1, 0), t = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3();
+  for (let i = 0; i <= n; i++) {
+    t.subVectors(pts[Math.min(n, i + 1)], pts[Math.max(0, i - 1)]).normalize();
+    a.crossVectors(t, up); if (a.lengthSq() < 1e-6) a.set(1, 0, 0); a.normalize(); b.crossVectors(a, t).normalize();
+    const r = radius * (taper + (1 - taper) * Math.min(1, i / (n * 0.6)));
+    for (let k = 0; k < sides; k++) {
+      const ang = k / sides * Math.PI * 2, c = Math.cos(ang) * r, s = Math.sin(ang) * r;
+      pos.push(pts[i].x + a.x * c + b.x * s, pts[i].y + a.y * c + b.y * s, pts[i].z + a.z * c + b.z * s);
+      if (i < n) { const v = i * sides + k, w = i * sides + (k + 1) % sides; idx.push(v, w, v + sides, w, w + sides, v + sides); }
+    }
+  }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx);
+  const m = new THREE.Mesh(geo, guideMat(color, opacity));
+  m.renderOrder = 6; m.frustumCulled = false; return m;
+}
+function ghostSquare(p, color) { // where a bag will come to rest: a solid square outline on the board
   const h = BAG / 2, pts = [[-h, -h], [h, -h], [h, h], [-h, h], [-h, -h]].map(([dx, dy]) => { const q = { x: p.x + dx, y: p.y + dy }; return W(q.x, q.y, surfaceAt(q) + 0.005); });
-  return dashedLine(pts, color, 0.06, 0.05);
+  const g = new THREE.Group();
+  for (let i = 0; i < 4; i++) { const seg = solidLine([pts[i], pts[i + 1]], color, 0.022); g.add(seg); }
+  g.geometry = { dispose: () => g.children.forEach(c => c.geometry.dispose()) };
+  return g;
 }
 let shownPlan = -1, shownPhase = "";
 function rebuildGuides() {
   shownPlan = S.planVersion; shownPhase = S.phase;
-  for (const o of [zoneMesh, zoneLine, slideLine, pushLine, ghostA, ghostB]) disposeGuide(o);
-  zoneMesh = zoneLine = slideLine = pushLine = ghostA = ghostB = null;
-  arcGeo.setDrawRange(0, 0);
+  for (const o of [zoneMesh, zoneLine, slideLine, pushLine, ghostA, ghostB, arcLine]) disposeGuide(o);
+  zoneMesh = zoneLine = slideLine = pushLine = ghostA = ghostB = arcLine = null;
   const visible = S.plan && ["aiming", "throw", "cpu"].includes(S.phase);
   finishMarker.visible = !!(visible && S.end);
   landingMarker.visible = !!(visible && S.landing);
@@ -305,22 +325,19 @@ function rebuildGuides() {
   if (!S.prev) return;
   const pv = S.prev;
   if (pv.slide.length > 1) {
-    slideLine = dashedLine(pv.slide.map(p => W(p.x, p.y, surfaceAt(p) + 0.01)), 0xffffff, 0.12, 0.09); guides.add(slideLine);
+    slideLine = solidLine(pv.slide.map(p => W(p.x, p.y, surfaceAt(p) + 0.01)), 0xffffff, 0.035); if (slideLine) guides.add(slideLine);
     if (pv.outcome !== "inHole") { ghostA = ghostSquare(pv.end, 0xffffff); guides.add(ghostA); }
   }
   if (pv.pushPath.length > 1) {
-    pushLine = dashedLine(pv.pushPath.map(p => W(p.x, p.y, surfaceAt(p) + 0.01)), 0xffc93a, 0.08, 0.08); guides.add(pushLine);
+    pushLine = solidLine(pv.pushPath.map(p => W(p.x, p.y, surfaceAt(p) + 0.01)), 0xffc93a, 0.035); if (pushLine) guides.add(pushLine);
     if (pv.pushOutcome !== "inHole") { ghostB = ghostSquare(pv.pushEnd, 0xffc93a); guides.add(ghostB); }
   }
-  const arr = arcGeo.attributes.position.array;
-  let last = null, n = 0;
-  for (const p of pv.flight) {
-    const w = W(p.x, p.y, p.z);
-    if (last && w.distanceTo(last) < 0.9) continue;
-    last = w; arr[n * 3] = w.x; arr[n * 3 + 1] = w.y; arr[n * 3 + 2] = w.z; n++;
-    if (n >= 90) break;
-  }
-  arcGeo.attributes.position.needsUpdate = true; arcGeo.setDrawRange(0, n); arcGeo.computeBoundingSphere();
+  // the flight: one solid arc from the hand to where it lands
+  const arc = []; let last = null;
+  for (const p of pv.flight) { const w = W(p.x, p.y, p.z); if (last && w.distanceTo(last) < 0.25) continue; arc.push(w); last = w; }
+  const tip = pv.flight[pv.flight.length - 1], tw = W(tip.x, tip.y, tip.z);
+  if (!last || last.distanceTo(tw) > 0.01) arc.push(tw);
+  arcLine = solidLine(arc, 0xffffff, 0.03, 0.85, 0.12); if (arcLine) guides.add(arcLine);
 }
 
 // ───────────────────────── Effects
