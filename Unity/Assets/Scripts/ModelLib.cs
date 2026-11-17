@@ -33,6 +33,7 @@ namespace CornholeThrowdown
             var sh = LitShader;
             if (sh == null) return Kit.Mat(color);
             var m = new Material(sh) { color = color, enableInstancing = true };
+            m.SetFloat("_UseVertexColor", 1f);
             if (tex != null) m.mainTexture = tex;
             m.SetFloat("_Glossiness", smooth);
             m.SetFloat("_Metallic", metal);

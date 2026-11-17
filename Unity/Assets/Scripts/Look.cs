@@ -15,10 +15,10 @@ namespace CornholeThrowdown
             // Sun: warm, from behind the thrower's left (web: sun at (-26, 20, -18)).
             var sun = new GameObject("Sun").AddComponent<Light>();
             sun.type = LightType.Directional;
-            sun.color = new Color(1f, 0.89f, 0.72f);
-            sun.intensity = 1.35f;
+            sun.color = new Color(1f, 0.96f, 0.88f);
+            sun.intensity = 1.15f;
             sun.shadows = LightShadows.Soft;
-            sun.shadowStrength = 0.82f;
+            sun.shadowStrength = 1f;
             sun.shadowBias = 0.03f;
             sun.shadowNormalBias = 0.25f;
             var toSun = new Vector3(-26f, 20f, 18f).normalized;
@@ -35,9 +35,9 @@ namespace CornholeThrowdown
 
             // Sky light from above, grass-green bounce from below (web: hemisphere 0xd6ecff / 0x557a2c).
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.72f, 0.82f, 0.95f);
-            RenderSettings.ambientEquatorColor = new Color(0.62f, 0.68f, 0.6f);
-            RenderSettings.ambientGroundColor = new Color(0.3f, 0.4f, 0.17f);
+            RenderSettings.ambientSkyColor = new Color(0.62f, 0.72f, 0.9f);
+            RenderSettings.ambientEquatorColor = new Color(0.6f, 0.66f, 0.68f);
+            RenderSettings.ambientGroundColor = new Color(0.42f, 0.5f, 0.3f);
             RenderSettings.ambientIntensity = 1f;
 
             var skyShader = Resources.Load<Shader>("Shaders/CornholeSky");
@@ -48,28 +48,30 @@ namespace CornholeThrowdown
                 RenderSettings.skybox = sky;
             }
 
-            // Warm haze far off (web: fog 0xf2cfa0 from 90 to 260 ft).
+            // Light blue haze far off, so distant trees soften into the sky.
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogColor = new Color(0.95f, 0.81f, 0.63f);
-            RenderSettings.fogStartDistance = 90f * Board.M;
-            RenderSettings.fogEndDistance = 260f * Board.M;
+            RenderSettings.fogColor = new Color(0.8f, 0.9f, 1f);
+            RenderSettings.fogStartDistance = 120f * Board.M;
+            RenderSettings.fogEndDistance = 520f * Board.M;
 
             cam.allowHDR = true;
             cam.allowMSAA = true;
             cam.clearFlags = CameraClearFlags.Skybox;
-            if (cam.GetComponent<PostFX>() == null) cam.gameObject.AddComponent<PostFX>().exposure = 1.08f;
+            if (cam.GetComponent<PostFX>() == null) cam.gameObject.AddComponent<PostFX>();
         }
     }
 
-    // The finishing pass: glow around bright things (bloom), the ACES film curve, a little extra colour and
-    // softly darker corners. If the shader can't run on a device, the picture is left as it is.
+    // The finishing pass, for a cartoon look: ink outlines, glow around bright things (bloom), punchier colour
+    // and contrast, and lightly darker corners. If the shader can't run on a device, the picture is left as it is.
     [RequireComponent(typeof(Camera))]
     public class PostFX : MonoBehaviour
     {
-        public float exposure = 1.08f, bloomThreshold = 1.0f, bloomKnee = 0.5f, bloomIntensity = 0.35f;
-        public float saturation = 1.12f, vignette = 0.28f;
-        public Color tint = new Color(1.02f, 1f, 0.97f);
+        public float exposure = 1.05f, bloomThreshold = 1.0f, bloomKnee = 0.5f, bloomIntensity = 0.25f;
+        public float saturation = 1.3f, contrast = 1.08f, vignette = 0.14f;
+        public Color tint = Color.white;
+        public float edgeStrength = 0.85f, edgeDepth = 0.06f, edgeNormal = 0.35f, edgeFadeStart = 0.06f, edgeFadeEnd = 0.25f;
+        public Color edgeColor = new Color(0.1f, 0.1f, 0.16f);
 
         Material mat;
         readonly RenderTexture[] levels = new RenderTexture[6];
@@ -79,6 +81,7 @@ namespace CornholeThrowdown
             var sh = Resources.Load<Shader>("Shaders/CornholePost");
             if (sh != null && sh.isSupported) mat = new Material(sh) { hideFlags = HideFlags.HideAndDontSave };
             else enabled = false;
+            GetComponent<Camera>().depthTextureMode |= DepthTextureMode.DepthNormals;   // for the outlines
         }
 
         void OnRenderImage(RenderTexture src, RenderTexture dst)
@@ -89,6 +92,14 @@ namespace CornholeThrowdown
             mat.SetFloat("_BloomIntensity", bloomIntensity);
             mat.SetFloat("_Exposure", exposure);
             mat.SetFloat("_Saturation", saturation);
+            mat.SetFloat("_Contrast", contrast);
+            mat.SetFloat("_EdgeWidth", Mathf.Max(1f, Screen.height / 900f));
+            mat.SetFloat("_EdgeStrength", edgeStrength);
+            mat.SetFloat("_EdgeDepth", edgeDepth);
+            mat.SetFloat("_EdgeNormal", edgeNormal);
+            mat.SetFloat("_EdgeFadeStart", edgeFadeStart);
+            mat.SetFloat("_EdgeFadeEnd", edgeFadeEnd);
+            mat.SetColor("_EdgeColor", edgeColor);
             mat.SetFloat("_Vignette", vignette);
             mat.SetColor("_Tint", tint);
 

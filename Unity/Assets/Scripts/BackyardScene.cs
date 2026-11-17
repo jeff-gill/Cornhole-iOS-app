@@ -44,9 +44,7 @@ namespace CornholeThrowdown
         static Material Glow(Color c, float strength)
         {
             var m = Kit.Mat(c, null, 1f, 1f, 0.3f);
-            m.EnableKeyword("_EMISSION");
-            m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-            m.SetColor("_EmissionColor", c.linear * strength);
+            m.SetColor("_EmissionColor", c * strength);
             return m;
         }
 
@@ -80,7 +78,7 @@ namespace CornholeThrowdown
                     ModelLib.Place(g, R() < 0.3f ? "flowers" : R() < 0.6f ? "bush_2" : "plant_3", sx * 24.2f, z, R() * 6.28f, 1.0f + R() * 0.4f);
 
             // A thick lawn: hundreds of grass tufts and some flowers, kept off the lane between the boards.
-            for (int i = 0; i < 900; i++)
+            for (int i = 0; i < 500; i++)
             {
                 float x = (R() - 0.5f) * 50f, z = -46f + R() * 60f;
                 if (Mathf.Abs(x) < 5.5f && z > -33f && z < 3f) continue;
@@ -102,9 +100,32 @@ namespace CornholeThrowdown
             ModelLib.Place(g, "wooden_picnic_table", -15f, 14f, 0.3f + Mathf.PI / 2f, 1f);
             ModelLib.Place(g, "plastic_monobloc_chair_01", -7.5f, -36f, 0.35f, 1f);
             ModelLib.Place(g, "plastic_monobloc_chair_01", 7.8f, -37f, -0.35f, 1f);
+            Clouds(g);
             StringLights(g, new[] { (-9f, -38f), (9f, -38f), (-9f, -14f), (9f, -14f) },
                 new[] { ((-9f, -38f), (9f, -38f)), ((-9f, -38f), (-9f, -14f)), ((9f, -38f), (9f, -14f)), ((-9f, -14f), (9f, -26f)), ((9f, -14f), (-9f, -26f)) },
                 10.6f, 2);
+        }
+
+        // Big puffy cartoon clouds all around the sky.
+        static void Clouds(Transform g)
+        {
+            var white = Kit.Mat(Color.white, null, 1f, 1f, 0f);
+            white.SetColor("_EmissionColor", new Color(0.35f, 0.37f, 0.42f));
+            white.SetColor("_ShadeColor", new Color(0.72f, 0.78f, 0.92f));
+            var sky = new GameObject("Clouds").transform; sky.SetParent(g, false);
+            for (int i = 0; i < 14; i++)
+            {
+                float a = i / 14f * Mathf.PI * 2f + R() * 0.3f, d = 420f + R() * 260f;
+                var c = Group(sky, "Cloud", Mathf.Sin(a) * d, -15f + Mathf.Cos(a) * d, R() * 6.28f);
+                c.localPosition += Vector3.up * (110f + R() * 70f) * M;
+                int puffs = 4 + (int)(R() * 4);
+                for (int k = 0; k < puffs; k++)
+                {
+                    float r = 18f + R() * 16f, x = (k - puffs / 2f) * 20f + R() * 8f;
+                    Ball(c, r, white, x, R() * 8f, R() * 14f - 7f).localScale = new Vector3(2f * r, 1.5f * r, 2f * r) * M;
+                }
+                foreach (var t in c.GetComponentsInChildren<Renderer>()) t.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
         }
 
         // Grass with soft light and dark patches (web: stylizedLawn), as vertex colours.
@@ -112,7 +133,7 @@ namespace CornholeThrowdown
         {
             const int N = 60;
             var verts = new List<Vector3>(); var cols = new List<Color>(); var tris = new List<int>();
-            Color a = Hex(0x76c05a), b = Hex(0x5aa646);
+            Color a = Hex(0x84e05a), b = Hex(0x5cc23f);   // bright cartoon greens
             for (int j = 0; j <= N; j++)
                 for (int i = 0; i <= N; i++)
                 {

@@ -1,5 +1,6 @@
-// The finishing pass on the whole picture: soft glow around bright things (bloom), film-style colour
-// (the same ACES curve as the web game), a touch more colour, and gently darker corners.
+// The finishing pass on the whole picture, for a cartoon look: ink outlines found from depth and surface
+// direction (fading out in the distance), a soft glow around bright things (bloom), punchier colour and
+// contrast, and lightly darker corners.
 Shader "Hidden/Cornhole/Post"
 {
     Properties { _MainTex ("", 2D) = "white" {} }
@@ -7,10 +8,11 @@ Shader "Hidden/Cornhole/Post"
     CGINCLUDE
     #include "UnityCG.cginc"
 
-    sampler2D _MainTex, _SourceTex;
-    float4 _MainTex_TexelSize;
-    float _Threshold, _Knee, _BloomIntensity, _Exposure, _Saturation, _Vignette;
-    half4 _Tint;
+    sampler2D _MainTex, _SourceTex, _CameraDepthNormalsTexture;
+    float4 _MainTex_TexelSize, _CameraDepthNormalsTexture_TexelSize;
+    float _Threshold, _Knee, _BloomIntensity, _Exposure, _Saturation, _Contrast, _Vignette;
+    float _EdgeWidth, _EdgeStrength, _EdgeDepth, _EdgeNormal, _EdgeFadeStart, _EdgeFadeEnd;
+    half4 _Tint, _EdgeColor;
 
     half3 Box4(float2 uv, float d)
     {
@@ -29,16 +31,24 @@ Shader "Hidden/Cornhole/Post"
         return c * w;
     }
 
-    float3 ACES(float3 color)
+    // How strongly this pixel sits on an outline: a jump in depth or a sharp change in surface direction.
+    float Edge(float2 uv)
     {
-        const float3x3 inMat = float3x3(0.59719, 0.35458, 0.04823, 0.07600, 0.90834, 0.01566, 0.02840, 0.13383, 0.83777);
-        const float3x3 outMat = float3x3(1.60475, -0.53108, -0.07367, -0.10208, 1.10813, -0.00605, -0.00327, -0.07276, 1.07602);
-        color *= _Exposure / 0.6;
-        color = mul(inMat, color);
-        float3 a = color * (color + 0.0245786) - 0.000090537;
-        float3 b = color * (0.983729 * color + 0.4329510) + 0.238081;
-        color = mul(outMat, a / b);
-        return saturate(color);
+        float d0; float3 n0;
+        DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, uv), d0, n0);
+        if (d0 >= 0.999) return 0;   // sky
+        float2 t = _CameraDepthNormalsTexture_TexelSize.xy * _EdgeWidth;
+        float e = 0;
+        float2 offs[4] = { float2(t.x, 0), float2(-t.x, 0), float2(0, t.y), float2(0, -t.y) };
+        for (int k = 0; k < 4; k++)
+        {
+            float d; float3 n;
+            DecodeDepthNormal(tex2D(_CameraDepthNormalsTexture, uv + offs[k]), d, n);
+            float dz = (d - d0) / max(d0, 0.0001);   // only the nearer side of a depth jump gets the line
+            e = max(e, saturate((dz - _EdgeDepth) * 12));
+            e = max(e, saturate((1 - dot(n, n0) - _EdgeNormal) * 3));
+        }
+        return e * (1 - smoothstep(_EdgeFadeStart, _EdgeFadeEnd, d0));
     }
     ENDCG
 
@@ -93,17 +103,18 @@ Shader "Hidden/Cornhole/Post"
                 c = GammaToLinearSpace(c);
                 #endif
                 c += Box4(i.uv, 0.5) * _BloomIntensity;
-                c *= _Tint.rgb;
-                c = ACES(c);
+                c = saturate(c * _Exposure * _Tint.rgb);
+                c = LinearToGammaSpace(c);   // grade in display space
                 half l = dot(c, half3(0.2126, 0.7152, 0.0722));
                 c = lerp(l.xxx, c, _Saturation);
+                c = saturate((c - 0.5) * _Contrast + 0.5);
+                c = lerp(c, _EdgeColor.rgb, Edge(i.uv) * _EdgeStrength);
                 float2 v = i.uv - 0.5;
                 c *= 1 - _Vignette * smoothstep(0.25, 0.85, dot(v, v) * 2.2);
-                // The curve's output is linear; in a linear project Unity encodes it for the screen.
                 #ifdef UNITY_COLORSPACE_GAMMA
-                return half4(LinearToGammaSpace(saturate(c)), 1);
+                return half4(c, 1);
                 #else
-                return half4(saturate(c), 1);
+                return half4(GammaToLinearSpace(c), 1);
                 #endif
             }
             ENDCG

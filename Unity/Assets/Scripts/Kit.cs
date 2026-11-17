@@ -23,9 +23,13 @@ namespace CornholeThrowdown
             }
         }
 
+        static Shader toon;
+
         public static Material Mat(Color color, string texture = null, float tileX = 1f, float tileY = 1f, float smooth = 0.08f)
         {
-            var m = new Material(Lit) { color = color };
+            if (toon == null) toon = Resources.Load<Shader>("Shaders/CornholeLit");
+            var m = new Material(toon != null ? toon : Lit) { color = color };
+            m.SetFloat("_UseVertexColor", 0f);
             if (texture != null)
             {
                 var tex = Resources.Load<Texture2D>("Tex/" + texture + "_diff_1k");

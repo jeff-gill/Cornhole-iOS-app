@@ -1,11 +1,11 @@
-// The game's sky (as in the web game): horizon, middle and top colours with a warm glow around the sun.
+// A bright cartoon sky: horizon, middle and top colours with a glow around the sun.
 Shader "Cornhole/Sky"
 {
     Properties
     {
-        _Top ("Top", Color) = (0.19, 0.44, 0.80, 1)
-        _Mid ("Middle", Color) = (0.56, 0.78, 0.95, 1)
-        _Horizon ("Horizon", Color) = (1.0, 0.83, 0.62, 1)
+        _Top ("Top", Color) = (0.13, 0.47, 0.95, 1)
+        _Mid ("Middle", Color) = (0.42, 0.74, 1.0, 1)
+        _Horizon ("Horizon", Color) = (0.86, 0.95, 1.0, 1)
         _SunDir ("Sun direction", Vector) = (-0.6, 0.45, 0.4, 0)
         _SunGlow ("Sun glow", Float) = 1
     }
