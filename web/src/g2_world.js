@@ -28,7 +28,11 @@ const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.32, 0.55, 0.92)
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 let glowOn = true;
-function renderScene() { if (glowOn) composer.render(); else renderer.render(scene, camera); }
+function renderScene() {
+  const toon = toonState && toonState.on;
+  if (toon && ++toonState.frame % 30 === 0) toonSweep(true); // models that loaded since get the cartoon look too
+  if (glowOn || toon) { bloom.enabled = glowOn; composer.render(); } else renderer.render(scene, camera);
+}
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
   if (!w || !h) return;
@@ -2630,4 +2634,5 @@ function buildVenue(id) {
 
   }
   scene.add(g); venueGroup = g;
+  setToon(id);
 }

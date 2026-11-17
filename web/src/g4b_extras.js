@@ -449,9 +449,8 @@ const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never m
 const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
-  const g = giftState(), n = g.n, st = g.streak || 0;
-  $("dailySub").innerHTML = (dailyFree() ? (n > 1 ? "2 ready to open!" : "Ready to open!") : ready ? `${career.spins} extra left` : `Next in ${timeText(giftNextIn())}`)
-    + `<span class="dstreak" title="Open 4 in a row for a bonus can">${[0, 1, 2, 3].map(i => `<i class="${i < st ? "on" : ""}"></i>`).join("")}</span>`;
+  const n = giftState().n;
+  $("dailySub").innerHTML = dailyFree() ? (n > 1 ? "2 ready to open!" : "Ready to open!") : ready ? `${career.spins} extra left` : `Next in ${timeText(giftNextIn())}`;
 }
 const wheelPrizeHTML = p => p.can ? canPic(p.can)
   : p.card ? `<span style="font-size:18px">🃏</span><b>card</b>` : p.caps ? `<i class="bcap"></i><b>${p.caps}</b>` : `<i class="coin"></i><b>${short(p.coins)}</b>`;
