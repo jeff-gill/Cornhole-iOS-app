@@ -125,7 +125,7 @@ function rampColor(a, out) {
 }
 let aimFireT = 0, aimWedgeZone = -1;
 function updateAimRig(dt) {
-  const throwing = S.phase === "throw" && S.ideal;
+  const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
   aimRig.visible = true;
   const L = lv(), p = S.pull, fill = throwing ? p.fill : Math.max(p.fill, 0.2), band = L.powZone * 0.5;

@@ -486,7 +486,7 @@ function beginTurn() {
   S.cpuPlan = null;
   setGear(S.player);
   S.clock = timedTurn() ? (S.kind === "bullseye" ? BB_THROW_TIME : THROW_TIME) : null;
-  if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.phase = "cpu"; }
+  if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.cpuErr = null; S.pull = { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 }; S.phase = "cpu"; }
   else if (isRemote(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.online.waitT = 0; S.phase = "remote"; }
   else {
     const s = S.saved[S.player]; S.end = s ? s[0] : null; S.landD = s ? s[1] : null; S.landPhi = s ? s[2] : 0;
@@ -684,6 +684,8 @@ function handleEvents(evts) {
 // Computer: plans like a decent player, partly allows for the wind (better players allow for more), then throws with skill-based error.
 function cpuTurn() {
   S.cpuPlan = cpuPlan(S.player, S.world.bags);
+  const sk = S.opponent ? S.opponent.skill : 0.25;
+  S.cpuErr = { dir: gauss(sk), pow: gauss(sk) }; // decided now, so its power ring and arrow (shown as it winds up) end on them
   S.end = { ...S.cpuPlan.end };
   S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0;
   refreshPlan();

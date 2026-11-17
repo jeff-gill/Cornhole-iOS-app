@@ -853,10 +853,18 @@ function step(now) {
   else if (S.phase === "cpu") {
     S.cpuT += dt;
     if (!S.cpuPlan && S.cpuT > 0.6) cpuTurn();
+    // The computer's wind-up, like yours: its power ring fills and its arrow swings, settling on where it lets go.
+    if (S.cpuT > 0.9 && S.ideal && S.cpuErr) {
+      const e = S.cpuErr, k = clamp((S.cpuT - 0.9) / 1.5, 0, 1), left = Math.max(0, 2.6 - S.cpuT);
+      S.pull.active = true;
+      S.pull.fill = (POWER_TARGET + e.pow * 0.5) * (1 - (1 - k) ** 3);
+      S.pull.swing = clamp(e.dir + 0.9 * Math.sin(left * 7) * Math.min(1, left / 1.2), -1.3, 1.3);
+    }
     if (S.cpuT > 2.6 && S.ideal) {
-      const sk = S.opponent.skill;
-      S.overdrive = false;
-      releaseBag({ dir: gauss(sk), pow: gauss(sk), ht: 0 });
+      const e = S.cpuErr || { dir: gauss(S.opponent.skill), pow: gauss(S.opponent.skill) };
+      S.overdrive = false; S.pull.active = false; S.cpuErr = null;
+      fireAim();
+      releaseBag({ dir: e.dir, pow: e.pow, ht: 0 });
     }
   } else if (S.phase === "flight") {
     S.acc += dt;

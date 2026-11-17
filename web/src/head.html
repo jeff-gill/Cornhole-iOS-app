@@ -77,6 +77,18 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card .cardrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; }
 .card .live { font-size: 10px; letter-spacing: .04em; }
 .card .pts { font-family: var(--font-display); font-size: 34px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); font-variant-numeric: tabular-nums; }
+/* The player tiles size everything to their own width, so a long name, big star count and a two-digit score
+   never run into each other on a narrow phone (cqw = 1% of the tile's width). */
+.card { container-type: inline-size; }
+.card .name { font-size: clamp(11px, 9.5cqw, 15px); }
+.card .cav .avatar { width: clamp(22px, 19cqw, 34px); height: clamp(22px, 19cqw, 34px); }
+.card .pts { font-size: clamp(22px, 19cqw, 34px); flex: none; min-width: 1.1em; text-align: center; }
+.card .cmid { overflow: hidden; }
+.card .dots { gap: clamp(2px, 1.6cqw, 3px); }
+.card .dots i { width: clamp(6px, 5.5cqw, 9px); height: clamp(6px, 5.5cqw, 9px); }
+.card .live { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: clamp(8px, 6.5cqw, 10px); padding: 0 clamp(3px, 2.5cqw, 6px); margin-left: 0; }
+.card .pts { margin-left: 2px; }
+.card .live b { font-size: clamp(11px, 9cqw, 16px); }
 .inning { text-align: center; display: flex; flex-direction: column; }
 .inning small { font-size: 10px; letter-spacing: .1em; color: var(--ink-dim); text-transform: uppercase; }
 .inning b { font-family: var(--font-display); font-size: 24px; line-height: 1.05; font-weight: 400; }

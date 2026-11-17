@@ -89,6 +89,18 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card .cardrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; }
 .card .live { font-size: 10px; letter-spacing: .04em; }
 .card .pts { font-family: var(--font-display); font-size: 34px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); font-variant-numeric: tabular-nums; }
+/* The player tiles size everything to their own width, so a long name, big star count and a two-digit score
+   never run into each other on a narrow phone (cqw = 1% of the tile's width). */
+.card { container-type: inline-size; }
+.card .name { font-size: clamp(11px, 9.5cqw, 15px); }
+.card .cav .avatar { width: clamp(22px, 19cqw, 34px); height: clamp(22px, 19cqw, 34px); }
+.card .pts { font-size: clamp(22px, 19cqw, 34px); flex: none; min-width: 1.1em; text-align: center; }
+.card .cmid { overflow: hidden; }
+.card .dots { gap: clamp(2px, 1.6cqw, 3px); }
+.card .dots i { width: clamp(6px, 5.5cqw, 9px); height: clamp(6px, 5.5cqw, 9px); }
+.card .live { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: clamp(8px, 6.5cqw, 10px); padding: 0 clamp(3px, 2.5cqw, 6px); margin-left: 0; }
+.card .pts { margin-left: 2px; }
+.card .live b { font-size: clamp(11px, 9cqw, 16px); }
 .inning { text-align: center; display: flex; flex-direction: column; }
 .inning small { font-size: 10px; letter-spacing: .1em; color: var(--ink-dim); text-transform: uppercase; }
 .inning b { font-family: var(--font-display); font-size: 24px; line-height: 1.05; font-weight: 400; }
@@ -781,7 +793,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794954056 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794954485 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -1830,7 +1842,7 @@ function beginTurn() {
   S.cpuPlan = null;
   setGear(S.player);
   S.clock = timedTurn() ? (S.kind === "bullseye" ? BB_THROW_TIME : THROW_TIME) : null;
-  if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.phase = "cpu"; }
+  if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.cpuErr = null; S.pull = { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 }; S.phase = "cpu"; }
   else if (isRemote(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.online.waitT = 0; S.phase = "remote"; }
   else {
     const s = S.saved[S.player]; S.end = s ? s[0] : null; S.landD = s ? s[1] : null; S.landPhi = s ? s[2] : 0;
@@ -2028,6 +2040,8 @@ function handleEvents(evts) {
 // Computer: plans like a decent player, partly allows for the wind (better players allow for more), then throws with skill-based error.
 function cpuTurn() {
   S.cpuPlan = cpuPlan(S.player, S.world.bags);
+  const sk = S.opponent ? S.opponent.skill : 0.25;
+  S.cpuErr = { dir: gauss(sk), pow: gauss(sk) }; // decided now, so its power ring and arrow (shown as it winds up) end on them
   S.end = { ...S.cpuPlan.end };
   S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0;
   refreshPlan();
@@ -2916,7 +2930,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794954056`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794954485`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4533,7 +4547,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794954056`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794954485`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4544,7 +4558,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794954056`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794954485`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6171,7 +6185,7 @@ function rampColor(a, out) {
 }
 let aimFireT = 0, aimWedgeZone = -1;
 function updateAimRig(dt) {
-  const throwing = S.phase === "throw" && S.ideal;
+  const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
   aimRig.visible = true;
   const L = lv(), p = S.pull, fill = throwing ? p.fill : Math.max(p.fill, 0.2), band = L.powZone * 0.5;
@@ -6740,7 +6754,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794954056";
+const BUILD_ID = "1794954485";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -8516,10 +8530,18 @@ function step(now) {
   else if (S.phase === "cpu") {
     S.cpuT += dt;
     if (!S.cpuPlan && S.cpuT > 0.6) cpuTurn();
+    // The computer's wind-up, like yours: its power ring fills and its arrow swings, settling on where it lets go.
+    if (S.cpuT > 0.9 && S.ideal && S.cpuErr) {
+      const e = S.cpuErr, k = clamp((S.cpuT - 0.9) / 1.5, 0, 1), left = Math.max(0, 2.6 - S.cpuT);
+      S.pull.active = true;
+      S.pull.fill = (POWER_TARGET + e.pow * 0.5) * (1 - (1 - k) ** 3);
+      S.pull.swing = clamp(e.dir + 0.9 * Math.sin(left * 7) * Math.min(1, left / 1.2), -1.3, 1.3);
+    }
     if (S.cpuT > 2.6 && S.ideal) {
-      const sk = S.opponent.skill;
-      S.overdrive = false;
-      releaseBag({ dir: gauss(sk), pow: gauss(sk), ht: 0 });
+      const e = S.cpuErr || { dir: gauss(S.opponent.skill), pow: gauss(S.opponent.skill) };
+      S.overdrive = false; S.pull.active = false; S.cpuErr = null;
+      fireAim();
+      releaseBag({ dir: e.dir, pow: e.pow, ht: 0 });
     }
   } else if (S.phase === "flight") {
     S.acc += dt;
