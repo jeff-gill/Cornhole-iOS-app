@@ -345,7 +345,42 @@ function bbTick(dt) {
       if (!BB.starTag) BB.starTag = bbLabel("⭐ x2");
       BB.starTag.visible = true; BB.starTag.position.copy(W(st.x, st.y, plane(st.y) + 0.5 + 0.05 * Math.sin(S.time * 3)));
     } else if (BB.starTag) BB.starTag.visible = false;
+    bbSpotTick();
   }
+}
+// Once the bag stops, it turns see-through with a bottle cap on its middle: whichever ring the cap sits in is the prize.
+function bbSpotTick() {
+  const b = S.phase === "bbdone" && S.world.bags.find(x => x.id === S.lastId);
+  const show = !!b && b.state !== "inHole" && onSurface(b) && onBoard(b);
+  for (const [id, v] of bagMeshes) { // the see-through bag (and back to solid otherwise)
+    const fade = show && id === b.id;
+    if (fade && !v.ghost) { v.solid = v.mesh.material; v.ghost = v.mesh.material.clone(); v.ghost.transparent = true; v.ghost.opacity = 0.5; v.ghost.depthWrite = false; }
+    if (v.ghost) v.mesh.material = fade ? v.ghost : v.solid;
+  }
+  if (!show) { if (BB.spot) BB.spot.visible = false; return; }
+  if (!BB.spot) {
+    BB.spot = new THREE.Mesh(new THREE.CircleGeometry(0.14, 40), new THREE.MeshBasicMaterial({ depthTest: false, transparent: true }));
+    BB.spot.rotation.x = -Math.PI / 2; BB.spot.renderOrder = 10; scene.add(BB.spot); BB.capTex = {};
+  }
+  const hit = BB.active && BB.active.result ? BB.active.result.hit : bbHit(b, BB.active ? BB.active.mode : "easy");
+  const col = typeof hit === "number" ? BB_PRIZES[BB.active.mode][hit].c : "#8a94a6";
+  BB.spot.material.map = BB.capTex[col] ||= bbCapTex(col); BB.spot.material.needsUpdate = true;
+  BB.spot.visible = true;
+  BB.spot.position.copy(W(b.x, b.y, plane(b.y) + 0.05));
+  BB.spot.scale.setScalar(1 + 0.08 * Math.sin(S.time * 5));
+}
+// A bottle cap, seen from above: a crimped silver edge round a cap in the prize ring's colour.
+function bbCapTex(col) {
+  return canvasTex(128, 128, (c, w, h) => {
+    const cx = w / 2, cy = h / 2;
+    c.beginPath();
+    for (let i = 0; i <= 42; i++) { const a = i / 42 * Math.PI * 2, r = i % 2 ? 56 : 63; c.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); }
+    c.fillStyle = "#c8ccd4"; c.fill(); c.lineWidth = 3; c.strokeStyle = "rgba(0,0,0,.45)"; c.stroke();
+    const g = c.createRadialGradient(cx - 12, cy - 14, 4, cx, cy, 50);
+    g.addColorStop(0, "#ffffffaa"); g.addColorStop(0.25, col); g.addColorStop(1, col);
+    c.beginPath(); c.arc(cx, cy, 47, 0, Math.PI * 2); c.fillStyle = g; c.fill(); c.strokeStyle = "rgba(0,0,0,.4)"; c.stroke();
+    c.beginPath(); c.arc(cx, cy, 36, 0, Math.PI * 2); c.strokeStyle = "rgba(255,255,255,.4)"; c.lineWidth = 2.5; c.stroke();
+  });
 }
 function bbLabel(text) {
   const tex = canvasTex(256, 96, (c, w, h) => {
@@ -406,7 +441,7 @@ function bbFinish() {
   save(); S.phase = "bbdone"; ui();
   if (hit === "miss") sfx.thud();
   A.result = { hit, doubled, got };
-  setTimeout(() => { if (BB.active === A) renderBBResult(); }, 900);
+  setTimeout(() => { if (BB.active === A) renderBBResult(); }, 1800); // time to see the dot on the board first
 }
 // The win, shown like a can's prize: the light rays in the prize's colour, the prize card popping up, then COLLECT
 // (or OPEN IT for a can, which goes straight to the can opening).

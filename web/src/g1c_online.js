@@ -36,7 +36,7 @@ function cancelSearch(playCPU) {
 }
 // ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).
 const ROW = 68; // one reel row = the window's inner height
-const REEL_SPIN = 3, REEL_SLOW = 2; // seconds spinning at full speed, then seconds slowing down to land
+const REEL_SPIN = 5, REEL_SLOW = 2; // seconds spinning at full speed, then seconds slowing down to land
 function buildReel() {
   const reel = $("oppReel"); reel.innerHTML = "";
   const rows = Array.from({ length: 80 }, randomPick);
