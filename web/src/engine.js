@@ -27,7 +27,8 @@ const onBoard = p => Math.abs(p.x) <= HW && p.y >= FY && p.y <= BY;
 const plane = y => FH + (y - FY) * (BH - FH) / (BY - FY);
 const surf = p => onBoard(p) ? plane(p.y) : 0;
 const overHole = (p, r = HR) => dist(p, HOLE) < r;
-// How much of a bag (a BAG-wide square, turned by its angle) is over the hole, 0..1. More than half and it falls in.
+// How much of a bag (a BAG-wide square, turned by its angle) is over the hole, 0..1. More than half (or its middle
+// over the hole) and it falls in.
 const COVER_N = 12;
 function holeCover(b) {
   const dx = b.x - HOLE.x, dy = b.y - HOLE.y;
@@ -155,8 +156,8 @@ class World {
       if (!onSurface(o)) continue;
       const cov = holeCover(o); if (cov <= 0) continue;
       const tx = HOLE.x - o.x, ty = HOLE.y - o.y, td = Math.hypot(tx, ty) || 1;
-      const k = 1.1 + cov * 2.2 + (this.random ? this.rand() * 0.6 : 0.3); // ft/s: the more it covers, the more it gets hit
-      o.vx = hx * k + (tx / td) * k * 0.45; o.vy = hy * k + (ty / td) * k * 0.45;
+      const k = 1.6 + cov * 3.5 + (this.random ? this.rand() * 0.6 : 0.3); // ft/s: the more it covers, the more it gets hit
+      o.vx = hx * k + (tx / td) * k * 0.7; o.vy = hy * k + (ty / td) * k * 0.7;
       o.state = "sliding"; o.spin += (this.random ? this.rand() * 2 - 1 : 0.5) * 2;
       this.events.push({ type: "hit", a: o, b: o });
     }
@@ -169,8 +170,8 @@ class World {
   }
   bounds(b) {
     if (!onSurface(b)) return;
-    // more than half of the bag over the hole: in it goes
-    if (holeCover(b) > 0.5) { b.state = "inHole"; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "drop", bag: b }); }
+    // the middle of the bag over the hole (or more than half of it): it tips in
+    if (holeCover(b) > 0.5 || dist(b, HOLE) < HR) { const v = { x: b.vx, y: b.vy }; b.state = "inHole"; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "drop", bag: b }); if (v.x || v.y) this.brush(v); }
     else if (!onBoard(b)) {
       if (b.y > BY) b.y += BR; if (b.y < FY) b.y -= BR; if (Math.abs(b.x) > HW) b.x += Math.sign(b.x) * BR;
       b.state = "ground"; b.z = 0; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "off", bag: b });

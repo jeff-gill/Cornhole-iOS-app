@@ -795,7 +795,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795037710 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795037853 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -968,7 +968,8 @@ const onBoard = p => Math.abs(p.x) <= HW && p.y >= FY && p.y <= BY;
 const plane = y => FH + (y - FY) * (BH - FH) / (BY - FY);
 const surf = p => onBoard(p) ? plane(p.y) : 0;
 const overHole = (p, r = HR) => dist(p, HOLE) < r;
-// How much of a bag (a BAG-wide square, turned by its angle) is over the hole, 0..1. More than half and it falls in.
+// How much of a bag (a BAG-wide square, turned by its angle) is over the hole, 0..1. More than half (or its middle
+// over the hole) and it falls in.
 const COVER_N = 12;
 function holeCover(b) {
   const dx = b.x - HOLE.x, dy = b.y - HOLE.y;
@@ -1096,8 +1097,8 @@ class World {
       if (!onSurface(o)) continue;
       const cov = holeCover(o); if (cov <= 0) continue;
       const tx = HOLE.x - o.x, ty = HOLE.y - o.y, td = Math.hypot(tx, ty) || 1;
-      const k = 1.1 + cov * 2.2 + (this.random ? this.rand() * 0.6 : 0.3); // ft/s: the more it covers, the more it gets hit
-      o.vx = hx * k + (tx / td) * k * 0.45; o.vy = hy * k + (ty / td) * k * 0.45;
+      const k = 1.6 + cov * 3.5 + (this.random ? this.rand() * 0.6 : 0.3); // ft/s: the more it covers, the more it gets hit
+      o.vx = hx * k + (tx / td) * k * 0.7; o.vy = hy * k + (ty / td) * k * 0.7;
       o.state = "sliding"; o.spin += (this.random ? this.rand() * 2 - 1 : 0.5) * 2;
       this.events.push({ type: "hit", a: o, b: o });
     }
@@ -1110,8 +1111,8 @@ class World {
   }
   bounds(b) {
     if (!onSurface(b)) return;
-    // more than half of the bag over the hole: in it goes
-    if (holeCover(b) > 0.5) { b.state = "inHole"; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "drop", bag: b }); }
+    // the middle of the bag over the hole (or more than half of it): it tips in
+    if (holeCover(b) > 0.5 || dist(b, HOLE) < HR) { const v = { x: b.vx, y: b.vy }; b.state = "inHole"; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "drop", bag: b }); if (v.x || v.y) this.brush(v); }
     else if (!onBoard(b)) {
       if (b.y > BY) b.y += BR; if (b.y < FY) b.y -= BR; if (Math.abs(b.x) > HW) b.x += Math.sign(b.x) * BR;
       b.state = "ground"; b.z = 0; b.vx = b.vy = 0; b.spin = 0; this.events.push({ type: "off", bag: b });
@@ -2933,7 +2934,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795037710`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795037853`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4550,7 +4551,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795037710`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795037853`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4561,7 +4562,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795037710`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795037853`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6791,7 +6792,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1795037710";
+const BUILD_ID = "1795037853";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
