@@ -132,11 +132,12 @@ function updateAimRig(dt) {
   // Place the rig a few feet in front of the hand, on the line toward the landing spot.
   const rel = release(S.player), to = S.landing || HOLE, d = Math.hypot(to.x - rel.x, to.y - rel.y);
   const dir = { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
-  const ahead = handFloor() > 0 ? 1.2 : 5.4; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
+  const ahead = handFloor() > 0 ? 1.2 : 5.9; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
   // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
   aimRig.rotation.x = handFloor() > 0 ? -Math.atan2(handFloor() - surf(to), Math.max(1, d - ahead)) : 0;
   aimBase.rotation.y = -Math.atan2(dir.x, dir.y);
+  if (handFloor() <= 0) aimOnArc(); // on screen, the flight line runs straight up the middle of the green wedge
   // Perfect-direction wedge.
   if (aimWedgeZone !== L.zone) {
     aimWedgeZone = L.zone;
@@ -170,6 +171,32 @@ function updateAimRig(dt) {
   u.uB0.value = ringFrac(POWER_TARGET - band, band); u.uB1.value = 0.5;
   u.uOD.value = ringFrac(1, band);
   u.uAlpha.value = alpha; u.uTime.value = S.time;
+}
+// The flight line is drawn up in the air and the wedge lies on the ground, so seen from behind the thrower they
+// drift apart. Slide the rig sideways (same height on screen) to sit right under the line, turned to follow it.
+const aimV = new THREE.Vector3(), aimG0 = new THREE.Vector3(), aimG1 = new THREE.Vector3();
+function aimArcX(fl, sy) { // where the flight line crosses this height on screen (the first time, nearest the hand)
+  let px = null, py = null;
+  for (const q of fl) {
+    aimV.copy(W(q.x, q.y, q.z)).project(camera);
+    if (aimV.z > 1) { px = null; continue; }
+    if (py !== null && (py - sy) * (aimV.y - sy) <= 0 && py !== aimV.y) return px + (aimV.x - px) * (sy - py) / (aimV.y - py);
+    px = aimV.x; py = aimV.y;
+  }
+  return null;
+}
+function aimGround(sx, sy, floor, out) { // the spot on the ground under this point of the screen
+  aimV.set(sx, sy, 0.5).unproject(camera).sub(camera.position).normalize();
+  if (aimV.y >= -1e-4) return null;
+  return out.copy(camera.position).addScaledVector(aimV, (floor - camera.position.y) / aimV.y);
+}
+function aimOnArc() {
+  const fl = S.prev && S.prev.flight; if (!fl || fl.length < 3) return;
+  const floor = aimRig.position.y, c = aimV.copy(aimRig.position).project(camera), sy0 = c.y, sy1 = c.y + 0.15;
+  const x0 = aimArcX(fl, sy0), x1 = aimArcX(fl, sy1); if (x0 === null || x1 === null) return;
+  if (!aimGround(x0, sy0, floor, aimG0) || !aimGround(x1, sy1, floor, aimG1)) return;
+  aimRig.position.copy(aimG0);
+  aimBase.rotation.y = -Math.atan2(aimG1.x - aimG0.x, -(aimG1.z - aimG0.z));
 }
 function fireAim() {
   aimFireT = 0.4;
