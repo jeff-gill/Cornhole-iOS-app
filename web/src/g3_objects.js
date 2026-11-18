@@ -216,6 +216,11 @@ function updateBags(dt) {
     const sq = v.squashT < 0.3 ? Math.sin(v.squashT / 0.3 * Math.PI) * Math.exp(-v.squashT * 6) : 0;
     m.scale.set(1 + 0.25 * sq, 1 - 0.45 * sq, 1 + 0.25 * sq);
     if (b.state === "flying") {
+      // in the air it pops out of the hand and flutters like a floppy cloth bag
+      v.flyT = (v.flyT || 0) + dt;
+      const pop = v.flyT < 0.18 ? 0.7 + 0.3 * (1 + 2.2 * (v.flyT / 0.18 - 1) ** 3 + 1.2 * (v.flyT / 0.18 - 1) ** 2) : 1;
+      const fl = 0.07 * Math.sin(v.flyT * 16);
+      m.scale.set(pop * (1 + fl), pop * (1 - fl * 0.6), pop * (1 - fl));
       m.position.copy(W(b.x, b.y, b.z));
       if (b.owner === 0 && (S.kind === "career" || S.kind === "bullseye") && career.trail !== "none") trailPuff(m.position, career.trail, 0);
       else if (b.owner === 1 && S.online && S.online.trail !== "none") trailPuff(m.position, S.online.trail, 1);

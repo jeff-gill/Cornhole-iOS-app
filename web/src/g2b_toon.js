@@ -3,7 +3,7 @@
 // Flat cartoon shading (three tones of light), ink outlines around every shape, a bright sky with puffy clouds
 // and punchier colour. Models load in over time, so their materials are swapped as they appear, and swapped
 // back on a court without the look. `var` (not const/let) so buildVenue can call setToon() while the game starts.
-var TOON_VENUES = new Set(["backyard"]);
+var TOON_VENUES = new Set(["backyard", "tailgate", "beach", "brewery", "lodge", "bonfire", "island", "rooftop", "lakeside", "canyon", "carnival", "stadium"]);
 var toonState = null;
 var toonOrig = new WeakMap();   // cartoon material -> the original it replaced
 
@@ -57,11 +57,13 @@ function setToon(id) {
   st.on = on; st.ink.enabled = on;
   toonSweep(on);
   if (!on) return;
-  // cartoon shading lights flat faces fully, so the lights come down a little; brighter cartoon sky
+  // cartoon shading lights flat faces fully, so the lights come down a little
   sun.intensity *= 0.55; hemi.intensity *= 0.85;
-  skyU.top.value.set(0.12, 0.42, 0.95); skyU.mid.value.set(0.42, 0.72, 1.0); skyU.horizon.value.set(0.82, 0.93, 1.0); skyU.sunGlow.value = 0.6;
-  scene.fog.color.setHex(0xcfe6ff); scene.fog.near = 420; scene.fog.far = 1500;
-  st.clouds = toonClouds(); scene.add(st.clouds);
+  if (id === "backyard") { // a brighter cartoon sky (other courts keep their own: sunset, snow, night...)
+    skyU.top.value.set(0.12, 0.42, 0.95); skyU.mid.value.set(0.42, 0.72, 1.0); skyU.horizon.value.set(0.82, 0.93, 1.0); skyU.sunGlow.value = 0.6;
+    scene.fog.color.setHex(0xcfe6ff); scene.fog.near = 420; scene.fog.far = 1500;
+  }
+  if (VENUE_LOOK[id].night < 0.5) { st.clouds = toonClouds(); scene.add(st.clouds); } // puffy clouds by day
 }
 
 // Big puffy clouds in a ring around the court.

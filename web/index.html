@@ -791,7 +791,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1794954704 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795019041 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2928,7 +2928,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1794954704`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795019041`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4545,7 +4545,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1794954704`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795019041`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4556,7 +4556,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1794954704`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795019041`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -5404,7 +5404,7 @@ function buildVenue(id) {
 // Flat cartoon shading (three tones of light), ink outlines around every shape, a bright sky with puffy clouds
 // and punchier colour. Models load in over time, so their materials are swapped as they appear, and swapped
 // back on a court without the look. `var` (not const/let) so buildVenue can call setToon() while the game starts.
-var TOON_VENUES = new Set(["backyard"]);
+var TOON_VENUES = new Set(["backyard", "tailgate", "beach", "brewery", "lodge", "bonfire", "island", "rooftop", "lakeside", "canyon", "carnival", "stadium"]);
 var toonState = null;
 var toonOrig = new WeakMap();   // cartoon material -> the original it replaced
 
@@ -5458,11 +5458,13 @@ function setToon(id) {
   st.on = on; st.ink.enabled = on;
   toonSweep(on);
   if (!on) return;
-  // cartoon shading lights flat faces fully, so the lights come down a little; brighter cartoon sky
+  // cartoon shading lights flat faces fully, so the lights come down a little
   sun.intensity *= 0.55; hemi.intensity *= 0.85;
-  skyU.top.value.set(0.12, 0.42, 0.95); skyU.mid.value.set(0.42, 0.72, 1.0); skyU.horizon.value.set(0.82, 0.93, 1.0); skyU.sunGlow.value = 0.6;
-  scene.fog.color.setHex(0xcfe6ff); scene.fog.near = 420; scene.fog.far = 1500;
-  st.clouds = toonClouds(); scene.add(st.clouds);
+  if (id === "backyard") { // a brighter cartoon sky (other courts keep their own: sunset, snow, night...)
+    skyU.top.value.set(0.12, 0.42, 0.95); skyU.mid.value.set(0.42, 0.72, 1.0); skyU.horizon.value.set(0.82, 0.93, 1.0); skyU.sunGlow.value = 0.6;
+    scene.fog.color.setHex(0xcfe6ff); scene.fog.near = 420; scene.fog.far = 1500;
+  }
+  if (VENUE_LOOK[id].night < 0.5) { st.clouds = toonClouds(); scene.add(st.clouds); } // puffy clouds by day
 }
 
 // Big puffy clouds in a ring around the court.
@@ -5770,6 +5772,11 @@ function updateBags(dt) {
     const sq = v.squashT < 0.3 ? Math.sin(v.squashT / 0.3 * Math.PI) * Math.exp(-v.squashT * 6) : 0;
     m.scale.set(1 + 0.25 * sq, 1 - 0.45 * sq, 1 + 0.25 * sq);
     if (b.state === "flying") {
+      // in the air it pops out of the hand and flutters like a floppy cloth bag
+      v.flyT = (v.flyT || 0) + dt;
+      const pop = v.flyT < 0.18 ? 0.7 + 0.3 * (1 + 2.2 * (v.flyT / 0.18 - 1) ** 3 + 1.2 * (v.flyT / 0.18 - 1) ** 2) : 1;
+      const fl = 0.07 * Math.sin(v.flyT * 16);
+      m.scale.set(pop * (1 + fl), pop * (1 - fl * 0.6), pop * (1 - fl));
       m.position.copy(W(b.x, b.y, b.z));
       if (b.owner === 0 && (S.kind === "career" || S.kind === "bullseye") && career.trail !== "none") trailPuff(m.position, career.trail, 0);
       else if (b.owner === 1 && S.online && S.online.trail !== "none") trailPuff(m.position, S.online.trail, 1);
@@ -6752,7 +6759,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1794954704";
+const BUILD_ID = "1795019041";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
