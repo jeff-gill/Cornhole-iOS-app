@@ -428,9 +428,10 @@ function renderBBResult() {
   requestAnimationFrame(() => card.classList.add("show"));
   if (won) { sfx.win(); haptic("success"); }
   $("bbCollect").onclick = () => {
-    $("bbReveal").hidden = true; openHub();
-    if (can) { const i = career.cans.findIndex(c => c.instant && c.id === can.can); if (i >= 0) setTimeout(() => openCanSheet(i), 250); }
+    openHub(); // (behind the reveal, which stays up until the can opening covers it: no flash of the clubhouse)
+    if (can) { const i = career.cans.findIndex(c => c.instant && c.id === can.can); if (i >= 0) openCanSheet(i); }
     else renderBBSheet(); // back to Bullseye: what's left, throw again or buy more
+    $("bbReveal").hidden = true;
   };
 }
 

@@ -132,7 +132,7 @@ function updateAimRig(dt) {
   // Place the rig a few feet in front of the hand, on the line toward the landing spot.
   const rel = release(S.player), to = S.landing || HOLE, d = Math.hypot(to.x - rel.x, to.y - rel.y);
   const dir = { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
-  const ahead = handFloor() > 0 ? 1.2 : 4.2; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
+  const ahead = handFloor() > 0 ? 1.2 : 5.4; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
   // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
   aimRig.rotation.x = handFloor() > 0 ? -Math.atan2(handFloor() - surf(to), Math.max(1, d - ahead)) : 0;
@@ -150,7 +150,7 @@ function updateAimRig(dt) {
   const frac = ringFrac(Math.min(fill, FILL_MAX), band);
   rampColor(frac, arrowMat.uniforms.uA.value);
   tipGlow.material.color.copy(arrowMat.uniforms.uA.value);
-  let len = 2 + Math.min(fill, FILL_MAX) * 12, alpha = p.active || !throwing ? 1 : 0.7;
+  let len = 2 + Math.min(fill, FILL_MAX) * 9, alpha = p.active || !throwing ? 1 : 0.7;
   if (!throwing) { // launch: the arrow shoots out and fades
     const k = 1 - aimFireT / 0.4;
     len *= 1 + k * 1.6; alpha = 1 - k;

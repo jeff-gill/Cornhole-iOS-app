@@ -278,7 +278,7 @@ function ui() {
   } else if (S.phase === "throw") {
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><button class="btn small" id="backBtn">↩ CHANGE AIM</button></div>
       <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
-      <div><div class="big">Pull back and let go</div><div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div></div></div>`;
+      <div><div class="big">Pull back and let go</div>${(career.throws || 0) < 12 ? `<div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div>` : ""}</div></div>`; // the how-to only for your first dozen throws
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
   } else if (S.phase === "bbintro") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
@@ -854,14 +854,18 @@ function step(now) {
   else if (S.phase === "cpu") {
     S.cpuT += dt;
     if (!S.cpuPlan && S.cpuT > 0.6) cpuTurn();
-    // The computer's wind-up, like yours: its power ring fills and its arrow swings, settling on where it lets go.
+    // The computer's wind-up runs the very same pull as yours (same ring fill, same steady arrow sweep): it pulls
+    // to its power, then lets go as the arrow sweeps past the direction it picked.
+    let go = S.cpuT > 6 && S.ideal; // a safety net; it normally lets go well before this
     if (S.cpuT > 0.9 && S.ideal && S.cpuErr) {
-      const e = S.cpuErr, k = clamp((S.cpuT - 0.9) / 1.5, 0, 1), left = Math.max(0, 2.6 - S.cpuT);
-      S.pull.active = true;
-      S.pull.fill = (POWER_TARGET + e.pow * 0.5) * (1 - (1 - k) ** 3);
-      S.pull.swing = clamp(e.dir + 0.9 * Math.sin(left * 7) * Math.min(1, left / 1.2), -1.3, 1.3);
+      const e = S.cpuErr, p = S.pull, k = clamp((S.cpuT - 0.9) / 0.8, 0, 1);
+      p.active = true;
+      p.raw = clamp(POWER_TARGET + e.pow * 0.5, 0.1, 1.25) * (1 - (1 - k) ** 3);
+      const lim = p.fill > 1 ? 1.3 : 1, aim = clamp(e.dir, -lim * 0.98, lim * 0.98), before = p.swing - aim;
+      updatePull(dt);
+      if (k >= 1 && S.cpuT > 2 && Math.sign(p.swing - aim) !== Math.sign(before)) { p.swing = aim; go = true; }
     }
-    if (S.cpuT > 2.6 && S.ideal) {
+    if (go) {
       const e = S.cpuErr || { dir: gauss(S.opponent.skill), pow: gauss(S.opponent.skill) };
       S.overdrive = false; S.pull.active = false; S.cpuErr = null;
       fireAim();

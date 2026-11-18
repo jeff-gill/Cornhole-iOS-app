@@ -517,6 +517,7 @@ function releasePull() {
   const p = S.pull, L = lv();
   p.active = false;
   if (p.fill < 0.1) { updateHUD(); return; } // a tap, not a pull
+  career.throws = (career.throws || 0) + 1;
   const over = p.fill > 1;
   const pow = clamp((p.fill - POWER_TARGET) / 0.5, -1, 1);
   S.errors = {

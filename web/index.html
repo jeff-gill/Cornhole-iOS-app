@@ -791,7 +791,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795019041 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795023539 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -1871,6 +1871,7 @@ function releasePull() {
   const p = S.pull, L = lv();
   p.active = false;
   if (p.fill < 0.1) { updateHUD(); return; } // a tap, not a pull
+  career.throws = (career.throws || 0) + 1;
   const over = p.fill > 1;
   const pow = clamp((p.fill - POWER_TARGET) / 0.5, -1, 1);
   S.errors = {
@@ -2928,7 +2929,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795019041`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795023539`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4545,7 +4546,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795019041`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795023539`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4556,7 +4557,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795019041`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795023539`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6197,7 +6198,7 @@ function updateAimRig(dt) {
   // Place the rig a few feet in front of the hand, on the line toward the landing spot.
   const rel = release(S.player), to = S.landing || HOLE, d = Math.hypot(to.x - rel.x, to.y - rel.y);
   const dir = { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
-  const ahead = handFloor() > 0 ? 1.2 : 4.2; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
+  const ahead = handFloor() > 0 ? 1.2 : 5.4; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
   // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
   aimRig.rotation.x = handFloor() > 0 ? -Math.atan2(handFloor() - surf(to), Math.max(1, d - ahead)) : 0;
@@ -6215,7 +6216,7 @@ function updateAimRig(dt) {
   const frac = ringFrac(Math.min(fill, FILL_MAX), band);
   rampColor(frac, arrowMat.uniforms.uA.value);
   tipGlow.material.color.copy(arrowMat.uniforms.uA.value);
-  let len = 2 + Math.min(fill, FILL_MAX) * 12, alpha = p.active || !throwing ? 1 : 0.7;
+  let len = 2 + Math.min(fill, FILL_MAX) * 9, alpha = p.active || !throwing ? 1 : 0.7;
   if (!throwing) { // launch: the arrow shoots out and fades
     const k = 1 - aimFireT / 0.4;
     len *= 1 + k * 1.6; alpha = 1 - k;
@@ -6759,7 +6760,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1795019041";
+const BUILD_ID = "1795023539";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -7630,9 +7631,10 @@ function renderBBResult() {
   requestAnimationFrame(() => card.classList.add("show"));
   if (won) { sfx.win(); haptic("success"); }
   $("bbCollect").onclick = () => {
-    $("bbReveal").hidden = true; openHub();
-    if (can) { const i = career.cans.findIndex(c => c.instant && c.id === can.can); if (i >= 0) setTimeout(() => openCanSheet(i), 250); }
+    openHub(); // (behind the reveal, which stays up until the can opening covers it: no flash of the clubhouse)
+    if (can) { const i = career.cans.findIndex(c => c.instant && c.id === can.can); if (i >= 0) openCanSheet(i); }
     else renderBBSheet(); // back to Bullseye: what's left, throw again or buy more
+    $("bbReveal").hidden = true;
   };
 }
 
@@ -7960,7 +7962,7 @@ function ui() {
   } else if (S.phase === "throw") {
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><button class="btn small" id="backBtn">↩ CHANGE AIM</button></div>
       <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
-      <div><div class="big">Pull back and let go</div><div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div></div></div>`;
+      <div><div class="big">Pull back and let go</div>${(career.throws || 0) < 12 ? `<div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div>` : ""}</div></div>`; // the how-to only for your first dozen throws
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
   } else if (S.phase === "bbintro") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
@@ -8536,14 +8538,18 @@ function step(now) {
   else if (S.phase === "cpu") {
     S.cpuT += dt;
     if (!S.cpuPlan && S.cpuT > 0.6) cpuTurn();
-    // The computer's wind-up, like yours: its power ring fills and its arrow swings, settling on where it lets go.
+    // The computer's wind-up runs the very same pull as yours (same ring fill, same steady arrow sweep): it pulls
+    // to its power, then lets go as the arrow sweeps past the direction it picked.
+    let go = S.cpuT > 6 && S.ideal; // a safety net; it normally lets go well before this
     if (S.cpuT > 0.9 && S.ideal && S.cpuErr) {
-      const e = S.cpuErr, k = clamp((S.cpuT - 0.9) / 1.5, 0, 1), left = Math.max(0, 2.6 - S.cpuT);
-      S.pull.active = true;
-      S.pull.fill = (POWER_TARGET + e.pow * 0.5) * (1 - (1 - k) ** 3);
-      S.pull.swing = clamp(e.dir + 0.9 * Math.sin(left * 7) * Math.min(1, left / 1.2), -1.3, 1.3);
+      const e = S.cpuErr, p = S.pull, k = clamp((S.cpuT - 0.9) / 0.8, 0, 1);
+      p.active = true;
+      p.raw = clamp(POWER_TARGET + e.pow * 0.5, 0.1, 1.25) * (1 - (1 - k) ** 3);
+      const lim = p.fill > 1 ? 1.3 : 1, aim = clamp(e.dir, -lim * 0.98, lim * 0.98), before = p.swing - aim;
+      updatePull(dt);
+      if (k >= 1 && S.cpuT > 2 && Math.sign(p.swing - aim) !== Math.sign(before)) { p.swing = aim; go = true; }
     }
-    if (S.cpuT > 2.6 && S.ideal) {
+    if (go) {
       const e = S.cpuErr || { dir: gauss(S.opponent.skill), pow: gauss(S.opponent.skill) };
       S.overdrive = false; S.pull.active = false; S.cpuErr = null;
       fireAim();
