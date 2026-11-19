@@ -124,6 +124,7 @@ function rampColor(a, out) {
   return out.set(RAMP[RAMP.length - 1][1]);
 }
 let aimFireT = 0, aimWedgeZone = -1;
+const wedgeTilt = new THREE.Group(); aimBase.add(wedgeTilt);
 function updateAimRig(dt) {
   const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
@@ -141,10 +142,10 @@ function updateAimRig(dt) {
   // Perfect-direction wedge.
   if (aimWedgeZone !== L.zone) {
     aimWedgeZone = L.zone;
-    if (wedge) { aimBase.remove(wedge); wedge.geometry.dispose(); }
+    if (wedge) { wedgeTilt.remove(wedge); wedge.geometry.dispose(); }
     const za = Math.max(0.006, L.zone * AIM_VIS);
     wedge = new THREE.Mesh(new THREE.CircleGeometry(19, 24, Math.PI / 2 - za, 2 * za), wedgeMat);
-    wedge.rotation.x = -Math.PI / 2; wedge.position.y = -0.01; wedge.renderOrder = 7; aimBase.add(wedge);
+    wedge.rotation.x = -Math.PI / 2; wedge.position.y = -0.01; wedge.renderOrder = 7; wedgeTilt.add(wedge);
   }
   // Arrow: longer with more pull, swinging with the aim needle.
   arrowMat.uniforms.uTime.value = S.time;
@@ -160,8 +161,10 @@ function updateAimRig(dt) {
   arrowMat.uniforms.uAlpha.value = alpha; outlineMat.opacity = 0.6 * alpha; whiteMat.opacity = alpha; shadowMat.opacity = 0.28 * alpha;
   aimSwing.rotation.y = -clamp(p.swing, -1.3, 1.3) * AIM_VIS;
   // the arrow tilts up off the ground with the throw's arc: a high lob points up, a low fast throw stays flatter
-  const tilt = S.ideal ? clamp(S.ideal.el * 0.36, 0.04, 0.36) : 0.12;
+  // (the green wedge tilts the same, so it shows where to point)
+  const tilt = S.ideal ? clamp((S.ideal.el - rad(12)) * 0.4, 0.01, 0.3) : 0.1;
   aimSwing.rotation.order = "YXZ"; aimSwing.rotation.x += (tilt - aimSwing.rotation.x) * Math.min(1, dt * 8);
+  wedgeTilt.rotation.x = aimSwing.rotation.x;
   setArrowLength(len);
   const tip = len + ARROW.hl;
   tipGlow.position.set(0, 0.25, -tip);
