@@ -192,7 +192,7 @@ function updateHUD() {
 // ───────────────────────── Panel and scoreboard
 const panel = $("panel");
 function renderScore() {
-  if (S.kind === "bullseye") { $("boardInfo").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = true; return; } // no scoreboard: one throw
+  if (S.kind === "bullseye") { $("boardInfo").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = $("iobag" + p).hidden = true; return; } // no scoreboard: one throw
   const ir = inningResult();
   for (const p of [0, 1]) {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
@@ -221,11 +221,15 @@ function renderBoardInfo() {
 function renderInOn() {
   const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden;
   for (const p of [0, 1]) {
-    const el = $("io" + p); el.hidden = !show; if (!show) continue;
+    const el = $("io" + p); el.hidden = !show; if (!show) { $("iobag" + p).hidden = true; continue; }
     let hole = 0, on = 0;
     for (const b of S.world.bags) if (b.owner === p) { const pts = bagPoints(b); if (pts === 3) hole++; else if (pts === 1) on++; }
     el.style.borderColor = COL.p[p]; el.style.setProperty("--line", COL.p[p]);
     el.innerHTML = `<table><tr><th>IN</th><th>ON</th><th>PTS</th></tr><tr><td>${hole}</td><td>${on}</td><td class="pts">${hole * 3 + on}</td></tr></table>`; // this inning
+    const bg = $("iobag" + p), gear = S.gear && S.gear[p];
+    bg.hidden = !gear; if (!gear) continue;
+    bg.style.bottom = (parseFloat(getComputedStyle(el).bottom) + el.offsetHeight + 4) + "px";
+    if (bg.dataset.id !== gear.id) { bg.dataset.id = gear.id; const ctx = bg.getContext("2d"); ctx.clearRect(0, 0, 96, 96); paintBag(ctx, 96, 96, gear); }
   }
 }
 function renderBanner() {
@@ -456,7 +460,7 @@ function dismissScorecard(dx, dy) {
 let hubVenue = career.venue || 0;
 function openHub() {
   $("timeupMsg").hidden = true;
-  $("io0").hidden = $("io1").hidden = true; $("boardInfo").hidden = true;
+  $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true;
   showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;

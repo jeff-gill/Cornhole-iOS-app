@@ -135,6 +135,10 @@ body.inhub .score, body.inhub #panel { display: none; }
 .iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
+/* the bag each player is throwing, sitting on top of their table at the outside edge */
+.iobag { position: absolute; z-index: 3; pointer-events: none; width: 44px; height: 44px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.iobag.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobag.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
+.iobag[hidden] { display: none; }
 .iobox table { border-collapse: collapse; } /* IN | ON over the two counts, split by a + of grid lines */
 .iobox th, .iobox td { width: 34px; padding: 2px 4px; text-align: center; }
 .iobox .pts { color: var(--gold); }
@@ -511,7 +515,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .dailybtn small { font: 900 11px/1.2 Nunito, system-ui, sans-serif; }
 /* Daily Drop on the left, Bullseye Bags on the right */
 /* Bullseye Bags: no scoreboard, just pause and help along the top */
-body.bbmode .score > .card, body.bbmode .score > .inning, body.bbmode .iobox, body.bbmode #boardInfo { display: none !important; }
+body.bbmode .score > .card, body.bbmode .score > .inning, body.bbmode .iobox, body.bbmode .iobag, body.bbmode #boardInfo { display: none !important; }
 body.bbmode .score { padding-bottom: 0; min-height: var(--toprow); }
 body.bbmode #app { width: 100%; }
 body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; left: 0; right: 0; top: calc(var(--toprow) - 38px); text-align: center; font-family: var(--font-display); font-size: 20px; color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; }
@@ -807,7 +811,7 @@ s.was { opacity: .6; font-size: .8em; }
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
-    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div>
+    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><canvas class="iobag p0" id="iobag0" width="96" height="96" hidden></canvas><canvas class="iobag p1" id="iobag1" width="96" height="96" hidden></canvas>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
@@ -828,7 +832,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795109053 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795119974 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2967,7 +2971,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795109053`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795119974`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4584,7 +4588,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795109053`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795119974`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4595,7 +4599,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795109053`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795119974`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6831,7 +6835,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1795109053";
+const BUILD_ID = "1795119974";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -7982,7 +7986,7 @@ function updateHUD() {
 // ───────────────────────── Panel and scoreboard
 const panel = $("panel");
 function renderScore() {
-  if (S.kind === "bullseye") { $("boardInfo").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = true; return; } // no scoreboard: one throw
+  if (S.kind === "bullseye") { $("boardInfo").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = $("iobag" + p).hidden = true; return; } // no scoreboard: one throw
   const ir = inningResult();
   for (const p of [0, 1]) {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
@@ -8011,11 +8015,15 @@ function renderBoardInfo() {
 function renderInOn() {
   const show = S.world && !["hub"].includes(S.phase) && $("hub").hidden;
   for (const p of [0, 1]) {
-    const el = $("io" + p); el.hidden = !show; if (!show) continue;
+    const el = $("io" + p); el.hidden = !show; if (!show) { $("iobag" + p).hidden = true; continue; }
     let hole = 0, on = 0;
     for (const b of S.world.bags) if (b.owner === p) { const pts = bagPoints(b); if (pts === 3) hole++; else if (pts === 1) on++; }
     el.style.borderColor = COL.p[p]; el.style.setProperty("--line", COL.p[p]);
     el.innerHTML = `<table><tr><th>IN</th><th>ON</th><th>PTS</th></tr><tr><td>${hole}</td><td>${on}</td><td class="pts">${hole * 3 + on}</td></tr></table>`; // this inning
+    const bg = $("iobag" + p), gear = S.gear && S.gear[p];
+    bg.hidden = !gear; if (!gear) continue;
+    bg.style.bottom = (parseFloat(getComputedStyle(el).bottom) + el.offsetHeight + 4) + "px";
+    if (bg.dataset.id !== gear.id) { bg.dataset.id = gear.id; const ctx = bg.getContext("2d"); ctx.clearRect(0, 0, 96, 96); paintBag(ctx, 96, 96, gear); }
   }
 }
 function renderBanner() {
@@ -8246,7 +8254,7 @@ function dismissScorecard(dx, dy) {
 let hubVenue = career.venue || 0;
 function openHub() {
   $("timeupMsg").hidden = true;
-  $("io0").hidden = $("io1").hidden = true; $("boardInfo").hidden = true;
+  $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true;
   showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;

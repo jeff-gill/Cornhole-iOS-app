@@ -123,6 +123,10 @@ body.inhub .score, body.inhub #panel { display: none; }
 .iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
+/* the bag each player is throwing, sitting on top of their table at the outside edge */
+.iobag { position: absolute; z-index: 3; pointer-events: none; width: 44px; height: 44px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.iobag.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobag.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
+.iobag[hidden] { display: none; }
 .iobox table { border-collapse: collapse; } /* IN | ON over the two counts, split by a + of grid lines */
 .iobox th, .iobox td { width: 34px; padding: 2px 4px; text-align: center; }
 .iobox .pts { color: var(--gold); }
@@ -499,7 +503,7 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .dailybtn small { font: 900 11px/1.2 Nunito, system-ui, sans-serif; }
 /* Daily Drop on the left, Bullseye Bags on the right */
 /* Bullseye Bags: no scoreboard, just pause and help along the top */
-body.bbmode .score > .card, body.bbmode .score > .inning, body.bbmode .iobox, body.bbmode #boardInfo { display: none !important; }
+body.bbmode .score > .card, body.bbmode .score > .inning, body.bbmode .iobox, body.bbmode .iobag, body.bbmode #boardInfo { display: none !important; }
 body.bbmode .score { padding-bottom: 0; min-height: var(--toprow); }
 body.bbmode #app { width: 100%; }
 body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; left: 0; right: 0; top: calc(var(--toprow) - 38px); text-align: center; font-family: var(--font-display); font-size: 20px; color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; }
@@ -795,7 +799,7 @@ s.was { opacity: .6; font-size: .8em; }
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
-    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div>
+    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><canvas class="iobag p0" id="iobag0" width="96" height="96" hidden></canvas><canvas class="iobag p1" id="iobag1" width="96" height="96" hidden></canvas>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
