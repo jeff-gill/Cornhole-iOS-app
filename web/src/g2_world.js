@@ -2202,7 +2202,7 @@ function buildVenue(id) {
     setGround(g, "asphalt", 18);
     stadiumNextDoor(g, 0, -205);
     campus(g);
-    truck(g, -16, -24, 0.15, 0xc8102e); truck(g, 17, -30, -0.2, 0x2f6fd9); truck(g, -18, -52, 0.1, 0xf2f2f2); truck(g, 16, -2, -0.1, 0x222222); truck(g, -17, 20, -0.1, 0xffc93a); truck(g, 15, 26, 0.15, 0x2fbf71);
+    truck(g, -16, -24, 0.15, 0xc8102e); truck(g, 17, -30, -0.2, 0x2f6fd9); truck(g, -18, -52, 0.1, 0xf2f2f2); truck(g, 16, -2, -0.1, 0x8e959e); truck(g, -17, 20, -0.1, 0xffc93a); truck(g, 15, 26, 0.15, 0x2fbf71);
     // a packed lot: rows of parked cars out to both sides, behind the boards and around the stadium
     const r = rng(19), CARS = [0xc8102e, 0x1f3a6e, 0xf2f2f2, 0x222222, 0x9aa4b2, 0x2f86ff, 0x6a6a70, 0x8a1020, 0x2fbf71, 0xb8b8bc, 0xffc93a], lot = [];
     const park = (x, z, rot) => lot.push([x, z, rot + (r() - 0.5) * 0.08, CARS[Math.floor(r() * CARS.length)], r() < 0.4 ? "suv" : "sedan"]);
@@ -2225,7 +2225,7 @@ function buildVenue(id) {
     crowd(g, 0, 34, 5, 4, 11, 0, 0);
     crowd(g, -21, 8, 3, 2, 13, -17, 20);
     crowd(g, 20, -16, 3, 2, 15, 0, -15); // watching the game chair(g, -7, -38, 0.3, 0xffc93a); chair(g, 7.5, -39, -0.3, 0x2fbf71);
-    picnicTable(g, -18, -32, 0.1);
+    picnicTable(g, -19, -39, 0.1);
   } else if (id === "beach") {
     // A resort beach: the sea and its surf alongside the court, rows of umbrellas and loungers, palms where the sand
     // ends, hotel towers behind them, a surf shack, lifeguard towers, and a cruise ship out on the water.
