@@ -754,6 +754,32 @@ s.was { opacity: .6; font-size: .8em; }
 }
 #loading { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 22px; color: #12203a; }
 @media (prefers-reduced-motion: reduce) { #banner, .card, .btn { transition: none; } #fourbag.go { animation-duration: .01s; } }
+/* Short screens (iPhone SE, iPhone 8 and the like): a tighter clubhouse so everything fits without scrolling. */
+@media (max-height: 720px) {
+  #hub { gap: 6px; padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .hubtop .pill b { font-size: 17px; } .hubtop .pill { padding: 2px 10px 2px 3px; }
+  .hubtitle { margin-top: 4px; font-size: min(8.5vw, 38px); }
+  .seasonbadge { margin-top: 4px; padding: 2px 10px; font-size: 12px; } .seasonbadge b { font-size: 13px; }
+  .hubperks { margin-top: 6px; }
+  .dailybtn { padding: 4px 8px 4px 4px; } .dailybtn .gift { font-size: 22px; }
+  .hubbottom { gap: 6px; }
+  .coolerhead { font-size: 13px; margin-bottom: 2px; }
+  .cooler { margin-bottom: 2px; gap: 6px; }
+  .cslot { height: 62px; }
+  .cslot .canpic { height: 38px; }
+  .venue { padding: 10px 14px; border-width: 3px; }
+  .venue h3 { font-size: 30px; margin: 2px 0 6px; }
+  .venue .facts { margin-top: 6px; }
+  .vcarousel .venue .go { margin-top: 6px; font-size: 20px; padding-top: 8px; padding-bottom: 8px; }
+  .hubrow .btn { padding-top: 8px; padding-bottom: 8px; }
+  /* in a match: more room for the court */
+  #banner { top: 52px; font-size: 19px; padding: 5px 14px 7px; }
+  #panel { min-height: 150px; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+  .who { font-size: 18px; }
+  .pullpad { gap: 10px; } .pullpad .bag { width: 48px; height: 48px; border-radius: 14px; font-size: 22px; }
+  .pullpad .big { font-size: 18px; } .pullpad .muted { font-size: 12px; }
+  .iobox { bottom: 6px; } .iobox th, .iobox td { width: 28px; padding: 1px 3px; } .iobox th { font-size: 10px; } .iobox td { font-size: 16px; }
+}
 </style>
 
 <div id="app">
@@ -791,7 +817,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795054909 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795055765 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2930,7 +2956,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795054909`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795055765`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4547,7 +4573,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795054909`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795055765`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4558,7 +4584,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795054909`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795055765`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6794,7 +6820,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1795054909";
+const BUILD_ID = "1795055765";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -8261,7 +8287,7 @@ function renderHub() {
   // The side cards show the same top as the front card (centred label and name), so nothing jumps as they swipe in.
   const peek = (i, cls) => i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
   $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars (W/L)", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", v.wind[0] === v.wind[1] ? `${v.wind[0]}` : `${v.wind[0]}–${v.wind[1]}`)}</div>
+    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", v.wind[0] === v.wind[1] ? `${v.wind[0]}` : `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : v.soon ? `<div class="locked">🚧 Coming soon</div>` : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
     <div class="vdots">${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
