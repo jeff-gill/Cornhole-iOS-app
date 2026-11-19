@@ -159,6 +159,9 @@ function updateAimRig(dt) {
   }
   arrowMat.uniforms.uAlpha.value = alpha; outlineMat.opacity = 0.6 * alpha; whiteMat.opacity = alpha; shadowMat.opacity = 0.28 * alpha;
   aimSwing.rotation.y = -clamp(p.swing, -1.3, 1.3) * AIM_VIS;
+  // the arrow tilts up off the ground with the throw's arc: a high lob points up, a low fast throw stays flatter
+  const tilt = S.ideal ? clamp(S.ideal.el * 0.36, 0.04, 0.36) : 0.12;
+  aimSwing.rotation.order = "YXZ"; aimSwing.rotation.x += (tilt - aimSwing.rotation.x) * Math.min(1, dt * 8);
   setArrowLength(len);
   const tip = len + ARROW.hl;
   tipGlow.position.set(0, 0.25, -tip);
