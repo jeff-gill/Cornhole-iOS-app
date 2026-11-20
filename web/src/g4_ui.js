@@ -461,6 +461,7 @@ function openHub() {
   if (!venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
+  if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
 
 }
 // Idle clubhouse: after 5 seconds without a touch it fades to 50% so the court shows through. The first tap only wakes it
@@ -937,7 +938,7 @@ function settleInterruptedMatch() {
 
 resize(); openHub(); settleInterruptedMatch();
 // the first time the game is opened: the clubhouse tour, once the title has faded out
-setTimeout(() => { if ($("livesSheet").hidden && S.phase === "hub") startTour(false); }, 3400);
+setTimeout(() => { if ($("livesSheet").hidden && S.phase === "hub") { startTour(false); if (career.tourDone && career.roughOffer != null) offerStarTrade(); } }, 3400); // (an offer left over from last time)
 postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 // Splash: hold the title for a few seconds, then fade into the clubhouse.

@@ -142,6 +142,20 @@ function showChoice(html, yes, onYes, no = "CANCEL", onNo = null, yesClass = "gr
   $("choiceYes").onclick = () => { $("livesSheet").hidden = true; onYes(); };
   $("livesSheet").hidden = false;
 }
+// The rough-patch offer: the only way to swap stars for coins. Stars come from the court you were playing first, then
+// your highest other courts (courts you've opened stay open). Yes or no, the count starts over.
+function offerStarTrade() {
+  const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden) return;
+  const v = VENUES[vi], want = 3 * v.loss, stars = Math.min(want, career.stars), coins = Math.round(5 * v.fee * stars / want);
+  const reset = () => { career.roughOffer = null; career.roughLosses = 0; career.recent = []; save(); renderHub(); };
+  if (stars < 1) { reset(); return; }
+  showChoice(`<div class="lifebig">🤝</div><h2>Rough patch?</h2><div class="muted">It happens to everyone. Trade <b>${stars} ⭐</b> for <b><i class="coin"></i> ${short(coins)}</b> to keep playing. This offer only comes after a run of losses.</div>`,
+    "TRADE", () => {
+      let left = stars;
+      for (const i of [vi, ...VENUES.map((_, k) => k).reverse()]) { const id = VENUES[i].id, have = career.courtStars[id] || 0, take = Math.min(have, left); if (take > 0) { career.courtStars[id] = have - take; left -= take; } if (!left) break; }
+      updateUnlocks(); career.coins += coins; sfx.win(); haptic("success"); reset();
+    }, "NO THANKS", reset);
+}
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
   return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Open one at a time: the better the can, the longer it takes, and Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>

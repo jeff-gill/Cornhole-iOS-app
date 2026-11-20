@@ -33,7 +33,7 @@ const VENUES = [
   { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.19, 0.12], mu: 0.33, wind: [0, 1], speed: "Normal boards" },
   { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.16, 0.10], mu: 0.40, wind: [1, 2], speed: "Grippy boards" },
   { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.13, 0.085], mu: 0.30, wind: [1, 3], speed: "Slick boards" },
-  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [2, 3], speed: "Icy boards" },
+  { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.115, 0.072], mu: 0.26, wind: [2, 3], speed: "Icy boards" },
   { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [2, 4], speed: "Manicured boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 4], speed: "Sandy boards" },
   { id: "rooftop", name: "City Rooftop", sub: "Rooftop party under the city lights", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [3, 5], speed: "Slick boards" },
@@ -439,7 +439,9 @@ function startMatch(kind, vi, online = null, pick = null) {
     } else {
       // a rough patch (3 or more losses in a row): the next opponent comes from the easy end and is a bit weaker for
       // every extra loss, until you win again (never announced)
-      const [hi, lo] = v.cpu, ease = Math.min(5, Math.max(0, (career.loseStreak || 0) - 2)), skill = ease ? hi * (1 + 0.1 * ease) : rand(lo, hi);
+      // a hot streak (3 or more wins in a row): each opponent is sharper than the last, faster the longer it runs
+      const [hi, lo] = v.cpu, ease = Math.min(5, Math.max(0, (career.loseStreak || 0) - 2)), heat = Math.max(0, (career.winStreak || 0) - 2);
+      const skill = ease ? hi * (1 + 0.1 * ease) : heat ? lo * (1 - Math.min(0.5, 0.04 * heat ** 1.6)) : rand(lo, hi);
       S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       // a CPU's career stars: everything before this court, plus part of this one (more for the tougher ones)
       const before = VENUES.slice(0, vi).reduce((t, x) => t + x.max, 0), k = (hi - skill) / Math.max(1e-6, hi - lo);
@@ -683,6 +685,11 @@ function finishMatch() {
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
   career.loseStreak = won ? 0 : (career.loseStreak || 0) + 1;
+  career.winStreak = won ? (career.winStreak || 0) + 1 : 0;
+  // a rough patch (10 losses in a row, or 7 of the last 10): the clubhouse offers to trade stars for coins
+  (career.recent ||= []).push(won ? 1 : 0); if (career.recent.length > 10) career.recent.shift();
+  career.roughLosses = won ? 0 : (career.roughLosses || 0) + 1;
+  if (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 7) career.roughOffer = S.venue;
   const newly = updateUnlocks();
   save();
   addSeasonPoints(won ? starsForWin(S.venue) : 1);
