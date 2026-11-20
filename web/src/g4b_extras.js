@@ -546,8 +546,7 @@ const TOUR = [
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
   ["#throwBagsBtn", "Throw bags", "Pick a court and find an opponent. Practice, free, is the first card."],
-  ["#rankBtn", "Rankings", "See how you stack up on the leaderboards."],
-  ["#navbar", "Menu", "The Store, your bags and boards, home, and settings (with How to Play) are always down here."],
+  ["#navbar", "Menu", "Settings (with How to Play), your bags and boards, home, the rankings and the Store are always down here."],
 ];
 let tourAt = -1;
 function startTour(again) {

@@ -643,14 +643,13 @@ s.was { opacity: .6; font-size: .8em; }
 .backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: none; z-index: 60; }
 .overlay:has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
-#rankBtn { display: block; width: 60%; margin: 0 auto; }
 #avatarClose, #bbClose, #wheelClose, #shopClose, #helpClose, #infoClose { display: none !important; }
 .throwbtn { width: 100%; font-size: 30px; padding: 14px; letter-spacing: .04em; }
 .courtshead { position: relative; text-align: center; margin-top: 18px; font-family: var(--font-display); font-size: 26px; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
-.navbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 6px 4px calc(4px + env(safe-area-inset-bottom, 0px)); margin: 4px -8px 0; background: linear-gradient(#1d3563, #0e1a33); border-top: 3px solid #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 0 rgba(0,0,0,.25); }
+.navbar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; padding: 6px 4px calc(4px + env(safe-area-inset-bottom, 0px)); margin: 4px -8px 0; background: linear-gradient(#1d3563, #0e1a33); border-top: 3px solid #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 0 rgba(0,0,0,.25); }
 .navbar button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; min-width: 0; border: none; background: none; color: var(--ink-dim); }
 .navbar .nic { width: 100%; height: 58px; display: grid; place-items: center; font-size: 34px; border-radius: 16px; border: 2px solid rgba(255,255,255,.5); background: linear-gradient(#2b4a80, #16284a); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
-.navbar small { font: 900 11px/1 Nunito, system-ui, sans-serif; letter-spacing: .04em; white-space: nowrap; }
+.navbar small { font: 900 10px/1.05 Nunito, system-ui, sans-serif; letter-spacing: .02em; text-align: center; min-height: 2.1em; display: flex; align-items: center; }
 .navbar button.on { color: #fff; } .navbar button.on .nic { border-color: #fff; background: linear-gradient(#ffd84a, #f0a020); transform: translateY(-3px); }
 .navbar .nbadge { position: absolute; top: 0; right: calc(50% - 26px); }
 .btn.small { font-size: 15px; padding: 10px 4px; }
@@ -878,16 +877,16 @@ s.was { opacity: .6; font-size: .8em; }
       <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
       <div class="cooler" id="cooler"></div>
       <button class="btn green throwbtn" id="throwBagsBtn">THROW BAGS</button>
-      <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
     <div class="oncourts">
       <div class="vcarousel" id="venueCard"></div>
     </div>
     <nav class="navbar" id="navbar">
-      <button data-nav="store"><span class="nic">🛒</span><small>STORE</small><i class="nbadge" id="shopBadge" hidden></i></button>
-      <button data-nav="gear"><span class="nic">🎒</span><small>BAGS &amp; BOARDS</small><i class="nbadge" id="gearBadge" hidden></i></button>
-      <button data-nav="home" class="on"><span class="nic">🏠</span><small>HOME</small></button>
       <button data-nav="settings"><span class="nic">⚙️</span><small>SETTINGS</small></button>
+      <button data-nav="gear"><span class="nic">🎒</span><small>BAGS &amp;<br>BOARDS</small><i class="nbadge" id="gearBadge" hidden></i></button>
+      <button data-nav="home" class="on"><span class="nic">🏠</span><small>HOME</small></button>
+      <button data-nav="rank"><span class="nic">🏆</span><small>RANKINGS</small></button>
+      <button data-nav="store"><span class="nic">🛒</span><small>STORE</small><i class="nbadge" id="shopBadge" hidden></i></button>
     </nav>
   </div>
 </div>

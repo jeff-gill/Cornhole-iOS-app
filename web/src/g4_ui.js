@@ -562,8 +562,9 @@ for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
   else if (n === "store") { shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; }
   else if (n === "gear") { shopTab = "bags"; openShopNews(); }
   else if (n === "settings") openAvatars("settings");
+  else if (n === "rank") openRankings();
 };
-$("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
+function openRankings() { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 // Swiping the court card left or right moves to the next or previous court.
 {
   const car = $("venueCard"); let sw = null;
