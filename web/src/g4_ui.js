@@ -242,7 +242,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
-  panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote"); // throwing (yours or theirs): a slim panel, the court gets the screen
+  panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote" || S.phase === "aiming"); // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
@@ -252,18 +252,10 @@ function ui() {
   const side = SIDES[S.player] < 0 ? "Left box" : "Right box";
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${whoName(S.player)} throw</div>`;
   if (S.phase === "aiming") {
-    let plan = `<div class="muted">Tap the board where you want your bag to end up, then drag the yellow ring to pick where it lands first. The green guide already allows for the wind.</div>`;
-    if (S.ideal) {
-      const spin = Math.abs(S.ideal.spin) < 0.05 ? "None" : (S.ideal.spin > 0 ? "Right " : "Left ") + Math.round(Math.abs(S.ideal.spin) * 100) + "%";
-      plan = `<div class="chips">
-        ${chip("Arc", deg(S.ideal.el).toFixed(0) + "°")}
-        ${chip("Slide", S.landD < 0.15 ? "Sticks" : S.landD.toFixed(1) + " ft")}
-        ${chip("Spin", spin)}
-        ${S.push ? chip("Push shot", "+" + Math.round(S.push.extra * 100) + "%", "gold") : ""}
-      </div>`;
-    }
+    // (just the essentials while aiming, so the court gets the room: no arc / slide / spin readouts)
+    const plan = S.ideal ? "" : `<div class="muted">Tap the board where you want your bag to end up.</div>`;
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">${S.kind === "bullseye" ? bbPanelTag() : `${side} · Bag ${S.thrown[S.player] + 1} of 4`}</span></div>
-      <div style="min-height:50px">${plan}</div>
+      ${plan}
       <div class="btns">
         <button class="btn" id="clearBtn" ${S.end ? "" : "disabled"}>CLEAR</button>
         <button class="btn" id="stickBtn" ${S.end ? "" : "disabled"}>STICK IT</button>
@@ -556,14 +548,29 @@ function showHubPage(p) {
 }
 $("courtsBack").onclick = () => showHubPage("home");
 $("throwBagsBtn").onclick = () => { initAudio(); showHubPage("courts"); };
+const PAGES = ["shop", "avatarSheet", "bbSheet", "helpSheet", "practiceSheet"];
+function closePages() { for (const id of PAGES) $(id).hidden = true; }
+function shopMode(m) { const el = $("shop"); el.classList.toggle("mode-store", m === "store"); el.classList.toggle("mode-gear", m === "gear"); $("shopTitle").textContent = m === "store" ? "Store" : m === "gear" ? "Bags & Boards" : "Pro Shop"; }
 for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
   const n = b.dataset.nav;
+  if (n === "rank") { openRankings(); return; }
+  closePages();
   if (n === "home") showHubPage("home");
-  else if (n === "store") { shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; }
-  else if (n === "gear") { shopTab = "bags"; openShopNews(); }
-  else if (n === "settings") openAvatars("settings");
-  else if (n === "rank") openRankings();
+  else if (n === "store") { shopMode("store"); shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); }
+  else if (n === "gear") { shopMode("gear"); shopTab = "bags"; openShopNews(); $("shop").classList.add("noback"); }
+  else if (n === "settings") { openAvatars("settings"); $("avatarSheet").classList.add("noback"); }
 };
+// which bottom-bar button is lit: the page that's open, else Home
+function syncNavbar() {
+  const on = !$("shop").hidden ? ($("shop").classList.contains("mode-store") ? "store" : "gear") : !$("avatarSheet").hidden && $("avatarSheet").classList.contains("noback") ? "settings" : "home";
+  for (const b of document.querySelectorAll("#navbar button")) { const lit = b.dataset.nav === on; if (b.classList.contains("on") !== lit) b.classList.toggle("on", lit); }
+  const top = $("hub").querySelector(".hubtop"), nav = $("navbar");
+  if (!$("hub").hidden && top && nav) {
+    const t = Math.round(top.getBoundingClientRect().bottom + 8) + "px", n = Math.round(innerHeight - nav.getBoundingClientRect().top) + "px", r = document.documentElement.style;
+    if (r.getPropertyValue("--topbar-h") !== t) r.setProperty("--topbar-h", t);
+    if (r.getPropertyValue("--navbar-h") !== n) r.setProperty("--navbar-h", n);
+  }
+}
 function openRankings() { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 // Swiping the court card left or right moves to the next or previous court.
 {
@@ -862,6 +869,7 @@ for (const [id, close] of [
 
 // Each sheet's back arrow sits on its top-left corner, wherever the sheet is (they're different heights).
 function placeSheetBacks() {
+  syncNavbar();
   for (const b of document.querySelectorAll(".sheetback")) {
     const ov = b.parentElement; if (ov.hidden) continue;
     const sheet = [...ov.children].find(c => c !== b && c.offsetParent !== null); if (!sheet) continue;

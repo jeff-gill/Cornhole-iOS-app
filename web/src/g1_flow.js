@@ -564,6 +564,7 @@ function releasePull() {
   S.errors = {
     dir: clamp(p.swing, -1.3, 1.3),
     pow: Math.abs(pow) <= L.powZone ? 0 : pow,
+    rawPow: pow, // (how close to the centre of the power band, for PERFECT)
     ht: over ? rand(-0.9, 0.9) : 0,
   };
   S.overdrive = over;
@@ -573,15 +574,21 @@ function releasePull() {
 function releaseBag(e) {
   if (!S.ideal) return;
   setGear(S.player);
-  const actual = applyErrors(e, S.ideal, lv());
+  // PERFECT means dead centre: aim and power both in the middle of the sweet spot. Those throws go exactly where they
+  // were set up (no natural wander), so PERFECT never shows on a shot that drifts off. The rest of the sweet spot is GREAT.
+  const L = lv(), CORE = 0.35, rawPow = e.rawPow ?? e.pow;
+  const dirExact = Math.abs(e.dir) <= L.zone * CORE, powExact = Math.abs(rawPow) <= L.powZone * CORE;
+  const exact = !S.overdrive && dirExact && powExact;
+  const actual = applyErrors(e, S.ideal, exact ? { ...L, scatter: 0 } : L);
   if (S.overdrive) actual.az += (e.dir - clamp(e.dir, -1, 1)) * MAX_DIR; // overdrive can swing past the normal limit
   actual.wind = windAccel();
+  const label = (x, m, inner) => { const t = grade(x, m, L); return t === "Perfect" && !inner ? "Great" : t; };
   S.feedback = [
-    { title: "Direction", text: grade(e.dir, METERS[0], lv()) },
-    { title: "Strength", text: grade(e.pow, METERS[1], lv()) },
+    { title: "Direction", text: label(e.dir, METERS[0], dirExact) },
+    { title: "Strength", text: label(e.pow, METERS[1], powExact) },
   ];
   if (S.overdrive) S.feedback.push({ title: "Overdrive", text: "Wild!" });
-  S.perfect = !S.overdrive && S.feedback.every(f => f.text === "Perfect");
+  S.perfect = exact;
   if (S.online) { // send the throw; both phones play it with the same luck
     const seed = Math.floor(Math.random() * 2 ** 31);
     S.world.seed(seed);

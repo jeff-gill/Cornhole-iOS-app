@@ -62,7 +62,7 @@ function canTapped(i) {
     if (!busy) $("startCan").onclick = () => { startCan(i); $("livesSheet").hidden = true; renderHubExtras(); sfx.tick(); };
   }
   $("openNow").onclick = () => {
-    if (!afford) { $("livesSheet").hidden = true; shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; return; }
+    if (!afford) { $("livesSheet").hidden = true; closePages(); shopMode("store"); shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); return; }
     skipCan(i); $("livesSheet").hidden = true; openCanSheet(i);
   };
 }
@@ -153,7 +153,7 @@ function offerWelcome() {
   career.welcomeDay = bbDay(); save();
   showChoice(`<div class="lifebig">🎁</div><h2>Welcome Pack</h2><div class="muted"><b>${it.blurb}</b></div>
     <div class="big center" style="margin-top:8px"><s style="opacity:.6">${it.value}</s> <b style="color:var(--gold)">${storePrices[it.id] || it.price}</b> · ${it.off}% OFF</div><div class="muted center">Only for new players · ends in ${timeText(welcomeLeft())}</div>`,
-    "GET IT", () => { shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; buy(it.id); }, "NOT NOW");
+    "GET IT", () => { closePages(); shopMode("store"); shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); buy(it.id); }, "NOT NOW");
 }
 function offerStarTrade() {
   const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden || S.phase !== "hub" || $("hub").hidden) return;
@@ -238,7 +238,7 @@ function renderProfile() {
   }
 }
 for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
-$("avatarBtn").onclick = () => openAvatars("profile"); // your profile and stats
+$("avatarBtn").onclick = () => { closePages(); openAvatars("profile"); $("avatarSheet").classList.remove("noback"); }; // your profile and stats
 $("avatarClose").onclick = () => { $("avatarSheet").hidden = true; renderHub(); };
 
 // ── Opening a can: tap, it shakes, the tab pops, a mist sprays out and the prizes come out one at a time.

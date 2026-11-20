@@ -54,7 +54,7 @@ body.inhub .score, body.inhub #panel { display: none; }
   font-family: var(--font-display); font-size: 18px;
 }
 .card {
-  position: relative; border-radius: 16px; padding: 5px 10px 6px; display: flex; flex-direction: column; gap: 0;
+  position: relative; border-radius: 16px; padding: 9px 10px 10px; display: flex; flex-direction: column; gap: 0;
   border: 3px solid rgba(255,255,255,.35); min-width: 0; transition: transform .2s, border-color .2s, filter .2s; filter: saturate(.55) brightness(.8);
   box-shadow: 0 4px 0 rgba(0,0,0,.35);
 }
@@ -75,7 +75,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card.p1 .cardrow { flex-direction: row-reverse; } .card.p1 .name { text-align: right; }
 /* row 2: avatar, then the bags over the stars (centred), then the score */
 .card .cardrow { align-items: center !important; }
-.card .cav { flex: none; } .card .cav .avatar { width: 34px; height: 34px; }
+.card .cav { flex: none; } .card .cav .avatar { width: 40px; height: 40px; }
 .card .cmid { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .card .cmid .dots { justify-content: center; margin-top: 0; }
 .card .live b { font-family: var(--font-display); font-size: 16px; font-weight: 400; vertical-align: -1px; letter-spacing: 0; }
@@ -85,10 +85,10 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card .pts { font-family: var(--font-display); font-size: 34px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); font-variant-numeric: tabular-nums; }
 /* The player tiles size everything to their own width, so a long name, big star count and a two-digit score
    never run into each other on a narrow phone (cqw = 1% of the tile's width). */
-.card { container-type: inline-size; }
+.card { container-type: inline-size; min-height: 76px; justify-content: center; } /* about 20% taller than before */
 .card .name { font-size: clamp(11px, 9.5cqw, 15px); }
-.card .cav .avatar { width: clamp(22px, 19cqw, 34px); height: clamp(22px, 19cqw, 34px); }
-.card .pts { font-size: clamp(22px, 19cqw, 34px); flex: none; min-width: 1.1em; text-align: center; }
+.card .cav .avatar { width: clamp(24px, 21cqw, 40px); height: clamp(24px, 21cqw, 40px); }
+.card .pts { font-size: clamp(24px, 21cqw, 38px); flex: none; min-width: 1.1em; text-align: center; }
 .card .cmid { overflow: hidden; }
 .card .dots { gap: clamp(2px, 1.6cqw, 3px); }
 .card .dots i { width: clamp(6px, 5.5cqw, 9px); height: clamp(6px, 5.5cqw, 9px); }
@@ -642,8 +642,18 @@ s.was { opacity: .6; font-size: .8em; }
 @media (max-height: 720px) { #hub .onhome .cooler .cslot { height: 80px; } }
 .coolerhead .qbadge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1b2233; font: 900 12px/1.2 Nunito, system-ui, sans-serif; letter-spacing: 0; text-shadow: none; vertical-align: middle; }
 .backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: translate(-30%, -30%); z-index: 60; }
-.overlay:has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
+.overlay:not(.page):has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
+/* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
+body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
+body.inhub .overlay.page > .sheet { max-width: 560px; width: 100%; margin: 0 auto; border: none; box-shadow: none; background: none; padding: 6px 4px 12px; max-height: 100%; }
+body.inhub .overlay.page .sheetback { transform: none; }
+body.inhub .overlay.page:not(.noback) > .sheet { padding-top: 54px; }
+body.inhub .overlay.page.noback .sheetback { display: none; }
+body.inhub #shop .items { padding-bottom: 12px; }
+body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins and caps) */
+#shop.mode-store .tabs { display: none; } #shop.mode-gear .tabs button[data-tab="store"] { display: none; }
+#shop.mode-gear .tabs { grid-template-columns: 0.85fr 1fr 0.95fr 1.3fr; }
 #avatarClose, #bbClose, #wheelClose, #shopClose, #helpClose, #infoClose { display: none !important; }
 .throwbtn { width: 100%; font-size: 30px; padding: 14px; letter-spacing: .04em; }
 .courtshead { position: relative; text-align: center; margin-top: 18px; font-family: var(--font-display); font-size: 26px; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
@@ -910,10 +920,10 @@ s.was { opacity: .6; font-size: .8em; }
 
 <div id="tour" hidden><div id="tourSpot"></div><div id="tourCard"></div></div>
 <div class="overlay" id="wheelSheet" hidden><div class="sheet center" id="wheelBody"></div></div>
-<div class="overlay" id="bbSheet" hidden><div class="sheet" id="bbBody"></div></div>
+<div class="overlay page" id="bbSheet" hidden><div class="sheet" id="bbBody"></div></div>
 <div class="overlay" id="bbReveal" hidden><div class="canstage"><div class="canrays" id="bbRays"></div><div class="cantitle" id="bbRevTitle"></div><div class="prize" id="bbRevPrize"></div><div class="bbrevfoot" id="bbRevFoot"></div></div></div>
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
-<div class="overlay" id="avatarSheet" hidden><div class="sheet">
+<div class="overlay page" id="avatarSheet" hidden><div class="sheet">
   <div class="tabs ptabs"><button data-ptab="settings" class="on">SETTINGS</button><button data-ptab="avatar">AVATAR</button><button data-ptab="profile">PROFILE</button></div>
   <div id="ptabAvatar" hidden><h2>Choose your avatar</h2><button class="btn ghost" id="useGcPhoto" hidden>Use my Game Center picture</button><div class="avgrid" id="avatarGrid"></div></div>
   <div id="ptabProfile" hidden></div>
@@ -935,10 +945,10 @@ s.was { opacity: .6; font-size: .8em; }
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>
-<div class="overlay" id="practiceSheet" hidden><div class="sheet" id="practiceBody"></div></div>
-<div class="overlay" id="shop" hidden>
+<div class="overlay page" id="practiceSheet" hidden><div class="sheet" id="practiceBody"></div></div>
+<div class="overlay page" id="shop" hidden>
   <div class="sheet">
-    <div class="row"><h2 style="text-align:left;white-space:nowrap;font-size:26px">Pro Shop</h2><span class="spacer"></span><button class="pill cappill" id="shopCoinsBtn"><i class="coin"></i><b id="shopCoins">0</b></button><button class="pill cappill" id="shopCapsBtn"><i class="bcap"></i><b id="shopCaps">0</b></button></div>
+    <div class="row"><h2 id="shopTitle" style="text-align:left;white-space:nowrap;font-size:26px">Pro Shop</h2><span class="spacer"></span><button class="pill cappill" id="shopCoinsBtn"><i class="coin"></i><b id="shopCoins">0</b></button><button class="pill cappill" id="shopCapsBtn"><i class="bcap"></i><b id="shopCaps">0</b></button></div>
     <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="throw">THROW</button><button data-tab="hole">CORNHOLE</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn shopexit" id="shopClose">✕ EXIT</button>
@@ -968,7 +978,7 @@ s.was { opacity: .6; font-size: .8em; }
   </div>
 </div>
 
-<div class="overlay" id="helpSheet" hidden>
+<div class="overlay page" id="helpSheet" hidden>
   <div class="sheet">
     <div class="tabs htabs"><button data-htab="play" class="on">HOW TO PLAY</button><button data-htab="rules">CORNHOLE RULES</button><button data-htab="regs">APP RULES</button></div>
     <div class="help" id="helpPlay">

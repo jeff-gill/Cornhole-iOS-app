@@ -66,7 +66,7 @@ body.inhub .score, body.inhub #panel { display: none; }
   font-family: var(--font-display); font-size: 18px;
 }
 .card {
-  position: relative; border-radius: 16px; padding: 5px 10px 6px; display: flex; flex-direction: column; gap: 0;
+  position: relative; border-radius: 16px; padding: 9px 10px 10px; display: flex; flex-direction: column; gap: 0;
   border: 3px solid rgba(255,255,255,.35); min-width: 0; transition: transform .2s, border-color .2s, filter .2s; filter: saturate(.55) brightness(.8);
   box-shadow: 0 4px 0 rgba(0,0,0,.35);
 }
@@ -87,7 +87,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card.p1 .cardrow { flex-direction: row-reverse; } .card.p1 .name { text-align: right; }
 /* row 2: avatar, then the bags over the stars (centred), then the score */
 .card .cardrow { align-items: center !important; }
-.card .cav { flex: none; } .card .cav .avatar { width: 34px; height: 34px; }
+.card .cav { flex: none; } .card .cav .avatar { width: 40px; height: 40px; }
 .card .cmid { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .card .cmid .dots { justify-content: center; margin-top: 0; }
 .card .live b { font-family: var(--font-display); font-size: 16px; font-weight: 400; vertical-align: -1px; letter-spacing: 0; }
@@ -97,10 +97,10 @@ body.inhub .score, body.inhub #panel { display: none; }
 .card .pts { font-family: var(--font-display); font-size: 34px; line-height: 1; text-shadow: 0 3px 0 rgba(0,0,0,.3); font-variant-numeric: tabular-nums; }
 /* The player tiles size everything to their own width, so a long name, big star count and a two-digit score
    never run into each other on a narrow phone (cqw = 1% of the tile's width). */
-.card { container-type: inline-size; }
+.card { container-type: inline-size; min-height: 76px; justify-content: center; } /* about 20% taller than before */
 .card .name { font-size: clamp(11px, 9.5cqw, 15px); }
-.card .cav .avatar { width: clamp(22px, 19cqw, 34px); height: clamp(22px, 19cqw, 34px); }
-.card .pts { font-size: clamp(22px, 19cqw, 34px); flex: none; min-width: 1.1em; text-align: center; }
+.card .cav .avatar { width: clamp(24px, 21cqw, 40px); height: clamp(24px, 21cqw, 40px); }
+.card .pts { font-size: clamp(24px, 21cqw, 38px); flex: none; min-width: 1.1em; text-align: center; }
 .card .cmid { overflow: hidden; }
 .card .dots { gap: clamp(2px, 1.6cqw, 3px); }
 .card .dots i { width: clamp(6px, 5.5cqw, 9px); height: clamp(6px, 5.5cqw, 9px); }
@@ -654,8 +654,18 @@ s.was { opacity: .6; font-size: .8em; }
 @media (max-height: 720px) { #hub .onhome .cooler .cslot { height: 80px; } }
 .coolerhead .qbadge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1b2233; font: 900 12px/1.2 Nunito, system-ui, sans-serif; letter-spacing: 0; text-shadow: none; vertical-align: middle; }
 .backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: translate(-30%, -30%); z-index: 60; }
-.overlay:has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
+.overlay:not(.page):has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
+/* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
+body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
+body.inhub .overlay.page > .sheet { max-width: 560px; width: 100%; margin: 0 auto; border: none; box-shadow: none; background: none; padding: 6px 4px 12px; max-height: 100%; }
+body.inhub .overlay.page .sheetback { transform: none; }
+body.inhub .overlay.page:not(.noback) > .sheet { padding-top: 54px; }
+body.inhub .overlay.page.noback .sheetback { display: none; }
+body.inhub #shop .items { padding-bottom: 12px; }
+body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins and caps) */
+#shop.mode-store .tabs { display: none; } #shop.mode-gear .tabs button[data-tab="store"] { display: none; }
+#shop.mode-gear .tabs { grid-template-columns: 0.85fr 1fr 0.95fr 1.3fr; }
 #avatarClose, #bbClose, #wheelClose, #shopClose, #helpClose, #infoClose { display: none !important; }
 .throwbtn { width: 100%; font-size: 30px; padding: 14px; letter-spacing: .04em; }
 .courtshead { position: relative; text-align: center; margin-top: 18px; font-family: var(--font-display); font-size: 26px; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
@@ -922,10 +932,10 @@ s.was { opacity: .6; font-size: .8em; }
 
 <div id="tour" hidden><div id="tourSpot"></div><div id="tourCard"></div></div>
 <div class="overlay" id="wheelSheet" hidden><div class="sheet center" id="wheelBody"></div></div>
-<div class="overlay" id="bbSheet" hidden><div class="sheet" id="bbBody"></div></div>
+<div class="overlay page" id="bbSheet" hidden><div class="sheet" id="bbBody"></div></div>
 <div class="overlay" id="bbReveal" hidden><div class="canstage"><div class="canrays" id="bbRays"></div><div class="cantitle" id="bbRevTitle"></div><div class="prize" id="bbRevPrize"></div><div class="bbrevfoot" id="bbRevFoot"></div></div></div>
 <div class="overlay" id="livesSheet" hidden><div class="sheet center" id="livesBody"></div></div>
-<div class="overlay" id="avatarSheet" hidden><div class="sheet">
+<div class="overlay page" id="avatarSheet" hidden><div class="sheet">
   <div class="tabs ptabs"><button data-ptab="settings" class="on">SETTINGS</button><button data-ptab="avatar">AVATAR</button><button data-ptab="profile">PROFILE</button></div>
   <div id="ptabAvatar" hidden><h2>Choose your avatar</h2><button class="btn ghost" id="useGcPhoto" hidden>Use my Game Center picture</button><div class="avgrid" id="avatarGrid"></div></div>
   <div id="ptabProfile" hidden></div>
@@ -947,10 +957,10 @@ s.was { opacity: .6; font-size: .8em; }
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>
-<div class="overlay" id="practiceSheet" hidden><div class="sheet" id="practiceBody"></div></div>
-<div class="overlay" id="shop" hidden>
+<div class="overlay page" id="practiceSheet" hidden><div class="sheet" id="practiceBody"></div></div>
+<div class="overlay page" id="shop" hidden>
   <div class="sheet">
-    <div class="row"><h2 style="text-align:left;white-space:nowrap;font-size:26px">Pro Shop</h2><span class="spacer"></span><button class="pill cappill" id="shopCoinsBtn"><i class="coin"></i><b id="shopCoins">0</b></button><button class="pill cappill" id="shopCapsBtn"><i class="bcap"></i><b id="shopCaps">0</b></button></div>
+    <div class="row"><h2 id="shopTitle" style="text-align:left;white-space:nowrap;font-size:26px">Pro Shop</h2><span class="spacer"></span><button class="pill cappill" id="shopCoinsBtn"><i class="coin"></i><b id="shopCoins">0</b></button><button class="pill cappill" id="shopCapsBtn"><i class="bcap"></i><b id="shopCaps">0</b></button></div>
     <div class="tabs"><button data-tab="bags" class="on">BAGS</button><button data-tab="boards">BOARDS</button><button data-tab="throw">THROW</button><button data-tab="hole">CORNHOLE</button><button data-tab="store">STORE</button></div>
     <div class="items" id="shopItems"></div>
     <button class="btn shopexit" id="shopClose">✕ EXIT</button>
@@ -980,7 +990,7 @@ s.was { opacity: .6; font-size: .8em; }
   </div>
 </div>
 
-<div class="overlay" id="helpSheet" hidden>
+<div class="overlay page" id="helpSheet" hidden>
   <div class="sheet">
     <div class="tabs htabs"><button data-htab="play" class="on">HOW TO PLAY</button><button data-htab="rules">CORNHOLE RULES</button><button data-htab="regs">APP RULES</button></div>
     <div class="help" id="helpPlay">
@@ -2045,6 +2055,7 @@ function releasePull() {
   S.errors = {
     dir: clamp(p.swing, -1.3, 1.3),
     pow: Math.abs(pow) <= L.powZone ? 0 : pow,
+    rawPow: pow, // (how close to the centre of the power band, for PERFECT)
     ht: over ? rand(-0.9, 0.9) : 0,
   };
   S.overdrive = over;
@@ -2054,15 +2065,21 @@ function releasePull() {
 function releaseBag(e) {
   if (!S.ideal) return;
   setGear(S.player);
-  const actual = applyErrors(e, S.ideal, lv());
+  // PERFECT means dead centre: aim and power both in the middle of the sweet spot. Those throws go exactly where they
+  // were set up (no natural wander), so PERFECT never shows on a shot that drifts off. The rest of the sweet spot is GREAT.
+  const L = lv(), CORE = 0.35, rawPow = e.rawPow ?? e.pow;
+  const dirExact = Math.abs(e.dir) <= L.zone * CORE, powExact = Math.abs(rawPow) <= L.powZone * CORE;
+  const exact = !S.overdrive && dirExact && powExact;
+  const actual = applyErrors(e, S.ideal, exact ? { ...L, scatter: 0 } : L);
   if (S.overdrive) actual.az += (e.dir - clamp(e.dir, -1, 1)) * MAX_DIR; // overdrive can swing past the normal limit
   actual.wind = windAccel();
+  const label = (x, m, inner) => { const t = grade(x, m, L); return t === "Perfect" && !inner ? "Great" : t; };
   S.feedback = [
-    { title: "Direction", text: grade(e.dir, METERS[0], lv()) },
-    { title: "Strength", text: grade(e.pow, METERS[1], lv()) },
+    { title: "Direction", text: label(e.dir, METERS[0], dirExact) },
+    { title: "Strength", text: label(e.pow, METERS[1], powExact) },
   ];
   if (S.overdrive) S.feedback.push({ title: "Overdrive", text: "Wild!" });
-  S.perfect = !S.overdrive && S.feedback.every(f => f.text === "Perfect");
+  S.perfect = exact;
   if (S.online) { // send the throw; both phones play it with the same luck
     const seed = Math.floor(Math.random() * 2 ** 31);
     S.world.seed(seed);
@@ -3112,7 +3129,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795215507`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795215801`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4626,7 +4643,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795215507`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795215801`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4637,7 +4654,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795215507`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795215801`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6563,7 +6580,7 @@ function canTapped(i) {
     if (!busy) $("startCan").onclick = () => { startCan(i); $("livesSheet").hidden = true; renderHubExtras(); sfx.tick(); };
   }
   $("openNow").onclick = () => {
-    if (!afford) { $("livesSheet").hidden = true; shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; return; }
+    if (!afford) { $("livesSheet").hidden = true; closePages(); shopMode("store"); shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); return; }
     skipCan(i); $("livesSheet").hidden = true; openCanSheet(i);
   };
 }
@@ -6654,7 +6671,7 @@ function offerWelcome() {
   career.welcomeDay = bbDay(); save();
   showChoice(`<div class="lifebig">🎁</div><h2>Welcome Pack</h2><div class="muted"><b>${it.blurb}</b></div>
     <div class="big center" style="margin-top:8px"><s style="opacity:.6">${it.value}</s> <b style="color:var(--gold)">${storePrices[it.id] || it.price}</b> · ${it.off}% OFF</div><div class="muted center">Only for new players · ends in ${timeText(welcomeLeft())}</div>`,
-    "GET IT", () => { shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; buy(it.id); }, "NOT NOW");
+    "GET IT", () => { closePages(); shopMode("store"); shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); buy(it.id); }, "NOT NOW");
 }
 function offerStarTrade() {
   const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden || S.phase !== "hub" || $("hub").hidden) return;
@@ -6739,7 +6756,7 @@ function renderProfile() {
   }
 }
 for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
-$("avatarBtn").onclick = () => openAvatars("profile"); // your profile and stats
+$("avatarBtn").onclick = () => { closePages(); openAvatars("profile"); $("avatarSheet").classList.remove("noback"); }; // your profile and stats
 $("avatarClose").onclick = () => { $("avatarSheet").hidden = true; renderHub(); };
 
 // ── Opening a can: tap, it shakes, the tab pops, a mist sprays out and the prizes come out one at a time.
@@ -8039,7 +8056,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
-  panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote"); // throwing (yours or theirs): a slim panel, the court gets the screen
+  panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote" || S.phase === "aiming"); // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
@@ -8049,18 +8066,10 @@ function ui() {
   const side = SIDES[S.player] < 0 ? "Left box" : "Right box";
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${whoName(S.player)} throw</div>`;
   if (S.phase === "aiming") {
-    let plan = `<div class="muted">Tap the board where you want your bag to end up, then drag the yellow ring to pick where it lands first. The green guide already allows for the wind.</div>`;
-    if (S.ideal) {
-      const spin = Math.abs(S.ideal.spin) < 0.05 ? "None" : (S.ideal.spin > 0 ? "Right " : "Left ") + Math.round(Math.abs(S.ideal.spin) * 100) + "%";
-      plan = `<div class="chips">
-        ${chip("Arc", deg(S.ideal.el).toFixed(0) + "°")}
-        ${chip("Slide", S.landD < 0.15 ? "Sticks" : S.landD.toFixed(1) + " ft")}
-        ${chip("Spin", spin)}
-        ${S.push ? chip("Push shot", "+" + Math.round(S.push.extra * 100) + "%", "gold") : ""}
-      </div>`;
-    }
+    // (just the essentials while aiming, so the court gets the room: no arc / slide / spin readouts)
+    const plan = S.ideal ? "" : `<div class="muted">Tap the board where you want your bag to end up.</div>`;
     panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">${S.kind === "bullseye" ? bbPanelTag() : `${side} · Bag ${S.thrown[S.player] + 1} of 4`}</span></div>
-      <div style="min-height:50px">${plan}</div>
+      ${plan}
       <div class="btns">
         <button class="btn" id="clearBtn" ${S.end ? "" : "disabled"}>CLEAR</button>
         <button class="btn" id="stickBtn" ${S.end ? "" : "disabled"}>STICK IT</button>
@@ -8353,14 +8362,29 @@ function showHubPage(p) {
 }
 $("courtsBack").onclick = () => showHubPage("home");
 $("throwBagsBtn").onclick = () => { initAudio(); showHubPage("courts"); };
+const PAGES = ["shop", "avatarSheet", "bbSheet", "helpSheet", "practiceSheet"];
+function closePages() { for (const id of PAGES) $(id).hidden = true; }
+function shopMode(m) { const el = $("shop"); el.classList.toggle("mode-store", m === "store"); el.classList.toggle("mode-gear", m === "gear"); $("shopTitle").textContent = m === "store" ? "Store" : m === "gear" ? "Bags & Boards" : "Pro Shop"; }
 for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
   const n = b.dataset.nav;
+  if (n === "rank") { openRankings(); return; }
+  closePages();
   if (n === "home") showHubPage("home");
-  else if (n === "store") { shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; }
-  else if (n === "gear") { shopTab = "bags"; openShopNews(); }
-  else if (n === "settings") openAvatars("settings");
-  else if (n === "rank") openRankings();
+  else if (n === "store") { shopMode("store"); shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); }
+  else if (n === "gear") { shopMode("gear"); shopTab = "bags"; openShopNews(); $("shop").classList.add("noback"); }
+  else if (n === "settings") { openAvatars("settings"); $("avatarSheet").classList.add("noback"); }
 };
+// which bottom-bar button is lit: the page that's open, else Home
+function syncNavbar() {
+  const on = !$("shop").hidden ? ($("shop").classList.contains("mode-store") ? "store" : "gear") : !$("avatarSheet").hidden && $("avatarSheet").classList.contains("noback") ? "settings" : "home";
+  for (const b of document.querySelectorAll("#navbar button")) { const lit = b.dataset.nav === on; if (b.classList.contains("on") !== lit) b.classList.toggle("on", lit); }
+  const top = $("hub").querySelector(".hubtop"), nav = $("navbar");
+  if (!$("hub").hidden && top && nav) {
+    const t = Math.round(top.getBoundingClientRect().bottom + 8) + "px", n = Math.round(innerHeight - nav.getBoundingClientRect().top) + "px", r = document.documentElement.style;
+    if (r.getPropertyValue("--topbar-h") !== t) r.setProperty("--topbar-h", t);
+    if (r.getPropertyValue("--navbar-h") !== n) r.setProperty("--navbar-h", n);
+  }
+}
 function openRankings() { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 // Swiping the court card left or right moves to the next or previous court.
 {
@@ -8659,6 +8683,7 @@ for (const [id, close] of [
 
 // Each sheet's back arrow sits on its top-left corner, wherever the sheet is (they're different heights).
 function placeSheetBacks() {
+  syncNavbar();
   for (const b of document.querySelectorAll(".sheetback")) {
     const ov = b.parentElement; if (ov.hidden) continue;
     const sheet = [...ov.children].find(c => c !== b && c.offsetParent !== null); if (!sheet) continue;
