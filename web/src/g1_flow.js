@@ -34,7 +34,7 @@ const VENUES = [
   { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.16, 0.10], mu: 0.40, wind: [1, 2], speed: "Grippy boards" },
   { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.13, 0.085], mu: 0.30, wind: [1, 3], speed: "Slick boards" },
   { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.115, 0.072], mu: 0.26, wind: [2, 3], speed: "Icy boards" },
-  { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [2, 4], speed: "Manicured boards" },
+  { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.10, 0.063], mu: 0.36, wind: [2, 4], speed: "Manicured boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 4], speed: "Sandy boards" },
   { id: "rooftop", name: "City Rooftop", sub: "Rooftop party under the city lights", max: 700, fee: 300000, win: 22, loss: 19, swing: 0.55, zone: 0.035, wob: 0.045, cpu: [0.08, 0.048], mu: 0.29, wind: [3, 5], speed: "Slick boards" },
   { id: "lakeside", soon: true, name: "Lakeside Dock", sub: "Out on the dock, out on the lake", max: 800, fee: 1000000, win: 25, loss: 25, swing: 0.55, zone: 0.034, wob: 0.047, cpu: [0.076, 0.045], mu: 0.33, wind: [4, 5], speed: "Dewy boards" },
@@ -686,11 +686,11 @@ function finishMatch() {
   if (won) career.wins++; else career.losses++;
   career.loseStreak = won ? 0 : (career.loseStreak || 0) + 1;
   career.winStreak = won ? (career.winStreak || 0) + 1 : 0;
-  // a rough patch (10 losses in a row, or 8 of the last 10, checked only after a loss): the clubhouse offers to trade
-  // stars for coins
+  // a rough patch (10 losses in a row, or 8 of the last 10, checked only after a loss, at most once a
+  // week): the clubhouse offers to trade stars for coins
   (career.recent ||= []).push(won ? 1 : 0); if (career.recent.length > 10) career.recent.shift();
   career.roughLosses = won ? 0 : (career.roughLosses || 0) + 1;
-  if (!won && (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 8)) career.roughOffer = S.venue;
+  if (!won && clockNow() - (career.roughAt || 0) >= 7 * 86400000 && (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 8)) career.roughOffer = S.venue;
   const newly = updateUnlocks();
   save();
   addSeasonPoints(won ? starsForWin(S.venue) : 1);
