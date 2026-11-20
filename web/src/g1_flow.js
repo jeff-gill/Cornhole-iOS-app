@@ -649,7 +649,7 @@ function finishInning() {
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
   S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
-  if (S.scores[best] >= winScore()) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
+  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { // reach the target and win by 2 S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
   if (r.winner === null) showWash();
 }

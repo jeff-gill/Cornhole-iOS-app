@@ -87,7 +87,10 @@ body.inhub .score, body.inhub #panel { display: none; }
    never run into each other on a narrow phone (cqw = 1% of the tile's width). */
 .card { container-type: inline-size; min-height: 76px; justify-content: center; } /* about 20% taller than before */
 .card .name { font-size: clamp(13px, 11cqw, 19px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.card .cav .avatar { width: clamp(22px, 19cqw, 36px); height: clamp(22px, 19cqw, 36px); }
+.card .cav .avatar { width: clamp(30px, 27cqw, 50px); height: clamp(30px, 27cqw, 50px); }
+.card .dots { display: none !important; }
+.card .live { display: flex; flex-direction: column; align-items: center; line-height: 1; padding: 3px 6px !important; border-radius: 10px; }
+.card .live .st { font-size: clamp(11px, 10cqw, 16px); } .card .live .sn { font-family: var(--font-display); font-weight: 400; font-size: clamp(11px, 10cqw, 16px); margin-top: 1px; }
 .card .pts { font-size: clamp(32px, 33cqw, 56px); -webkit-text-stroke: 1.5px rgba(0,0,0,.25); text-shadow: 0 3px 0 rgba(0,0,0,.35), 0 0 12px rgba(255,255,255,.35); flex: none; min-width: 1.1em; text-align: center; }
 .card .cmid { overflow: hidden; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; } .card .dots { flex-wrap: nowrap; }
 .card .dots { gap: clamp(2px, 1.6cqw, 3px); }
@@ -130,7 +133,11 @@ body.inhub .score, body.inhub #panel { display: none; }
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
 /* the bag each player is throwing, sitting on top of their table at the outside edge */
-.iobag { position: absolute; z-index: 3; pointer-events: none; width: 44px; height: 44px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.iobag { position: absolute; z-index: 3; pointer-events: none; display: flex; align-items: flex-end; gap: 5px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.iobag.p1 { flex-direction: row-reverse; }
+.iobag canvas { width: 26px; height: 26px; transition: opacity .3s, width .2s, height .2s; }
+.iobag canvas.big { width: 46px; height: 46px; }
+.iobag canvas.used { opacity: .18; }
 .iobag.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobag.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
 .iobag[hidden] { display: none; }
 .iobox table { border-collapse: collapse; } /* IN | ON over the two counts, split by a + of grid lines */
@@ -647,6 +654,7 @@ s.was { opacity: .6; font-size: .8em; }
 .coolerhead .qbadge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1b2233; font: 900 12px/1.2 Nunito, system-ui, sans-serif; letter-spacing: 0; text-shadow: none; vertical-align: middle; }
 .backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: translate(-30%, -30%); z-index: 60; }
 .overlay:not(.page):has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
+.infobtn { width: 26px; height: 26px; margin-left: 8px; border-radius: 50%; border: 2px solid #fff; background: #2f86ff; color: #fff; font: 900 15px/1 Georgia, serif; font-style: italic; padding: 0; flex: none; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 /* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
@@ -850,7 +858,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
-    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><canvas class="iobag p0" id="iobag0" width="96" height="96" hidden></canvas><canvas class="iobag p1" id="iobag1" width="96" height="96" hidden></canvas>
+    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
@@ -992,7 +1000,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
-      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins: 11 at Backyard BBQ, 2 more at each court after, up to 21. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins (11 at Backyard BBQ, 2 more at each court after, up to 21), and you have to win by 2, so a close match can run past the target. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
       <p><b>Wind.</b> Wind bends the bag in flight. The green aiming guide already allows for it, so throw down the middle of the green.
       <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
@@ -1020,7 +1028,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
         <li>A bag that touches the ground, or hits the ground and bounces onto the board, scores nothing and is taken off.</li>
         <li>Points cancel out: only the difference between the two sides counts each inning. Equal scores are a wash.</li></ul></div>
       <div class="rulesec"><h3>🏆 Winning</h3><ul>
-        <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21.</li></ul></div>
+        <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21. You have to win by 2, so a close match keeps going past the target.</li></ul></div>
       <div class="rulesec"><h3>🚫 Fouls</h3><ul>
         <li>Stepping past the foul line, throwing from outside your box or throwing out of turn is a foul. A fouled bag scores nothing and is taken off the board.</li>
         <li>Taking too long to throw can also be called as a foul in leagues.</li></ul></div>

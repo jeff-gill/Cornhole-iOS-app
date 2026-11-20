@@ -113,13 +113,14 @@ function updateCamera(dt) {
     k = 1.5;
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
+    fov = narrow ? 41 : 36; // zoomed in on the board
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
     // straight behind whoever is throwing: their aim circle in the middle, the target board up the lane ahead
     // on the line from the thrower's aim circle to the target: the circle sits dead centre, and the view angles in from
     // their side of the board
     const tgt = S.landing || HOLE, az0 = S.ideal ? S.ideal.az : Math.atan2(tgt.x - rel.x, tgt.y - rel.y), ax = rel.x + Math.sin(az0) * 0.6, ay = rel.y + Math.cos(az0) * 0.6, ux0 = tgt.x - ax, uy0 = tgt.y - ay, ul = Math.hypot(ux0, uy0) || 1, ux = ux0 / ul, uy = uy0 / ul;
-    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 14, 0, -(ay + uy * 14));
+    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 11.5, 0, -(ay + uy * 11.5)); // (circle just clear of the score tables)
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
@@ -203,12 +204,13 @@ function renderScore() {
     $("pts" + p).textContent = S.scores[p];
     // career matches: each player's career stars, under their name (practice has none)
     const stars = S.kind === "career" ? (p === 0 ? career.stars : S.opponent ? S.opponent.stars || 0 : 0) : null;
-    $("live" + p).innerHTML = stars == null ? "" : `⭐ ${bigNum(stars)}`;
+    $("live" + p).innerHTML = stars == null ? "" : `<span class="st">⭐</span><span class="sn">${bigNum(stars)}</span>`;
     const lost = (S.lost || [[], []])[p]; // bag k (0-based) empties dot 3-k
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
-  $("inningNum").textContent = S.inning; $("toScore").textContent = "to " + winScore();
+  $("inningNum").textContent = S.inning;
+  $("toScore").textContent = Math.max(...S.scores) >= winScore() ? "win by 2" : "to " + winScore(); // (past the target but not 2 clear)
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
   renderInOn(); renderBoardInfo();
@@ -232,7 +234,13 @@ function renderInOn() {
     const bg = $("iobag" + p), gear = S.gear && S.gear[p];
     bg.hidden = !gear; if (!gear) continue;
     bg.style.bottom = (parseFloat(getComputedStyle(el).bottom) + el.offsetHeight + 4) + "px";
-    if (bg.dataset.id !== gear.id) { bg.dataset.id = gear.id; const ctx = bg.getContext("2d"); ctx.clearRect(0, 0, 96, 96); paintBag(ctx, 96, 96, gear); }
+    if (bg.dataset.id !== gear.id) { // four of this player's bags, painted once
+      bg.dataset.id = gear.id; bg.innerHTML = "";
+      for (let k = 0; k < 4; k++) { const c = document.createElement("canvas"); c.width = c.height = 96; paintBag(c.getContext("2d"), 96, 96, gear); bg.appendChild(c); }
+    }
+    // the bag in hand big at the outside edge, the ones still to throw small beside it, thrown ones faint at the end
+    const left = Math.max(0, 4 - S.thrown[p]);
+    [...bg.children].forEach((c, k) => { c.classList.toggle("big", k === 0); c.classList.toggle("used", k >= left); });
   }
 }
 function renderBanner() {
@@ -247,8 +255,9 @@ function ui() {
   panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote" || S.phase === "aiming"); // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
-  if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
-  else if (canEdit() && S.landing) { hint.textContent = "Drag the yellow ring around the gold zone"; hint.hidden = false; }
+  const learning = !career.tutorialDone; // the on-court hints only while learning; after that the ⓘ button has them
+  if (learning && canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
+  else if (learning && canEdit() && S.landing) { hint.textContent = "Drag the yellow ring around the gold zone"; hint.hidden = false; }
   else hint.hidden = true;
   renderCoach();
   const side = SIDES[S.player] < 0 ? "Left box" : "Right box";
@@ -256,13 +265,19 @@ function ui() {
   if (S.phase === "aiming") {
     // (just the essentials while aiming, so the court gets the room: no arc / slide / spin readouts)
     const plan = S.ideal ? "" : `<div class="muted">Tap the board where you want your bag to end up.</div>`;
-    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">${S.kind === "bullseye" ? bbPanelTag() : `${side} · Bag ${S.thrown[S.player] + 1} of 4`}</span></div>
+    panel.innerHTML = `<div class="row">${who}<button class="infobtn" id="aimInfo" aria-label="How to aim">i</button><span class="spacer"></span><span class="muted">${S.kind === "bullseye" ? bbPanelTag() : `${side} · Bag ${S.thrown[S.player] + 1} of 4`}</span></div>
       ${plan}
       <div class="btns">
         <button class="btn" id="clearBtn" ${S.end ? "" : "disabled"}>CLEAR</button>
         <button class="btn" id="stickBtn" ${S.end ? "" : "disabled"}>STICK IT</button>
         <button class="btn go red" id="throwBtn" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]} 50%, ${COL.pd[S.player]})" ${S.ideal ? "" : "disabled"}>THROW</button>
       </div>`;
+    $("aimInfo").onclick = () => showInfo(`<h2>How to aim</h2><div class="muted" style="text-align:left;line-height:1.45">
+      <p>1. <b>Tap the board</b> where you want your bag to end up.</p>
+      <p>2. <b>Drag the yellow ring</b> to pick where it lands first. Anywhere in the gold zone works: closer to the finish means a high, soft throw; farther back means a lower one that slides.</p>
+      <p><b>STICK IT</b> lands it right on the spot with no slide. <b>CLEAR</b> starts over.</p>
+      <p>3. Tap <b>THROW</b>, then <b>pull down and let go</b> when the ring is in the gold and the arrow points up the middle of the green.</p>
+      <p>The green guide already allows for the wind. Bags in the way get pushed: yours onto the spot, theirs out of the way.</p></div>`);
     $("clearBtn").onclick = () => { S.end = null; S.landD = null; S.landPhi = 0; refreshPlan(); ui(); };
     $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };

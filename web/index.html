@@ -95,7 +95,10 @@ body.inhub .score, body.inhub #panel { display: none; }
    never run into each other on a narrow phone (cqw = 1% of the tile's width). */
 .card { container-type: inline-size; min-height: 76px; justify-content: center; } /* about 20% taller than before */
 .card .name { font-size: clamp(13px, 11cqw, 19px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.card .cav .avatar { width: clamp(22px, 19cqw, 36px); height: clamp(22px, 19cqw, 36px); }
+.card .cav .avatar { width: clamp(30px, 27cqw, 50px); height: clamp(30px, 27cqw, 50px); }
+.card .dots { display: none !important; }
+.card .live { display: flex; flex-direction: column; align-items: center; line-height: 1; padding: 3px 6px !important; border-radius: 10px; }
+.card .live .st { font-size: clamp(11px, 10cqw, 16px); } .card .live .sn { font-family: var(--font-display); font-weight: 400; font-size: clamp(11px, 10cqw, 16px); margin-top: 1px; }
 .card .pts { font-size: clamp(32px, 33cqw, 56px); -webkit-text-stroke: 1.5px rgba(0,0,0,.25); text-shadow: 0 3px 0 rgba(0,0,0,.35), 0 0 12px rgba(255,255,255,.35); flex: none; min-width: 1.1em; text-align: center; }
 .card .cmid { overflow: hidden; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; } .card .dots { flex-wrap: nowrap; }
 .card .dots { gap: clamp(2px, 1.6cqw, 3px); }
@@ -138,7 +141,11 @@ body.inhub .score, body.inhub #panel { display: none; }
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
 /* the bag each player is throwing, sitting on top of their table at the outside edge */
-.iobag { position: absolute; z-index: 3; pointer-events: none; width: 44px; height: 44px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.iobag { position: absolute; z-index: 3; pointer-events: none; display: flex; align-items: flex-end; gap: 5px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.iobag.p1 { flex-direction: row-reverse; }
+.iobag canvas { width: 26px; height: 26px; transition: opacity .3s, width .2s, height .2s; }
+.iobag canvas.big { width: 46px; height: 46px; }
+.iobag canvas.used { opacity: .18; }
 .iobag.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobag.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
 .iobag[hidden] { display: none; }
 .iobox table { border-collapse: collapse; } /* IN | ON over the two counts, split by a + of grid lines */
@@ -655,6 +662,7 @@ s.was { opacity: .6; font-size: .8em; }
 .coolerhead .qbadge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1b2233; font: 900 12px/1.2 Nunito, system-ui, sans-serif; letter-spacing: 0; text-shadow: none; vertical-align: middle; }
 .backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: translate(-30%, -30%); z-index: 60; }
 .overlay:not(.page):has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
+.infobtn { width: 26px; height: 26px; margin-left: 8px; border-radius: 50%; border: 2px solid #fff; background: #2f86ff; color: #fff; font: 900 15px/1 Georgia, serif; font-style: italic; padding: 0; flex: none; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 /* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
@@ -858,7 +866,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
-    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><canvas class="iobag p0" id="iobag0" width="96" height="96" hidden></canvas><canvas class="iobag p1" id="iobag1" width="96" height="96" hidden></canvas>
+    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
@@ -1000,7 +1008,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
-      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins: 11 at Backyard BBQ, 2 more at each court after, up to 21. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins (11 at Backyard BBQ, 2 more at each court after, up to 21), and you have to win by 2, so a close match can run past the target. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
       <p><b>Wind.</b> Wind bends the bag in flight. The green aiming guide already allows for it, so throw down the middle of the green.
       <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
@@ -1028,7 +1036,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
         <li>A bag that touches the ground, or hits the ground and bounces onto the board, scores nothing and is taken off.</li>
         <li>Points cancel out: only the difference between the two sides counts each inning. Equal scores are a wash.</li></ul></div>
       <div class="rulesec"><h3>🏆 Winning</h3><ul>
-        <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21.</li></ul></div>
+        <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21. You have to win by 2, so a close match keeps going past the target.</li></ul></div>
       <div class="rulesec"><h3>🚫 Fouls</h3><ul>
         <li>Stepping past the foul line, throwing from outside your box or throwing out of turn is a foul. A fouled bag scores nothing and is taken off the board.</li>
         <li>Taking too long to throw can also be called as a foul in leagues.</li></ul></div>
@@ -2142,7 +2150,7 @@ function finishInning() {
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
   S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
-  if (S.scores[best] >= winScore()) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
+  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { // reach the target and win by 2 S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
   if (r.winner === null) showWash();
 }
@@ -3131,7 +3139,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795218383`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795218992`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4645,7 +4653,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795218383`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795218992`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4656,7 +4664,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795218383`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795218992`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -7936,13 +7944,14 @@ function updateCamera(dt) {
     k = 1.5;
   } else if (mode === "aim") {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
+    fov = narrow ? 41 : 36; // zoomed in on the board
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
     // straight behind whoever is throwing: their aim circle in the middle, the target board up the lane ahead
     // on the line from the thrower's aim circle to the target: the circle sits dead centre, and the view angles in from
     // their side of the board
     const tgt = S.landing || HOLE, az0 = S.ideal ? S.ideal.az : Math.atan2(tgt.x - rel.x, tgt.y - rel.y), ax = rel.x + Math.sin(az0) * 0.6, ay = rel.y + Math.cos(az0) * 0.6, ux0 = tgt.x - ax, uy0 = tgt.y - ay, ul = Math.hypot(ux0, uy0) || 1, ux = ux0 / ul, uy = uy0 / ul;
-    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 14, 0, -(ay + uy * 14));
+    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 11.5, 0, -(ay + uy * 11.5)); // (circle just clear of the score tables)
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
@@ -8026,12 +8035,13 @@ function renderScore() {
     $("pts" + p).textContent = S.scores[p];
     // career matches: each player's career stars, under their name (practice has none)
     const stars = S.kind === "career" ? (p === 0 ? career.stars : S.opponent ? S.opponent.stars || 0 : 0) : null;
-    $("live" + p).innerHTML = stars == null ? "" : `⭐ ${bigNum(stars)}`;
+    $("live" + p).innerHTML = stars == null ? "" : `<span class="st">⭐</span><span class="sn">${bigNum(stars)}</span>`;
     const lost = (S.lost || [[], []])[p]; // bag k (0-based) empties dot 3-k
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
-  $("inningNum").textContent = S.inning; $("toScore").textContent = "to " + winScore();
+  $("inningNum").textContent = S.inning;
+  $("toScore").textContent = Math.max(...S.scores) >= winScore() ? "win by 2" : "to " + winScore(); // (past the target but not 2 clear)
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
   renderInOn(); renderBoardInfo();
@@ -8055,7 +8065,13 @@ function renderInOn() {
     const bg = $("iobag" + p), gear = S.gear && S.gear[p];
     bg.hidden = !gear; if (!gear) continue;
     bg.style.bottom = (parseFloat(getComputedStyle(el).bottom) + el.offsetHeight + 4) + "px";
-    if (bg.dataset.id !== gear.id) { bg.dataset.id = gear.id; const ctx = bg.getContext("2d"); ctx.clearRect(0, 0, 96, 96); paintBag(ctx, 96, 96, gear); }
+    if (bg.dataset.id !== gear.id) { // four of this player's bags, painted once
+      bg.dataset.id = gear.id; bg.innerHTML = "";
+      for (let k = 0; k < 4; k++) { const c = document.createElement("canvas"); c.width = c.height = 96; paintBag(c.getContext("2d"), 96, 96, gear); bg.appendChild(c); }
+    }
+    // the bag in hand big at the outside edge, the ones still to throw small beside it, thrown ones faint at the end
+    const left = Math.max(0, 4 - S.thrown[p]);
+    [...bg.children].forEach((c, k) => { c.classList.toggle("big", k === 0); c.classList.toggle("used", k >= left); });
   }
 }
 function renderBanner() {
@@ -8070,8 +8086,9 @@ function ui() {
   panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote" || S.phase === "aiming"); // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
-  if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
-  else if (canEdit() && S.landing) { hint.textContent = "Drag the yellow ring around the gold zone"; hint.hidden = false; }
+  const learning = !career.tutorialDone; // the on-court hints only while learning; after that the ⓘ button has them
+  if (learning && canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
+  else if (learning && canEdit() && S.landing) { hint.textContent = "Drag the yellow ring around the gold zone"; hint.hidden = false; }
   else hint.hidden = true;
   renderCoach();
   const side = SIDES[S.player] < 0 ? "Left box" : "Right box";
@@ -8079,13 +8096,19 @@ function ui() {
   if (S.phase === "aiming") {
     // (just the essentials while aiming, so the court gets the room: no arc / slide / spin readouts)
     const plan = S.ideal ? "" : `<div class="muted">Tap the board where you want your bag to end up.</div>`;
-    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><span class="muted">${S.kind === "bullseye" ? bbPanelTag() : `${side} · Bag ${S.thrown[S.player] + 1} of 4`}</span></div>
+    panel.innerHTML = `<div class="row">${who}<button class="infobtn" id="aimInfo" aria-label="How to aim">i</button><span class="spacer"></span><span class="muted">${S.kind === "bullseye" ? bbPanelTag() : `${side} · Bag ${S.thrown[S.player] + 1} of 4`}</span></div>
       ${plan}
       <div class="btns">
         <button class="btn" id="clearBtn" ${S.end ? "" : "disabled"}>CLEAR</button>
         <button class="btn" id="stickBtn" ${S.end ? "" : "disabled"}>STICK IT</button>
         <button class="btn go red" id="throwBtn" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]} 50%, ${COL.pd[S.player]})" ${S.ideal ? "" : "disabled"}>THROW</button>
       </div>`;
+    $("aimInfo").onclick = () => showInfo(`<h2>How to aim</h2><div class="muted" style="text-align:left;line-height:1.45">
+      <p>1. <b>Tap the board</b> where you want your bag to end up.</p>
+      <p>2. <b>Drag the yellow ring</b> to pick where it lands first. Anywhere in the gold zone works: closer to the finish means a high, soft throw; farther back means a lower one that slides.</p>
+      <p><b>STICK IT</b> lands it right on the spot with no slide. <b>CLEAR</b> starts over.</p>
+      <p>3. Tap <b>THROW</b>, then <b>pull down and let go</b> when the ring is in the gold and the arrow points up the middle of the green.</p>
+      <p>The green guide already allows for the wind. Bags in the way get pushed: yours onto the spot, theirs out of the way.</p></div>`);
     $("clearBtn").onclick = () => { S.end = null; S.landD = null; S.landPhi = 0; refreshPlan(); ui(); };
     $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };
