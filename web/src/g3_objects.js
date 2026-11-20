@@ -386,20 +386,21 @@ function trailPuff(pos, kind, owner = 0) {
     fx.push({ o: s, vel: new THREE.Vector3((Math.random() - 0.5) * 0.3, t.rise, (Math.random() - 0.5) * 0.3), life: t.life, max: t.life, grow: t.grow ?? 0.1, s0: s.scale.x, op: t.op ?? 1, flicker: !!t.flicker, kind: "trail" });
   }
 }
-const confettiGeo = new THREE.PlaneGeometry(0.09, 0.05);
+const confettiGeo = new THREE.PlaneGeometry(0.17, 0.095);
 function confetti(owner) {
   const cols = [COL.p[owner], COL.gold, "#ffffff", COL.pl[owner], COL.go];
-  const n = 90, mesh = new THREE.InstancedMesh(confettiGeo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true }), n);
+  const n = 160, mesh = new THREE.InstancedMesh(confettiGeo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true }), n);
   const parts = [], col = new THREE.Color();
   for (let i = 0; i < n; i++) {
-    const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 5;
-    parts.push({ p: W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.1), v: new THREE.Vector3(Math.cos(a) * v * 0.6, 5 + Math.random() * 7, Math.sin(a) * v * 0.6), r: new THREE.Euler(Math.random() * 6, Math.random() * 6, 0), w: (Math.random() - 0.5) * 18 });
+    const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 5, r = Math.sqrt(Math.random()) * HR * 0.8;
+    // out of the hole's mouth in a column that fans out as it rises
+    parts.push({ p: W(HOLE.x + Math.cos(a) * r, HOLE.y + Math.sin(a) * r, plane(HOLE.y) - 0.1), v: new THREE.Vector3(Math.cos(a) * v * 0.38, 7 + Math.random() * 8, Math.sin(a) * v * 0.38), r: new THREE.Euler(Math.random() * 6, Math.random() * 6, 0), w: (Math.random() - 0.5) * 18 });
     mesh.setColorAt(i, col.set(cols[i % cols.length]));
   }
   scene.add(mesh);
   fx.push({ o: mesh, parts, life: 2.2, max: 2.2, kind: "confetti" });
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0xffd76a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
-  glow.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.2)); glow.scale.setScalar(0.8); scene.add(glow);
+  glow.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.2)); glow.scale.setScalar(1.6); scene.add(glow);
   fx.push({ o: glow, life: 0.9, max: 0.9, kind: "glow" });
   shake = Math.max(shake, 0.45);
 }

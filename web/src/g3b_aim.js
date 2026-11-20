@@ -125,11 +125,17 @@ function rampColor(a, out) {
 }
 let aimFireT = 0, aimWedgeZone = -1;
 const wedgeTilt = new THREE.Group(); aimBase.add(wedgeTilt);
-// A see-through divider board between the two pitcher's boxes, so it's clear who throws from which side.
-const boxDivider = new THREE.Mesh(new THREE.BoxGeometry(0.14, 3, 6), new THREE.MeshStandardMaterial({ color: 0xc89a5a, roughness: 0.8, transparent: true, opacity: 0.35, depthWrite: false }));
-boxDivider.position.copy(W(0, 0.8, 1.5)); boxDivider.renderOrder = 5; scene.add(boxDivider);
+// The throwers' own board stands between the two pitcher's boxes (as in real cornhole). It's slightly see-through so
+// it never hides the arrow. Its materials are its own copies, so the target board stays solid.
+function ghostOwnBoard() {
+  ownBoard.traverse(o => {
+    if (!o.isMesh || o.userData.ghost) return;
+    const g = m => { const c = m.clone(); c.transparent = true; c.opacity = 0.6; c.depthWrite = false; return c; };
+    o.material = Array.isArray(o.material) ? o.material.map(g) : g(o.material); o.userData.ghost = true; o.renderOrder = 4;
+  });
+}
 function updateAimRig(dt) {
-  boxDivider.visible = S.phase !== "hub" && S.kind !== "bullseye";
+  ghostOwnBoard();
   const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
   aimRig.visible = true;

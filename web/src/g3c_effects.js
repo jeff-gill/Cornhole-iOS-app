@@ -24,12 +24,14 @@ const fxTex = {
 // A burst of sprite particles: n of them, launched upward in a cone, with gravity and a fade.
 function spriteBurst({ n = 40, tex = dotTex, colors = [0xffffff], speed = [3, 7], up = [5, 9], spread = 0.7, gravity = 12, life = [1, 1.6], size = [0.12, 0.22], additive = false, drag = 0.4, bounce = false, rise = 0, swirl = 0 }) {
   const base = W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.1);
+  n = Math.round(n * 1.5);
   for (let i = 0; i < n; i++) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: colors[i % colors.length], transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
-    const a = Math.random() * Math.PI * 2, v = rand(speed[0], speed[1]) * spread;
-    s.position.copy(base); s.scale.setScalar(rand(size[0], size[1])); scene.add(s);
-    const L = rand(life[0], life[1]);
-    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]), Math.sin(a) * v), gravity, drag, bounce, rise, swirl, base, life: L, max: L, s0: s.scale.x });
+    const a = Math.random() * Math.PI * 2, v = rand(speed[0], speed[1]) * spread * 0.55, r = Math.sqrt(Math.random()) * HR * 0.8;
+    // from inside the hole's mouth, just below the board, so it pours up out of it
+    s.position.copy(W(HOLE.x + Math.cos(a) * r, HOLE.y + Math.sin(a) * r, plane(HOLE.y) - 0.15)); s.scale.setScalar(rand(size[0], size[1]) * 2); scene.add(s);
+    const L = rand(life[0], life[1]) * 1.15;
+    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]) * 1.3, Math.sin(a) * v), gravity, drag, bounce, rise, swirl, base, life: L, max: L, s0: s.scale.x, grace: 0.3 });
   }
 }
 function lightningStrike(color = 0xbfe6ff) {
@@ -50,8 +52,18 @@ function lightningStrike(color = 0xbfe6ff) {
   spriteBurst({ n: 30, colors: [0xffffff, 0xbfe6ff], additive: true, speed: [3, 8], up: [1, 4], life: [0.4, 0.8], size: [0.08, 0.16] });
   shake = Math.max(shake, 0.35);
 }
+function holeEruption(color) {
+  const mouth = W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.05);
+  const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+  flash.position.copy(mouth); flash.scale.setScalar(2.4); scene.add(flash);
+  fx.push({ o: flash, life: 0.7, max: 0.7, kind: "glow" });
+  const col = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+  col.position.copy(mouth).add(new THREE.Vector3(0, 1.4, 0)); col.scale.set(0.9, 3.4, 1); scene.add(col);
+  fx.push({ o: col, kind: "sprite", vel: new THREE.Vector3(0, 6, 0), gravity: 0, drag: 0.2, bounce: false, rise: 0, swirl: 0, base: mouth, life: 0.55, max: 0.55, s0: 0.9, grace: 9, noSpin: true });
+}
 function celebrate(owner, forced) {
   const id = forced || (owner === 0 ? career.effect : (S.online && S.online.effect) || "confetti");
+  holeEruption(new THREE.Color(id === "flames" ? "#ff6a1a" : id === "blizzard" ? "#bfe6ff" : id === "galaxy" ? "#a24bff" : COL.pl[owner] || "#ffd76a"));
   const team = [COL.p[owner], COL.pl[owner], "#ffffff"];
   switch (id) {
     case "streamers": confetti(owner); spriteBurst({ n: 30, colors: team, speed: [2, 4], up: [7, 11], gravity: 5, life: [1.6, 2.2], size: [0.1, 0.18], drag: 0.6 }); break;
@@ -82,9 +94,10 @@ function updateCelebrationFx(f, dt, a) {
     if (f.swirl) { const dx = f.o.position.x - f.base.x, dz = f.o.position.z - f.base.z; f.vel.x += -dz * f.swirl * dt; f.vel.z += dx * f.swirl * dt; }
     f.o.position.addScaledVector(f.vel, dt);
     const floor = surf({ x: f.o.position.x, y: -f.o.position.z }) + 0.05;
-    if (f.o.position.y < floor) { f.o.position.y = floor; if (f.bounce && Math.abs(f.vel.y) > 1) f.vel.y *= -0.45; else f.vel.set(0, 0, 0); }
+    if (f.grace > 0) f.grace -= dt; // still coming up out of the hole
+    else if (f.o.position.y < floor) { f.o.position.y = floor; if (f.bounce && Math.abs(f.vel.y) > 1) f.vel.y *= -0.45; else f.vel.set(0, 0, 0); }
     f.o.material.opacity = Math.min(1, a * 2.5);
-    f.o.material.rotation += dt * 3;
+    if (!f.noSpin) f.o.material.rotation += dt * 3;
     return true;
   }
   if (f.kind === "flicker") { f.o.material.opacity = a * (Math.random() < 0.6 ? 1 : 0.2); return true; }

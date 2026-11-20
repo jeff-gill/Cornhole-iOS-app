@@ -3095,7 +3095,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795213047`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795213397`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4609,7 +4609,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795213047`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795213397`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4620,7 +4620,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795213047`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795213397`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -5976,20 +5976,21 @@ function trailPuff(pos, kind, owner = 0) {
     fx.push({ o: s, vel: new THREE.Vector3((Math.random() - 0.5) * 0.3, t.rise, (Math.random() - 0.5) * 0.3), life: t.life, max: t.life, grow: t.grow ?? 0.1, s0: s.scale.x, op: t.op ?? 1, flicker: !!t.flicker, kind: "trail" });
   }
 }
-const confettiGeo = new THREE.PlaneGeometry(0.09, 0.05);
+const confettiGeo = new THREE.PlaneGeometry(0.17, 0.095);
 function confetti(owner) {
   const cols = [COL.p[owner], COL.gold, "#ffffff", COL.pl[owner], COL.go];
-  const n = 90, mesh = new THREE.InstancedMesh(confettiGeo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true }), n);
+  const n = 160, mesh = new THREE.InstancedMesh(confettiGeo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true }), n);
   const parts = [], col = new THREE.Color();
   for (let i = 0; i < n; i++) {
-    const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 5;
-    parts.push({ p: W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.1), v: new THREE.Vector3(Math.cos(a) * v * 0.6, 5 + Math.random() * 7, Math.sin(a) * v * 0.6), r: new THREE.Euler(Math.random() * 6, Math.random() * 6, 0), w: (Math.random() - 0.5) * 18 });
+    const a = Math.random() * Math.PI * 2, v = 2 + Math.random() * 5, r = Math.sqrt(Math.random()) * HR * 0.8;
+    // out of the hole's mouth in a column that fans out as it rises
+    parts.push({ p: W(HOLE.x + Math.cos(a) * r, HOLE.y + Math.sin(a) * r, plane(HOLE.y) - 0.1), v: new THREE.Vector3(Math.cos(a) * v * 0.38, 7 + Math.random() * 8, Math.sin(a) * v * 0.38), r: new THREE.Euler(Math.random() * 6, Math.random() * 6, 0), w: (Math.random() - 0.5) * 18 });
     mesh.setColorAt(i, col.set(cols[i % cols.length]));
   }
   scene.add(mesh);
   fx.push({ o: mesh, parts, life: 2.2, max: 2.2, kind: "confetti" });
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0xffd76a, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
-  glow.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.2)); glow.scale.setScalar(0.8); scene.add(glow);
+  glow.position.copy(W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.2)); glow.scale.setScalar(1.6); scene.add(glow);
   fx.push({ o: glow, life: 0.9, max: 0.9, kind: "glow" });
   shake = Math.max(shake, 0.45);
 }
@@ -6224,11 +6225,17 @@ function rampColor(a, out) {
 }
 let aimFireT = 0, aimWedgeZone = -1;
 const wedgeTilt = new THREE.Group(); aimBase.add(wedgeTilt);
-// A see-through divider board between the two pitcher's boxes, so it's clear who throws from which side.
-const boxDivider = new THREE.Mesh(new THREE.BoxGeometry(0.14, 3, 6), new THREE.MeshStandardMaterial({ color: 0xc89a5a, roughness: 0.8, transparent: true, opacity: 0.35, depthWrite: false }));
-boxDivider.position.copy(W(0, 0.8, 1.5)); boxDivider.renderOrder = 5; scene.add(boxDivider);
+// The throwers' own board stands between the two pitcher's boxes (as in real cornhole). It's slightly see-through so
+// it never hides the arrow. Its materials are its own copies, so the target board stays solid.
+function ghostOwnBoard() {
+  ownBoard.traverse(o => {
+    if (!o.isMesh || o.userData.ghost) return;
+    const g = m => { const c = m.clone(); c.transparent = true; c.opacity = 0.6; c.depthWrite = false; return c; };
+    o.material = Array.isArray(o.material) ? o.material.map(g) : g(o.material); o.userData.ghost = true; o.renderOrder = 4;
+  });
+}
 function updateAimRig(dt) {
-  boxDivider.visible = S.phase !== "hub" && S.kind !== "bullseye";
+  ghostOwnBoard();
   const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
   aimRig.visible = true;
@@ -6344,12 +6351,14 @@ const fxTex = {
 // A burst of sprite particles: n of them, launched upward in a cone, with gravity and a fade.
 function spriteBurst({ n = 40, tex = dotTex, colors = [0xffffff], speed = [3, 7], up = [5, 9], spread = 0.7, gravity = 12, life = [1, 1.6], size = [0.12, 0.22], additive = false, drag = 0.4, bounce = false, rise = 0, swirl = 0 }) {
   const base = W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.1);
+  n = Math.round(n * 1.5);
   for (let i = 0; i < n; i++) {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: colors[i % colors.length], transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending }));
-    const a = Math.random() * Math.PI * 2, v = rand(speed[0], speed[1]) * spread;
-    s.position.copy(base); s.scale.setScalar(rand(size[0], size[1])); scene.add(s);
-    const L = rand(life[0], life[1]);
-    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]), Math.sin(a) * v), gravity, drag, bounce, rise, swirl, base, life: L, max: L, s0: s.scale.x });
+    const a = Math.random() * Math.PI * 2, v = rand(speed[0], speed[1]) * spread * 0.55, r = Math.sqrt(Math.random()) * HR * 0.8;
+    // from inside the hole's mouth, just below the board, so it pours up out of it
+    s.position.copy(W(HOLE.x + Math.cos(a) * r, HOLE.y + Math.sin(a) * r, plane(HOLE.y) - 0.15)); s.scale.setScalar(rand(size[0], size[1]) * 2); scene.add(s);
+    const L = rand(life[0], life[1]) * 1.15;
+    fx.push({ o: s, kind: "sprite", vel: new THREE.Vector3(Math.cos(a) * v, rand(up[0], up[1]) * 1.3, Math.sin(a) * v), gravity, drag, bounce, rise, swirl, base, life: L, max: L, s0: s.scale.x, grace: 0.3 });
   }
 }
 function lightningStrike(color = 0xbfe6ff) {
@@ -6370,8 +6379,18 @@ function lightningStrike(color = 0xbfe6ff) {
   spriteBurst({ n: 30, colors: [0xffffff, 0xbfe6ff], additive: true, speed: [3, 8], up: [1, 4], life: [0.4, 0.8], size: [0.08, 0.16] });
   shake = Math.max(shake, 0.35);
 }
+function holeEruption(color) {
+  const mouth = W(HOLE.x, HOLE.y, plane(HOLE.y) + 0.05);
+  const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+  flash.position.copy(mouth); flash.scale.setScalar(2.4); scene.add(flash);
+  fx.push({ o: flash, life: 0.7, max: 0.7, kind: "glow" });
+  const col = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+  col.position.copy(mouth).add(new THREE.Vector3(0, 1.4, 0)); col.scale.set(0.9, 3.4, 1); scene.add(col);
+  fx.push({ o: col, kind: "sprite", vel: new THREE.Vector3(0, 6, 0), gravity: 0, drag: 0.2, bounce: false, rise: 0, swirl: 0, base: mouth, life: 0.55, max: 0.55, s0: 0.9, grace: 9, noSpin: true });
+}
 function celebrate(owner, forced) {
   const id = forced || (owner === 0 ? career.effect : (S.online && S.online.effect) || "confetti");
+  holeEruption(new THREE.Color(id === "flames" ? "#ff6a1a" : id === "blizzard" ? "#bfe6ff" : id === "galaxy" ? "#a24bff" : COL.pl[owner] || "#ffd76a"));
   const team = [COL.p[owner], COL.pl[owner], "#ffffff"];
   switch (id) {
     case "streamers": confetti(owner); spriteBurst({ n: 30, colors: team, speed: [2, 4], up: [7, 11], gravity: 5, life: [1.6, 2.2], size: [0.1, 0.18], drag: 0.6 }); break;
@@ -6402,9 +6421,10 @@ function updateCelebrationFx(f, dt, a) {
     if (f.swirl) { const dx = f.o.position.x - f.base.x, dz = f.o.position.z - f.base.z; f.vel.x += -dz * f.swirl * dt; f.vel.z += dx * f.swirl * dt; }
     f.o.position.addScaledVector(f.vel, dt);
     const floor = surf({ x: f.o.position.x, y: -f.o.position.z }) + 0.05;
-    if (f.o.position.y < floor) { f.o.position.y = floor; if (f.bounce && Math.abs(f.vel.y) > 1) f.vel.y *= -0.45; else f.vel.set(0, 0, 0); }
+    if (f.grace > 0) f.grace -= dt; // still coming up out of the hole
+    else if (f.o.position.y < floor) { f.o.position.y = floor; if (f.bounce && Math.abs(f.vel.y) > 1) f.vel.y *= -0.45; else f.vel.set(0, 0, 0); }
     f.o.material.opacity = Math.min(1, a * 2.5);
-    f.o.material.rotation += dt * 3;
+    if (!f.noSpin) f.o.material.rotation += dt * 3;
     return true;
   }
   if (f.kind === "flicker") { f.o.material.opacity = a * (Math.random() < 0.6 ? 1 : 0.2); return true; }
@@ -7870,7 +7890,7 @@ function updateCamera(dt) {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
     // (the opponent's throws are seen from the same spot: behind your box)
     const eye = isCPU(S.player) || isRemote(S.player) ? release(0) : rel;
-    tPos.set(eye.x * 1.1, 6.2, 5.2); tLook.set(eye.x * 0.15, 0, -14); // arrow and ring near the bottom, board up the lane
+    tPos.set(eye.x * 1.1, 6.6, 7.4); tLook.set(eye.x * 0.15, 0, -14); // far enough back to see your own board beside you // arrow and ring near the bottom, board up the lane
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
