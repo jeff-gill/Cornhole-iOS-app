@@ -891,13 +891,26 @@ s.was { opacity: .6; font-size: .8em; }
     </div>
     <nav class="navbar" id="navbar">
       <button data-nav="settings"><span class="nic">⚙️</span><small>SETTINGS</small></button>
-      <button data-nav="gear"><span class="nic"><svg viewBox="2 2 44 44" width="46" height="46" aria-hidden="true">
-        <g transform="rotate(14 31 24)"><rect x="22" y="5" width="18" height="34" rx="2" fill="#d9a56a" stroke="#8a5a2b" stroke-width="2"/><rect x="22" y="17" width="18" height="5" fill="#1f3a6e"/><circle cx="31" cy="11.5" r="3.6" fill="#2a1a0e" stroke="#8a5a2b" stroke-width="1"/></g>
-        <g transform="rotate(-14 16 33)"><rect x="5" y="23" width="21" height="19" rx="5" fill="#e8392b" stroke="#fff" stroke-width="2"/><rect x="8.5" y="26.5" width="14" height="12" rx="3" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="1.2" stroke-dasharray="2 2"/></g>
+      <button data-nav="gear"><span class="nic"><svg viewBox="200 120 660 860" width="50" height="50" aria-hidden="true">
+        <defs><radialGradient id="navBagG" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#ff9a8a"/><stop offset="0.5" stop-color="#ff4b3a"/><stop offset="1" stop-color="#d42a1c"/></radialGradient>
+        <linearGradient id="navBoardG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d6a4"/><stop offset="1" stop-color="#dcb07a"/></linearGradient></defs>
+        <rect x="250" y="930" width="524" height="40" fill="#1f3a6e"/>
+        <polygon points="350,428 672,428 776,930 248,930" fill="url(#navBoardG)" stroke="#9c6f3d" stroke-width="14"/>
+        <ellipse cx="512" cy="545" rx="90" ry="56" fill="#ffc93a"/><ellipse cx="512" cy="545" rx="70" ry="42" fill="#160e08"/>
+        <polygon points="282,765 722,668 742,778 262,885" fill="#1f3a6e"/><polygon points="285,762 720,666 724,690 280,790" fill="#ffc93a"/>
+        <g transform="rotate(-22 560 330)"><rect x="420" y="190" width="280" height="280" rx="60" fill="url(#navBagG)" stroke="#7a1208" stroke-width="16"/>
+        <rect x="460" y="230" width="200" height="200" rx="34" fill="none" stroke="#ffe4de" stroke-width="12" stroke-dasharray="26 22"/></g>
       </svg></span><small>BAGS &amp;<br>BOARDS</small><i class="nbadge" id="gearBadge" hidden></i></button>
       <button data-nav="home" class="on"><span class="nic">🏠</span><small>HOME</small></button>
       <button data-nav="rank"><span class="nic">🏆</span><small>RANKINGS</small></button>
-      <button data-nav="store"><span class="nic">🛒</span><small>STORE</small><i class="nbadge" id="shopBadge" hidden></i></button>
+      <button data-nav="store"><span class="nic"><svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true">
+        <defs><linearGradient id="navCoinG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#e8a417"/></linearGradient></defs>
+        <g stroke="#9a6400" stroke-width="2"><ellipse cx="26" cy="49" rx="17" ry="6" fill="#d89412"/><rect x="9" y="41" width="34" height="8" fill="#e8a417" stroke="none"/><ellipse cx="26" cy="41" rx="17" ry="6" fill="url(#navCoinG)"/>
+        <ellipse cx="26" cy="35" rx="17" ry="6" fill="#d89412"/><rect x="9" y="27" width="34" height="8" fill="#e8a417" stroke="none"/><ellipse cx="26" cy="27" rx="17" ry="6" fill="url(#navCoinG)"/>
+        <ellipse cx="26" cy="21" rx="17" ry="6" fill="#d89412"/><rect x="9" y="13" width="34" height="8" fill="#e8a417" stroke="none"/><ellipse cx="26" cy="13" rx="17" ry="6" fill="url(#navCoinG)"/></g>
+        <text x="26" y="17.5" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="11" font-weight="900" fill="#9a6400">$</text>
+        <g transform="rotate(-18 47 41)"><circle cx="47" cy="41" r="13" fill="#e8392b" stroke="#fff" stroke-width="2.5" stroke-dasharray="3.2 2.2"/><circle cx="47" cy="41" r="8" fill="#c81f12"/><path d="M47 35.5 l1.6 3.4 3.7 .4 -2.8 2.5 .8 3.6 -3.3-1.9 -3.3 1.9 .8-3.6 -2.8-2.5 3.7-.4z" fill="#fff"/></g>
+      </svg></span><small>STORE</small><i class="nbadge" id="shopBadge" hidden></i></button>
     </nav>
   </div>
 </div>
@@ -3094,7 +3107,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795214305`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795214575`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4608,7 +4621,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795214305`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795214575`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4619,7 +4632,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795214305`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795214575`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
