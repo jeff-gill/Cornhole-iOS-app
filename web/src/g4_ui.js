@@ -644,7 +644,7 @@ function storeHTML() {
   for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Bottle caps</div>`);
   for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
-  parts.push(`<div class="label">Lives and cans</div>`);
+  parts.push(`<div class="label">Cans</div>`);
   for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
     const ic = it.kind === "can" ? canPic(it.can, "store") : it.kind === "lives" ? `<i class="tkt" style="width:46px;height:34px"></i>` : it.icon;
     parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
@@ -860,9 +860,19 @@ for (const [id, close] of [
   el.addEventListener("click", e => { if (e.target === el && downOnBackdrop) close(); downOnBackdrop = false; });
 }
 
+// Each sheet's back arrow sits on its top-left corner, wherever the sheet is (they're different heights).
+function placeSheetBacks() {
+  for (const b of document.querySelectorAll(".sheetback")) {
+    const ov = b.parentElement; if (ov.hidden) continue;
+    const sheet = [...ov.children].find(c => c !== b && c.offsetParent !== null); if (!sheet) continue;
+    const r = sheet.getBoundingClientRect(), top = Math.max(r.top, 8) + "px", left = Math.max(r.left, 8) + "px";
+    if (b.style.top !== top) b.style.top = top; if (b.style.left !== left) b.style.left = left;
+  }
+}
 // ───────────────────────── Loop
 let lastT = 0, lastFrameAt = performance.now(), frameErrors = 0;
 function frame(now) {
+  placeSheetBacks();
   lastFrameAt = performance.now();
   try { step(now); frameErrors = 0; }
   catch (err) { // one bad frame shouldn't freeze the game; a run of them means it's stuck

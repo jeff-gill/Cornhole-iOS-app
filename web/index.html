@@ -625,6 +625,7 @@ s.was { opacity: .6; font-size: .8em; }
 #prize .coin.big, #prize .bcap.big { width: 88px; height: 88px; }
 .shopexit { position: fixed; left: 0; right: 0; margin: 0 auto; width: fit-content; bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 20; min-width: 170px;
   background: linear-gradient(#ff6a5a, #c8102e); border-color: #fff; box-shadow: 0 5px 0 rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.45); }
+#shop .tabs { position: sticky; top: 14px; z-index: 5; background: #14254a; box-shadow: 0 -44px 0 22px var(--deck-2), 0 6px 10px rgba(6,12,24,.5); }
 #shop .items { padding-bottom: 84px; } /* room so the last item isn't hidden under the exit button */
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 400; font-size: 36px; line-height: 1; white-space: nowrap; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
@@ -648,7 +649,7 @@ s.was { opacity: .6; font-size: .8em; }
 #hub .onhome .cooler .cslot { height: 100px; font-size: 13px; }
 @media (max-height: 720px) { #hub .onhome .cooler .cslot { height: 80px; } }
 .coolerhead .qbadge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1b2233; font: 900 12px/1.2 Nunito, system-ui, sans-serif; letter-spacing: 0; text-shadow: none; vertical-align: middle; }
-.backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: none; z-index: 60; }
+.backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: translate(-30%, -30%); z-index: 60; }
 .overlay:has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 #avatarClose, #bbClose, #wheelClose, #shopClose, #helpClose, #infoClose { display: none !important; }
@@ -3107,7 +3108,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795214771`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795215091`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4621,7 +4622,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795214771`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795215091`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4632,7 +4633,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795214771`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795215091`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8436,7 +8437,7 @@ function storeHTML() {
   for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Bottle caps</div>`);
   for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
-  parts.push(`<div class="label">Lives and cans</div>`);
+  parts.push(`<div class="label">Cans</div>`);
   for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
     const ic = it.kind === "can" ? canPic(it.can, "store") : it.kind === "lives" ? `<i class="tkt" style="width:46px;height:34px"></i>` : it.icon;
     parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
@@ -8652,9 +8653,19 @@ for (const [id, close] of [
   el.addEventListener("click", e => { if (e.target === el && downOnBackdrop) close(); downOnBackdrop = false; });
 }
 
+// Each sheet's back arrow sits on its top-left corner, wherever the sheet is (they're different heights).
+function placeSheetBacks() {
+  for (const b of document.querySelectorAll(".sheetback")) {
+    const ov = b.parentElement; if (ov.hidden) continue;
+    const sheet = [...ov.children].find(c => c !== b && c.offsetParent !== null); if (!sheet) continue;
+    const r = sheet.getBoundingClientRect(), top = Math.max(r.top, 8) + "px", left = Math.max(r.left, 8) + "px";
+    if (b.style.top !== top) b.style.top = top; if (b.style.left !== left) b.style.left = left;
+  }
+}
 // ───────────────────────── Loop
 let lastT = 0, lastFrameAt = performance.now(), frameErrors = 0;
 function frame(now) {
+  placeSheetBacks();
   lastFrameAt = performance.now();
   try { step(now); frameErrors = 0; }
   catch (err) { // one bad frame shouldn't freeze the game; a run of them means it's stuck

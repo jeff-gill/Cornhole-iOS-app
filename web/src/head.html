@@ -617,6 +617,7 @@ s.was { opacity: .6; font-size: .8em; }
 #prize .coin.big, #prize .bcap.big { width: 88px; height: 88px; }
 .shopexit { position: fixed; left: 0; right: 0; margin: 0 auto; width: fit-content; bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 20; min-width: 170px;
   background: linear-gradient(#ff6a5a, #c8102e); border-color: #fff; box-shadow: 0 5px 0 rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.45); }
+#shop .tabs { position: sticky; top: 14px; z-index: 5; background: #14254a; box-shadow: 0 -44px 0 22px var(--deck-2), 0 6px 10px rgba(6,12,24,.5); }
 #shop .items { padding-bottom: 84px; } /* room so the last item isn't hidden under the exit button */
 .venue { position: relative; border: 4px solid #fff; border-radius: 24px; padding: 14px 16px; background: linear-gradient(135deg, rgba(27,47,82,.95), rgba(18,32,58,.95)); box-shadow: 0 7px 0 rgba(0,0,0,.35); }
 .venue h3 { margin: 4px 0 10px; font-family: var(--font-display); font-weight: 400; font-size: 36px; line-height: 1; white-space: nowrap; text-shadow: 0 3px 0 rgba(0,0,0,.3); }
@@ -640,7 +641,7 @@ s.was { opacity: .6; font-size: .8em; }
 #hub .onhome .cooler .cslot { height: 100px; font-size: 13px; }
 @media (max-height: 720px) { #hub .onhome .cooler .cslot { height: 80px; } }
 .coolerhead .qbadge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1b2233; font: 900 12px/1.2 Nunito, system-ui, sans-serif; letter-spacing: 0; text-shadow: none; vertical-align: middle; }
-.backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: none; z-index: 60; }
+.backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: translate(-30%, -30%); z-index: 60; }
 .overlay:has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 #avatarClose, #bbClose, #wheelClose, #shopClose, #helpClose, #infoClose { display: none !important; }
