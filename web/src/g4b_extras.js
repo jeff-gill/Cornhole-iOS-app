@@ -144,6 +144,17 @@ function showChoice(html, yes, onYes, no = "CANCEL", onNo = null, yesClass = "gr
 }
 // The rough-patch offer: the only way to swap stars for coins. Stars come from the court you were playing first, then
 // your highest other courts (courts you've opened stay open). Yes or no, the count starts over.
+// The Welcome Pack: offered after a match in your first 3 days, at most once a day, until you buy it or it ends.
+const WELCOME_MS = 3 * 86400000;
+function welcomeLeft() { if (career.firstSeen == null) { career.firstSeen = clockNow(); save(); } return career.firstSeen + WELCOME_MS - clockNow(); }
+function offerWelcome() {
+  const it = STORE.find(x => x.id === PID("starterpack"));
+  if (!it || career.purchases.includes(it.id) || welcomeLeft() <= 0 || career.welcomeDay === bbDay() || !(career.wins + career.losses) || !$("livesSheet").hidden) return;
+  career.welcomeDay = bbDay(); save();
+  showChoice(`<div class="lifebig">🎁</div><h2>Welcome Pack</h2><div class="muted"><b>${it.blurb}</b></div>
+    <div class="big center" style="margin-top:8px"><s style="opacity:.6">${it.value}</s> <b style="color:var(--gold)">${storePrices[it.id] || it.price}</b> · ${it.off}% OFF</div><div class="muted center">Only for new players · ends in ${timeText(welcomeLeft())}</div>`,
+    "GET IT", () => { shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; buy(it.id); }, "NOT NOW");
+}
 function offerStarTrade() {
   const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden) return;
   // coins: 4 buy-ins of the middle court you have open (rounded down), a nudge toward easier courts

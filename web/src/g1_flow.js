@@ -89,7 +89,7 @@ const STORE = [
   { id: PID("coins.medium"), kind: "coins", coins: 150000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
   { id: PID("coins.large"), kind: "coins", coins: 500000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
   { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
-  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 25000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "25,000 coins + Firecracker bags + Neon Nights board" },
+  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Welcome Pack", coins: 25000, caps: 100, can: "gold", grants: ["bag:firecracker", "board:neon"], tag: "WELCOME OFFER", value: "$9.46", off: 68, blurb: "25,000 coins + 100 bottle caps + a Golden Pop can + Firecracker bags + Neon Nights board" },
   { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
   { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
@@ -260,6 +260,8 @@ function grantPurchase(id, restored) {
   if (career.purchases.includes(id)) return item;
   career.purchases.push(id);
   if (item.coins && !restored) career.coins += item.coins;
+  if (item.caps && !restored) career.caps += item.caps;
+  if (item.can && !restored) stashCan({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
   for (const g of item.grants || []) {
     const [type, key] = g.split(":"), list = type === "bag" ? career.bags : type === "board" ? career.boards : career.trails;
     if (!list.includes(key)) list.push(key);

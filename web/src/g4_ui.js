@@ -462,6 +462,7 @@ function openHub() {
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
   if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
+  else if (S.kind === "career") setTimeout(offerWelcome, 900);
 
 }
 // Idle clubhouse: after 5 seconds without a touch it fades to 50% so the court shows through. The first tap only wakes it
@@ -609,7 +610,7 @@ function storeHTML() {
   const sw = keys => `<div class="swrow">${keys.filter(k => !k.startsWith("trail")).map(k => `<canvas data-sw="${k}" width="80" height="80"></canvas>`).join("")}</div>`;
   const starter = STORE.find(x => x.id === PID("starterpack"));
   const parts = [];
-  if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
+  if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title} <span class="was"><s>${starter.value}</s> ${starter.off}% OFF</span></h4><div class="sub">${starter.blurb}</div>${welcomeLeft() > 0 ? `<div class="sub">Ends in ${timeText(welcomeLeft())}</div>` : ""}${sw(starter.grants)}</div>${btn(starter)}</div>`);
   parts.push(`<div class="label">Coins</div>`);
   for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Bottle caps</div>`);
@@ -938,7 +939,7 @@ function settleInterruptedMatch() {
 
 resize(); openHub(); settleInterruptedMatch();
 // the first time the game is opened: the clubhouse tour, once the title has faded out
-setTimeout(() => { if ($("livesSheet").hidden && S.phase === "hub") { startTour(false); if (career.tourDone && career.roughOffer != null) offerStarTrade(); } }, 3400); // (an offer left over from last time)
+setTimeout(() => { if ($("livesSheet").hidden && S.phase === "hub") { startTour(false); if (career.tourDone && career.roughOffer != null) offerStarTrade(); else if (career.tourDone) offerWelcome(); } }, 3400); // (an offer left over from last time)
 postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 // Splash: hold the title for a few seconds, then fade into the clubhouse.

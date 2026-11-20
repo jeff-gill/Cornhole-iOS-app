@@ -144,6 +144,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 .iobox table { border-collapse: collapse; } /* IN | ON over the two counts, split by a + of grid lines */
 .iobox th, .iobox td { width: 34px; padding: 2px 4px; text-align: center; }
 .iobox .pts { color: var(--gold); }
+.storeitem h4 .was { font-size: 12px; color: var(--gold); white-space: nowrap; } .storeitem h4 .was s { color: var(--ink-dim); }
 .iobox th { color: var(--ink-dim); font-size: 11px; letter-spacing: .06em; border-bottom: 2px solid var(--line); }
 .iobox td { color: #fff; font-family: var(--font-display); font-weight: 400; font-size: 18px; }
 .iobox th + th, .iobox td + td { border-left: 2px solid var(--line); }
@@ -1511,7 +1512,7 @@ const STORE = [
   { id: PID("coins.medium"), kind: "coins", coins: 150000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
   { id: PID("coins.large"), kind: "coins", coins: 500000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
   { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
-  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Starter Pack", coins: 25000, grants: ["bag:firecracker", "board:neon"], tag: "ONE TIME ONLY", blurb: "25,000 coins + Firecracker bags + Neon Nights board" },
+  { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Welcome Pack", coins: 25000, caps: 100, can: "gold", grants: ["bag:firecracker", "board:neon"], tag: "WELCOME OFFER", value: "$9.46", off: 68, blurb: "25,000 coins + 100 bottle caps + a Golden Pop can + Firecracker bags + Neon Nights board" },
   { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
   { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
@@ -1682,6 +1683,8 @@ function grantPurchase(id, restored) {
   if (career.purchases.includes(id)) return item;
   career.purchases.push(id);
   if (item.coins && !restored) career.coins += item.coins;
+  if (item.caps && !restored) career.caps += item.caps;
+  if (item.can && !restored) stashCan({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
   for (const g of item.grants || []) {
     const [type, key] = g.split(":"), list = type === "bag" ? career.bags : type === "board" ? career.boards : career.trails;
     if (!list.includes(key)) list.push(key);
@@ -3050,7 +3053,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795194606`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795209255`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4564,7 +4567,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795194606`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795209255`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4575,7 +4578,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795194606`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795209255`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6557,6 +6560,17 @@ function showChoice(html, yes, onYes, no = "CANCEL", onNo = null, yesClass = "gr
 }
 // The rough-patch offer: the only way to swap stars for coins. Stars come from the court you were playing first, then
 // your highest other courts (courts you've opened stay open). Yes or no, the count starts over.
+// The Welcome Pack: offered after a match in your first 3 days, at most once a day, until you buy it or it ends.
+const WELCOME_MS = 3 * 86400000;
+function welcomeLeft() { if (career.firstSeen == null) { career.firstSeen = clockNow(); save(); } return career.firstSeen + WELCOME_MS - clockNow(); }
+function offerWelcome() {
+  const it = STORE.find(x => x.id === PID("starterpack"));
+  if (!it || career.purchases.includes(it.id) || welcomeLeft() <= 0 || career.welcomeDay === bbDay() || !(career.wins + career.losses) || !$("livesSheet").hidden) return;
+  career.welcomeDay = bbDay(); save();
+  showChoice(`<div class="lifebig">🎁</div><h2>Welcome Pack</h2><div class="muted"><b>${it.blurb}</b></div>
+    <div class="big center" style="margin-top:8px"><s style="opacity:.6">${it.value}</s> <b style="color:var(--gold)">${storePrices[it.id] || it.price}</b> · ${it.off}% OFF</div><div class="muted center">Only for new players · ends in ${timeText(welcomeLeft())}</div>`,
+    "GET IT", () => { shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; buy(it.id); }, "NOT NOW");
+}
 function offerStarTrade() {
   const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden) return;
   // coins: 4 buy-ins of the middle court you have open (rounded down), a nudge toward easier courts
@@ -8149,6 +8163,7 @@ function openHub() {
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
   if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
+  else if (S.kind === "career") setTimeout(offerWelcome, 900);
 
 }
 // Idle clubhouse: after 5 seconds without a touch it fades to 50% so the court shows through. The first tap only wakes it
@@ -8296,7 +8311,7 @@ function storeHTML() {
   const sw = keys => `<div class="swrow">${keys.filter(k => !k.startsWith("trail")).map(k => `<canvas data-sw="${k}" width="80" height="80"></canvas>`).join("")}</div>`;
   const starter = STORE.find(x => x.id === PID("starterpack"));
   const parts = [];
-  if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div>${sw(starter.grants)}</div>${btn(starter)}</div>`);
+  if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title} <span class="was"><s>${starter.value}</s> ${starter.off}% OFF</span></h4><div class="sub">${starter.blurb}</div>${welcomeLeft() > 0 ? `<div class="sub">Ends in ${timeText(welcomeLeft())}</div>` : ""}${sw(starter.grants)}</div>${btn(starter)}</div>`);
   parts.push(`<div class="label">Coins</div>`);
   for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Bottle caps</div>`);
@@ -8625,7 +8640,7 @@ function settleInterruptedMatch() {
 
 resize(); openHub(); settleInterruptedMatch();
 // the first time the game is opened: the clubhouse tour, once the title has faded out
-setTimeout(() => { if ($("livesSheet").hidden && S.phase === "hub") { startTour(false); if (career.tourDone && career.roughOffer != null) offerStarTrade(); } }, 3400); // (an offer left over from last time)
+setTimeout(() => { if ($("livesSheet").hidden && S.phase === "hub") { startTour(false); if (career.tourDone && career.roughOffer != null) offerStarTrade(); else if (career.tourDone) offerWelcome(); } }, 3400); // (an offer left over from last time)
 postNative("store", "load"); // ask the iPhone app for real, local prices
 postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own sheet if needed)
 // Splash: hold the title for a few seconds, then fade into the clubhouse.
