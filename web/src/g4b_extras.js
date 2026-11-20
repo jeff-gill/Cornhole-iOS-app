@@ -149,14 +149,14 @@ function offerStarTrade() {
   // coins: 4 buy-ins of the middle court you have open (rounded down), a nudge toward easier courts
   const open = VENUES.filter((_, i) => venueUnlocked(i)).length, mid = VENUES[Math.max(0, Math.floor((open + 1) / 2) - 1)];
   const v = VENUES[vi], want = 3 * v.loss, stars = Math.min(want, career.stars), coins = Math.round(4 * mid.fee * stars / want);
-  const reset = () => { career.roughOffer = null; career.roughLosses = 0; career.recent = []; career.roughAt = clockNow(); save(); renderHub(); };
+  const reset = (took = false) => { career.roughOffer = null; career.roughLosses = 0; career.recent = []; if (took) career.roughAt = clockNow(); save(); renderHub(); }; // only taking it starts the week
   if (stars < 1) { reset(); return; }
   showChoice(`<div class="lifebig">🤝</div><h2>Rough patch?</h2><div class="muted">It happens to everyone. Trade <b>${stars} ⭐</b> for <b><i class="coin"></i> ${short(coins)}</b> to keep playing. An easier court like <b>${mid.name}</b> might be a good place to get back on track.</div>`,
     "TRADE", () => {
       let left = stars;
       for (const i of [vi, ...VENUES.map((_, k) => k).reverse()]) { const id = VENUES[i].id, have = career.courtStars[id] || 0, take = Math.min(have, left); if (take > 0) { career.courtStars[id] = have - take; left -= take; } if (!left) break; }
-      updateUnlocks(); career.coins += coins; sfx.win(); haptic("success"); reset();
-    }, "NO THANKS", reset);
+      updateUnlocks(); career.coins += coins; sfx.win(); haptic("success"); reset(true);
+    }, "NO THANKS", () => reset());
 }
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
