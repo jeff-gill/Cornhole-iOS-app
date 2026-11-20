@@ -2157,7 +2157,7 @@ function buildVenue(id) {
   if (venueGroup) { scene.remove(venueGroup); disposeTree(venueGroup); }
   venueId = id; glowSprites = []; venueAnim = []; clearPhotoSky();
   // Glow (bloom) only where there are real lights at night; in daylight it hazes the whole picture.
-  glowOn = VENUE_LOOK[id].night >= 0.5;
+  glowOn = VENUE_LOOK[id].night >= 0.5 && id !== "rooftop"; // (the floodlit rooftop is bright enough to haze over too)
   const g = new THREE.Group(), L = VENUE_LOOK[id];
   skyU.top.value.set(...L.top); skyU.mid.value.set(...L.mid); skyU.horizon.value.set(...L.horizon); skyU.sunGlow.value = L.sunGlow; skyU.night.value = L.night;
   scene.fog.color.setHex(L.fog[0]); scene.fog.near = L.fog[1]; scene.fog.far = L.fog[2];
@@ -2466,7 +2466,7 @@ function buildVenue(id) {
     // A floodlit court on a city roof at night: four light towers keep the court bright, a lounge bar and sofas along
     // the side, and a varied skyline (glass towers, setbacks, spires, brick low-rises) with a ring of far city lights.
     const deckTex = groundTexture("roof"); deckTex.repeat.set(70 / 14, 90 / 14);
-    const deck = new THREE.Mesh(new THREE.PlaneGeometry(70, 90), new THREE.MeshStandardMaterial({ map: deckTex, roughness: 0.9, color: 0xe8e8ec }));
+    const deck = new THREE.Mesh(new THREE.PlaneGeometry(70, 90), new THREE.MeshStandardMaterial({ map: deckTex, roughness: 0.9, color: 0xa8aab2 }));
     deck.rotation.x = -Math.PI / 2; deck.position.z = -14; deck.receiveShadow = true; g.add(deck);
     const ledge = std(0x5a5c64), glassRail = new THREE.MeshPhysicalMaterial({ color: 0xbfe6ff, transparent: true, opacity: 0.25, roughness: 0.05 });
     for (const [x, z, w, d] of [[0, -59, 70, 1.2], [0, 31, 70, 1.2], [-35, -14, 1.2, 90], [35, -14, 1.2, 90]]) { add(g, box(w, 2, d, ledge), x, 1, z); add(g, box(w, 3, d * 0.3 + (d > 1.2 ? 0 : 0), glassRail), x, 3.5, z, false); }
