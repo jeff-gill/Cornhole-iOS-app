@@ -225,9 +225,10 @@ function renderProfile() {
       <button class="linkbtn" id="setReset" style="display:block;margin:14px auto 0;font-size:13px;color:#ff8a7a">Start over (erase my progress)</button>`;
     $("setReset").onclick = () => showChoice(`<div class="lifebig">⚠️</div><h2>Start over?</h2><div class="muted">This erases your coins, bottle caps, stars, courts, cans and items on every device signed in to your Game Center / iCloud account. It can't be undone.<br><br>Things you bought with real money come back with <b>Restore purchases</b> in the Store.</div>`,
       "ERASE", () => showChoice(`<h2>Are you sure?</h2><div class="muted">Everything goes back to a brand-new game.</div>`, "YES, START OVER", () => {
-        const keep = { handle: career.handle, handleSet: career.handleSet, haptics: career.haptics, alerts: career.alerts };
-        career = { ...fresh(), ...keep }; save(); // saved now, so it's the newest copy everywhere
-        location.reload();
+        // a brand-new player (new guest name too), but without the tutorial and tour
+        career = { ...fresh(), tourDone: true, tutorialDone: true, tourGift: true }; save(); // saved now, so it's the newest copy everywhere
+        // start over in place (a reload in the iPhone app would bring back the copy the app handed the game at launch)
+        updateUnlocks(); hubVenue = 0; closePages(); showHubPage("home"); renderHub();
       }, "CANCEL", null, "red"), "CANCEL", null, "red");
     $("setPrivacy").onclick = () => openLink(LEGAL_URL + "privacy.html");
     $("setTerms").onclick = () => openLink(LEGAL_URL + "terms.html");
