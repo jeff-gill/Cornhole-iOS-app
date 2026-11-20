@@ -322,6 +322,35 @@ function solvePush(base, L, E, pl, own, aim) {
   return best.t;
 }
 
+// Push through: a bag (anyone's) is in the way, so throw harder (a flatter arc) until your own bag still gets to the
+// finish spot. If even the hardest throw can't, it throws as hard as it goes.
+function solveThrough(base, L, E, pl) {
+  const D = dist(L, E); if (D < 0.05) return null;
+  const u = { x: (E.x - L.x) / D, y: (E.y - L.y) / D }, sink = dist(E, HOLE) < HR;
+  const mk = el => { const t = throwFor(base.o, L, el); if (t) t.spin = base.spin; return t; };
+  const reach = t => { const r = simulate(t, pl, false); return sink && r.outcome === "inHole" ? D + 1 : (r.end.x - L.x) * u.x + (r.end.y - L.y) * u.y; };
+  if (reach(base) >= D - 0.15) return null;
+  let lo = T.minEl, hi = base.el;
+  const hard = mk(lo); if (!hard) return null;
+  if (reach(hard) < D) return hard;
+  for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2, t = mk(m); if (!t || reach(t) < D) hi = m; else lo = m; }
+  return mk(lo);
+}
+// Wind: aim into it so a perfect throw still lands and finishes where it was planned without wind. The throw keeps
+// the wind, so the preview line shows the real, wind-bent path.
+function windFix(t, w) {
+  if (!t || (!w.x && !w.y)) return t;
+  const want = freeSlideEnd(t);
+  let aimL = { ...contact(t, true).p }, best = { ...t, wind: w };
+  for (let i = 0; i < 16; i++) {
+    const c = throwFor(t.o, aimL, t.el); if (!c) break;
+    const n = { ...t, speed: c.speed, az: c.az, wind: w }, e = freeSlideEnd(n), ex = want.x - e.x, ey = want.y - e.y;
+    best = n; if (Math.hypot(ex, ey) < 0.01) break;
+    aimL = { x: aimL.x + ex * 0.85, y: aimL.y + ey * 0.85 };
+  }
+  return best;
+}
+
 // ───────────────────────── Aiming: finish spot + landing distance along the throwing line
 // A bag slides the way it was thrown, so the landing spot must sit on the line from the hand to the finish.
 function aimLine(pl, E) {

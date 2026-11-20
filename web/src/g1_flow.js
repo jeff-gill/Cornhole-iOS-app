@@ -459,10 +459,13 @@ function refreshPlan() {
   S.landing = S.plan.landing; S.ideal = S.plan.ideal;
   S.prev = simulate(S.ideal, S.player);
   S.push = null;
-  if (S.prev.own && S.landD > 0.1) {
-    const base = S.ideal, t = solvePush(base, S.landing, S.end, S.player, S.prev.own, false);
-    if (t) { S.push = { extra: t.speed / base.speed - 1 }; S.ideal = t; S.prev = simulate(t, S.player); }
+  if (S.prev.hit && S.landD > 0.1) { // a bag in the way: yours gets pushed onto the finish spot, anyone else's gets pushed through
+    const base = S.ideal, t = S.prev.own ? solvePush(base, S.landing, S.end, S.player, S.prev.own, false) : solveThrough(base, S.landing, S.end, S.player);
+    if (t) { S.push = { extra: t.speed / base.speed - 1 }; S.ideal = t; }
   }
+  // the computer reads the wind for itself (cpuTurn); yours is allowed for, so the green wedge and line show the real path
+  if (!isCPU(S.player) && S.wind) S.ideal = windFix(S.ideal, windAccel());
+  S.prev = simulate(S.ideal, S.player);
 }
 let dragging = null, pendingDrag = null;
 function moveMarker(kind, p) {
@@ -508,7 +511,8 @@ function updatePull(dt) {
   p.fill = clamp(p.raw + Math.sin(S.time * 11) * L.wobble * Math.min(1, p.raw * 4), 0, 1.25);
   const over = p.fill > 1;
   const speed = (0.35 + 0.65 * Math.min(p.fill / POWER_TARGET, 1.6)) * (over ? 1.9 : 1);
-  p.phase += dt * L.freq * speed; // cycles
+  const hard = S.push && S.phase === "throw" ? 1 + clamp(S.push.extra * 5, 0, 1.2) : 1; // a push shot is harder: the arrow swings faster
+  p.phase += dt * L.freq * speed * hard; // cycles
   const ph = p.phase % 1; // triangle wave: steady sweep left and right
   p.swing = ph < 0.25 ? ph * 4 : ph < 0.75 ? 2 - ph * 4 : ph * 4 - 4;
   if (over) p.swing *= 1.3;
