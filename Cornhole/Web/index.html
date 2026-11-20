@@ -98,13 +98,13 @@ body.inhub .score, body.inhub #panel { display: none; }
 /* The player tiles size everything to their own width, so a long name, big star count and a two-digit score
    never run into each other on a narrow phone (cqw = 1% of the tile's width). */
 .card { container-type: inline-size; min-height: 76px; justify-content: center; } /* about 20% taller than before */
-.card .name { font-size: clamp(11px, 9.5cqw, 15px); }
-.card .cav .avatar { width: clamp(24px, 21cqw, 40px); height: clamp(24px, 21cqw, 40px); }
-.card .pts { font-size: clamp(24px, 21cqw, 38px); flex: none; min-width: 1.1em; text-align: center; }
-.card .cmid { overflow: hidden; }
+.card .name { font-size: clamp(13px, 11cqw, 19px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.card .cav .avatar { width: clamp(22px, 19cqw, 36px); height: clamp(22px, 19cqw, 36px); }
+.card .pts { font-size: clamp(32px, 33cqw, 56px); -webkit-text-stroke: 1.5px rgba(0,0,0,.25); text-shadow: 0 3px 0 rgba(0,0,0,.35), 0 0 12px rgba(255,255,255,.35); flex: none; min-width: 1.1em; text-align: center; }
+.card .cmid { overflow: hidden; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; } .card .dots { flex-wrap: nowrap; }
 .card .dots { gap: clamp(2px, 1.6cqw, 3px); }
-.card .dots i { width: clamp(6px, 5.5cqw, 9px); height: clamp(6px, 5.5cqw, 9px); }
-.card .live { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: clamp(8px, 6.5cqw, 10px); padding: 0 clamp(3px, 2.5cqw, 6px); margin-left: 0; }
+.card .dots i { width: clamp(6px, 6cqw, 10px); height: clamp(6px, 6cqw, 10px); flex: none; }
+.card .live { max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: clamp(9px, 8cqw, 12px); padding: 0 clamp(3px, 2.5cqw, 6px); margin-left: 0; }
 .card .pts { margin-left: 2px; }
 .card .live b { font-size: clamp(11px, 9cqw, 16px); }
 .inning { text-align: center; display: flex; flex-direction: column; }
@@ -3129,7 +3129,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795215801`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795216040`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4643,7 +4643,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795215801`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795216040`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4654,7 +4654,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795215801`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795216040`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
