@@ -424,10 +424,10 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .cslot .minican { width: 21px; height: 38px; flex: none; }
 /* small cans: pictures of the real 3D can */
 .canpic { display: block; height: 44px; width: auto; flex: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
-.cslot .canpic { height: 46px; margin: -2px -4px -2px -6px; } .cslot.idle .canpic { filter: saturate(.5) brightness(.8) drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+.cslot .canpic { height: 44px; margin: -2px -7px -2px 2px; } .cslot.idle .canpic { filter: saturate(.5) brightness(.8) drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
 .cangrid .canpic { height: 56px; } .canpic.store { height: 58px; } .canpic.big { height: 170px; margin: 6px auto; }
 .cslot .cinfo { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; min-width: 0; }
-.cslot .cname { font-size: 11px; letter-spacing: -.02em; line-height: 1.05; text-align: center; color: rgba(255,255,255,.9); max-width: 100%; overflow: hidden; }
+.cslot .cname { font-size: 10.5px; letter-spacing: -.03em; line-height: 1.05; text-align: center; color: rgba(255,255,255,.9); max-width: 100%; overflow: hidden; }
 .cslot .cdur { font-size: 11px; color: var(--ink-dim); }
 /* the status bar along the whole bottom of the slot */
 .cslot .cbar { grid-column: 1 / -1; margin: 4px -4px 0; padding: 3px 2px; text-align: center; font-size: 12px; letter-spacing: .03em; white-space: nowrap; font-variant-numeric: tabular-nums; background: rgba(255,255,255,.1); }
@@ -3091,7 +3091,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795213579`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795213774`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4605,7 +4605,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795213579`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795213774`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4616,7 +4616,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795213579`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795213774`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
