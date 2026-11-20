@@ -662,7 +662,7 @@ s.was { opacity: .6; font-size: .8em; }
 .navbar button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; min-width: 0; border: none; background: none; color: var(--ink-dim); }
 .navbar .nic { width: 100%; height: 58px; display: grid; place-items: center; font-size: 34px; border-radius: 16px; border: 2px solid rgba(255,255,255,.5); background: linear-gradient(#2b4a80, #16284a); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
 .navbar small { font: 900 10px/1.05 Nunito, system-ui, sans-serif; letter-spacing: .02em; text-align: center; min-height: 2.1em; display: flex; align-items: center; }
-.navbar button.on { color: #fff; } .navbar button.on .nic { border-color: #fff; background: linear-gradient(#ffd84a, #f0a020); transform: translateY(-3px); }
+.navbar button.on { color: #fff; } .navbar button.on .nic { border-color: #fff; background: linear-gradient(#ffd84a, #f0a020); }
 .navbar .nbadge { position: absolute; top: 0; right: calc(50% - 26px); }
 .btn.small { font-size: 15px; padding: 10px 4px; }
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
@@ -3095,7 +3095,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795213774`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795214175`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4609,7 +4609,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795213774`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795214175`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4620,7 +4620,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795213774`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795214175`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
