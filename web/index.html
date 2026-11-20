@@ -3125,7 +3125,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795216040`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795216287`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4639,7 +4639,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795216040`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795216287`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4650,7 +4650,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795216040`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795216287`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6265,7 +6265,7 @@ function ghostOwnBoard() {
   });
 }
 function updateAimRig(dt) {
-  ghostOwnBoard();
+  ownBoard.visible = S.phase === "hub"; // (no board between the throwers during a match)
   const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
   aimRig.visible = true;
@@ -6736,7 +6736,14 @@ function renderProfile() {
       ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
-      <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>`;
+      <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
+      <button class="linkbtn" id="setReset" style="display:block;margin:14px auto 0;font-size:13px;color:#ff8a7a">Start over (erase my progress)</button>`;
+    $("setReset").onclick = () => showChoice(`<div class="lifebig">⚠️</div><h2>Start over?</h2><div class="muted">This erases your coins, bottle caps, stars, courts, cans and items on every device signed in to your Game Center / iCloud account. It can't be undone.<br><br>Things you bought with real money come back with <b>Restore purchases</b> in the Store.</div>`,
+      "ERASE", () => showChoice(`<h2>Are you sure?</h2><div class="muted">Everything goes back to a brand-new game.</div>`, "YES, START OVER", () => {
+        const keep = { handle: career.handle, handleSet: career.handleSet, haptics: career.haptics, alerts: career.alerts };
+        career = { ...fresh(), ...keep }; save(); // saved now, so it's the newest copy everywhere
+        location.reload();
+      }, "CANCEL", null, "red"), "CANCEL", null, "red");
     $("setPrivacy").onclick = () => openLink(LEGAL_URL + "privacy.html");
     $("setTerms").onclick = () => openLink(LEGAL_URL + "terms.html");
     if ($("setGc")) $("setGc").onclick = () => postNative("gamecenter", "signin-now");
@@ -7925,9 +7932,8 @@ function updateCamera(dt) {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
-    // (the opponent's throws are seen from the same spot: behind your box)
-    const eye = isCPU(S.player) || isRemote(S.player) ? release(0) : rel;
-    tPos.set(0, 7.6, 10.5); tLook.set(0, 0, -13); // centred behind your own board, like a batter's box: your board at the bottom, a throwing spot either side // arrow and ring near the bottom, board up the lane
+    // straight behind whoever is throwing: their aim circle in the middle, the target board up the lane ahead
+    tPos.set(rel.x * 0.8, 7.2, 9.5); tLook.set(rel.x * 0.8, 0, -13);
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
@@ -8252,7 +8258,7 @@ function dismissScorecard(dx, dy) {
 }
 
 // ───────────────────────── Clubhouse (career hub) and shop
-let hubVenue = (() => { const open = VENUES.map((_, i) => i).filter(i => venueUnlocked(i)); return open.length ? open[Math.floor(Math.random() * open.length)] : 0; })(); // a random court you have open, each time the game opens
+let hubVenue = venueUnlocked(career.venue || 0) ? (career.venue || 0) : 0; // the court you played last
 let sceneVenue = hubVenue; // the court shown behind the clubhouse (the practice card keeps it)
 function openHub() {
   $("timeupMsg").hidden = true;

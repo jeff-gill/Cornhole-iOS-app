@@ -135,7 +135,7 @@ function ghostOwnBoard() {
   });
 }
 function updateAimRig(dt) {
-  ghostOwnBoard();
+  ownBoard.visible = S.phase === "hub"; // (no board between the throwers during a match)
   const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
   aimRig.visible = true;

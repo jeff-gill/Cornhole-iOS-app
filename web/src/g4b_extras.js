@@ -222,7 +222,14 @@ function renderProfile() {
       ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
-      <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>`;
+      <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
+      <button class="linkbtn" id="setReset" style="display:block;margin:14px auto 0;font-size:13px;color:#ff8a7a">Start over (erase my progress)</button>`;
+    $("setReset").onclick = () => showChoice(`<div class="lifebig">⚠️</div><h2>Start over?</h2><div class="muted">This erases your coins, bottle caps, stars, courts, cans and items on every device signed in to your Game Center / iCloud account. It can't be undone.<br><br>Things you bought with real money come back with <b>Restore purchases</b> in the Store.</div>`,
+      "ERASE", () => showChoice(`<h2>Are you sure?</h2><div class="muted">Everything goes back to a brand-new game.</div>`, "YES, START OVER", () => {
+        const keep = { handle: career.handle, handleSet: career.handleSet, haptics: career.haptics, alerts: career.alerts };
+        career = { ...fresh(), ...keep }; save(); // saved now, so it's the newest copy everywhere
+        location.reload();
+      }, "CANCEL", null, "red"), "CANCEL", null, "red");
     $("setPrivacy").onclick = () => openLink(LEGAL_URL + "privacy.html");
     $("setTerms").onclick = () => openLink(LEGAL_URL + "terms.html");
     if ($("setGc")) $("setGc").onclick = () => postNative("gamecenter", "signin-now");

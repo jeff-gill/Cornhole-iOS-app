@@ -115,9 +115,8 @@ function updateCamera(dt) {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
-    // (the opponent's throws are seen from the same spot: behind your box)
-    const eye = isCPU(S.player) || isRemote(S.player) ? release(0) : rel;
-    tPos.set(0, 7.6, 10.5); tLook.set(0, 0, -13); // centred behind your own board, like a batter's box: your board at the bottom, a throwing spot either side // arrow and ring near the bottom, board up the lane
+    // straight behind whoever is throwing: their aim circle in the middle, the target board up the lane ahead
+    tPos.set(rel.x * 0.8, 7.2, 9.5); tLook.set(rel.x * 0.8, 0, -13);
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
@@ -442,7 +441,7 @@ function dismissScorecard(dx, dy) {
 }
 
 // ───────────────────────── Clubhouse (career hub) and shop
-let hubVenue = (() => { const open = VENUES.map((_, i) => i).filter(i => venueUnlocked(i)); return open.length ? open[Math.floor(Math.random() * open.length)] : 0; })(); // a random court you have open, each time the game opens
+let hubVenue = venueUnlocked(career.venue || 0) ? (career.venue || 0) : 0; // the court you played last
 let sceneVenue = hubVenue; // the court shown behind the clubhouse (the practice card keeps it)
 function openHub() {
   $("timeupMsg").hidden = true;
