@@ -71,6 +71,8 @@ struct WebGameView: UIViewRepresentable {
             let center = NotificationCenter.default
             // back from the background: the phone's clock may have been changed meanwhile
             center.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in self?.syncClock() }
+            // back from a Game Center screen (or anything else): make sure nothing invisible is left over the game
+            center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in self?.gameCenter.clearStalePresentation() }
             center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in CareerStore.uploadToGameCenter() }
         }
 

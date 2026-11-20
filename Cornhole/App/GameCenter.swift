@@ -89,13 +89,22 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
 
     func showLeaderboards() {
         guard GKLocalPlayer.local.isAuthenticated else { signIn(); return }
-        let vc = GKGameCenterViewController(state: .leaderboards)
-        vc.gameCenterDelegate = self
-        Self.topViewController()?.present(vc, animated: true)
+        // iOS shows (and closes) its own Game Center leaderboards. The older full-screen controller could close without
+        // telling the app on newer iOS, leaving an invisible layer over the game that swallowed every tap.
+        clearStalePresentation()
+        GKAccessPoint.shared.trigger(state: .leaderboards) {}
     }
 
     func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
         gameCenterViewController.dismiss(animated: true)
+    }
+
+    /// If a Game Center screen closed without dismissing its controller, it would sit (invisible) over the game and block
+    /// every tap. Dismiss anything left over that isn't actually on screen any more.
+    func clearStalePresentation() {
+        guard let root = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).flatMap({ $0.windows }).first(where: { $0.isKeyWindow })?.rootViewController,
+              let presented = root.presentedViewController, presented is GKGameCenterViewController || presented.view.window == nil || presented.view.alpha == 0 else { return }
+        root.dismiss(animated: false)
     }
 
     // MARK: Seasons
