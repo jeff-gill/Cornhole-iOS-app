@@ -324,13 +324,17 @@ function solvePush(base, L, E, pl, own, aim) {
 
 // Push through: a bag (anyone's) is in the way, so throw harder (a flatter arc) until your own bag still gets to the
 // finish spot. If even the hardest throw can't, it throws as hard as it goes.
+const THROUGH_MAX = 0.12;
 function solveThrough(base, L, E, pl) {
   const D = dist(L, E); if (D < 0.05) return null;
   const u = { x: (E.x - L.x) / D, y: (E.y - L.y) / D }, sink = dist(E, HOLE) < HR;
   const mk = el => { const t = throwFor(base.o, L, el); if (t) t.spin = base.spin; return t; };
   const reach = t => { const r = simulate(t, pl, false); return sink && r.outcome === "inHole" ? D + 1 : (r.end.x - L.x) * u.x + (r.end.y - L.y) * u.y; };
   if (reach(base) >= D - 0.15) return null;
+  // at most THROUGH_MAX harder than the plain throw: past that it turns into a low, fast line drive nobody can aim
   let lo = T.minEl, hi = base.el;
+  for (let k = 0; k < 20; k++) { const m = (lo + hi) / 2, t = mk(m); if (!t || t.speed > base.speed * (1 + THROUGH_MAX)) lo = m; else hi = m; }
+  lo = hi; hi = base.el;
   const hard = mk(lo); if (!hard) return null;
   if (reach(hard) < D) return hard;
   for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2, t = mk(m); if (!t || reach(t) < D) hi = m; else lo = m; }

@@ -832,7 +832,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795140074 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795140260 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -1302,13 +1302,17 @@ function solvePush(base, L, E, pl, own, aim) {
 
 // Push through: a bag (anyone's) is in the way, so throw harder (a flatter arc) until your own bag still gets to the
 // finish spot. If even the hardest throw can't, it throws as hard as it goes.
+const THROUGH_MAX = 0.12;
 function solveThrough(base, L, E, pl) {
   const D = dist(L, E); if (D < 0.05) return null;
   const u = { x: (E.x - L.x) / D, y: (E.y - L.y) / D }, sink = dist(E, HOLE) < HR;
   const mk = el => { const t = throwFor(base.o, L, el); if (t) t.spin = base.spin; return t; };
   const reach = t => { const r = simulate(t, pl, false); return sink && r.outcome === "inHole" ? D + 1 : (r.end.x - L.x) * u.x + (r.end.y - L.y) * u.y; };
   if (reach(base) >= D - 0.15) return null;
+  // at most THROUGH_MAX harder than the plain throw: past that it turns into a low, fast line drive nobody can aim
   let lo = T.minEl, hi = base.el;
+  for (let k = 0; k < 20; k++) { const m = (lo + hi) / 2, t = mk(m); if (!t || t.speed > base.speed * (1 + THROUGH_MAX)) lo = m; else hi = m; }
+  lo = hi; hi = base.el;
   const hard = mk(lo); if (!hard) return null;
   if (reach(hard) < D) return hard;
   for (let k = 0; k < 18; k++) { const m = (lo + hi) / 2, t = mk(m); if (!t || reach(t) < D) hi = m; else lo = m; }
@@ -1936,7 +1940,7 @@ function updatePull(dt) {
   p.fill = clamp(p.raw + Math.sin(S.time * 11) * L.wobble * Math.min(1, p.raw * 4), 0, 1.25);
   const over = p.fill > 1;
   const speed = (0.35 + 0.65 * Math.min(p.fill / POWER_TARGET, 1.6)) * (over ? 1.9 : 1);
-  const hard = S.push && S.phase === "throw" ? 1 + clamp(S.push.extra * 5, 0, 1.2) : 1; // a push shot is harder: the arrow swings faster
+  const hard = S.push && S.phase === "throw" ? 1 + clamp(S.push.extra * 3, 0, 0.4) : 1; // a push shot is harder: the arrow swings faster
   p.phase += dt * L.freq * speed * hard; // cycles
   const ph = p.phase % 1; // triangle wave: steady sweep left and right
   p.swing = ph < 0.25 ? ph * 4 : ph < 0.75 ? 2 - ph * 4 : ph * 4 - 4;
@@ -3007,7 +3011,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795140074`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795140260`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4624,7 +4628,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795140074`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795140260`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4635,7 +4639,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795140074`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795140260`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6871,7 +6875,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1795140074";
+const BUILD_ID = "1795140260";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));

@@ -511,7 +511,7 @@ function updatePull(dt) {
   p.fill = clamp(p.raw + Math.sin(S.time * 11) * L.wobble * Math.min(1, p.raw * 4), 0, 1.25);
   const over = p.fill > 1;
   const speed = (0.35 + 0.65 * Math.min(p.fill / POWER_TARGET, 1.6)) * (over ? 1.9 : 1);
-  const hard = S.push && S.phase === "throw" ? 1 + clamp(S.push.extra * 5, 0, 1.2) : 1; // a push shot is harder: the arrow swings faster
+  const hard = S.push && S.phase === "throw" ? 1 + clamp(S.push.extra * 3, 0, 0.4) : 1; // a push shot is harder: the arrow swings faster
   p.phase += dt * L.freq * speed * hard; // cycles
   const ph = p.phase % 1; // triangle wave: steady sweep left and right
   p.swing = ph < 0.25 ? ph * 4 : ph < 0.75 ? 2 - ph * 4 : ph * 4 - 4;
