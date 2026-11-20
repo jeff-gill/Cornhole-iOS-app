@@ -20,7 +20,6 @@ const clockText = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s
 const topCourt = () => VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 
 function renderHubExtras() {
-  testerTopUp();
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
   $("caps").textContent = bigNum(career.caps);
   fillCooler();
@@ -178,7 +177,7 @@ function renderProfile() {
         <div><b>${career.wins}</b><small>Wins</small></div><div><b>${career.losses}</b><small>Losses</small></div><div><b>${career.wins + career.losses ? Math.round(career.wins / (career.wins + career.losses) * 100) : 0}%</b><small>Win rate</small></div></div>`;
     $("handleSave").onclick = () => {
       const v = $("handleIn").value.trim();
-      if (!setHandle(v)) { $("handleErr").textContent = "Use 3–16 letters, numbers, dots, dashes or underscores."; return; }
+      if (!setHandle(v)) { $("handleErr").textContent = rudeName(v) ? "That name isn't allowed. Please pick another." : "Use 3–16 letters, numbers, dots, dashes or underscores."; return; }
       $("handleErr").textContent = ""; sfx.tick(); renderProfile();
     };
   } else {
@@ -189,7 +188,10 @@ function renderProfile() {
       <div class="setrow"><span>🔔 Alerts (Daily Drops, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
       ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
-      <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>`;
+      <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
+      <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>`;
+    $("setPrivacy").onclick = () => openLink(LEGAL_URL + "privacy.html");
+    $("setTerms").onclick = () => openLink(LEGAL_URL + "terms.html");
     if ($("setGc")) $("setGc").onclick = () => postNative("gamecenter", "signin-now");
     $("setTour").onclick = () => { $("avatarSheet").hidden = true; startTour(true); };
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
@@ -341,66 +343,18 @@ $("canDone").onclick = () => {
   if (i >= 0) { delete career.cans[i].bonus; save(); const t = document.createElement("div"); t.className = "toast"; t.textContent = "4 in a row! Here's a bonus can 🎉"; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); setTimeout(() => openCanSheet(i), 700); }
 };
 
-// ── Testing tools: the browser preview and Xcode debug builds (the app sets window.__debugBuild), never the App Store.
-// Tester mode keeps coins and bottle caps topped up and the stars maxed so everything can be tried; it's on until switched off.
-const TEST_BANK = 99999999;
 let gcSignedIn = ""; // the Game Center name once the iPhone app reports a signed-in player
-const testing = () => !nativeBridge || !!window.__debugBuild;
-function testerTopUp() {
-  if (!testing() || career.tester === false) return;
-  career.coins = TEST_BANK; career.caps = TEST_BANK;
-  // and every court's star track full, so every court (and its avatars) is open
-  if (VENUES.some(v => (career.courtStars[v.id] || 0) < v.max)) { for (const v of VENUES) career.courtStars[v.id] = v.max; updateUnlocks(); }
-}
-if (testing()) {
-  const b = $("testerBtn"); b.hidden = false;
-  const label = () => { b.textContent = `🧪 Tester mode: ${career.tester !== false ? "on" : "off"}`; };
-  b.onclick = () => { career.tester = career.tester === false; if (career.tester) testerTopUp(); save(); label(); renderHub(); };
-  label(); testerTopUp();
-}
-// Browser preview only (never in the iPhone app): fill the cooler with cans that are ready to open, for testing.
-if (!nativeBridge) {
-  // An empty cooler in the preview gets a demo set: one opening, one ready (Express) and two waiting to start.
-  if (!career.cans.length) {
-    const c = topCourt();
-    career.cans = [{ id: "gold", court: c, start: Date.now() - 3600000 }, { id: "express", court: c }, { id: "silver", court: c }, { id: "purple", court: c }];
-    save();
-  }
-}
-// Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "__BUILD_ID__";
-if (testing() && career.testBuild !== BUILD_ID) {
-  career.testBuild = BUILD_ID;
-  career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
-  save();
-}
-if (testing()) { // Max stars: fill every court's star track, which opens all the courts (and their avatars)
-  $("maxStarsBtn").hidden = false;
-  $("refillDropsBtn").hidden = false; // tester: back to 2 Daily Drops (the real rules still apply: never more than 2)
-  $("refillDropsBtn").onclick = () => { const g = giftState(); g.n = GIFT_MAX; g.at = Date.now(); save(); renderHub(); };
-  $("maxStarsBtn").onclick = () => {
-    for (const v of VENUES) career.courtStars[v.id] = v.max;
-    updateUnlocks(); save(); renderHub();
-    const t = document.createElement("div"); t.className = "toast"; t.textContent = `All ${VENUES.length} courts open · ${career.stars.toLocaleString()} ⭐`;
-    $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
-  };
-}
-if (testing()) { // Test cans: also in Xcode debug builds
-  $("testCans").hidden = false;
-  $("testCans").onclick = () => {
-    const pick = ["silver", "gold", "purple", "platinum", "diamond", "express"].sort(() => Math.random() - 0.5).slice(0, COOLER_SIZE);
-    career.cans = pick.map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
-    save(); renderHub();
-  };
-}
+// The privacy policy and terms of service (published from the repository's docs/ folder with GitHub Pages).
+const LEGAL_URL = "https://jeff-gill.github.io/Cornhole-iOS-app/";
+function openLink(url) { if (nativeBridge && nativeBridge.open) postNative("open", url); else window.open(url, "_blank", "noopener"); }
 
 // ── Season badge and ladder
 function renderSeasonBadge() {
-  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
+  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
 }
 function openSeason() {
-  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
+  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
   if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, myHandle()]], s.title, s.id), "me", s.id), me: "me" };
@@ -471,15 +425,13 @@ function wheelCard() { // which card (paid when the Daily Drop can opens)
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
   return { cat: cat.key, id: it.id };
 }
-const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never more than 2; tester mode too)
+const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never more than 2)
 const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
   const n = giftState().n;
   $("dailySub").innerHTML = dailyFree() ? (n > 1 ? "2 ready to open!" : "Ready to open!") : ready ? `${career.spins} extra left` : `Next in ${timeText(giftNextIn())}`;
 }
-const wheelPrizeHTML = p => p.can ? canPic(p.can)
-  : p.card ? `<span style="font-size:18px">🃏</span><b>card</b>` : p.caps ? `<i class="bcap"></i><b>${p.caps}</b>` : `<i class="coin"></i><b>${short(p.coins)}</b>`;
 let wheelSpin = null; // (kept for the purchase handler: there's no spinning any more)
 // Tapping Daily Drop: if a drop is ready (a free one every 4 hours, up to 2 waiting, or a bought one), the prize comes
 // straight away, picked by the prize table's weights. If not, a sheet shows when the next free one comes and offers more.
@@ -519,30 +471,6 @@ function openWheel(msg = "") {
   for (const b of $("wheelBody").querySelectorAll("[data-wbuy]")) b.onclick = () => {
     if (!canBuy()) { openWheel("Purchases are available in the iPhone app."); return; }
     pendingBuy = b.dataset.wbuy; postNative("purchase", pendingBuy); openWheel(" ");
-  };
-}
-function wheelWon(p) {
-  $("wheelSheet").hidden = true; wheelSpin = null;
-  const ck = p.can ? canById(p.can) : null;
-  $("bbRays").style.setProperty("--ray", p.col); $("bbRays").hidden = false;
-  $("bbRevTitle").innerHTML = p.jackpot ? "JACKPOT!" : "Daily Drop!";
-  const card = $("bbRevPrize"); card.className = "prize";
-  const cd = p.got; // a card prize
-  if (cd) {
-    card.innerHTML = `<div class="pic">🃏</div><b>${esc(cd.it.name)}</b><small>${cd.cat === "bag" ? "Bag" : "Board"} card · ${cd.unlocked ? "UNLOCKED!" : cd.owned ? `you have it: +${cd.coins} coins` : `${cd.have}/${cd.need} cards`}</small>`;
-    $("bbRevFoot").innerHTML = `<button class="btn green go" id="bbCollect">COLLECT</button>`;
-    $("bbReveal").hidden = false; requestAnimationFrame(() => card.classList.add("show")); sfx.win(); haptic("success");
-    $("bbCollect").onclick = () => { $("bbReveal").hidden = true; renderHub(); };
-    return;
-  }
-  card.innerHTML = `<div class="pic">${ck ? canPic(ck.id, "big") : p.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`}</div>
-    <b>${ck ? ck.name : p.caps ? `${p.caps} cap${p.caps > 1 ? "s" : ""}` : `${short(p.coins)} coins`}</b><small>${ck ? "Open it now!" : giftState().n ? "Another Daily Drop is waiting!" : `Next free one in ${timeText(giftNextIn())}`}</small>`;
-  $("bbRevFoot").innerHTML = `<button class="btn green go" id="bbCollect">${ck ? "OPEN IT!" : "COLLECT"}</button>`;
-  $("bbReveal").hidden = false; requestAnimationFrame(() => card.classList.add("show"));
-  sfx.win(); haptic("success");
-  $("bbCollect").onclick = () => {
-    $("bbReveal").hidden = true; renderHub();
-    if (ck) { const i = career.cans.findIndex(c => c.instant && c.id === p.can); if (i >= 0) setTimeout(() => openCanSheet(i), 250); }
   };
 }
 $("dailyBtn").onclick = () => { initAudio(); openWheel(); };

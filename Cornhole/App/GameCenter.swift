@@ -232,6 +232,10 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
         let info = ["name": player.displayName, "id": player.gamePlayerID]
         guard let data = try? JSONSerialization.data(withJSONObject: info), let json = String(data: data, encoding: .utf8) else { return }
         callJS("window.__gcPlayer && window.__gcPlayer(\(json))")
+        // the career saved in their Game Center account (a new iPhone or iPad picks up where they left off)
+        CareerStore.fetchFromGameCenter { [weak self] saved in
+            self?.callJS("window.__cloudCareer && window.__cloudCareer(\(saved))")
+        }
         // The player's Game Center photo, if they have one: sent as a small PNG data URL for their default avatar.
         player.loadPhoto(for: .small) { [weak self] image, _ in
             guard let image, let png = image.pngData(), png.count < 400_000 else { return }

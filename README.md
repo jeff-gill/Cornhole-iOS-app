@@ -14,7 +14,7 @@ The name and tagline are set in `web/src/game.env`. `web/build.sh` copies them i
 - **No lives:** matches are limited only by coins. The Daily Drop gives a free prize every 4 hours (up to 2 wait), enough to keep playing the first court every day.
 - **Bottle caps:** the premium currency (a red cap with a star). Use them to open a can now (1 cap for every 10 minutes left). You start with 20, get some from cans (more often from rare ones) and 3 per 4-bagger, and can buy packs in the Store.
 - **Profile (tap your avatar):** three tabs.
-  - **Avatar:** 25 hats and helmets on their own (ball cap, devil helmet, cowboy hat, police hat, fireman helmet, tiara, crown, astronaut helmet and more; several feminine picks), made in Blender (`web/tools/blender/hats.py`). 4 to start, 3 more with each court you open through Court 8. Your Game Center picture is the default when you have one.
+  - **Avatar:** 25 hats and helmets on their own (ball cap, devil helmet, cowboy hat, police hat, fireman helmet, tiara, crown, astronaut helmet and more; several feminine picks), made in Blender. 4 to start, 3 more with each court you open through Court 8. Your Game Center picture is the default when you have one.
   - **Profile:** your handle and stats. New players are "guest-" plus 10 digits, or their Game Center name, until they choose a handle (3–16 letters, numbers, dots, dashes or underscores). Live opponents see your handle.
   - **Settings:** music and sound effects on/off and volume, haptics, and alerts.
 - **Computer opponents** and the CPU players in season groups use player-style handles (for example SliderSam22) and aren't labeled; How to play mentions that you play a computer opponent when no one is available.
@@ -63,8 +63,9 @@ web/vendor/         three.js 0.160 (MIT) and the Lilita One and Nunito fonts (OF
 web/build.sh        builds everything below from web/src
 web/index.html      built: a single page for browsers (loads three.js and fonts from CDNs)
 Cornhole/Web/       built: the offline copy bundled into the iPhone app
-Cornhole/App/       the iOS app: full-screen WKWebView, app:// file server, saves, haptics
-Cornhole/Engine/    the earlier native Swift physics engine (not used by the app; kept for online play later)
+Cornhole/App/       the iOS app: full-screen WKWebView, app:// file server, sealed saves (device, iCloud, Game Center),
+                    trusted clock, haptics, purchases, Game Center
+docs/               the privacy policy and terms of service (published with GitHub Pages)
 ```
 
 Edit files in `web/src`, then run `web/build.sh` before building the app or publishing the page.
@@ -74,7 +75,7 @@ Edit files in `web/src`, then run `web/build.sh` before building the app or publ
 1. Open `Cornhole.xcodeproj` in Xcode 16 or later.
 2. Pick an iPhone simulator, or your iPhone after you set a Team under Signing & Capabilities, and press Run.
 
-Your career is saved on the device. In debug builds you can inspect the game from Safari on a Mac: open the Develop menu, then choose the simulator or your phone.
+Your career is saved on the device, in iCloud and in your Game Center account. In debug builds you can inspect the game from Safari on a Mac: open the Develop menu, then choose the simulator or your phone.
 
 ## Before publishing
 
@@ -179,18 +180,7 @@ The odds are not shown in the game. The App Store requires the odds for paid loo
 - Pausing on your throw: the first pause of a match stops the throw clock for 5 seconds, then it runs again; later
   pauses leave it running, with a warning on the pause screen. A bag lost to the clock shows as a red ✕ in your tile.
 
-## Blender pipeline
+## 3D art
 
-Custom 3D art is made with Blender scripts in `web/tools/blender/`, so it can be regenerated or tweaked at any time. Each script builds models, bakes soft shading (ambient occlusion) into their vertex colors with Cycles, and exports them to `web/assets/blender/` as single `.json` glTF files.
-
-- `trees.py`: the stylized oak, maple and pine trees used in the Backyard.
-- `hats.py`: the 25 headgear avatars, rendered to transparent PNGs in `web/assets/hats/`. Pass names after `--` to re-render only some.
-- `people.py`: converts the Quaternius character packs (`quaternius/`) into animated glTF people (not used in the game yet).
-- `board.py`: the board's frame (rounded 2x4 rails, brace, bolt heads) and splayed legs with a cross brace. The frame takes each board design's color. The painted top stays in the game and gets Poly Haven plywood grain.
-
-Run from the repo root (needs Blender 4 with numpy for the glTF exporter), then rebuild:
-
-```
-blender -b --python web/tools/blender/trees.py
-web/build.sh
-```
+The trees, hats, board frame and people were made in Blender and exported to `web/assets/` as glTF (`.json`) files; the
+Poly Haven and Quaternius models and textures are CC0.

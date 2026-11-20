@@ -44,8 +44,6 @@ const VENUES = [
 ];
 const pot = v => v.fee * 2;
 const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
-// Stars needed in total (all courts so far) to open court vi: the "Total to advance" column.
-const starsToReach = vi => VENUES.slice(0, vi).reduce((t, v) => t + v.max, 0);
 // The house covers your Backyard buy-in if you're short, so you can never get stuck.
 const houseCovers = vi => false; // (no free "on the house" matches any more: the Free Gift covers the first court)
 // Twenty coin bags. Prices about double each step (100 coins to 100 million), so each court's winnings buy the next tier
@@ -169,25 +167,43 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 const SAVE_KEY = "backyard-cornhole.career.v1";
 const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 20, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
+// The time used for every timer and daily reward. In the iPhone app this is the app's own trusted clock (network
+// time, carried forward with the phone's uptime), so setting the phone's clock forward doesn't skip a wait.
+const clockNow = () => Date.now() + (window.__clockOffset || 0);
+// The calendar day for daily things (Bullseye Bags) runs on the time zone the game was first played in, so hopping
+// time zones doesn't hand out an extra day. homeDate()'s getUTC* fields read as that home time.
+const homeDate = () => { if (typeof career === "object" && career && career.tz == null) career.tz = new Date().getTimezoneOffset(); return new Date(clockNow() - ((career && career.tz) || 0) * 60000); };
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
 const haptic = kind => { if (career.haptics !== false) postNative("haptic", kind); };
 let career = fresh();
-try {
-  const raw = window.__nativeCareer || localStorage.getItem(SAVE_KEY);
-  if (raw) {
-    const old = typeof raw === "string" ? JSON.parse(raw) : raw;
-    career = { ...fresh(), ...old };
-    if (old.tutorialDone === undefined && (old.wins || old.losses)) career.tutorialDone = true; // veterans skip the coach
-    if (!old.courtStars) { // older saves had one star count: pour it into the courts in order
-      let left = old.stars || 0;
-      for (const v of VENUES) { const n = Math.min(v.max, left); if (n > 0) career.courtStars[v.id] = n; left -= n; }
-      career.venue = 0;
-    }
-    career.courtStars = { ...career.courtStars };
-    updateUnlocks();
+function careerFrom(raw) {
+  const old = typeof raw === "string" ? JSON.parse(raw) : raw, c = { ...fresh(), ...old };
+  if (old.tutorialDone === undefined && (old.wins || old.losses)) c.tutorialDone = true; // veterans skip the coach
+  if (!old.courtStars) { // older saves had one star count: pour it into the courts in order
+    let left = old.stars || 0;
+    for (const v of VENUES) { const n = Math.min(v.max, left); if (n > 0) c.courtStars[v.id] = n; left -= n; }
+    c.venue = 0;
   }
+  c.courtStars = { ...c.courtStars };
+  return c;
+}
+try {
+  // In the app only the app's own sealed save counts (the web view's storage could be edited from a backup).
+  const raw = nativeBridge ? window.__nativeCareer : localStorage.getItem(SAVE_KEY);
+  if (raw) { career = careerFrom(raw); updateUnlocks(); }
 } catch (e) { /* storage unavailable: play without saving */ }
+// The app found a newer save in the player's Game Center / iCloud account (a new phone, or another device): use it,
+// once they're back in the clubhouse.
+window.__cloudCareer = raw => {
+  try {
+    const c = careerFrom(raw);
+    if ((c.savedAt || 0) <= (career.savedAt || 0)) return;
+    const apply = () => { if (typeof S === "object" && S.phase && S.phase !== "hub") { setTimeout(apply, 2000); return; }
+      career = c; updateUnlocks(); save(); if (typeof renderHub === "function") renderHub(); };
+    apply();
+  } catch (e) { /* not a career */ }
+};
 // Game Center leaderboards (in the iPhone app): total stars, wins and 4-baggers.
 const postScores = () => postNative("score", JSON.stringify({ stars: career.stars, wins: career.wins, fourBaggers: career.fourBaggers || 0 }));
 // Your handle: your own choice, else your Game Center name, else "guest-" and ten digits.
@@ -196,12 +212,21 @@ function myHandle() {
   return career.handle;
 }
 const HANDLE_RE = /^[A-Za-z0-9_.-]{3,16}$/;
-function setHandle(h) { if (!HANDLE_RE.test(h)) return false; career.handle = h; career.handleSet = true; save(); return true; }
+// Names other players see can't be rude: checked with look-alike letters (sh1t, a$$) and separators (f.u.c.k) taken out.
+// Words blocked anywhere in a name, and shorter ones blocked only as a whole word (so "Michelle" and "Essex" are fine).
+const BAD_ANYWHERE = ["fuck", "fuk", "fck", "fcuk", "phuck", "shit", "cunt", "bitch", "biatch", "pussy", "asshole", "whore", "slut", "nigg", "porn", "dildo", "jizz", "penis", "vagina", "tranny", "nazi", "hitler", "retard", "kkk", "faggot", "cocaine", "suicide"];
+const BAD_WORD = ["ass", "azz", "fag", "dick", "cock", "cum", "tits", "boob", "boobs", "sex", "sexy", "rape", "kill", "drug", "drugs", "weed", "twat", "wank", "piss", "damn", "hell", "crap", "butt", "spic", "chink", "kike", "homo", "dyke", "hoe", "milf", "naked", "nude", "horny", "booty", "anal", "beer", "vodka", "drunk", "booze", "wine", "whiskey"];
+function rudeName(h) {
+  const n = h.toLowerCase().replace(/[0@4]/g, m => ({ "0": "o", "@": "a", "4": "a" })[m]).replace(/1/g, "i").replace(/3/g, "e").replace(/[5$]/g, "s").replace(/7/g, "t");
+  const joined = n.replace(/[^a-z]/g, ""), words = n.split(/[^a-z]+/).filter(Boolean);
+  return BAD_ANYWHERE.some(w => joined.includes(w)) || words.some(w => BAD_WORD.includes(w)) || BAD_WORD.includes(joined);
+}
+function setHandle(h) { if (!HANDLE_RE.test(h) || rudeName(h)) return false; career.handle = h; career.handleSet = true; save(); return true; }
 function save() {
-  career.savedAt = Date.now(); // the iPhone app keeps whichever copy (device or iCloud) is newest
+  career.savedAt = clockNow(); // the iPhone app keeps whichever copy (device or iCloud) is newest
   const json = JSON.stringify(career);
   postNative("save", json);
-  try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
+  if (!nativeBridge) try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
 }
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
 const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
@@ -400,7 +425,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     const fee = houseCovers(vi) ? 0 : v.fee;
     career.coins -= fee;
     // Remember the match until it ends properly, so a crash or a quit app can be refunded (see refundMatch).
-    career.activeMatch = { vi, fee, at: Date.now() };
+    career.activeMatch = { vi, fee, at: clockNow() };
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
       S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };

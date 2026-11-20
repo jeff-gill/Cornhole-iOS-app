@@ -29,22 +29,22 @@ const timeText = ms => { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600
 function canState(slot) {
   if (canById(slot.id).express || slot.instant) return "ready";
   if (!slot.start) return "idle";
-  return Date.now() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
+  return clockNow() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
 }
-const canLeft = slot => (slot.start ? Math.max(0, slot.start + openMs(slot.id) - Date.now()) : openMs(slot.id));
+const canLeft = slot => (slot.start ? Math.max(0, slot.start + openMs(slot.id) - clockNow()) : openMs(slot.id));
 // Bottle caps open a can right now: 1 cap per 10 minutes still to wait (at least 1).
 const skipCost = slot => Math.max(1, Math.ceil(canLeft(slot) / 600000));
 function skipCan(i) {
   const slot = career.cans[i]; if (!slot || canState(slot) === "ready") return true;
   const cost = skipCost(slot); if (career.caps < cost) return false;
-  career.caps -= cost; slot.start = Date.now() - openMs(slot.id); save();
+  career.caps -= cost; slot.start = clockNow() - openMs(slot.id); save();
   return true;
 }
 const anyTicking = () => career.cans.some(c => canState(c) === "ticking");
 function startCan(i) {
   const slot = career.cans[i];
   if (!slot || anyTicking() || canState(slot) !== "idle") return false;
-  slot.start = Date.now(); save();
+  slot.start = clockNow(); save();
   if (career.alerts) postNative("notify", JSON.stringify({ op: "schedule", id: "can.ready", at: slot.start + openMs(slot.id), title: `Your ${canById(slot.id).name} is ready! 🥫`, body: "Crack it open and see what's inside." }));
   return true;
 }
@@ -52,8 +52,6 @@ const COOLER_SIZE = 4;
 // The Daily Drop's own can: red with grey trim. It isn't one of the cans you win; it holds that drop's one prize.
 const DAILY_CAN = { id: "daily", name: "Daily Drop", color: "#c8102e", rim: "#9aa0aa", odds: 0, pulls: 1, coins: [0, 0], cards: [0, 0], bias: 5, life: 0, daily: true };
 const canById = id => (id === "daily" ? DAILY_CAN : CANS.find(c => c.id === id) || CANS[0]);
-// Daily free can: mostly the low tiers.
-const DAILY_ODDS = { black: 70, white: 24, bronze: 5, silver: 1 }; // the daily can opens instantly and leans low
 // boost: your cornholes in the match. Each one tilts the odds toward the rarer cans (capped at 30).
 function rollCan(odds, boost = 0) {
   const k = 1 + Math.min(30, boost) * 0.012, rank = c => CANS.indexOf(c);
@@ -181,16 +179,16 @@ tickLives(); // an old save that ran out of tickets is never blocked
 // is in g4b_extras.js. (Kept as career.gift so saves carry over.)
 const GIFT_MS = 4 * 60 * 60 * 1000, GIFT_MAX = 2;
 function giftState() {
-  const g = (career.gift ||= { n: 1, at: Date.now() }); // a first free spin waiting on a fresh game
-  const now = Date.now();
+  const g = (career.gift ||= { n: 1, at: clockNow() }); // a first free spin waiting on a fresh game
+  const now = clockNow();
   while (g.n < GIFT_MAX && now >= g.at + GIFT_MS) { g.n++; g.at += GIFT_MS; if (g.n >= GIFT_MAX) g.streak = 0; } // both waiting: the streak resets
   if (g.n >= GIFT_MAX) g.at = now; // full: the clock waits until one is used
   return g;
 }
-const giftNextIn = () => { const g = giftState(); return g.n >= GIFT_MAX ? 0 : Math.max(0, g.at + GIFT_MS - Date.now()); };
+const giftNextIn = () => { const g = giftState(); return g.n >= GIFT_MAX ? 0 : Math.max(0, g.at + GIFT_MS - clockNow()); };
 function useFreeSpin() {
   const g = giftState(); if (g.n <= 0) return false;
-  if (g.n >= GIFT_MAX) g.at = Date.now(); // the next one starts coming now
+  if (g.n >= GIFT_MAX) g.at = clockNow(); // the next one starts coming now
   g.n--; save(); scheduleGiftAlert();
   return true;
 }
@@ -276,8 +274,8 @@ function seasonRewardCan(title, rank, size) {
 }
 // Title perk: +5% cards in every can for each title above Rookie.
 const titleCardBonus = () => 1 + 0.05 * (career.season ? career.season.title : 0);
-const seasonId = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-const seasonEnds = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
+const seasonId = (d = new Date(clockNow())) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+const seasonEnds = () => { const d = new Date(clockNow()); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
 // Without Game Center (the browser preview), a season is judged against fixed point lines for your title instead.
 const offlinePromoteAt = t => 40 + t * 35, offlineDemoteBelow = t => 5 + t * 6;
 function seasonState() {
@@ -326,8 +324,8 @@ function botHandle(h) {
 function withBots(entries, title, season) {
   const want = (BOT_FILL[title] || 0) - entries.length;
   if (want <= 0) return entries;
-  const d = new Date(), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
-  const progress = season === seasonId() ? clamp((Date.now() - start) / (seasonEnds() - start), 0, 1) : 1;
+  const d = new Date(clockNow()), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+  const progress = season === seasonId() ? clamp((clockNow() - start) / (seasonEnds() - start), 0, 1) : 1;
   const mean = title === 0 ? 35 : 60, bots = [];
   for (let i = 0; i < want; i++) {
     const h = hashStr(`bot|${season}|${title}|${i}`), u = (h % 100000) / 100000;

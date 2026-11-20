@@ -110,7 +110,7 @@ function tryStartOnline() {
   const s = search, h = s.hello; search = null;
   $("searching").hidden = true;
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
-  const handle = typeof h.handle === "string" && /^[A-Za-z0-9_.-]{3,24}$/.test(h.handle) ? h.handle : s.name; // their chosen handle
+  const handle = typeof h.handle === "string" && /^[A-Za-z0-9_.-]{3,24}$/.test(h.handle) && !rudeName(h.handle) ? h.handle : s.name; // their chosen handle
   startMatch("career", s.vi, {
     ...s.setup, name: handle, host: s.host, board: typeof h.board === "string" ? h.board : "classic", stars: Math.max(0, Math.min(1e7, h.stars | 0)),
     bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"), avatar: known(AVATARS, h.avatar, "a0"),
@@ -156,8 +156,8 @@ function takeAwayTime(left) {
 }
 document.addEventListener("visibilitychange", () => {
   const live = S.kind && !["hub", "over"].includes(S.phase);
-  if (document.hidden) { if (live) S.awayAt = Date.now(); return; }
-  if (S.awayAt && live) S.awayDebt = (S.awayDebt || 0) + (Date.now() - S.awayAt) / 1000;
+  if (document.hidden) { if (live) S.awayAt = clockNow(); return; }
+  if (S.awayAt && live) S.awayDebt = (S.awayDebt || 0) + (clockNow() - S.awayAt) / 1000;
   S.awayAt = null;
 });
 function updateOnline(dt) {

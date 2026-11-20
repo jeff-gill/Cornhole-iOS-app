@@ -84,7 +84,6 @@ function updateOcclusion(dt) {
 }
 
 function updateCamera(dt) {
-  if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   const bbLanded = () => { const b = S.world.bags.find(x => x.id === S.lastId); return !!b && b.state !== "flying"; };
@@ -102,13 +101,14 @@ function updateCamera(dt) {
     // court is 31 ft long), and aims so the court rides above the clubhouse card.
     hubYaw += dt * 0.12;
     const a = hubYaw, side = Math.sin(a) ** 2, cz = -FY / 2 - 1;
-    let d = narrow ? 38 + 16 * side : 30 + 6 * side;
+    let d = narrow ? 38 + 16 * side : camera.aspect > 1.1 ? 42 + 8 * side : 30 + 6 * side; // (a wide iPad window: further back, so the near board clears the cards)
     const wall = VENUE_LOOK[venueId]?.wall; // stay inside the stands
     if (wall) d = Math.min(d, wall[0] / Math.max(Math.abs(Math.sin(a)), 0.01), wall[1] / Math.max(Math.abs(Math.cos(a)), 0.01));
     const h = Math.min(narrow ? 8 + 4 * side : 9, d * 0.2); // closer in (inside the stands) means lower, so the crowd shows
     fov = narrow ? 50 + 20 * side : 44;
     tPos.set(Math.sin(a) * d, h, cz + Math.cos(a) * d);
-    const below = (narrow ? (wall ? 0.3 : 0.55) : 0.2) * fov / 2 * Math.PI / 180; // put the court centre this far above the screen centre
+    // put the court centre this far above the screen centre (a wide iPad window: higher still, clear of the court card)
+    const below = (narrow ? (wall ? 0.3 : 0.55) : camera.aspect > 1.1 ? 0.4 : 0.2) * fov / 2 * Math.PI / 180;
     const drop = d * Math.tan(Math.atan2(h, d) + below) - h;
     tLook.set(0, -drop, cz);
     k = 1.5;
@@ -236,15 +236,6 @@ function renderBanner() {
   const el = $("banner");
   if (S.banner) { el.textContent = S.banner.text; el.style.background = `linear-gradient(${COL.pl[S.banner.pl] || "#666"}, ${COL.p[S.banner.pl] || "#333"})`; el.classList.add("show"); }
   else el.classList.remove("show");
-}
-function outcomeText(p) {
-  if (p.own) {
-    if (p.pushOutcome === "inHole") return "Pushes yours in";
-    return onSurface({ state: p.pushOutcome }) && onBoard(p.pushEnd) ? "Pushes yours" : "Pushes yours off";
-  }
-  if (p.outcome === "inHole") return "Cornhole";
-  if (onSurface({ state: p.outcome }) && onBoard(p.end)) return "On the board";
-  return "Off the board";
 }
 const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${label}</small><b>${value}</b></div>`;
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
@@ -633,12 +624,11 @@ function storeHTML() {
     parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
   }
   if (career.purchases.includes(starter.id)) parts.push(`<div class="storeitem"><div class="ic">⭐</div><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div></div>${btn(starter)}</div>`);
-  parts.push(`<div class="storenote">No ads, ever. Coins and items stay on this device.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
+  parts.push(`<div class="storenote">No ads, ever. Coins and items are for the game only and have no cash value. Your progress is saved to your Game Center account.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
   if (shopMsg) parts.push(`<div class="shoptoast">${esc(shopMsg)}</div>`);
   return parts.join("");
 }
 function renderShop() {
-  testerTopUp();
   $("shopCoins").textContent = bigNum(career.coins); $("shopCaps").textContent = bigNum(career.caps);
   const TAB_CAT = { bags: "bag", boards: "board", throw: "trail", hole: "fx" };
   for (const b of document.querySelectorAll("#shop .tabs button")) {
@@ -849,8 +839,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 function step(now) {
-  // __timeScale / __skipRender are test hooks for automated playthroughs; unused in normal play.
-  const dt = (lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60) * (window.__timeScale || 1); lastT = now;
+  const dt = (lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60); lastT = now;
   S.time += dt; S.relT += dt;
   if (S.banner) { S.bannerT -= dt; if (S.bannerT <= 0) { S.banner = null; renderBanner(); } }
   if (pendingDrag && dragging) { moveMarker(dragging, pendingDrag); pendingDrag = null; }
@@ -905,7 +894,7 @@ function step(now) {
   venueTick(dt, S.time);
   updateCamera(dt);
   updateOcclusion(dt);
-  if (!window.__skipRender) renderScene();
+  renderScene();
 }
 
 // ───────────────────────── Glitch watchdog
@@ -917,7 +906,7 @@ const watch = { phase: null, since: 0, clock: null, clockAt: 0 };
 document.addEventListener("visibilitychange", () => { lastFrameAt = performance.now(); watch.phase = null; watch.clock = null; }); // back from the background: start counting afresh
 setInterval(() => {
   const now = performance.now();
-  if (document.hidden || !inMatch() || window.__timeScale) { watch.phase = null; watch.clock = null; return; } // paused or in the background: not a glitch
+  if (document.hidden || !inMatch()) { watch.phase = null; watch.clock = null; return; } // paused or in the background: not a glitch
   if (now - lastFrameAt > 6000) { lastFrameAt = now; glitchOut(); requestAnimationFrame(frame); return; } // the loop died
   // Measured in game time (S.time), so a slow phone never looks stuck: only a game that's running but not moving does.
   if (S.phase !== watch.phase) { watch.phase = S.phase; watch.since = S.time; }
@@ -955,4 +944,3 @@ postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own
 setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
 
 requestAnimationFrame(frame);
-window.__cornhole = { playCourt, simulate, applyErrors, windAccel, planThrow, setGlow: v => { glowOn = v; }, ui, showUnlocks, takeDrop, openCanSheet, BAGS, TRAILS, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };

@@ -27,14 +27,14 @@ struct WebGameView: UIViewRepresentable {
         controller.add(handler, name: "net")
         controller.add(handler, name: "notify")
         controller.add(handler, name: "season")
+        controller.add(handler, name: "open")
+        // the trusted clock for timers (changing the phone's clock doesn't skip a wait); refreshed from the network below
+        controller.addUserScript(WKUserScript(source: "window.__clockOffset = \(TrustedClock.offset());",
+                                              injectionTime: .atDocumentStart, forMainFrameOnly: true))
         if let saved = CareerStore.load() {
             controller.addUserScript(WKUserScript(source: "window.__nativeCareer = \(saved);",
                                                   injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
-        #if DEBUG
-        // Debug builds from Xcode get the game's testing tools (tester mode with unlimited coins and caps).
-        controller.addUserScript(WKUserScript(source: "window.__debugBuild = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        #endif
         config.userContentController = controller
 
         let webView = WKWebView(frame: .zero, configuration: config)
@@ -50,6 +50,8 @@ struct WebGameView: UIViewRepresentable {
         #endif
         context.coordinator.store.webView = webView
         context.coordinator.gameCenter.webView = webView
+        context.coordinator.webView = webView
+        context.coordinator.syncClock()
         if let url = URL(string: "\(BundleSchemeHandler.scheme)://game/index.html") {
             webView.load(URLRequest(url: url))
         }
@@ -62,6 +64,23 @@ struct WebGameView: UIViewRepresentable {
         private let haptics = Haptics()
         let store = StoreManager()
         let gameCenter = GameCenter()
+        weak var webView: WKWebView?
+
+        override init() {
+            super.init()
+            let center = NotificationCenter.default
+            // back from the background: the phone's clock may have been changed meanwhile
+            center.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main) { [weak self] _ in self?.syncClock() }
+            center.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { _ in CareerStore.uploadToGameCenter() }
+        }
+
+        /// Sends the game the trusted clock's offset now, then again once the network time is in.
+        func syncClock() {
+            webView?.evaluateJavaScript("window.__clockOffset = \(TrustedClock.offset());", completionHandler: nil)
+            TrustedClock.sync { [weak self] offset in
+                self?.webView?.evaluateJavaScript("window.__clockOffset = \(offset);", completionHandler: nil)
+            }
+        }
 
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             switch message.name {
@@ -90,6 +109,10 @@ struct WebGameView: UIViewRepresentable {
                 if let json = message.body as? String { gameCenter.net(json) }
             case "season":
                 if let json = message.body as? String { gameCenter.season(json) }
+            case "open": // the privacy policy and terms, in Safari (only https web pages)
+                if let text = message.body as? String, let url = URL(string: text), url.scheme == "https" {
+                    UIApplication.shared.open(url)
+                }
             case "notify":
                 if let json = message.body as? String { LivesAlert.handle(json) }
             default:
@@ -156,36 +179,3 @@ final class BundleSchemeHandler: NSObject, WKURLSchemeHandler {
     }
 }
 
-/// The player's career (coins, stars, gear) as the game's own JSON. It is kept on the device (UserDefaults) and,
-/// when the app has the iCloud key-value capability, in the player's iCloud too, so it follows their Apple ID to a new
-/// phone with no sign-in screen. Whichever copy was saved most recently wins.
-enum CareerStore {
-    private static let key = "career.v1"
-    private static var cloud: NSUbiquitousKeyValueStore { .default }
-
-    static func load() -> String? {
-        cloud.synchronize()
-        let local = UserDefaults.standard.string(forKey: key).flatMap(validated)
-        let remote = cloud.string(forKey: key).flatMap(validated)
-        switch (local, remote) {
-        case let (l?, r?): return savedAt(r) > savedAt(l) ? r : l
-        default: return local ?? remote
-        }
-    }
-
-    static func save(_ json: String) {
-        guard validated(json) != nil else { return }
-        UserDefaults.standard.set(json, forKey: key)
-        if json.utf8.count < 900_000 { cloud.set(json, forKey: key) } // iCloud key-value storage holds up to 1 MB
-    }
-
-    private static func validated(_ json: String) -> String? {
-        guard let data = json.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data), object is [String: Any] else { return nil }
-        return json
-    }
-
-    private static func savedAt(_ json: String) -> Double {
-        guard let data = json.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return 0 }
-        return (object["savedAt"] as? NSNumber)?.doubleValue ?? 0
-    }
-}

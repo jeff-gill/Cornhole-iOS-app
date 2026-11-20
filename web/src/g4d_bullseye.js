@@ -38,10 +38,10 @@ const BB_STORE = ["bullseye.1", "bullseye.3", "bullseye.5"].map(PID);
 const BB = { active: null, mesh: null, precip: null, starTag: null };
 
 // ── The day's challenge
-const bbDay = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const bbDay = (d = homeDate()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 function bbToday() {
   const key = bbDay();
-  if (bbToday.cache && bbToday.cache.key === key && bbToday.cache.sunday === (new Date().getDay() === 0 || !!window.__bbSunday)) return bbToday.cache;
+  if (bbToday.cache && bbToday.cache.key === key && bbToday.cache.sunday === (homeDate().getUTCDay() === 0)) return bbToday.cache;
   let h = 2166136261; for (const ch of "bullseye:" + key) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   const r = rng(h >>> 0), pick = a => a[Math.floor(r() * a.length)];
   const v = pick(bbCourts()), scene = { id: v.id, name: v.name, sub: v.sub, surf: ["beach", "island", "lakeside"].includes(v.id) }, side = r() < 0.5 ? -1 : 1;
@@ -66,13 +66,13 @@ function bbToday() {
     }
     modes[m] = { dist: 27, wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags };
   }
-  const sunday = new Date().getDay() === 0 || !!window.__bbSunday; // Hole-in-One Sunday: the hole also wins the exclusive bag
+  const sunday = homeDate().getUTCDay() === 0; // Hole-in-One Sunday: the hole also wins the exclusive bag
   return (bbToday.cache = { key, scene, side, weather, board, windDir, modes, sunday });
 }
 
 // ── Throws: one free a day (resets at midnight), plus any you've bought. Prizes won today, per level.
 const bbState = () => (career.bb ||= { day: "", extra: 0 });
-const bbFreeReady = () => testing() || bbState().day !== bbDay(); // tester mode: unlimited throws
+const bbFreeReady = () => bbState().day !== bbDay();
 const bbCanPlay = () => bbFreeReady() || bbState().extra > 0;
 function bbWon(mode) { // indexes 0-4 (4 is the hole) won today on this level
   const s = bbState();
@@ -102,10 +102,9 @@ function bbShowRingLabels(on) {
     sp.scale.set(0.8, 0.24, 1); sp.renderOrder = 10; sp.position.copy(W(x, y, plane(y) + 0.22)); scene.add(sp); BB.labels.push(sp);
   }
 }
-const bbCleared = mode => !testing() && bbWon(mode).length >= 5;
+const bbCleared = mode => bbWon(mode).length >= 5;
 function bbUseThrow() {
   const s = bbState();
-  if (testing()) { s.used = null; return true; } // tester mode: throws are free and unlimited
   if (s.day !== bbDay()) { s.day = bbDay(); s.used = "free"; }
   else if (s.extra > 0) { s.extra--; s.used = "extra"; }
   else return false;
@@ -116,7 +115,7 @@ function bbRefundThrow() { // a throw that never happened (quit before throwing,
   if (s.used === "free") s.day = ""; else if (s.used === "extra") s.extra++;
   s.used = null; save();
 }
-const bbUntilMidnight = () => { const n = new Date(), m = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1); return m - n; };
+const bbUntilMidnight = () => { const n = homeDate(); return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1) - n.getTime(); };
 function renderBBBtn() {
   const b = $("bbBtn"); if (!b) return;
   const free = bbFreeReady(), extra = bbState().extra, done = bbCleared("easy") && bbCleared("hard");
@@ -425,7 +424,7 @@ function bbFinish() {
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];
   const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : {}; // no ring, no prize
-  if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); if (testing() && wl.length >= 5) wl.length = 0; } // gone for the day (tester mode: all five come back once cleared)
+  if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); } // gone for the day
   if (p.can) for (let k = 0; k < times; k++) { // the first can opens on the spot; a doubled second one goes in the cooler, locked
     const id = rollCan(p.can);
     if (k === 0) career.cans.push({ id, court: topCourt(), instant: true }); else stashCan({ id, court: topCourt() });
@@ -503,11 +502,9 @@ function renderBBSheet(msg = "") {
     <div class="label center">${can ? "More throws" : "Buy more throws"}</div>
     ${bbBuyRow()}
     ${msg ? `<div class="muted center">${esc(msg)}</div>` : ""}
-    ${testing() ? `<button class="linkbtn" id="bbTest">🧪 +5 throws</button>` : ""}
     <button class="btn" id="bbClose">CLOSE</button>`;
   for (const b of $("bbBody").querySelectorAll("[data-bbpreview]")) b.onclick = () => bbStart(b.dataset.bbpreview, true);
   bbWireBuy(m => renderBBSheet(m));
-  if ($("bbTest")) $("bbTest").onclick = () => { bbState().extra += 5; save(); renderBBSheet(); renderBBBtn(); };
   $("bbClose").onclick = () => { $("bbSheet").hidden = true; renderBBBtn(); };
   $("bbSheet").hidden = false;
 }

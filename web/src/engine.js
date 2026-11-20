@@ -397,20 +397,13 @@ function planThrow(pl, E, D, phi) {
   return t ? { z, D, phi, landing: L, ideal: t } : null;
 }
 
-// ───────────────────────── Difficulty & meters
-const LEVELS = {
-  easy:   { title: "Backyard", sub: "Slow meters, full trajectory preview", freq: 0.42, zone: 0.08, cpu: 0.42, preview: true },
-  medium: { title: "Tailgate", sub: "Quicker meters, full trajectory preview", freq: 0.62, zone: 0.06, cpu: 0.26, preview: true },
-  hard:   { title: "League", sub: "Fast meters, landing spot only", freq: 0.85, zone: 0.045, cpu: 0.15, preview: false },
-  pro:    { title: "Pro", sub: "Very fast meters, tiny sweet spot", freq: 1.15, zone: 0.03, cpu: 0.08, preview: false },
-};
+// ───────────────────────── Meters
 const METERS = [
   { key: "dir", title: "Direction", lo: "Left", hi: "Right" },
   { key: "pow", title: "Strength", lo: "Short", hi: "Long" },
   { key: "ht", title: "Height", lo: "Flat", hi: "High" },
 ];
 const MAX_DIR = rad(6), MAX_POW = 0.14, MAX_HT = rad(9);
-const needleAt = (time, lv) => -Math.cos(2 * Math.PI * lv.freq * time);
 const eff = (e, lv) => Math.abs(e) <= lv.zone ? 0 : clamp(e, -1, 1);
 // Even a perfect release isn't a machine's: every throw wanders a little (about 2 inches at the Backyard, more at
 // later courts), so a "perfect" airmail drops in about half the time rather than every time.

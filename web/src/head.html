@@ -28,7 +28,13 @@ body {
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 body.inhub .score, body.inhub #panel { display: none; }
-#app { height: 100%; display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; position: relative; }
+#app { height: 100%; display: flex; flex-direction: column; margin: 0 auto; position: relative; }
+/* iPad and other wide screens: the court fills the whole screen; the player tiles and the controls below keep a
+   comfortable width in the middle (the pause and ? buttons stay in the corners) */
+@media (min-width: 640px) {
+  .score { padding-left: calc((100% - 600px) / 2) !important; padding-right: calc((100% - 600px) / 2) !important; }
+  #panel { padding-left: calc((100% - 600px) / 2) !important; padding-right: calc((100% - 600px) / 2) !important; }
+}
 
 /* Scoreboard */
 /* The match header: pause and ? sit up in the top corners (beside the Dynamic Island, where the hidden status bar
@@ -819,8 +825,6 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashboard"><i class="hole"></i><i class="sbag b1"></i><i class="sbag b2"></i></div>
   <div class="splashbar"><i></i></div>
   <div class="splashtag">__GAME_TAGLINE__</div>
-  <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(__BUILD_ID__ * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -845,7 +849,7 @@ s.was { opacity: .6; font-size: .8em; }
       <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button><button class="linkbtn" id="refillDropsBtn" hidden>🧪 Refill Daily Drops</button></div>
+    
   </div>
 </div>
 

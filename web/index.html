@@ -36,7 +36,13 @@ body {
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 body.inhub .score, body.inhub #panel { display: none; }
-#app { height: 100%; display: flex; flex-direction: column; max-width: 620px; margin: 0 auto; position: relative; }
+#app { height: 100%; display: flex; flex-direction: column; margin: 0 auto; position: relative; }
+/* iPad and other wide screens: the court fills the whole screen; the player tiles and the controls below keep a
+   comfortable width in the middle (the pause and ? buttons stay in the corners) */
+@media (min-width: 640px) {
+  .score { padding-left: calc((100% - 600px) / 2) !important; padding-right: calc((100% - 600px) / 2) !important; }
+  #panel { padding-left: calc((100% - 600px) / 2) !important; padding-right: calc((100% - 600px) / 2) !important; }
+}
 
 /* Scoreboard */
 /* The match header: pause and ? sit up in the top corners (beside the Dynamic Island, where the hidden status bar
@@ -827,8 +833,6 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashboard"><i class="hole"></i><i class="sbag b1"></i><i class="sbag b2"></i></div>
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
-  <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795140260 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -853,7 +857,7 @@ s.was { opacity: .6; font-size: .8em; }
       <button class="btn small" id="passBtn">PRACTICE</button>
       <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
-    <div class="row" style="justify-content:center;gap:4px 14px;flex-wrap:wrap;font-size:14px"><button class="linkbtn" id="testCans" hidden>🧪 Test cans</button><button class="linkbtn" id="testerBtn" hidden>🧪 Tester mode</button><button class="linkbtn" id="maxStarsBtn" hidden>🧪 Max stars</button><button class="linkbtn" id="refillDropsBtn" hidden>🧪 Refill Daily Drops</button></div>
+    
   </div>
 </div>
 
@@ -1371,20 +1375,13 @@ function planThrow(pl, E, D, phi) {
   return t ? { z, D, phi, landing: L, ideal: t } : null;
 }
 
-// ───────────────────────── Difficulty & meters
-const LEVELS = {
-  easy:   { title: "Backyard", sub: "Slow meters, full trajectory preview", freq: 0.42, zone: 0.08, cpu: 0.42, preview: true },
-  medium: { title: "Tailgate", sub: "Quicker meters, full trajectory preview", freq: 0.62, zone: 0.06, cpu: 0.26, preview: true },
-  hard:   { title: "League", sub: "Fast meters, landing spot only", freq: 0.85, zone: 0.045, cpu: 0.15, preview: false },
-  pro:    { title: "Pro", sub: "Very fast meters, tiny sweet spot", freq: 1.15, zone: 0.03, cpu: 0.08, preview: false },
-};
+// ───────────────────────── Meters
 const METERS = [
   { key: "dir", title: "Direction", lo: "Left", hi: "Right" },
   { key: "pow", title: "Strength", lo: "Short", hi: "Long" },
   { key: "ht", title: "Height", lo: "Flat", hi: "High" },
 ];
 const MAX_DIR = rad(6), MAX_POW = 0.14, MAX_HT = rad(9);
-const needleAt = (time, lv) => -Math.cos(2 * Math.PI * lv.freq * time);
 const eff = (e, lv) => Math.abs(e) <= lv.zone ? 0 : clamp(e, -1, 1);
 // Even a perfect release isn't a machine's: every throw wanders a little (about 2 inches at the Backyard, more at
 // later courts), so a "perfect" airmail drops in about half the time rather than every time.
@@ -1469,8 +1466,6 @@ const VENUES = [
 ];
 const pot = v => v.fee * 2;
 const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
-// Stars needed in total (all courts so far) to open court vi: the "Total to advance" column.
-const starsToReach = vi => VENUES.slice(0, vi).reduce((t, v) => t + v.max, 0);
 // The house covers your Backyard buy-in if you're short, so you can never get stuck.
 const houseCovers = vi => false; // (no free "on the house" matches any more: the Free Gift covers the first court)
 // Twenty coin bags. Prices about double each step (100 coins to 100 million), so each court's winnings buy the next tier
@@ -1594,25 +1589,43 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 const SAVE_KEY = "backyard-cornhole.career.v1";
 const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 20, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
+// The time used for every timer and daily reward. In the iPhone app this is the app's own trusted clock (network
+// time, carried forward with the phone's uptime), so setting the phone's clock forward doesn't skip a wait.
+const clockNow = () => Date.now() + (window.__clockOffset || 0);
+// The calendar day for daily things (Bullseye Bags) runs on the time zone the game was first played in, so hopping
+// time zones doesn't hand out an extra day. homeDate()'s getUTC* fields read as that home time.
+const homeDate = () => { if (typeof career === "object" && career && career.tz == null) career.tz = new Date().getTimezoneOffset(); return new Date(clockNow() - ((career && career.tz) || 0) * 60000); };
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
 const haptic = kind => { if (career.haptics !== false) postNative("haptic", kind); };
 let career = fresh();
-try {
-  const raw = window.__nativeCareer || localStorage.getItem(SAVE_KEY);
-  if (raw) {
-    const old = typeof raw === "string" ? JSON.parse(raw) : raw;
-    career = { ...fresh(), ...old };
-    if (old.tutorialDone === undefined && (old.wins || old.losses)) career.tutorialDone = true; // veterans skip the coach
-    if (!old.courtStars) { // older saves had one star count: pour it into the courts in order
-      let left = old.stars || 0;
-      for (const v of VENUES) { const n = Math.min(v.max, left); if (n > 0) career.courtStars[v.id] = n; left -= n; }
-      career.venue = 0;
-    }
-    career.courtStars = { ...career.courtStars };
-    updateUnlocks();
+function careerFrom(raw) {
+  const old = typeof raw === "string" ? JSON.parse(raw) : raw, c = { ...fresh(), ...old };
+  if (old.tutorialDone === undefined && (old.wins || old.losses)) c.tutorialDone = true; // veterans skip the coach
+  if (!old.courtStars) { // older saves had one star count: pour it into the courts in order
+    let left = old.stars || 0;
+    for (const v of VENUES) { const n = Math.min(v.max, left); if (n > 0) c.courtStars[v.id] = n; left -= n; }
+    c.venue = 0;
   }
+  c.courtStars = { ...c.courtStars };
+  return c;
+}
+try {
+  // In the app only the app's own sealed save counts (the web view's storage could be edited from a backup).
+  const raw = nativeBridge ? window.__nativeCareer : localStorage.getItem(SAVE_KEY);
+  if (raw) { career = careerFrom(raw); updateUnlocks(); }
 } catch (e) { /* storage unavailable: play without saving */ }
+// The app found a newer save in the player's Game Center / iCloud account (a new phone, or another device): use it,
+// once they're back in the clubhouse.
+window.__cloudCareer = raw => {
+  try {
+    const c = careerFrom(raw);
+    if ((c.savedAt || 0) <= (career.savedAt || 0)) return;
+    const apply = () => { if (typeof S === "object" && S.phase && S.phase !== "hub") { setTimeout(apply, 2000); return; }
+      career = c; updateUnlocks(); save(); if (typeof renderHub === "function") renderHub(); };
+    apply();
+  } catch (e) { /* not a career */ }
+};
 // Game Center leaderboards (in the iPhone app): total stars, wins and 4-baggers.
 const postScores = () => postNative("score", JSON.stringify({ stars: career.stars, wins: career.wins, fourBaggers: career.fourBaggers || 0 }));
 // Your handle: your own choice, else your Game Center name, else "guest-" and ten digits.
@@ -1621,12 +1634,21 @@ function myHandle() {
   return career.handle;
 }
 const HANDLE_RE = /^[A-Za-z0-9_.-]{3,16}$/;
-function setHandle(h) { if (!HANDLE_RE.test(h)) return false; career.handle = h; career.handleSet = true; save(); return true; }
+// Names other players see can't be rude: checked with look-alike letters (sh1t, a$$) and separators (f.u.c.k) taken out.
+// Words blocked anywhere in a name, and shorter ones blocked only as a whole word (so "Michelle" and "Essex" are fine).
+const BAD_ANYWHERE = ["fuck", "fuk", "fck", "fcuk", "phuck", "shit", "cunt", "bitch", "biatch", "pussy", "asshole", "whore", "slut", "nigg", "porn", "dildo", "jizz", "penis", "vagina", "tranny", "nazi", "hitler", "retard", "kkk", "faggot", "cocaine", "suicide"];
+const BAD_WORD = ["ass", "azz", "fag", "dick", "cock", "cum", "tits", "boob", "boobs", "sex", "sexy", "rape", "kill", "drug", "drugs", "weed", "twat", "wank", "piss", "damn", "hell", "crap", "butt", "spic", "chink", "kike", "homo", "dyke", "hoe", "milf", "naked", "nude", "horny", "booty", "anal", "beer", "vodka", "drunk", "booze", "wine", "whiskey"];
+function rudeName(h) {
+  const n = h.toLowerCase().replace(/[0@4]/g, m => ({ "0": "o", "@": "a", "4": "a" })[m]).replace(/1/g, "i").replace(/3/g, "e").replace(/[5$]/g, "s").replace(/7/g, "t");
+  const joined = n.replace(/[^a-z]/g, ""), words = n.split(/[^a-z]+/).filter(Boolean);
+  return BAD_ANYWHERE.some(w => joined.includes(w)) || words.some(w => BAD_WORD.includes(w)) || BAD_WORD.includes(joined);
+}
+function setHandle(h) { if (!HANDLE_RE.test(h) || rudeName(h)) return false; career.handle = h; career.handleSet = true; save(); return true; }
 function save() {
-  career.savedAt = Date.now(); // the iPhone app keeps whichever copy (device or iCloud) is newest
+  career.savedAt = clockNow(); // the iPhone app keeps whichever copy (device or iCloud) is newest
   const json = JSON.stringify(career);
   postNative("save", json);
-  try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
+  if (!nativeBridge) try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
 }
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
 const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
@@ -1825,7 +1847,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     const fee = houseCovers(vi) ? 0 : v.fee;
     career.coins -= fee;
     // Remember the match until it ends properly, so a crash or a quit app can be refunded (see refundMatch).
-    career.activeMatch = { vi, fee, at: Date.now() };
+    career.activeMatch = { vi, fee, at: clockNow() };
     career.venue = vi; career.venueId = v.id; save();
     if (online) {
       S.online = { ...online, queue: [], waitT: 0, rematch: { me: false, them: false, setup: null } };
@@ -2374,7 +2396,7 @@ function tryStartOnline() {
   const s = search, h = s.hello; search = null;
   $("searching").hidden = true;
   const known = (list, id, fallback) => (list.some(x => x.id === id) ? id : fallback);
-  const handle = typeof h.handle === "string" && /^[A-Za-z0-9_.-]{3,24}$/.test(h.handle) ? h.handle : s.name; // their chosen handle
+  const handle = typeof h.handle === "string" && /^[A-Za-z0-9_.-]{3,24}$/.test(h.handle) && !rudeName(h.handle) ? h.handle : s.name; // their chosen handle
   startMatch("career", s.vi, {
     ...s.setup, name: handle, host: s.host, board: typeof h.board === "string" ? h.board : "classic", stars: Math.max(0, Math.min(1e7, h.stars | 0)),
     bag: known(BAGS, h.bag, "starter"), trail: known(TRAILS, h.trail, "none"), effect: known(EFFECTS, h.effect, "confetti"), avatar: known(AVATARS, h.avatar, "a0"),
@@ -2420,8 +2442,8 @@ function takeAwayTime(left) {
 }
 document.addEventListener("visibilitychange", () => {
   const live = S.kind && !["hub", "over"].includes(S.phase);
-  if (document.hidden) { if (live) S.awayAt = Date.now(); return; }
-  if (S.awayAt && live) S.awayDebt = (S.awayDebt || 0) + (Date.now() - S.awayAt) / 1000;
+  if (document.hidden) { if (live) S.awayAt = clockNow(); return; }
+  if (S.awayAt && live) S.awayDebt = (S.awayDebt || 0) + (clockNow() - S.awayAt) / 1000;
   S.awayAt = null;
 });
 function updateOnline(dt) {
@@ -2507,22 +2529,22 @@ const timeText = ms => { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600
 function canState(slot) {
   if (canById(slot.id).express || slot.instant) return "ready";
   if (!slot.start) return "idle";
-  return Date.now() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
+  return clockNow() >= slot.start + openMs(slot.id) ? "ready" : "ticking";
 }
-const canLeft = slot => (slot.start ? Math.max(0, slot.start + openMs(slot.id) - Date.now()) : openMs(slot.id));
+const canLeft = slot => (slot.start ? Math.max(0, slot.start + openMs(slot.id) - clockNow()) : openMs(slot.id));
 // Bottle caps open a can right now: 1 cap per 10 minutes still to wait (at least 1).
 const skipCost = slot => Math.max(1, Math.ceil(canLeft(slot) / 600000));
 function skipCan(i) {
   const slot = career.cans[i]; if (!slot || canState(slot) === "ready") return true;
   const cost = skipCost(slot); if (career.caps < cost) return false;
-  career.caps -= cost; slot.start = Date.now() - openMs(slot.id); save();
+  career.caps -= cost; slot.start = clockNow() - openMs(slot.id); save();
   return true;
 }
 const anyTicking = () => career.cans.some(c => canState(c) === "ticking");
 function startCan(i) {
   const slot = career.cans[i];
   if (!slot || anyTicking() || canState(slot) !== "idle") return false;
-  slot.start = Date.now(); save();
+  slot.start = clockNow(); save();
   if (career.alerts) postNative("notify", JSON.stringify({ op: "schedule", id: "can.ready", at: slot.start + openMs(slot.id), title: `Your ${canById(slot.id).name} is ready! 🥫`, body: "Crack it open and see what's inside." }));
   return true;
 }
@@ -2530,8 +2552,6 @@ const COOLER_SIZE = 4;
 // The Daily Drop's own can: red with grey trim. It isn't one of the cans you win; it holds that drop's one prize.
 const DAILY_CAN = { id: "daily", name: "Daily Drop", color: "#c8102e", rim: "#9aa0aa", odds: 0, pulls: 1, coins: [0, 0], cards: [0, 0], bias: 5, life: 0, daily: true };
 const canById = id => (id === "daily" ? DAILY_CAN : CANS.find(c => c.id === id) || CANS[0]);
-// Daily free can: mostly the low tiers.
-const DAILY_ODDS = { black: 70, white: 24, bronze: 5, silver: 1 }; // the daily can opens instantly and leans low
 // boost: your cornholes in the match. Each one tilts the odds toward the rarer cans (capped at 30).
 function rollCan(odds, boost = 0) {
   const k = 1 + Math.min(30, boost) * 0.012, rank = c => CANS.indexOf(c);
@@ -2659,16 +2679,16 @@ tickLives(); // an old save that ran out of tickets is never blocked
 // is in g4b_extras.js. (Kept as career.gift so saves carry over.)
 const GIFT_MS = 4 * 60 * 60 * 1000, GIFT_MAX = 2;
 function giftState() {
-  const g = (career.gift ||= { n: 1, at: Date.now() }); // a first free spin waiting on a fresh game
-  const now = Date.now();
+  const g = (career.gift ||= { n: 1, at: clockNow() }); // a first free spin waiting on a fresh game
+  const now = clockNow();
   while (g.n < GIFT_MAX && now >= g.at + GIFT_MS) { g.n++; g.at += GIFT_MS; if (g.n >= GIFT_MAX) g.streak = 0; } // both waiting: the streak resets
   if (g.n >= GIFT_MAX) g.at = now; // full: the clock waits until one is used
   return g;
 }
-const giftNextIn = () => { const g = giftState(); return g.n >= GIFT_MAX ? 0 : Math.max(0, g.at + GIFT_MS - Date.now()); };
+const giftNextIn = () => { const g = giftState(); return g.n >= GIFT_MAX ? 0 : Math.max(0, g.at + GIFT_MS - clockNow()); };
 function useFreeSpin() {
   const g = giftState(); if (g.n <= 0) return false;
-  if (g.n >= GIFT_MAX) g.at = Date.now(); // the next one starts coming now
+  if (g.n >= GIFT_MAX) g.at = clockNow(); // the next one starts coming now
   g.n--; save(); scheduleGiftAlert();
   return true;
 }
@@ -2754,8 +2774,8 @@ function seasonRewardCan(title, rank, size) {
 }
 // Title perk: +5% cards in every can for each title above Rookie.
 const titleCardBonus = () => 1 + 0.05 * (career.season ? career.season.title : 0);
-const seasonId = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-const seasonEnds = () => { const d = new Date(); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
+const seasonId = (d = new Date(clockNow())) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+const seasonEnds = () => { const d = new Date(clockNow()); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
 // Without Game Center (the browser preview), a season is judged against fixed point lines for your title instead.
 const offlinePromoteAt = t => 40 + t * 35, offlineDemoteBelow = t => 5 + t * 6;
 function seasonState() {
@@ -2804,8 +2824,8 @@ function botHandle(h) {
 function withBots(entries, title, season) {
   const want = (BOT_FILL[title] || 0) - entries.length;
   if (want <= 0) return entries;
-  const d = new Date(), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
-  const progress = season === seasonId() ? clamp((Date.now() - start) / (seasonEnds() - start), 0, 1) : 1;
+  const d = new Date(clockNow()), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+  const progress = season === seasonId() ? clamp((clockNow() - start) / (seasonEnds() - start), 0, 1) : 1;
   const mean = title === 0 ? 35 : 60, bots = [];
   for (let i = 0; i < want; i++) {
     const h = hashStr(`bot|${season}|${title}|${i}`), u = (h % 100000) / 100000;
@@ -3007,23 +3027,11 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795140260`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795141519`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
   return blenderCache.get(name);
-}
-function blenderTrees(g, seed, kinds, opts = {}) {
-  const r = rng(seed), spots = [];
-  const place = (x, z, s) => spots.push([x, z, s, kinds[Math.floor(r() * kinds.length)], r() * 6.28]);
-  const back = opts.back ?? -60;
-  for (let x = -75; x <= 75; x += 7 + r() * 6) place(x, back - r() * 22, 0.9 + r() * 0.6);
-  if (opts.front) for (let x = -75; x <= 75; x += 7 + r() * 6) place(x, opts.front + r() * 22, 0.9 + r() * 0.6);
-  if (opts.sides !== false) for (let z = -52; z <= 20; z += 8 + r() * 6) { place(-50 - r() * 14, z, 0.8 + r() * 0.5); place(50 + r() * 14, z, 0.8 + r() * 0.5); }
-  for (const [x, z, sc, kind, rot] of spots) loadBlender(kind).then(src => {
-    if (!src || venueGroup !== g) return;
-    const t = src.clone(); t.position.set(x, 0, z); t.rotation.y = rot; t.scale.setScalar(sc); g.add(t);
-  });
 }
 function trees(g, seed, palette, opts = {}) {
   const r = rng(seed);
@@ -3186,16 +3194,6 @@ function jumbotron(g) {
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(40, 20), new THREE.MeshBasicMaterial({ map: tex, fog: false }));
   screen.position.set(0, 42, -94); g.add(screen);
   add(g, box(42, 22, 2, std(0x222222)), 0, 42, -95.2, false);
-}
-function ocean(g) {
-  const tex = canvasTex(256, 256, (c, w, h) => {
-    const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#1e88c9"); gr.addColorStop(1, "#38b6e0"); c.fillStyle = gr; c.fillRect(0, 0, w, h);
-    c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 2; for (let y = 10; y < h; y += 22) { c.beginPath(); for (let x = 0; x <= w; x += 8) { const yy = y + Math.sin(x / 18 + y) * 3; x ? c.lineTo(x, yy) : c.moveTo(x, yy); } c.stroke(); }
-  }, [30, 6]);
-  const sea = new THREE.Mesh(new THREE.PlaneGeometry(1200, 300), new THREE.MeshLambertMaterial({ map: tex }));
-  sea.rotation.x = -Math.PI / 2; sea.position.set(0, 0.05, -230); g.add(sea);
-  const surf = new THREE.Mesh(new THREE.PlaneGeometry(1200, 6), new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 }));
-  surf.rotation.x = -Math.PI / 2; surf.position.set(0, 0.07, -81); g.add(surf);
 }
 
 // Things that move with the scenery: falling snow, fire, lapping water. venueTick runs every frame.
@@ -3363,35 +3361,11 @@ function bonfire(g, x, z) {
   venueAnim.push({ kind: "firelight", o: pl, base: 60 });
   for (const [lx, lz, ry] of [[x - 5, z, 0], [x + 5, z, 0], [x, z + 5, Math.PI / 2]]) { const log = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 6, 10), wood); log.rotation.set(Math.PI / 2, ry, 0, "YXZ"); add(g, log, lx, 0.6, lz); }
 }
-function tiki(g, x, z) {
-  add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 6, 6), lam(0x7a5232)), x, 3, z);
-  add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.22, 0.8, 8), lam(0x3b2a1c)), x, 6.2, z);
-  flame(g, x, 6.5, z, 0.9);
-}
-function waterTexture(deep = "#0f7fb8", shallow = "#22b8d8") {
-  return canvasTex(256, 256, (c, w, h) => {
-    const gr = c.createLinearGradient(0, 0, w, h); gr.addColorStop(0, deep); gr.addColorStop(1, shallow); c.fillStyle = gr; c.fillRect(0, 0, w, h);
-    c.strokeStyle = "rgba(255,255,255,.28)"; c.lineWidth = 2;
-    for (let y = 8; y < h; y += 18) { c.beginPath(); for (let x = 0; x <= w; x += 8) { const yy = y + Math.sin(x / 16 + y) * 3; x ? c.lineTo(x, yy) : c.moveTo(x, yy); } c.stroke(); }
-  }, [1, 1]);
-}
 function island(g, x, z, rad, sandTex) {
   const shallow = new THREE.Mesh(new THREE.CircleGeometry(rad * 1.7, 48), new THREE.MeshBasicMaterial({ color: 0x5fe0e6, transparent: true, opacity: 0.45, depthWrite: false }));
   shallow.rotation.x = -Math.PI / 2; shallow.position.set(x, 0.03, z); g.add(shallow);
   const wet = new THREE.Mesh(new THREE.CircleGeometry(rad * 1.12, 48), lam(0xc9b27a)); wet.rotation.x = -Math.PI / 2; wet.position.set(x, 0.035, z); wet.receiveShadow = true; g.add(wet);
   const sand = new THREE.Mesh(new THREE.CircleGeometry(rad, 48), new THREE.MeshStandardMaterial({ map: sandTex, roughness: 1 })); sand.rotation.x = -Math.PI / 2; sand.position.set(x, 0.04, z); sand.receiveShadow = true; g.add(sand);
-}
-function farIsland(g, x, z, s, r) {
-  const m = new THREE.Group();
-  const hill = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), lam(0x2f8a46, { flatShading: true })); hill.scale.set(s, s * (0.35 + r() * 0.3), s * 0.8); m.add(hill);
-  const beach = new THREE.Mesh(new THREE.CylinderGeometry(s * 1.12, s * 1.18, 0.6, 20), lam(0xead39c)); beach.scale.z = 0.8; beach.position.y = 0.1; m.add(beach);
-  m.position.set(x, 0, z); g.add(m);
-}
-function rowboat(g, x, z, rotY) {
-  const b = new THREE.Group(), hull = std(0xd62828, { roughness: 0.5 }), wood = std(0xb08050);
-  const shape = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 0.9, 7, 12, 1, true, 0, Math.PI), hull); shape.rotation.set(Math.PI / 2, 0, Math.PI); shape.scale.set(1, 1, 0.6); add(b, shape, 0, 0.6, 0);
-  add(b, box(2.4, 0.15, 0.6, wood), 0, 0.6, 0.6); add(b, box(2.4, 0.15, 0.6, wood), 0, 0.6, -1.6);
-  b.position.set(x, 0, z); b.rotation.y = rotY; g.add(b);
 }
 
 function windowTex(seed, lit = 0.55) {
@@ -3419,27 +3393,6 @@ function waterTower(g, x, z) {
   t.position.set(x, 0, z); g.add(t);
 }
 function acUnit(g, x, z) { const u = new THREE.Group(); add(u, box(4, 2.6, 3, std(0xb8bcc4, { metalness: 0.3 })), 0, 1.3, 0); add(u, new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.2, 16), std(0x333333)), 0, 2.7, 0); u.position.set(x, 0, z); g.add(u); }
-function cactus(g, x, z, s) {
-  const c = new THREE.Group(), m = lam(0x3f8a3c, { flatShading: true });
-  add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, 8, 8), m), 0, 4, 0);
-  add(c, new THREE.Mesh(new THREE.SphereGeometry(0.7, 8, 6), m), 0, 8, 0, false);
-  for (const [sx, y, hgt] of [[-1, 3.5, 3], [1, 5, 2.4]]) {
-    add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.6, 8), m).rotateZ(Math.PI / 2), sx * 1.1, y, 0);
-    add(c, new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, hgt, 8), m), sx * 1.8, y + hgt / 2, 0);
-  }
-  c.position.set(x, 0, z); c.scale.setScalar(s); c.rotation.y = Math.random() * 3; g.add(c);
-}
-function mesas(g, seed) {
-  const r = rng(seed), rock = [lam(0xb5562f, { flatShading: true }), lam(0xc8703a, { flatShading: true }), lam(0x9a4426, { flatShading: true })];
-  for (let k = 0; k < 18; k++) {
-    const a = k / 18 * Math.PI * 2 + r() * 0.2, d = 160 + r() * 120, rad = 18 + r() * 30, hgt = 25 + r() * 45;
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(rad * 0.85, rad, hgt, 7 + Math.floor(r() * 3)), rock[k % 3]);
-    m.position.set(Math.sin(a) * d, hgt / 2, -15 + Math.cos(a) * d); m.rotation.y = r() * 3; g.add(m);
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(rad * 0.86, rad * 0.86, 2, 8), rock[(k + 1) % 3]); cap.position.set(m.position.x, hgt + 0.5, m.position.z); g.add(cap);
-  }
-  const rocks = lam(0xa0502c, { flatShading: true });
-  for (let k = 0; k < 24; k++) { const a = r() * Math.PI * 2, d = 40 + r() * 60, s = 1 + r() * 3; const b = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), rocks); b.position.set(Math.sin(a) * d, s * 0.4, -15 + Math.cos(a) * d); b.rotation.set(r() * 3, r() * 3, 0); g.add(b); }
-}
 function ferrisWheel(g, x, z) {
   const w = new THREE.Group(), frame = std(0xe8e8f0, { metalness: 0.4 }), R = 22;
   const wheel = new THREE.Group();
@@ -3526,20 +3479,9 @@ function loadSky(file) {
   skyCache.set(file, p); return p;
 }
 function clearPhotoSky() { scene.environment = null; scene.background = null; skyMesh.visible = true; scene.environmentIntensity = 1; scene.backgroundIntensity = 1; }
-function plankFence(g) {
-  const post = std(0x4a3420, { roughness: 0.9 });
-  const wall = (len, x, z, rot) => {
-    const m = photoMat("weathered_brown_planks", 1, len / 5, { rotate: Math.PI / 2, fallback: 0x8a6a4a }); // boards run up and down
-    const w = new THREE.Mesh(new THREE.BoxGeometry(len, 5.4, 0.3), m); w.position.set(x, 2.7, z); w.rotation.y = rot; w.castShadow = w.receiveShadow = true; g.add(w);
-    for (let k = 0; k <= len; k += 8) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.45, 6, 0.45), post); p.position.set(x + Math.cos(rot) * (k - len / 2), 3, z - Math.sin(rot) * (k - len / 2)); p.castShadow = true; g.add(p); }
-  };
-  wall(52, 0, -46, 0); wall(56, -26, -18, Math.PI / 2); wall(56, 26, -18, Math.PI / 2);
-}
 
 // ── Tailgate dressing: people, a smoking grill, parked cars, parking lot lights and the stadium next door.
 const SKIN = [0xf1c7a5, 0xe0ac86, 0xc68e62, 0x8d5a3b, 0x5e3a25];
-const SHIRTS = [0xc8102e, 0x1f3a6e, 0xffc93a, 0xffffff, 0x2fbf71, 0xff8a1f, 0x2f86ff, 0x6a2c91, 0x222222];
-const PANTS = [0x2a3550, 0x3a3a40, 0x6a5a40, 0x1f2a44, 0x8a7a60];
 // A simple low-poly person, about 5.5-6 ft tall, facing +z before rotY. pose: "stand", "drink" (arm raised) or "cheer".
 // An animated person (a Quaternius character; see animPerson). pose: "stand", "drink", "cheer", "sit" or "dance".
 // Returns their group straight away (things can be attached to it, like skis or an apron); the model loads into it.
@@ -3818,13 +3760,6 @@ function towel(g, x, z, rotY, colors) {
   const t = new THREE.Mesh(new THREE.PlaneGeometry(3, 6), std(0xffffff, { map: stripeTex(colors, 7, 64, 256), roughness: 1 }));
   t.rotation.set(-Math.PI / 2, 0, rotY); t.position.set(x, 0.06, z); t.receiveShadow = true; g.add(t);
 }
-function lounger(g, x, z, rotY, color) {
-  const l = new THREE.Group(), frame = std(0xf4f4f4, { metalness: 0.4, roughness: 0.4 }), cloth = std(color, { roughness: 0.9 });
-  add(l, box(2.4, 0.2, 4.4, cloth), 0, 1.2, 0.9);
-  const back = add(l, box(2.4, 0.2, 2.6, cloth), 0, 2.0, -2.0); back.rotation.x = 0.75;
-  for (const sx of [-1.15, 1.15]) for (const sz of [-1.6, 2.9]) add(l, new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.2, 5), frame), sx, 0.6, sz, false);
-  l.position.set(x, 0, z); l.rotation.y = rotY; g.add(l);
-}
 function surfboard(g, x, z, rotY, color, stripe) {
   const b = new THREE.Group();
   const board = new THREE.Mesh(new THREE.CapsuleGeometry(0.9, 5.2, 6, 14), std(color, { roughness: 0.35 })); board.scale.set(1, 1, 0.16); add(b, board, 0, 3.4, 0);
@@ -3846,15 +3781,6 @@ function lifeguardTower(g, x, z, rotY) {
   const sign = canvasTex(256, 64, (c, w, h) => { c.fillStyle = "#fff"; c.fillRect(0, 0, w, h); c.fillStyle = "#d62828"; c.font = "bold 40px Arial Black, sans-serif"; c.textAlign = "center"; c.fillText("LIFEGUARD", w / 2, 47); });
   const sg = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 1.4), new THREE.MeshBasicMaterial({ map: sign })); sg.position.set(0, 14.1, 2.8); t.add(sg);
   t.position.set(x, 0, z); t.rotation.y = rotY; g.add(t);
-}
-function volleyNet(g, x, z, rotY) {
-  const v = new THREE.Group(), pole = std(0x2a2a2a, { metalness: 0.5 });
-  for (const sx of [-16, 16]) add(v, new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 9, 8), pole), sx, 4.5, 0);
-  const netTex = canvasTex(256, 32, (c, w, h) => { c.strokeStyle = "rgba(20,20,20,.85)"; c.lineWidth = 2; for (let x = 0; x < w; x += 8) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke(); } for (let y = 0; y < h; y += 8) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); } c.fillStyle = "#fff"; c.fillRect(0, 0, w, 4); });
-  netTex.wrapS = THREE.RepeatWrapping; netTex.repeat.set(4, 1);
-  const net = new THREE.Mesh(new THREE.PlaneGeometry(32, 3.2), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })); net.position.set(0, 7.3, 0); v.add(net);
-  add(v, new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 12), std(0xffffff, { map: stripeTex(["#ffffff", "#ffd23a", "#2f86ff"], 6, 128, 32) })), 4, 0.75, 6);
-  v.position.set(x, 0, z); v.rotation.y = rotY; g.add(v);
 }
 function beachShack(g, x, z, rotY) {
   const s = new THREE.Group(), planks = photoMat("weathered_brown_planks", 3, 1, { rotate: Math.PI / 2, fallback: 0x8a6a4a });
@@ -4043,15 +3969,6 @@ function dayWindowTex() { // glass in daylight: sky reflected at the top, the ro
     c.fillStyle = g; c.fillRect(0, 0, w, h);
     c.fillStyle = "rgba(255,255,255,.35)"; c.beginPath(); c.moveTo(14, 0); c.lineTo(46, 0); c.lineTo(14, 70); c.closePath(); c.fill();
     c.strokeStyle = "#f2efe6"; c.lineWidth = 7; c.strokeRect(3, 3, w - 6, h - 6); c.beginPath(); c.moveTo(w / 2, 0); c.lineTo(w / 2, h); c.moveTo(0, h * 0.45); c.lineTo(w, h * 0.45); c.stroke();
-  });
-}
-function litWindowTex(kind) {
-  return canvasTex(128, 192, (c, w, h) => {
-    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#ffd890"); g.addColorStop(0.6, "#ffb05a"); g.addColorStop(1, "#c8642a");
-    c.fillStyle = g; c.fillRect(0, 0, w, h);
-    if (kind === "shop") { c.fillStyle = "rgba(80,40,20,.35)"; for (let k = 0; k < 4; k++) c.fillRect(8 + k * 30, 120, 22, 60); } // shelves and people inside
-    c.fillStyle = "rgba(255,255,255,.25)"; c.fillRect(10, 8, 18, h - 16);
-    c.strokeStyle = "#2a1a10"; c.lineWidth = 6; c.strokeRect(3, 3, w - 6, h - 6); c.beginPath(); c.moveTo(w / 2, 0); c.lineTo(w / 2, h); c.moveTo(0, h * 0.45); c.lineTo(w, h * 0.45); c.stroke();
   });
 }
 function pizzeria(g, x, z) {
@@ -4624,7 +4541,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795140260`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795141519`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4635,7 +4552,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795140260`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795141519`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -5009,36 +4926,6 @@ function buildVenue(id) {
   renderer.toneMappingExposure = L.exposure; venueDust = L.dust;
 
   if (id === "backyard") { styledBackyard(g);
-  } else if (id === "backyard-old") {
-    // Photo-real backyard: real sky light, a photo lawn and plank fence, and scanned chairs, table and shrubs.
-    const lawn = new THREE.Mesh(new THREE.PlaneGeometry(520, 520), photoMat("sparse_grass", 520 / 9, 520 / 9, { tint: 0xb4ff6a, bump: 0.8, fallback: 0x5fae3e }));
-    lawn.rotation.x = -Math.PI / 2; lawn.position.z = -30; lawn.receiveShadow = true; g.add(lawn);
-    blenderTrees(g, 21, ["tree_oak", "tree_maple", "tree_oak", "tree_pine"], { front: 62 });
-    backOfHouse(g, 2, 66); // the back of the house, behind you: we're in the backyard
-    plankFence(g);
-    stringLights(g, [[-9, -38], [9, -38], [-9, -14], [9, -14]], [[[-9, -38], [9, -38]], [[-9, -38], [-9, -14]], [[9, -38], [9, -14]], [[-9, -14], [9, -26]], [[9, -14], [-9, -26]]]);
-    placeModel(g, "plastic_monobloc_chair_01", -7.5, -36, 0.35); // set back from the board, facing the players
-    placeModel(g, "plastic_monobloc_chair_01", 7.8, -37, -0.35);
-    placeModel(g, "wooden_picnic_table", -15, 14, 0.3 + Math.PI / 2);
-    const r = rng(77);
-    for (let x = -22; x <= 22; x += 5.5 + r() * 2) placeModel(g, r() < 0.5 ? "shrub_02" : "shrub_04", x, -43.5 - r(), r() * 6, 0.9 + r() * 0.5);
-    for (let z = -38; z <= 4; z += 7 + r() * 3) for (const sx of [-1, 1]) placeModel(g, r() < 0.5 ? "shrub_02" : "shrub_04", sx * (23.5 - r()), z, r() * 6, 0.8 + r() * 0.5);
-    placeModel(g, "planter_box_01", -9, 34, 0); placeModel(g, "planter_box_01", 17, 34, 0);
-    // a backyard party: friends by the picnic table and the grill, a couple watching the game from the side
-    grill(g, 15, 4, -0.5);
-    smoker(g, 19.5, 9, -0.6);
-    { const cook = person(g, 15.5, 8.2, Math.PI - 0.5, 33, "stand"); apron(cook, 0xd62828); } // the cook, between the grill and the smoker
-    deckTable(g, -15, -4, 41); deckTable(g, 18, -10, 43); deckTable(g, -17, 24, 45);
-    crowd(g, -14, 10, 4, 2.6, 21, -15, 14);
-    crowd(g, 22, -3, 3, 2.2, 23, 15, 4); // chatting a few steps from the grill
-    person(g, -11, -30, 0.9, 25, "drink"); person(g, -12.5, -27, 1.2, 27, "stand");
-    person(g, 11.5, -24, -1.1, 29, "cheer");
-    loadSky("garden_nook_2k.hdr").then(sky => {
-      if (!sky || venueId !== "backyard") return;
-      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
-      hemi.intensity = 0.85; renderer.toneMappingExposure = 1.12;
-      scene.fog.color.setHex(0xc9dcef); scene.fog.near = 220; scene.fog.far = 640; // light sky-coloured, far off
-    });
   } else if (id === "tailgate") {
     // Game day: a packed lot right outside the stadium, with fans, grills and tailgates down.
     setGround(g, "asphalt", 18);
@@ -6523,7 +6410,6 @@ const clockText = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s
 const topCourt = () => VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 
 function renderHubExtras() {
-  testerTopUp();
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
   $("caps").textContent = bigNum(career.caps);
   fillCooler();
@@ -6681,7 +6567,7 @@ function renderProfile() {
         <div><b>${career.wins}</b><small>Wins</small></div><div><b>${career.losses}</b><small>Losses</small></div><div><b>${career.wins + career.losses ? Math.round(career.wins / (career.wins + career.losses) * 100) : 0}%</b><small>Win rate</small></div></div>`;
     $("handleSave").onclick = () => {
       const v = $("handleIn").value.trim();
-      if (!setHandle(v)) { $("handleErr").textContent = "Use 3–16 letters, numbers, dots, dashes or underscores."; return; }
+      if (!setHandle(v)) { $("handleErr").textContent = rudeName(v) ? "That name isn't allowed. Please pick another." : "Use 3–16 letters, numbers, dots, dashes or underscores."; return; }
       $("handleErr").textContent = ""; sfx.tick(); renderProfile();
     };
   } else {
@@ -6692,7 +6578,10 @@ function renderProfile() {
       <div class="setrow"><span>🔔 Alerts (Daily Drops, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
       ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
-      <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>`;
+      <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
+      <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>`;
+    $("setPrivacy").onclick = () => openLink(LEGAL_URL + "privacy.html");
+    $("setTerms").onclick = () => openLink(LEGAL_URL + "terms.html");
     if ($("setGc")) $("setGc").onclick = () => postNative("gamecenter", "signin-now");
     $("setTour").onclick = () => { $("avatarSheet").hidden = true; startTour(true); };
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
@@ -6844,66 +6733,18 @@ $("canDone").onclick = () => {
   if (i >= 0) { delete career.cans[i].bonus; save(); const t = document.createElement("div"); t.className = "toast"; t.textContent = "4 in a row! Here's a bonus can 🎉"; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); setTimeout(() => openCanSheet(i), 700); }
 };
 
-// ── Testing tools: the browser preview and Xcode debug builds (the app sets window.__debugBuild), never the App Store.
-// Tester mode keeps coins and bottle caps topped up and the stars maxed so everything can be tried; it's on until switched off.
-const TEST_BANK = 99999999;
 let gcSignedIn = ""; // the Game Center name once the iPhone app reports a signed-in player
-const testing = () => !nativeBridge || !!window.__debugBuild;
-function testerTopUp() {
-  if (!testing() || career.tester === false) return;
-  career.coins = TEST_BANK; career.caps = TEST_BANK;
-  // and every court's star track full, so every court (and its avatars) is open
-  if (VENUES.some(v => (career.courtStars[v.id] || 0) < v.max)) { for (const v of VENUES) career.courtStars[v.id] = v.max; updateUnlocks(); }
-}
-if (testing()) {
-  const b = $("testerBtn"); b.hidden = false;
-  const label = () => { b.textContent = `🧪 Tester mode: ${career.tester !== false ? "on" : "off"}`; };
-  b.onclick = () => { career.tester = career.tester === false; if (career.tester) testerTopUp(); save(); label(); renderHub(); };
-  label(); testerTopUp();
-}
-// Browser preview only (never in the iPhone app): fill the cooler with cans that are ready to open, for testing.
-if (!nativeBridge) {
-  // An empty cooler in the preview gets a demo set: one opening, one ready (Express) and two waiting to start.
-  if (!career.cans.length) {
-    const c = topCourt();
-    career.cans = [{ id: "gold", court: c, start: Date.now() - 3600000 }, { id: "express", court: c }, { id: "silver", court: c }, { id: "purple", court: c }];
-    save();
-  }
-}
-// Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1795140260";
-if (testing() && career.testBuild !== BUILD_ID) {
-  career.testBuild = BUILD_ID;
-  career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
-  save();
-}
-if (testing()) { // Max stars: fill every court's star track, which opens all the courts (and their avatars)
-  $("maxStarsBtn").hidden = false;
-  $("refillDropsBtn").hidden = false; // tester: back to 2 Daily Drops (the real rules still apply: never more than 2)
-  $("refillDropsBtn").onclick = () => { const g = giftState(); g.n = GIFT_MAX; g.at = Date.now(); save(); renderHub(); };
-  $("maxStarsBtn").onclick = () => {
-    for (const v of VENUES) career.courtStars[v.id] = v.max;
-    updateUnlocks(); save(); renderHub();
-    const t = document.createElement("div"); t.className = "toast"; t.textContent = `All ${VENUES.length} courts open · ${career.stars.toLocaleString()} ⭐`;
-    $("hub").appendChild(t); setTimeout(() => t.remove(), 2600);
-  };
-}
-if (testing()) { // Test cans: also in Xcode debug builds
-  $("testCans").hidden = false;
-  $("testCans").onclick = () => {
-    const pick = ["silver", "gold", "purple", "platinum", "diamond", "express"].sort(() => Math.random() - 0.5).slice(0, COOLER_SIZE);
-    career.cans = pick.map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
-    save(); renderHub();
-  };
-}
+// The privacy policy and terms of service (published from the repository's docs/ folder with GitHub Pages).
+const LEGAL_URL = "https://jeff-gill.github.io/Cornhole-iOS-app/";
+function openLink(url) { if (nativeBridge && nativeBridge.open) postNative("open", url); else window.open(url, "_blank", "noopener"); }
 
 // ── Season badge and ladder
 function renderSeasonBadge() {
-  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
+  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
 }
 function openSeason() {
-  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - Date.now()) / 86400000));
+  const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
   if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, myHandle()]], s.title, s.id), "me", s.id), me: "me" };
@@ -6974,15 +6815,13 @@ function wheelCard() { // which card (paid when the Daily Drop can opens)
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
   return { cat: cat.key, id: it.id };
 }
-const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never more than 2; tester mode too)
+const dailyFree = () => giftState().n > 0; // a free Daily Drop waiting (never more than 2)
 const dailyReady = () => dailyFree() || (career.spins || 0) > 0; // the free spin, or bought ones
 function renderDaily() { // always there: bobbing when it's ready, still (with a countdown to midnight) once spun
   const ready = dailyReady(); $("dailyBtn").classList.toggle("ready", ready);
   const n = giftState().n;
   $("dailySub").innerHTML = dailyFree() ? (n > 1 ? "2 ready to open!" : "Ready to open!") : ready ? `${career.spins} extra left` : `Next in ${timeText(giftNextIn())}`;
 }
-const wheelPrizeHTML = p => p.can ? canPic(p.can)
-  : p.card ? `<span style="font-size:18px">🃏</span><b>card</b>` : p.caps ? `<i class="bcap"></i><b>${p.caps}</b>` : `<i class="coin"></i><b>${short(p.coins)}</b>`;
 let wheelSpin = null; // (kept for the purchase handler: there's no spinning any more)
 // Tapping Daily Drop: if a drop is ready (a free one every 4 hours, up to 2 waiting, or a bought one), the prize comes
 // straight away, picked by the prize table's weights. If not, a sheet shows when the next free one comes and offers more.
@@ -7022,30 +6861,6 @@ function openWheel(msg = "") {
   for (const b of $("wheelBody").querySelectorAll("[data-wbuy]")) b.onclick = () => {
     if (!canBuy()) { openWheel("Purchases are available in the iPhone app."); return; }
     pendingBuy = b.dataset.wbuy; postNative("purchase", pendingBuy); openWheel(" ");
-  };
-}
-function wheelWon(p) {
-  $("wheelSheet").hidden = true; wheelSpin = null;
-  const ck = p.can ? canById(p.can) : null;
-  $("bbRays").style.setProperty("--ray", p.col); $("bbRays").hidden = false;
-  $("bbRevTitle").innerHTML = p.jackpot ? "JACKPOT!" : "Daily Drop!";
-  const card = $("bbRevPrize"); card.className = "prize";
-  const cd = p.got; // a card prize
-  if (cd) {
-    card.innerHTML = `<div class="pic">🃏</div><b>${esc(cd.it.name)}</b><small>${cd.cat === "bag" ? "Bag" : "Board"} card · ${cd.unlocked ? "UNLOCKED!" : cd.owned ? `you have it: +${cd.coins} coins` : `${cd.have}/${cd.need} cards`}</small>`;
-    $("bbRevFoot").innerHTML = `<button class="btn green go" id="bbCollect">COLLECT</button>`;
-    $("bbReveal").hidden = false; requestAnimationFrame(() => card.classList.add("show")); sfx.win(); haptic("success");
-    $("bbCollect").onclick = () => { $("bbReveal").hidden = true; renderHub(); };
-    return;
-  }
-  card.innerHTML = `<div class="pic">${ck ? canPic(ck.id, "big") : p.caps ? `<i class="bcap big"></i>` : `<i class="coin big"></i>`}</div>
-    <b>${ck ? ck.name : p.caps ? `${p.caps} cap${p.caps > 1 ? "s" : ""}` : `${short(p.coins)} coins`}</b><small>${ck ? "Open it now!" : giftState().n ? "Another Daily Drop is waiting!" : `Next free one in ${timeText(giftNextIn())}`}</small>`;
-  $("bbRevFoot").innerHTML = `<button class="btn green go" id="bbCollect">${ck ? "OPEN IT!" : "COLLECT"}</button>`;
-  $("bbReveal").hidden = false; requestAnimationFrame(() => card.classList.add("show"));
-  sfx.win(); haptic("success");
-  $("bbCollect").onclick = () => {
-    $("bbReveal").hidden = true; renderHub();
-    if (ck) { const i = career.cans.findIndex(c => c.instant && c.id === p.can); if (i >= 0) setTimeout(() => openCanSheet(i), 250); }
   };
 }
 $("dailyBtn").onclick = () => { initAudio(); openWheel(); };
@@ -7352,10 +7167,10 @@ const BB_STORE = ["bullseye.1", "bullseye.3", "bullseye.5"].map(PID);
 const BB = { active: null, mesh: null, precip: null, starTag: null };
 
 // ── The day's challenge
-const bbDay = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const bbDay = (d = homeDate()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 function bbToday() {
   const key = bbDay();
-  if (bbToday.cache && bbToday.cache.key === key && bbToday.cache.sunday === (new Date().getDay() === 0 || !!window.__bbSunday)) return bbToday.cache;
+  if (bbToday.cache && bbToday.cache.key === key && bbToday.cache.sunday === (homeDate().getUTCDay() === 0)) return bbToday.cache;
   let h = 2166136261; for (const ch of "bullseye:" + key) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
   const r = rng(h >>> 0), pick = a => a[Math.floor(r() * a.length)];
   const v = pick(bbCourts()), scene = { id: v.id, name: v.name, sub: v.sub, surf: ["beach", "island", "lakeside"].includes(v.id) }, side = r() < 0.5 ? -1 : 1;
@@ -7380,13 +7195,13 @@ function bbToday() {
     }
     modes[m] = { dist: 27, wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags };
   }
-  const sunday = new Date().getDay() === 0 || !!window.__bbSunday; // Hole-in-One Sunday: the hole also wins the exclusive bag
+  const sunday = homeDate().getUTCDay() === 0; // Hole-in-One Sunday: the hole also wins the exclusive bag
   return (bbToday.cache = { key, scene, side, weather, board, windDir, modes, sunday });
 }
 
 // ── Throws: one free a day (resets at midnight), plus any you've bought. Prizes won today, per level.
 const bbState = () => (career.bb ||= { day: "", extra: 0 });
-const bbFreeReady = () => testing() || bbState().day !== bbDay(); // tester mode: unlimited throws
+const bbFreeReady = () => bbState().day !== bbDay();
 const bbCanPlay = () => bbFreeReady() || bbState().extra > 0;
 function bbWon(mode) { // indexes 0-4 (4 is the hole) won today on this level
   const s = bbState();
@@ -7416,10 +7231,9 @@ function bbShowRingLabels(on) {
     sp.scale.set(0.8, 0.24, 1); sp.renderOrder = 10; sp.position.copy(W(x, y, plane(y) + 0.22)); scene.add(sp); BB.labels.push(sp);
   }
 }
-const bbCleared = mode => !testing() && bbWon(mode).length >= 5;
+const bbCleared = mode => bbWon(mode).length >= 5;
 function bbUseThrow() {
   const s = bbState();
-  if (testing()) { s.used = null; return true; } // tester mode: throws are free and unlimited
   if (s.day !== bbDay()) { s.day = bbDay(); s.used = "free"; }
   else if (s.extra > 0) { s.extra--; s.used = "extra"; }
   else return false;
@@ -7430,7 +7244,7 @@ function bbRefundThrow() { // a throw that never happened (quit before throwing,
   if (s.used === "free") s.day = ""; else if (s.used === "extra") s.extra++;
   s.used = null; save();
 }
-const bbUntilMidnight = () => { const n = new Date(), m = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1); return m - n; };
+const bbUntilMidnight = () => { const n = homeDate(); return Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1) - n.getTime(); };
 function renderBBBtn() {
   const b = $("bbBtn"); if (!b) return;
   const free = bbFreeReady(), extra = bbState().extra, done = bbCleared("easy") && bbCleared("hard");
@@ -7739,7 +7553,7 @@ function bbFinish() {
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];
   const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : {}; // no ring, no prize
-  if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); if (testing() && wl.length >= 5) wl.length = 0; } // gone for the day (tester mode: all five come back once cleared)
+  if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); } // gone for the day
   if (p.can) for (let k = 0; k < times; k++) { // the first can opens on the spot; a doubled second one goes in the cooler, locked
     const id = rollCan(p.can);
     if (k === 0) career.cans.push({ id, court: topCourt(), instant: true }); else stashCan({ id, court: topCourt() });
@@ -7817,11 +7631,9 @@ function renderBBSheet(msg = "") {
     <div class="label center">${can ? "More throws" : "Buy more throws"}</div>
     ${bbBuyRow()}
     ${msg ? `<div class="muted center">${esc(msg)}</div>` : ""}
-    ${testing() ? `<button class="linkbtn" id="bbTest">🧪 +5 throws</button>` : ""}
     <button class="btn" id="bbClose">CLOSE</button>`;
   for (const b of $("bbBody").querySelectorAll("[data-bbpreview]")) b.onclick = () => bbStart(b.dataset.bbpreview, true);
   bbWireBuy(m => renderBBSheet(m));
-  if ($("bbTest")) $("bbTest").onclick = () => { bbState().extra += 5; save(); renderBBSheet(); renderBBBtn(); };
   $("bbClose").onclick = () => { $("bbSheet").hidden = true; renderBBBtn(); };
   $("bbSheet").hidden = false;
 }
@@ -7914,7 +7726,6 @@ function updateOcclusion(dt) {
 }
 
 function updateCamera(dt) {
-  if (window.__freeze) { camera.position.set(...window.__freeze.pos); camera.lookAt(...window.__freeze.look); return; } // test hook: hold a set view
   const mode = camMode(), rel = release(S.player), narrow = camera.aspect < 0.7;
   let k = 3, fov = narrow ? 50 : 42;
   const bbLanded = () => { const b = S.world.bags.find(x => x.id === S.lastId); return !!b && b.state !== "flying"; };
@@ -7932,13 +7743,14 @@ function updateCamera(dt) {
     // court is 31 ft long), and aims so the court rides above the clubhouse card.
     hubYaw += dt * 0.12;
     const a = hubYaw, side = Math.sin(a) ** 2, cz = -FY / 2 - 1;
-    let d = narrow ? 38 + 16 * side : 30 + 6 * side;
+    let d = narrow ? 38 + 16 * side : camera.aspect > 1.1 ? 42 + 8 * side : 30 + 6 * side; // (a wide iPad window: further back, so the near board clears the cards)
     const wall = VENUE_LOOK[venueId]?.wall; // stay inside the stands
     if (wall) d = Math.min(d, wall[0] / Math.max(Math.abs(Math.sin(a)), 0.01), wall[1] / Math.max(Math.abs(Math.cos(a)), 0.01));
     const h = Math.min(narrow ? 8 + 4 * side : 9, d * 0.2); // closer in (inside the stands) means lower, so the crowd shows
     fov = narrow ? 50 + 20 * side : 44;
     tPos.set(Math.sin(a) * d, h, cz + Math.cos(a) * d);
-    const below = (narrow ? (wall ? 0.3 : 0.55) : 0.2) * fov / 2 * Math.PI / 180; // put the court centre this far above the screen centre
+    // put the court centre this far above the screen centre (a wide iPad window: higher still, clear of the court card)
+    const below = (narrow ? (wall ? 0.3 : 0.55) : camera.aspect > 1.1 ? 0.4 : 0.2) * fov / 2 * Math.PI / 180;
     const drop = d * Math.tan(Math.atan2(h, d) + below) - h;
     tLook.set(0, -drop, cz);
     k = 1.5;
@@ -8066,15 +7878,6 @@ function renderBanner() {
   const el = $("banner");
   if (S.banner) { el.textContent = S.banner.text; el.style.background = `linear-gradient(${COL.pl[S.banner.pl] || "#666"}, ${COL.p[S.banner.pl] || "#333"})`; el.classList.add("show"); }
   else el.classList.remove("show");
-}
-function outcomeText(p) {
-  if (p.own) {
-    if (p.pushOutcome === "inHole") return "Pushes yours in";
-    return onSurface({ state: p.pushOutcome }) && onBoard(p.pushEnd) ? "Pushes yours" : "Pushes yours off";
-  }
-  if (p.outcome === "inHole") return "Cornhole";
-  if (onSurface({ state: p.outcome }) && onBoard(p.end)) return "On the board";
-  return "Off the board";
 }
 const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${label}</small><b>${value}</b></div>`;
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
@@ -8463,12 +8266,11 @@ function storeHTML() {
     parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
   }
   if (career.purchases.includes(starter.id)) parts.push(`<div class="storeitem"><div class="ic">⭐</div><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div></div>${btn(starter)}</div>`);
-  parts.push(`<div class="storenote">No ads, ever. Coins and items stay on this device.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
+  parts.push(`<div class="storenote">No ads, ever. Coins and items are for the game only and have no cash value. Your progress is saved to your Game Center account.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
   if (shopMsg) parts.push(`<div class="shoptoast">${esc(shopMsg)}</div>`);
   return parts.join("");
 }
 function renderShop() {
-  testerTopUp();
   $("shopCoins").textContent = bigNum(career.coins); $("shopCaps").textContent = bigNum(career.caps);
   const TAB_CAT = { bags: "bag", boards: "board", throw: "trail", hole: "fx" };
   for (const b of document.querySelectorAll("#shop .tabs button")) {
@@ -8679,8 +8481,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 function step(now) {
-  // __timeScale / __skipRender are test hooks for automated playthroughs; unused in normal play.
-  const dt = (lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60) * (window.__timeScale || 1); lastT = now;
+  const dt = (lastT ? Math.min((now - lastT) / 1000, 0.05) : 1 / 60); lastT = now;
   S.time += dt; S.relT += dt;
   if (S.banner) { S.bannerT -= dt; if (S.bannerT <= 0) { S.banner = null; renderBanner(); } }
   if (pendingDrag && dragging) { moveMarker(dragging, pendingDrag); pendingDrag = null; }
@@ -8735,7 +8536,7 @@ function step(now) {
   venueTick(dt, S.time);
   updateCamera(dt);
   updateOcclusion(dt);
-  if (!window.__skipRender) renderScene();
+  renderScene();
 }
 
 // ───────────────────────── Glitch watchdog
@@ -8747,7 +8548,7 @@ const watch = { phase: null, since: 0, clock: null, clockAt: 0 };
 document.addEventListener("visibilitychange", () => { lastFrameAt = performance.now(); watch.phase = null; watch.clock = null; }); // back from the background: start counting afresh
 setInterval(() => {
   const now = performance.now();
-  if (document.hidden || !inMatch() || window.__timeScale) { watch.phase = null; watch.clock = null; return; } // paused or in the background: not a glitch
+  if (document.hidden || !inMatch()) { watch.phase = null; watch.clock = null; return; } // paused or in the background: not a glitch
   if (now - lastFrameAt > 6000) { lastFrameAt = now; glitchOut(); requestAnimationFrame(frame); return; } // the loop died
   // Measured in game time (S.time), so a slow phone never looks stuck: only a game that's running but not moving does.
   if (S.phase !== watch.phase) { watch.phase = S.phase; watch.since = S.time; }
@@ -8785,7 +8586,6 @@ postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own
 setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
 
 requestAnimationFrame(frame);
-window.__cornhole = { playCourt, simulate, applyErrors, windAccel, planThrow, setGlow: v => { glowOn = v; }, ui, showUnlocks, takeDrop, openCanSheet, BAGS, TRAILS, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };
 </script>
 
 </body>
