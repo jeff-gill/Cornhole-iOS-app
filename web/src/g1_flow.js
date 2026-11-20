@@ -376,12 +376,13 @@ function renderBagPick() { // (the suggested bag is listed first)
         <div class="bpstats"><em>Accuracy</em>${dots("acc")}<em>Control</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
-    <button class="btn green" id="bagPickGo">${S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
+    ${S.pickReady ? `<div class="waitopp">⏳ Waiting for opponent…</div>` : ""}
+    <button class="btn green" id="bagPickGo" ${S.pickReady ? "disabled" : ""}>${S.pickReady ? "WAITING…" : S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
   for (const c of $("bagPickBody").querySelectorAll(".bpbag")) {
     paintBag(c.querySelector("canvas").getContext("2d"), 72, 72, { ...bagById(c.dataset.bag), c: S.teamC ? S.teamC[0] : bagById(c.dataset.bag).c });
     c.onclick = () => { S.gear[0] = bagById(c.dataset.bag); career.bag = c.dataset.bag; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: c.dataset.bag }); renderBagPick(); };
   }
-  $("bagPickGo").onclick = () => { if (!S.online) closeBagPick(); else { S.pickReady = true; $("bagPickGo").textContent = "WAITING…"; } };
+  $("bagPickGo").onclick = () => { if (!S.online) closeBagPick(); else { S.pickReady = true; renderBagPick(); } };
 }
 function tickBagPick(dt) {
   if (S.phase !== "bagpick") return;

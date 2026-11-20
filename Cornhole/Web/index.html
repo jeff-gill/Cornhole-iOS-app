@@ -649,12 +649,20 @@ s.was { opacity: .6; font-size: .8em; }
 .starsunder { font: 900 13px/1 Nunito, system-ui, sans-serif; background: rgba(10,20,38,.75); border: 2px solid rgba(255,255,255,.7); border-radius: 999px; padding: 2px 8px; color: #fff; }
 .starsunder b { font-family: var(--font-display); font-weight: 400; font-size: 15px; }
 .backbtn { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#2b4a80, #12203a); color: #fff; font: 400 34px/1 var(--font-display); padding: 0 0 4px; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+#hub .onhome .cooler .cslot { height: 100px; font-size: 13px; }
+@media (max-height: 720px) { #hub .onhome .cooler .cslot { height: 80px; } }
+.coolerhead .qbadge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1b2233; font: 900 12px/1.2 Nunito, system-ui, sans-serif; letter-spacing: 0; text-shadow: none; vertical-align: middle; }
+.backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: none; z-index: 60; }
+.overlay:has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
+.waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
+#rankBtn { display: block; width: 60%; margin: 0 auto; }
+#avatarClose, #bbClose, #wheelClose, #shopClose, #helpClose, #infoClose { display: none !important; }
 .throwbtn { width: 100%; font-size: 30px; padding: 14px; letter-spacing: .04em; }
 .courtshead { position: relative; text-align: center; margin-top: 18px; font-family: var(--font-display); font-size: 26px; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
-.navbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 6px 4px calc(4px + env(safe-area-inset-bottom, 0px)); margin: 4px -8px 0; background: linear-gradient(#1d3563, #0e1a33); border-top: 3px solid #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 0 rgba(0,0,0,.25); }
-.navbar button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; border: none; background: none; color: var(--ink-dim); }
-.navbar .nic { width: 46px; height: 40px; display: grid; place-items: center; font-size: 24px; border-radius: 12px; border: 2px solid rgba(255,255,255,.5); background: linear-gradient(#2b4a80, #16284a); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
-.navbar small { font: 900 10px/1 Nunito, system-ui, sans-serif; letter-spacing: .04em; white-space: nowrap; }
+.navbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 6px 4px calc(4px + env(safe-area-inset-bottom, 0px)); margin: 4px -8px 0; background: linear-gradient(#1d3563, #0e1a33); border-top: 3px solid #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 0 rgba(0,0,0,.25); }
+.navbar button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 0; min-width: 0; border: none; background: none; color: var(--ink-dim); }
+.navbar .nic { width: 100%; height: 58px; display: grid; place-items: center; font-size: 34px; border-radius: 16px; border: 2px solid rgba(255,255,255,.5); background: linear-gradient(#2b4a80, #16284a); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.navbar small { font: 900 11px/1 Nunito, system-ui, sans-serif; letter-spacing: .04em; white-space: nowrap; }
 .navbar button.on { color: #fff; } .navbar button.on .nic { border-color: #fff; background: linear-gradient(#ffd84a, #f0a020); transform: translateY(-3px); }
 .navbar .nbadge { position: absolute; top: 0; right: calc(50% - 26px); }
 .btn.small { font-size: 15px; padding: 10px 4px; }
@@ -882,7 +890,7 @@ s.was { opacity: .6; font-size: .8em; }
       <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
       <div class="cooler" id="cooler"></div>
       <button class="btn green throwbtn" id="throwBagsBtn">THROW BAGS</button>
-      <div class="hubrow two"><button class="btn small" id="rankBtn">🏆 RANKINGS</button><button class="btn small" id="passBtn">PRACTICE</button></div>
+      <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
     </div>
     <div class="oncourts">
       <div class="vcarousel" id="venueCard"></div>
@@ -1833,12 +1841,13 @@ function renderBagPick() { // (the suggested bag is listed first)
         <div class="bpstats"><em>Accuracy</em>${dots("acc")}<em>Control</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
-    <button class="btn green" id="bagPickGo">${S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
+    ${S.pickReady ? `<div class="waitopp">⏳ Waiting for opponent…</div>` : ""}
+    <button class="btn green" id="bagPickGo" ${S.pickReady ? "disabled" : ""}>${S.pickReady ? "WAITING…" : S.online ? `READY · ${Math.ceil(S.pickT)}` : `PLAY · ${Math.ceil(S.pickT)}`}</button>`;
   for (const c of $("bagPickBody").querySelectorAll(".bpbag")) {
     paintBag(c.querySelector("canvas").getContext("2d"), 72, 72, { ...bagById(c.dataset.bag), c: S.teamC ? S.teamC[0] : bagById(c.dataset.bag).c });
     c.onclick = () => { S.gear[0] = bagById(c.dataset.bag); career.bag = c.dataset.bag; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: c.dataset.bag }); renderBagPick(); };
   }
-  $("bagPickGo").onclick = () => { if (!S.online) closeBagPick(); else { S.pickReady = true; $("bagPickGo").textContent = "WAITING…"; } };
+  $("bagPickGo").onclick = () => { if (!S.online) closeBagPick(); else { S.pickReady = true; renderBagPick(); } };
 }
 function tickBagPick(dt) {
   if (S.phase !== "bagpick") return;
@@ -3087,7 +3096,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795211357`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795212670`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4601,7 +4610,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795211357`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795212670`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4612,7 +4621,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795211357`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795212670`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6216,7 +6225,11 @@ function rampColor(a, out) {
 }
 let aimFireT = 0, aimWedgeZone = -1;
 const wedgeTilt = new THREE.Group(); aimBase.add(wedgeTilt);
+// A see-through divider board between the two pitcher's boxes, so it's clear who throws from which side.
+const boxDivider = new THREE.Mesh(new THREE.BoxGeometry(0.14, 3, 6), new THREE.MeshStandardMaterial({ color: 0xc89a5a, roughness: 0.8, transparent: true, opacity: 0.35, depthWrite: false }));
+boxDivider.position.copy(W(0, 0.8, 1.5)); boxDivider.renderOrder = 5; scene.add(boxDivider);
 function updateAimRig(dt) {
+  boxDivider.visible = S.phase !== "hub" && S.kind !== "bullseye";
   const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
   aimRig.visible = true;
@@ -6225,7 +6238,7 @@ function updateAimRig(dt) {
   const rel = release(S.player), to = S.landing || HOLE, d = Math.hypot(to.x - rel.x, to.y - rel.y);
   // along the real launch line (it aims into the wind), so the green zone shows where to point
   const dir = S.ideal ? { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) } : { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
-  const ahead = handFloor() > 0 ? 1.2 : 5.9; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
+  const ahead = handFloor() > 0 ? 1.2 : 5.3; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
   // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
   aimRig.rotation.x = handFloor() > 0 ? -Math.atan2(handFloor() - surf(to), Math.max(1, d - ahead)) : 0;
@@ -6477,7 +6490,7 @@ function renderHubExtras() {
   const cooler = $("cooler"); cooler.innerHTML = "";
   const slots = COOLER_SIZE;
   const waiting = career.canBacklog?.length || 0;
-  $("coolerHead").textContent = waiting ? `PRIZE COOLER · ${waiting} waiting` : "PRIZE COOLER";
+  $("coolerHead").innerHTML = waiting ? `PRIZE COOLER<span class="qbadge">+${waiting} waiting in line</span>` : "PRIZE COOLER";
   for (let i = 0; i < slots; i++) {
     const c = career.cans[i], b = document.createElement("button");
     if (c) {
@@ -6996,9 +7009,8 @@ const TOUR = [
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
-  ["#throwBagsBtn", "Throw bags", "Pick a court and find an opponent."],
+  ["#throwBagsBtn", "Throw bags", "Pick a court and find an opponent. Practice, free, is the first card."],
   ["#rankBtn", "Rankings", "See how you stack up on the leaderboards."],
-  ["#passBtn", "Practice", "Play for free, alone or with friends on one phone."],
   ["#navbar", "Menu", "The Store, your bags and boards, home, and settings (with How to Play) are always down here."],
 ];
 let tourAt = -1;
@@ -7753,8 +7765,7 @@ function camMode() {
   if (S.phase === "hub") return "intro";
   if (S.phase === "aiming") return "aim";
   if (S.phase === "throw") return "throw";
-  if (S.phase === "cpu") return S.cpuT < 0.6 ? "aim" : "throw";
-  if (S.phase === "remote") return "aim";
+  if (S.phase === "cpu" || S.phase === "remote") return "throw"; // the opponent's throw: the same view as yours
   if (S.phase === "flight") {
     const b = S.world.bags.find(x => x.id === S.lastId);
     if (b && b.state === "flying" && b.y < FY - 7) return "follow";
@@ -7859,7 +7870,9 @@ function updateCamera(dt) {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
-    tPos.set(rel.x * 1.1, 6.2, 5.2); tLook.set(rel.x * 0.15, 0, -14); // arrow and ring near the bottom, board up the lane
+    // (the opponent's throws are seen from the same spot: behind your box)
+    const eye = isCPU(S.player) || isRemote(S.player) ? release(0) : rel;
+    tPos.set(eye.x * 1.1, 6.2, 5.2); tLook.set(eye.x * 0.15, 0, -14); // arrow and ring near the bottom, board up the lane
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
@@ -7984,7 +7997,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
-  panel.classList.toggle("slim", S.phase === "throw");
+  panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote"); // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
@@ -8192,7 +8205,8 @@ function dismissScorecard(dx, dy) {
 }
 
 // ───────────────────────── Clubhouse (career hub) and shop
-let hubVenue = career.venue || 0;
+let hubVenue = (() => { const open = VENUES.map((_, i) => i).filter(i => venueUnlocked(i)); return open.length ? open[Math.floor(Math.random() * open.length)] : 0; })(); // a random court you have open, each time the game opens
+let sceneVenue = hubVenue; // the court shown behind the clubhouse (the practice card keeps it)
 function openHub() {
   $("timeupMsg").hidden = true;
   $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true;
@@ -8202,7 +8216,7 @@ function openHub() {
   bbExit();
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
-  if (!venueUnlocked(hubVenue)) hubVenue = 0;
+  if (hubVenue >= 0 && !venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
   if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
@@ -8215,11 +8229,7 @@ let hubIdleT = null;
 const hubSheetOpen = () => [...document.querySelectorAll(".overlay")].some(o => o.id !== "hub" && !o.hidden);
 function hubWake() {
   $("hub").classList.remove("idle"); clearTimeout(hubIdleT);
-  hubIdleT = setTimeout(function idle() {
-    if ($("hub").hidden) return;
-    if (hubSheetOpen() || !$("tour").hidden) { hubIdleT = setTimeout(idle, 5000); return; } // not while a sheet or the tour is up
-    $("hub").classList.add("idle");
-  }, 5000);
+  // (the clubhouse no longer fades: the courts have their own page now, so nothing hides the view)
 }
 for (const type of ["pointerdown", "click"]) $("hub").addEventListener(type, e => {
   if ($("hub").classList.contains("idle")) { e.stopPropagation(); e.preventDefault(); if (type === "click") hubWake(); return; }
@@ -8236,10 +8246,24 @@ function fitChips(root) {
   }
   for (const b of bs) b.style.fontSize = min + "px"; // the whole row at one size
 }
+// The practice card: first in the courts carousel, free, alone or with friends on one phone.
+const practicePeek = cls => `<div class="venue side ${cls}" data-go="-1"><div class="lvlno">Free play</div><h3>Practice</h3></div>`;
+function renderPracticeCard() {
+  const v = VENUES[sceneVenue];
+  $("venueCard").innerHTML = `<div class="venue cur"><div class="lvlno">Free play</div><h3>Practice</h3>
+    <div class="muted" style="margin:6px 0 4px">No buy-in, no stars. Play alone or with friends on one phone.</div>
+    <button class="btn green go" id="playBtn">PRACTICE · FREE</button></div>${`<div class="venue side next" data-go="0"><div class="lvlno">Court 1 of ${VENUES.length}</div><h3>${esc(VENUES[0].name)}</h3></div>`}
+    <div class="vdots"><i class="on"></i>${VENUES.map(() => `<i></i>`).join("")}</div>`;
+  for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
+  $("playBtn").onclick = () => { initAudio(); openPractice(); };
+  renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
+}
 function short(n) { return bigNum(n); } // 1.5K, 2.3M ... one decimal
 function renderHub() {
   $("coins").textContent = bigNum(career.coins);
   $("stars").textContent = bigNum(career.stars);
+  if (hubVenue < 0) { renderPracticeCard(); return; }
+  sceneVenue = hubVenue;
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
   buildVenue(v.id); setBoardDesign(career.board); // the clubhouse shows your own board
   venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
@@ -8247,12 +8271,12 @@ function renderHub() {
   const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? (VENUES[hubVenue + 1].soon ? "Court " + (hubVenue + 2) + " coming soon" : "to open Court " + (hubVenue + 2)) : "to finish the tour"}</span></div>`;
   // A carousel: this court in the middle, the previous and next ones peeking in at the sides. Swipe to move.
   // The side cards show the same top as the front card (centred label and name), so nothing jumps as they swipe in.
-  const peek = (i, cls) => i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
+  const peek = (i, cls) => i === -1 ? practicePeek(cls) : i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
   $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3>
     <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", v.wind[0] === v.wind[1] ? `${v.wind[0]}` : `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : v.soon ? `<div class="locked">🚧 Coming soon</div>` : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
-    <div class="vdots">${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
+    <div class="vdots"><i></i>${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
   fitChips($("venueCard")); document.fonts?.ready.then(() => fitChips($("venueCard")));
   $("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
@@ -8262,7 +8286,6 @@ function renderHub() {
   const noLives = false; // (no lives any more)
   play.disabled = !open || (!afford && !noLives);
   play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? (dailyReady() ? "NOT ENOUGH COINS · OPEN 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
-  $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
 // Game Center: your handle defaults to your Game Center name until you choose your own.
@@ -8305,7 +8328,7 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
     sw.dx = e.clientX - sw.x;
     if (!sw.on && Math.abs(sw.dx) > 8 && Math.abs(sw.dx) > Math.abs(e.clientY - sw.y)) { sw.on = true; car.classList.add("dragging"); car.setPointerCapture(sw.id); }
     if (!sw.on) return;
-    const edge = (sw.dx > 0 && hubVenue === 0) || (sw.dx < 0 && hubVenue === VENUES.length - 1);
+    const edge = (sw.dx > 0 && hubVenue === -1) || (sw.dx < 0 && hubVenue === VENUES.length - 1);
     const dx = edge ? sw.dx * 0.3 : sw.dx; // resist past the first and last court
     for (const c of car.querySelectorAll(".venue")) c.style.transform = `translateX(${dx}px)`;
   });
@@ -8315,7 +8338,7 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
     if (!s0.on) return;
     const dir = s0.dx < -50 ? 1 : s0.dx > 50 ? -1 : 0, to = hubVenue + dir;
     const w = (car.querySelector(".venue.cur") || car).offsetWidth + 8;
-    if (dir && to >= 0 && to < VENUES.length) {
+    if (dir && to >= -1 && to < VENUES.length) {
       for (const c of car.querySelectorAll(".venue")) c.style.transform = `translateX(${-dir * w}px)`;
       sfx.tick(); haptic("light");
       setTimeout(() => { hubVenue = to; renderHub(); }, 260);
@@ -8325,7 +8348,7 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
   // a click right after a swipe shouldn't also open a side court
   car.addEventListener("click", e => { if (car.classList.contains("dragging")) e.stopPropagation(); }, true);
 }
-$("passBtn").onclick = () => { initAudio(); openPractice(); };
+
 let shopTab = "bags";
 function swatch(item, kind) {
   const c = document.createElement("canvas"); c.width = 128; c.height = 128;
@@ -8583,8 +8606,10 @@ for (const [id, close] of [
   ["helpSheet", () => $("helpClose").click()],
   ["practiceSheet", () => { $("practiceSheet").hidden = true; }],
   ["pause", () => $("resumeBtn").click()],
+  ["livesSheet", () => { if ($("choiceNo")) $("choiceNo").click(); else $("livesSheet").hidden = true; }],
 ]) {
   const el = $(id); let downOnBackdrop = false;
+  if (id !== "pause") { const b = document.createElement("button"); b.className = "backbtn sheetback"; b.setAttribute("aria-label", "Back"); b.textContent = "‹"; b.onclick = close; el.appendChild(b); }
   el.addEventListener("pointerdown", e => { downOnBackdrop = e.target === el; });
   el.addEventListener("click", e => { if (e.target === el && downOnBackdrop) close(); downOnBackdrop = false; });
 }

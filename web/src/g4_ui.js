@@ -10,8 +10,7 @@ function camMode() {
   if (S.phase === "hub") return "intro";
   if (S.phase === "aiming") return "aim";
   if (S.phase === "throw") return "throw";
-  if (S.phase === "cpu") return S.cpuT < 0.6 ? "aim" : "throw";
-  if (S.phase === "remote") return "aim";
+  if (S.phase === "cpu" || S.phase === "remote") return "throw"; // the opponent's throw: the same view as yours
   if (S.phase === "flight") {
     const b = S.world.bags.find(x => x.id === S.lastId);
     if (b && b.state === "flying" && b.y < FY - 7) return "follow";
@@ -116,7 +115,9 @@ function updateCamera(dt) {
     tPos.set(rel.x * 0.25, narrow ? 7.4 : 6.6, -(FY - (narrow ? 3.0 : 3.6))); tLook.set(0, 0.3, -(FY + 2.15));
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
-    tPos.set(rel.x * 1.1, 6.2, 5.2); tLook.set(rel.x * 0.15, 0, -14); // arrow and ring near the bottom, board up the lane
+    // (the opponent's throws are seen from the same spot: behind your box)
+    const eye = isCPU(S.player) || isRemote(S.player) ? release(0) : rel;
+    tPos.set(eye.x * 1.1, 6.2, 5.2); tLook.set(eye.x * 0.15, 0, -14); // arrow and ring near the bottom, board up the lane
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
@@ -241,7 +242,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
-  panel.classList.toggle("slim", S.phase === "throw");
+  panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote"); // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
@@ -449,7 +450,8 @@ function dismissScorecard(dx, dy) {
 }
 
 // ───────────────────────── Clubhouse (career hub) and shop
-let hubVenue = career.venue || 0;
+let hubVenue = (() => { const open = VENUES.map((_, i) => i).filter(i => venueUnlocked(i)); return open.length ? open[Math.floor(Math.random() * open.length)] : 0; })(); // a random court you have open, each time the game opens
+let sceneVenue = hubVenue; // the court shown behind the clubhouse (the practice card keeps it)
 function openHub() {
   $("timeupMsg").hidden = true;
   $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true;
@@ -459,7 +461,7 @@ function openHub() {
   bbExit();
   S.phase = "hub"; S.world = new World(); clearBagMeshes(); S.end = null; S.plan = null; S.planVersion++;
   $("inningSheet").hidden = true; $("pause").hidden = true;
-  if (!venueUnlocked(hubVenue)) hubVenue = 0;
+  if (hubVenue >= 0 && !venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
   if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
@@ -472,11 +474,7 @@ let hubIdleT = null;
 const hubSheetOpen = () => [...document.querySelectorAll(".overlay")].some(o => o.id !== "hub" && !o.hidden);
 function hubWake() {
   $("hub").classList.remove("idle"); clearTimeout(hubIdleT);
-  hubIdleT = setTimeout(function idle() {
-    if ($("hub").hidden) return;
-    if (hubSheetOpen() || !$("tour").hidden) { hubIdleT = setTimeout(idle, 5000); return; } // not while a sheet or the tour is up
-    $("hub").classList.add("idle");
-  }, 5000);
+  // (the clubhouse no longer fades: the courts have their own page now, so nothing hides the view)
 }
 for (const type of ["pointerdown", "click"]) $("hub").addEventListener(type, e => {
   if ($("hub").classList.contains("idle")) { e.stopPropagation(); e.preventDefault(); if (type === "click") hubWake(); return; }
@@ -493,10 +491,24 @@ function fitChips(root) {
   }
   for (const b of bs) b.style.fontSize = min + "px"; // the whole row at one size
 }
+// The practice card: first in the courts carousel, free, alone or with friends on one phone.
+const practicePeek = cls => `<div class="venue side ${cls}" data-go="-1"><div class="lvlno">Free play</div><h3>Practice</h3></div>`;
+function renderPracticeCard() {
+  const v = VENUES[sceneVenue];
+  $("venueCard").innerHTML = `<div class="venue cur"><div class="lvlno">Free play</div><h3>Practice</h3>
+    <div class="muted" style="margin:6px 0 4px">No buy-in, no stars. Play alone or with friends on one phone.</div>
+    <button class="btn green go" id="playBtn">PRACTICE · FREE</button></div>${`<div class="venue side next" data-go="0"><div class="lvlno">Court 1 of ${VENUES.length}</div><h3>${esc(VENUES[0].name)}</h3></div>`}
+    <div class="vdots"><i class="on"></i>${VENUES.map(() => `<i></i>`).join("")}</div>`;
+  for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
+  $("playBtn").onclick = () => { initAudio(); openPractice(); };
+  renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
+}
 function short(n) { return bigNum(n); } // 1.5K, 2.3M ... one decimal
 function renderHub() {
   $("coins").textContent = bigNum(career.coins);
   $("stars").textContent = bigNum(career.stars);
+  if (hubVenue < 0) { renderPracticeCard(); return; }
+  sceneVenue = hubVenue;
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
   buildVenue(v.id); setBoardDesign(career.board); // the clubhouse shows your own board
   venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
@@ -504,12 +516,12 @@ function renderHub() {
   const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? (VENUES[hubVenue + 1].soon ? "Court " + (hubVenue + 2) + " coming soon" : "to open Court " + (hubVenue + 2)) : "to finish the tour"}</span></div>`;
   // A carousel: this court in the middle, the previous and next ones peeking in at the sides. Swipe to move.
   // The side cards show the same top as the front card (centred label and name), so nothing jumps as they swipe in.
-  const peek = (i, cls) => i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
+  const peek = (i, cls) => i === -1 ? practicePeek(cls) : i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
   $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3>
     <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", v.wind[0] === v.wind[1] ? `${v.wind[0]}` : `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : v.soon ? `<div class="locked">🚧 Coming soon</div>` : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
-    <div class="vdots">${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
+    <div class="vdots"><i></i>${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
   fitChips($("venueCard")); document.fonts?.ready.then(() => fitChips($("venueCard")));
   $("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
@@ -519,7 +531,6 @@ function renderHub() {
   const noLives = false; // (no lives any more)
   play.disabled = !open || (!afford && !noLives);
   play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? (dailyReady() ? "NOT ENOUGH COINS · OPEN 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
-  $("passBtn").disabled = !open;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
 // Game Center: your handle defaults to your Game Center name until you choose your own.
@@ -562,7 +573,7 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
     sw.dx = e.clientX - sw.x;
     if (!sw.on && Math.abs(sw.dx) > 8 && Math.abs(sw.dx) > Math.abs(e.clientY - sw.y)) { sw.on = true; car.classList.add("dragging"); car.setPointerCapture(sw.id); }
     if (!sw.on) return;
-    const edge = (sw.dx > 0 && hubVenue === 0) || (sw.dx < 0 && hubVenue === VENUES.length - 1);
+    const edge = (sw.dx > 0 && hubVenue === -1) || (sw.dx < 0 && hubVenue === VENUES.length - 1);
     const dx = edge ? sw.dx * 0.3 : sw.dx; // resist past the first and last court
     for (const c of car.querySelectorAll(".venue")) c.style.transform = `translateX(${dx}px)`;
   });
@@ -572,7 +583,7 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
     if (!s0.on) return;
     const dir = s0.dx < -50 ? 1 : s0.dx > 50 ? -1 : 0, to = hubVenue + dir;
     const w = (car.querySelector(".venue.cur") || car).offsetWidth + 8;
-    if (dir && to >= 0 && to < VENUES.length) {
+    if (dir && to >= -1 && to < VENUES.length) {
       for (const c of car.querySelectorAll(".venue")) c.style.transform = `translateX(${-dir * w}px)`;
       sfx.tick(); haptic("light");
       setTimeout(() => { hubVenue = to; renderHub(); }, 260);
@@ -582,7 +593,7 @@ $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) po
   // a click right after a swipe shouldn't also open a side court
   car.addEventListener("click", e => { if (car.classList.contains("dragging")) e.stopPropagation(); }, true);
 }
-$("passBtn").onclick = () => { initAudio(); openPractice(); };
+
 let shopTab = "bags";
 function swatch(item, kind) {
   const c = document.createElement("canvas"); c.width = 128; c.height = 128;
@@ -840,8 +851,10 @@ for (const [id, close] of [
   ["helpSheet", () => $("helpClose").click()],
   ["practiceSheet", () => { $("practiceSheet").hidden = true; }],
   ["pause", () => $("resumeBtn").click()],
+  ["livesSheet", () => { if ($("choiceNo")) $("choiceNo").click(); else $("livesSheet").hidden = true; }],
 ]) {
   const el = $(id); let downOnBackdrop = false;
+  if (id !== "pause") { const b = document.createElement("button"); b.className = "backbtn sheetback"; b.setAttribute("aria-label", "Back"); b.textContent = "‹"; b.onclick = close; el.appendChild(b); }
   el.addEventListener("pointerdown", e => { downOnBackdrop = e.target === el; });
   el.addEventListener("click", e => { if (e.target === el && downOnBackdrop) close(); downOnBackdrop = false; });
 }

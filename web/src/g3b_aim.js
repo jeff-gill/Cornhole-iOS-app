@@ -125,7 +125,11 @@ function rampColor(a, out) {
 }
 let aimFireT = 0, aimWedgeZone = -1;
 const wedgeTilt = new THREE.Group(); aimBase.add(wedgeTilt);
+// A see-through divider board between the two pitcher's boxes, so it's clear who throws from which side.
+const boxDivider = new THREE.Mesh(new THREE.BoxGeometry(0.14, 3, 6), new THREE.MeshStandardMaterial({ color: 0xc89a5a, roughness: 0.8, transparent: true, opacity: 0.35, depthWrite: false }));
+boxDivider.position.copy(W(0, 0.8, 1.5)); boxDivider.renderOrder = 5; scene.add(boxDivider);
 function updateAimRig(dt) {
+  boxDivider.visible = S.phase !== "hub" && S.kind !== "bullseye";
   const throwing = (S.phase === "throw" || (S.phase === "cpu" && S.cpuT > 0.9 && S.cpuErr)) && S.ideal; // yours, or the computer's wind-up
   if (!throwing && aimFireT <= 0) { aimRig.visible = false; return; }
   aimRig.visible = true;
@@ -134,7 +138,7 @@ function updateAimRig(dt) {
   const rel = release(S.player), to = S.landing || HOLE, d = Math.hypot(to.x - rel.x, to.y - rel.y);
   // along the real launch line (it aims into the wind), so the green zone shows where to point
   const dir = S.ideal ? { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) } : { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
-  const ahead = handFloor() > 0 ? 1.2 : 5.9; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
+  const ahead = handFloor() > 0 ? 1.2 : 5.3; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
   // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
   aimRig.rotation.x = handFloor() > 0 ? -Math.atan2(handFloor() - surf(to), Math.max(1, d - ahead)) : 0;

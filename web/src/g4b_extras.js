@@ -26,7 +26,7 @@ function renderHubExtras() {
   const cooler = $("cooler"); cooler.innerHTML = "";
   const slots = COOLER_SIZE;
   const waiting = career.canBacklog?.length || 0;
-  $("coolerHead").textContent = waiting ? `PRIZE COOLER · ${waiting} waiting` : "PRIZE COOLER";
+  $("coolerHead").innerHTML = waiting ? `PRIZE COOLER<span class="qbadge">+${waiting} waiting in line</span>` : "PRIZE COOLER";
   for (let i = 0; i < slots; i++) {
     const c = career.cans[i], b = document.createElement("button");
     if (c) {
@@ -545,9 +545,8 @@ const TOUR = [
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
-  ["#throwBagsBtn", "Throw bags", "Pick a court and find an opponent."],
+  ["#throwBagsBtn", "Throw bags", "Pick a court and find an opponent. Practice, free, is the first card."],
   ["#rankBtn", "Rankings", "See how you stack up on the leaderboards."],
-  ["#passBtn", "Practice", "Play for free, alone or with friends on one phone."],
   ["#navbar", "Menu", "The Store, your bags and boards, home, and settings (with How to Play) are always down here."],
 ];
 let tourAt = -1;
