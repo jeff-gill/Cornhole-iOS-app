@@ -686,10 +686,11 @@ function finishMatch() {
   if (won) career.wins++; else career.losses++;
   career.loseStreak = won ? 0 : (career.loseStreak || 0) + 1;
   career.winStreak = won ? (career.winStreak || 0) + 1 : 0;
-  // a rough patch (10 losses in a row, or 7 of the last 10): the clubhouse offers to trade stars for coins
+  // a rough patch (10 losses in a row, or 8 of the last 10, checked only after a loss): the clubhouse offers to trade
+  // stars for coins
   (career.recent ||= []).push(won ? 1 : 0); if (career.recent.length > 10) career.recent.shift();
   career.roughLosses = won ? 0 : (career.roughLosses || 0) + 1;
-  if (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 7) career.roughOffer = S.venue;
+  if (!won && (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 8)) career.roughOffer = S.venue;
   const newly = updateUnlocks();
   save();
   addSeasonPoints(won ? starsForWin(S.venue) : 1);

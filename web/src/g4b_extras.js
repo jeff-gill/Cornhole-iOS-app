@@ -146,10 +146,12 @@ function showChoice(html, yes, onYes, no = "CANCEL", onNo = null, yesClass = "gr
 // your highest other courts (courts you've opened stay open). Yes or no, the count starts over.
 function offerStarTrade() {
   const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden) return;
-  const v = VENUES[vi], want = 3 * v.loss, stars = Math.min(want, career.stars), coins = Math.round(5 * v.fee * stars / want);
+  // coins: 4 buy-ins of the middle court you have open (rounded down), a nudge toward easier courts
+  const open = VENUES.filter((_, i) => venueUnlocked(i)).length, mid = VENUES[Math.max(0, Math.floor((open + 1) / 2) - 1)];
+  const v = VENUES[vi], want = 3 * v.loss, stars = Math.min(want, career.stars), coins = Math.round(4 * mid.fee * stars / want);
   const reset = () => { career.roughOffer = null; career.roughLosses = 0; career.recent = []; save(); renderHub(); };
   if (stars < 1) { reset(); return; }
-  showChoice(`<div class="lifebig">🤝</div><h2>Rough patch?</h2><div class="muted">It happens to everyone. Trade <b>${stars} ⭐</b> for <b><i class="coin"></i> ${short(coins)}</b> to keep playing. This offer only comes after a run of losses.</div>`,
+  showChoice(`<div class="lifebig">🤝</div><h2>Rough patch?</h2><div class="muted">It happens to everyone. Trade <b>${stars} ⭐</b> for <b><i class="coin"></i> ${short(coins)}</b> to keep playing. An easier court like <b>${mid.name}</b> might be a good place to get back on track.</div>`,
     "TRADE", () => {
       let left = stars;
       for (const i of [vi, ...VENUES.map((_, k) => k).reverse()]) { const id = VENUES[i].id, have = career.courtStars[id] || 0, take = Math.min(have, left); if (take > 0) { career.courtStars[id] = have - take; left -= take; } if (!left) break; }

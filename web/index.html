@@ -2108,10 +2108,11 @@ function finishMatch() {
   if (won) career.wins++; else career.losses++;
   career.loseStreak = won ? 0 : (career.loseStreak || 0) + 1;
   career.winStreak = won ? (career.winStreak || 0) + 1 : 0;
-  // a rough patch (10 losses in a row, or 7 of the last 10): the clubhouse offers to trade stars for coins
+  // a rough patch (10 losses in a row, or 8 of the last 10, checked only after a loss): the clubhouse offers to trade
+  // stars for coins
   (career.recent ||= []).push(won ? 1 : 0); if (career.recent.length > 10) career.recent.shift();
   career.roughLosses = won ? 0 : (career.roughLosses || 0) + 1;
-  if (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 7) career.roughOffer = S.venue;
+  if (!won && (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 8)) career.roughOffer = S.venue;
   const newly = updateUnlocks();
   save();
   addSeasonPoints(won ? starsForWin(S.venue) : 1);
@@ -3049,7 +3050,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795182555`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795182783`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4563,7 +4564,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795182555`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795182783`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4574,7 +4575,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795182555`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795182783`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6558,10 +6559,12 @@ function showChoice(html, yes, onYes, no = "CANCEL", onNo = null, yesClass = "gr
 // your highest other courts (courts you've opened stay open). Yes or no, the count starts over.
 function offerStarTrade() {
   const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden) return;
-  const v = VENUES[vi], want = 3 * v.loss, stars = Math.min(want, career.stars), coins = Math.round(5 * v.fee * stars / want);
+  // coins: 4 buy-ins of the middle court you have open (rounded down), a nudge toward easier courts
+  const open = VENUES.filter((_, i) => venueUnlocked(i)).length, mid = VENUES[Math.max(0, Math.floor((open + 1) / 2) - 1)];
+  const v = VENUES[vi], want = 3 * v.loss, stars = Math.min(want, career.stars), coins = Math.round(4 * mid.fee * stars / want);
   const reset = () => { career.roughOffer = null; career.roughLosses = 0; career.recent = []; save(); renderHub(); };
   if (stars < 1) { reset(); return; }
-  showChoice(`<div class="lifebig">🤝</div><h2>Rough patch?</h2><div class="muted">It happens to everyone. Trade <b>${stars} ⭐</b> for <b><i class="coin"></i> ${short(coins)}</b> to keep playing. This offer only comes after a run of losses.</div>`,
+  showChoice(`<div class="lifebig">🤝</div><h2>Rough patch?</h2><div class="muted">It happens to everyone. Trade <b>${stars} ⭐</b> for <b><i class="coin"></i> ${short(coins)}</b> to keep playing. An easier court like <b>${mid.name}</b> might be a good place to get back on track.</div>`,
     "TRADE", () => {
       let left = stars;
       for (const i of [vi, ...VENUES.map((_, k) => k).reverse()]) { const id = VENUES[i].id, have = career.courtStars[id] || 0, take = Math.min(have, left); if (take > 0) { career.courtStars[id] = have - take; left -= take; } if (!left) break; }
