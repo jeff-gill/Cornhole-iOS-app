@@ -116,7 +116,10 @@ function updateCamera(dt) {
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
     // straight behind whoever is throwing: their aim circle in the middle, the target board up the lane ahead
-    tPos.set(rel.x * 0.8, 7.2, 9.5); tLook.set(rel.x * 0.8, 0, -13);
+    // on the line from the thrower's aim circle to the target: the circle sits dead centre, and the view angles in from
+    // their side of the board
+    const tgt = S.landing || HOLE, az0 = S.ideal ? S.ideal.az : Math.atan2(tgt.x - rel.x, tgt.y - rel.y), ax = rel.x + Math.sin(az0) * 0.6, ay = rel.y + Math.cos(az0) * 0.6, ux0 = tgt.x - ax, uy0 = tgt.y - ay, ul = Math.hypot(ux0, uy0) || 1, ux = ux0 / ul, uy = uy0 / ul;
+    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 14, 0, -(ay + uy * 14));
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);

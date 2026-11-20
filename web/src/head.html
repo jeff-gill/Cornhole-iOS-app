@@ -648,6 +648,8 @@ s.was { opacity: .6; font-size: .8em; }
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
 body.inhub .overlay.page > .sheet { max-width: 560px; width: 100%; margin: 0 auto; border: none; box-shadow: none; background: none; padding: 6px 4px 12px; max-height: 100%; }
 body.inhub .overlay.page .sheetback { transform: none; }
+body.inhub .overlay:not(.page):not(#hub) { z-index: 30; } /* pop-ups always open on top of a page */
+#avatarSheet .ptabs { position: sticky; top: -6px; z-index: 5; background: #14254a; box-shadow: 0 -30px 0 18px var(--deck-2), 0 6px 10px rgba(6,12,24,.5); }
 body.inhub .overlay.page:not(.noback) > .sheet { padding-top: 54px; }
 body.inhub .overlay.page.noback .sheetback { display: none; }
 body.inhub #shop .items { padding-bottom: 12px; }

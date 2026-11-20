@@ -656,6 +656,8 @@ s.was { opacity: .6; font-size: .8em; }
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
 body.inhub .overlay.page > .sheet { max-width: 560px; width: 100%; margin: 0 auto; border: none; box-shadow: none; background: none; padding: 6px 4px 12px; max-height: 100%; }
 body.inhub .overlay.page .sheetback { transform: none; }
+body.inhub .overlay:not(.page):not(#hub) { z-index: 30; } /* pop-ups always open on top of a page */
+#avatarSheet .ptabs { position: sticky; top: -6px; z-index: 5; background: #14254a; box-shadow: 0 -30px 0 18px var(--deck-2), 0 6px 10px rgba(6,12,24,.5); }
 body.inhub .overlay.page:not(.noback) > .sheet { padding-top: 54px; }
 body.inhub .overlay.page.noback .sheetback { display: none; }
 body.inhub #shop .items { padding-bottom: 12px; }
@@ -3125,7 +3127,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795216287`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795216614`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4639,7 +4641,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795216287`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795216614`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4650,7 +4652,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795216287`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795216614`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6276,11 +6278,11 @@ function updateAimRig(dt) {
   const dir = S.ideal ? { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) } : { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
   const ahead = handFloor() > 0 ? 1.2 : 0.6; // at your hand, beside your own board (the arrow angles from there to the target) // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
-  aimRig.scale.setScalar(handFloor() > 0 ? 1 : 0.8); // (close to the camera now, so a touch smaller)
+  aimRig.scale.setScalar(1);
   // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
   aimRig.rotation.x = handFloor() > 0 ? -Math.atan2(handFloor() - surf(to), Math.max(1, d - ahead)) : 0;
   aimBase.rotation.y = -Math.atan2(dir.x, dir.y);
-  if (handFloor() <= 0) aimOnArc(); // on screen, the flight line runs straight up the middle of the green wedge
+  // (the throw camera now sits on the line from the circle to the target, so the circle stays dead centre)
   // Perfect-direction wedge.
   if (aimWedgeZone !== L.zone) {
     aimWedgeZone = L.zone;
@@ -7933,7 +7935,10 @@ function updateCamera(dt) {
   } else if (mode === "throw") {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
     // straight behind whoever is throwing: their aim circle in the middle, the target board up the lane ahead
-    tPos.set(rel.x * 0.8, 7.2, 9.5); tLook.set(rel.x * 0.8, 0, -13);
+    // on the line from the thrower's aim circle to the target: the circle sits dead centre, and the view angles in from
+    // their side of the board
+    const tgt = S.landing || HOLE, az0 = S.ideal ? S.ideal.az : Math.atan2(tgt.x - rel.x, tgt.y - rel.y), ax = rel.x + Math.sin(az0) * 0.6, ay = rel.y + Math.cos(az0) * 0.6, ux0 = tgt.x - ax, uy0 = tgt.y - ay, ul = Math.hypot(ux0, uy0) || 1, ux = ux0 / ul, uy = uy0 / ul;
+    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 14, 0, -(ay + uy * 14));
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
