@@ -144,8 +144,9 @@ function updateAimRig(dt) {
   const rel = release(S.player), to = S.landing || HOLE, d = Math.hypot(to.x - rel.x, to.y - rel.y);
   // along the real launch line (it aims into the wind), so the green zone shows where to point
   const dir = S.ideal ? { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) } : { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
-  const ahead = handFloor() > 0 ? 1.2 : 5.3; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
+  const ahead = handFloor() > 0 ? 1.2 : 0.6; // at your hand, beside your own board (the arrow angles from there to the target) // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
+  aimRig.scale.setScalar(handFloor() > 0 ? 1 : 0.8); // (close to the camera now, so a touch smaller)
   // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
   aimRig.rotation.x = handFloor() > 0 ? -Math.atan2(handFloor() - surf(to), Math.max(1, d - ahead)) : 0;
   aimBase.rotation.y = -Math.atan2(dir.x, dir.y);
