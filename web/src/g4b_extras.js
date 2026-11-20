@@ -33,9 +33,8 @@ function renderHubExtras() {
       const k = canById(c.id), st = canState(c);
       b.className = `cslot full ${st}`;
       b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "locked, tap to unlock"}`);
-      // the can on the left with its name stacked and centred beside it; what it's doing in a bar along the whole bottom
-      b.innerHTML = `${canPic(c.id)}<span class="cinfo"><span class="cname">${k.name.split(" ").join("<br>")}</span>${st === "idle" ? `<span class="cdur">${durText(openMs(c.id))}</span>` : ""}</span>
-        <span class="cbar">${st === "ready" ? "OPEN!" : st === "ticking" ? `⏱ ${timeText(canLeft(c))}` : "🔒 UNLOCK"}</span>`;
+      // just the can, big and centred; what it's doing in a bar along the bottom (locked shows how long it takes)
+      b.innerHTML = `${canPic(c.id)}<span class="cbar">${st === "ready" ? "OPEN!" : st === "ticking" ? `⏱ ${timeText(canLeft(c))}` : `🔒 ${durText(openMs(c.id))}`}</span>`;
       b.onclick = () => canTapped(i);
     } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
     cooler.appendChild(b);

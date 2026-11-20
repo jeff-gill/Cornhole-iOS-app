@@ -651,6 +651,10 @@ s.was { opacity: .6; font-size: .8em; }
 .starsunder b { font-family: var(--font-display); font-weight: 400; font-size: 15px; }
 .backbtn { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#2b4a80, #12203a); color: #fff; font: 400 34px/1 var(--font-display); padding: 0 0 4px; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
 #hub .onhome .cooler .cslot { height: 100px; font-size: 13px; }
+.cslot.full { display: flex !important; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px 0 0 !important; }
+.cslot.full .canpic { height: 62px !important; margin: 0 !important; }
+.cslot.full .cbar { align-self: stretch; margin: 0 !important; font-size: 14px !important; padding: 4px 2px !important; }
+@media (max-height: 720px) { .cslot.full .canpic { height: 46px !important; } .cslot.full .cbar { font-size: 12px !important; } }
 @media (max-height: 720px) { #hub .onhome .cooler .cslot { height: 80px; } }
 .coolerhead .qbadge { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: var(--gold); color: #1b2233; font: 900 12px/1.2 Nunito, system-ui, sans-serif; letter-spacing: 0; text-shadow: none; vertical-align: middle; }
 .backbtn.sheetback { position: fixed; top: max(14px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); transform: translate(-30%, -30%); z-index: 60; }
@@ -3131,7 +3135,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795216614`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795216982`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4645,7 +4649,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795216614`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795216982`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4656,7 +4660,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795216614`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795216982`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6553,9 +6557,8 @@ function renderHubExtras() {
       const k = canById(c.id), st = canState(c);
       b.className = `cslot full ${st}`;
       b.setAttribute("aria-label", `${k.name}: ${st === "ready" ? "ready to open" : st === "ticking" ? "opening" : "locked, tap to unlock"}`);
-      // the can on the left with its name stacked and centred beside it; what it's doing in a bar along the whole bottom
-      b.innerHTML = `${canPic(c.id)}<span class="cinfo"><span class="cname">${k.name.split(" ").join("<br>")}</span>${st === "idle" ? `<span class="cdur">${durText(openMs(c.id))}</span>` : ""}</span>
-        <span class="cbar">${st === "ready" ? "OPEN!" : st === "ticking" ? `⏱ ${timeText(canLeft(c))}` : "🔒 UNLOCK"}</span>`;
+      // just the can, big and centred; what it's doing in a bar along the bottom (locked shows how long it takes)
+      b.innerHTML = `${canPic(c.id)}<span class="cbar">${st === "ready" ? "OPEN!" : st === "ticking" ? `⏱ ${timeText(canLeft(c))}` : `🔒 ${durText(openMs(c.id))}`}</span>`;
       b.onclick = () => canTapped(i);
     } else { b.className = "cslot"; b.setAttribute("aria-label", "Empty cooler slot"); b.onclick = () => showInfo(cansInfoHTML()); }
     cooler.appendChild(b);
