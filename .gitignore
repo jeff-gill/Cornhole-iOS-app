@@ -4,3 +4,4 @@ DerivedData/
 *.xcuserstate
 build/
 build/
+web/sim.html
