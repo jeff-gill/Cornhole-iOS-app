@@ -117,7 +117,7 @@ function updateCamera(dt) {
     // Behind the thrower's hand in their pitcher's box, looking down their real line to the board.
     // (the opponent's throws are seen from the same spot: behind your box)
     const eye = isCPU(S.player) || isRemote(S.player) ? release(0) : rel;
-    tPos.set(eye.x * 1.1, 6.6, 7.4); tLook.set(eye.x * 0.15, 0, -14); // far enough back to see your own board beside you // arrow and ring near the bottom, board up the lane
+    tPos.set(0, 7.6, 10.5); tLook.set(0, 0, -13); // centred behind your own board, like a batter's box: your board at the bottom, a throwing spot either side // arrow and ring near the bottom, board up the lane
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
