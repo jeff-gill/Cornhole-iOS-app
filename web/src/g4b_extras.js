@@ -185,8 +185,14 @@ function renderProfile() {
   $("ptabAvatar").hidden = ptab !== "avatar"; $("ptabProfile").hidden = ptab !== "profile"; $("ptabSettings").hidden = ptab !== "settings";
   if (ptab === "avatar") {
     const grid = $("avatarGrid"); grid.innerHTML = "";
-    const gcb = $("useGcPhoto"); gcb.hidden = !gcPhoto || career.avatar === "gc"; // your Game Center picture, outside the even grid
-    gcb.onclick = () => { career.avatar = "gc"; career.avatarSet = true; save(); renderProfile(); renderHubExtras(); };
+    $("useGcPhoto").hidden = true;
+    if (gcPhoto) { // your Game Center picture first, so you can always go back to it
+      const b = document.createElement("button");
+      b.className = "avpick" + (career.avatar === "gc" ? " on" : "");
+      b.innerHTML = avatarHTML("gc") + `<small>Game Center</small>`;
+      b.onclick = () => { career.avatar = "gc"; career.avatarSet = true; save(); renderProfile(); renderHubExtras(); };
+      grid.appendChild(b);
+    }
     for (const a of AVATARS) {
       const open = avatarOpen(a), b = document.createElement("button");
       b.className = "avpick" + (career.avatar === a.id ? " on" : "") + (open ? "" : " avlock");
