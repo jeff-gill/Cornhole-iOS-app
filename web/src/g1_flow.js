@@ -169,7 +169,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
+const fresh = () => ({ coins: 500, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 // The time used for every timer and daily reward. In the iPhone app this is the app's own trusted clock (network
 // time, carried forward with the phone's uptime), so setting the phone's clock forward doesn't skip a wait.
