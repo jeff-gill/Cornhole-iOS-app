@@ -64,7 +64,7 @@ function bbToday() {
       const p = { x: (r() * 2 - 1) * (HWb - 0.27), y, angle: r() * 6 };
       if (clear(p)) { bags.push(p); k++; }
     }
-    modes[m] = { dist: 27, wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags };
+    modes[m] = { dist: 27, wind: Math.round(hard ? 3 + gust * 2 : gust * 2), bags };
   }
   const sunday = homeDate().getUTCDay() === 0; // Hole-in-One Sunday: the hole also wins the exclusive bag
   return (bbToday.cache = { key, scene, side, weather, board, windDir, modes, sunday });
@@ -226,7 +226,7 @@ function bbRenderLegend() {
   el.innerHTML = `<h4>Today's prizes <small>${5 - bbWon(mode).length} left</small></h4>${bbPrizeRows(mode)}<p>⭐ Star bag in the hole: <b>x2</b></p>`;
 }
 const markerScale = () => 1;
-const bbPanelTag = () => BB.active ? `Bullseye · ${BB.active.mode === "hard" ? "Harder" : "Easier"}` : ""; // (no court name: it's just a standard court with a different view each day)
+const bbPanelTag = () => BB.active ? `Bullseye · ${BB.active.mode === "hard" ? "Harder" : "Easier"} <button class="btn small blue" id="bbMoreBtn" onclick="bbBuyPopup()">+ THROWS</button>` : ""; // (no court name: it's just a standard court with a different view each day)
 
 // Back to the regular court (on the way back to the clubhouse, or before any match).
 function bbExit() {
@@ -474,6 +474,15 @@ function bbBuyRow() {
   const price = id => storePrices[id] || STORE.find(x => x.id === id).price;
   return `<div class="bbbuy">${BB_STORE.map(id => { const it = STORE.find(x => x.id === id); return `<button class="btn blue" data-bbbuy="${id}" ${pendingBuy === id ? "disabled" : ""}><b>${it.throws}</b> throw${it.throws > 1 ? "s" : ""}<small>${pendingBuy === id ? "…" : price(id)}</small></button>`; }).join("")}</div>`;
 }
+function bbBuyPopup(msg = "") {
+  const extra = bbState().extra || 0;
+  showInfo(`<h2>🎯 More throws</h2><div class="muted">${extra ? `You have ${extra} extra throw${extra > 1 ? "s" : ""}.` : "Buy extra Bullseye throws for today's challenge."}</div>${bbBuyRow()}${msg ? `<div class="muted center">${esc(msg)}</div>` : ""}`);
+  for (const b of $("livesBody").querySelectorAll("[data-bbbuy]")) b.onclick = () => {
+    if (!canBuy()) { bbBuyPopup("Purchases are available in the iPhone app."); return; }
+    pendingBuy = b.dataset.bbbuy; postNative("purchase", pendingBuy); bbBuyPopup();
+  };
+}
+window.bbBuyPopup = bbBuyPopup; // (the throw screen's button)
 function bbWireBuy(rerender) {
   for (const b of $("bbBody").querySelectorAll("[data-bbbuy]")) b.onclick = () => {
     if (!canBuy()) { rerender("Purchases are available in the iPhone app."); return; }

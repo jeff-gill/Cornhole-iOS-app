@@ -244,6 +244,9 @@ body.inhub .score, body.inhub #panel { display: none; }
 .btn.nope, .btn.nope:disabled { background: linear-gradient(#7a8194, #565d6e); box-shadow: 0 5px 0 #2c313d, inset 0 2px 0 rgba(255,255,255,.18); color: #d6dbe6; opacity: .8; pointer-events: none; text-shadow: none; font-size: 16px !important; white-space: normal; line-height: 1.15; }
 .btn.green { background: linear-gradient(#7af0a3, var(--go) 50%, var(--go-dark)); box-shadow: 0 5px 0 #075c2b, inset 0 2px 0 rgba(255,255,255,.35); }
 .pullpad { display: flex; align-items: center; gap: 14px; }
+#panel.slim { min-height: 0 !important; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+#panel.slim .pullpad .bag { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; }
+#panel.slim .pullpad .big { font-size: 18px; }
 .pullpad .bag { width: 64px; height: 64px; flex: none; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--font-display); font-size: 26px; }
 .big { font-family: var(--font-display); font-size: 22px; font-weight: 400; line-height: 1.1; }
 .feedback { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -625,6 +628,23 @@ s.was { opacity: .6; font-size: .8em; }
 .venue .prev { left: -14px; } .venue .next { right: -14px; }
 .locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 20px; line-height: 1.25; pointer-events: none; }
 .hubrow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.hubrow.two { grid-template-columns: 1fr 1fr; }
+/* Pages of the clubhouse: home (perks, cooler, THROW BAGS) and courts (just the court cards). The top and bottom bars stay. */
+#hub.page-home .oncourts, #hub.page-courts .onhome { display: none !important; }
+.hubtop { align-items: flex-start; }
+.mecol { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.hubtop .mecol .avatarbtn { width: 56px; height: 56px; }
+.starsunder { font: 900 13px/1 Nunito, system-ui, sans-serif; background: rgba(10,20,38,.75); border: 2px solid rgba(255,255,255,.7); border-radius: 999px; padding: 2px 8px; color: #fff; }
+.starsunder b { font-family: var(--font-display); font-weight: 400; font-size: 15px; }
+.backbtn { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#2b4a80, #12203a); color: #fff; font: 400 34px/1 var(--font-display); padding: 0 0 4px; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+.throwbtn { width: 100%; font-size: 30px; padding: 14px; letter-spacing: .04em; }
+.courtshead { position: relative; text-align: center; margin-top: 18px; font-family: var(--font-display); font-size: 26px; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.navbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 6px 4px calc(4px + env(safe-area-inset-bottom, 0px)); margin: 4px -8px 0; background: linear-gradient(#1d3563, #0e1a33); border-top: 3px solid #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 0 rgba(0,0,0,.25); }
+.navbar button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; border: none; background: none; color: var(--ink-dim); }
+.navbar .nic { width: 46px; height: 40px; display: grid; place-items: center; font-size: 24px; border-radius: 12px; border: 2px solid rgba(255,255,255,.5); background: linear-gradient(#2b4a80, #16284a); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.navbar small { font: 900 10px/1 Nunito, system-ui, sans-serif; letter-spacing: .04em; white-space: nowrap; }
+.navbar button.on { color: #fff; } .navbar button.on .nic { border-color: #fff; background: linear-gradient(#ffd84a, #f0a020); transform: translateY(-3px); }
+.navbar .nbadge { position: absolute; top: 0; right: calc(50% - 26px); }
 .btn.small { font-size: 15px; padding: 10px 4px; }
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff1a8); }
@@ -827,30 +847,40 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">__GAME_TAGLINE__</div>
 </div>
-<div class="overlay" id="hub">
+<div class="overlay page-home" id="hub">
   <div class="hubhead">
     <div class="hubtop">
-      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button></div>
-      <div class="hubright"><button class="pill cappill" id="coinsBtn"><i class="coin"></i><b id="coins">0</b></button><button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button><div class="pill" id="starsPill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
+      <button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button>
+      <div class="mecol"><button class="avatarbtn" id="avatarBtn" aria-label="Your profile"></button><div class="starsunder" id="starsPill">⭐ <b id="stars">0</b></div></div>
+      <button class="pill cappill" id="coinsBtn"><i class="coin"></i><b id="coins">0</b></button>
     </div>
-    <div class="hubtitle" id="hubTitle">__GAME_TITLE_HTML__</div>
-    <div class="gcname" id="gcName" hidden></div>
-    <button class="seasonbadge" id="seasonBtn"></button>
-    <div class="hubperks">
-      <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
-      <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
+    <div class="onhome">
+      <div class="hubtitle" id="hubTitle">__GAME_TITLE_HTML__</div>
+      <div class="gcname" id="gcName" hidden></div>
+      <button class="seasonbadge" id="seasonBtn"></button>
+      <div class="hubperks">
+        <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
+        <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
+      </div>
     </div>
+    <div class="oncourts courtshead"><button class="backbtn" id="courtsBack" aria-label="Back">‹</button><b>CHOOSE A COURT</b></div>
   </div>
   <div class="hubbottom">
-    <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
-    <div class="cooler" id="cooler"></div>
-    <div class="vcarousel" id="venueCard"></div>
-    <div class="hubrow">
-      <button class="btn small" id="shopBtn">SHOP<i class="nbadge" id="shopBadge" hidden></i></button>
-      <button class="btn small" id="passBtn">PRACTICE</button>
-      <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
+    <div class="onhome">
+      <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
+      <div class="cooler" id="cooler"></div>
+      <button class="btn green throwbtn" id="throwBagsBtn">THROW BAGS</button>
+      <div class="hubrow two"><button class="btn small" id="rankBtn">🏆 RANKINGS</button><button class="btn small" id="passBtn">PRACTICE</button></div>
     </div>
-    
+    <div class="oncourts">
+      <div class="vcarousel" id="venueCard"></div>
+    </div>
+    <nav class="navbar" id="navbar">
+      <button data-nav="store"><span class="nic">🛒</span><small>STORE</small><i class="nbadge" id="shopBadge" hidden></i></button>
+      <button data-nav="gear"><span class="nic">🎒</span><small>BAGS &amp; BOARDS</small><i class="nbadge" id="gearBadge" hidden></i></button>
+      <button data-nav="home" class="on"><span class="nic">🏠</span><small>HOME</small></button>
+      <button data-nav="settings"><span class="nic">⚙️</span><small>SETTINGS</small></button>
+    </nav>
   </div>
 </div>
 
@@ -923,7 +953,7 @@ s.was { opacity: .6; font-size: .8em; }
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins: 11 at Backyard BBQ, 2 more at each court after, up to 21. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
-      <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
+      <p><b>Wind.</b> Wind bends the bag in flight. The green aiming guide already allows for it, so throw down the middle of the green.
       <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>

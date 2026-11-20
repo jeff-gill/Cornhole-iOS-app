@@ -149,14 +149,14 @@ const WELCOME_MS = 3 * 86400000;
 function welcomeLeft() { if (career.firstSeen == null) { career.firstSeen = clockNow(); save(); } return career.firstSeen + WELCOME_MS - clockNow(); }
 function offerWelcome() {
   const it = STORE.find(x => x.id === PID("starterpack"));
-  if (!it || career.purchases.includes(it.id) || welcomeLeft() <= 0 || career.welcomeDay === bbDay() || !(career.wins + career.losses) || !$("livesSheet").hidden) return;
+  if (S.phase !== "hub" || $("hub").hidden || !it || career.purchases.includes(it.id) || welcomeLeft() <= 0 || career.welcomeDay === bbDay() || !(career.wins + career.losses) || !$("livesSheet").hidden) return;
   career.welcomeDay = bbDay(); save();
   showChoice(`<div class="lifebig">🎁</div><h2>Welcome Pack</h2><div class="muted"><b>${it.blurb}</b></div>
     <div class="big center" style="margin-top:8px"><s style="opacity:.6">${it.value}</s> <b style="color:var(--gold)">${storePrices[it.id] || it.price}</b> · ${it.off}% OFF</div><div class="muted center">Only for new players · ends in ${timeText(welcomeLeft())}</div>`,
     "GET IT", () => { shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; buy(it.id); }, "NOT NOW");
 }
 function offerStarTrade() {
-  const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden) return;
+  const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden || S.phase !== "hub" || $("hub").hidden) return;
   // coins: 4 buy-ins of the middle court you have open (rounded down), a nudge toward easier courts
   const open = VENUES.filter((_, i) => venueUnlocked(i)).length, mid = VENUES[Math.max(0, Math.floor((open + 1) / 2) - 1)];
   const v = VENUES[vi], want = 3 * v.loss, stars = Math.min(want, career.stars), coins = Math.round(4 * mid.fee * stars / want);
@@ -232,7 +232,7 @@ function renderProfile() {
   }
 }
 for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
-$("avatarBtn").onclick = () => openAvatars("settings"); // settings first
+$("avatarBtn").onclick = () => openAvatars("profile"); // your profile and stats
 $("avatarClose").onclick = () => { $("avatarSheet").hidden = true; renderHub(); };
 
 // ── Opening a can: tap, it shakes, the tab pops, a mist sprays out and the prizes come out one at a time.
@@ -538,19 +538,17 @@ function renderPractice() {
 // It can be skipped at any step; either way it ends by saying where to find How to Play & Rules and the tour again.
 const TOUR = [
   [null, "👋 Welcome!", "Here's a quick look around the clubhouse. You can skip it any time."],
-  ["#avatarBtn", "Your avatar", "Tap it for <b>Settings</b>, your avatar and your profile. How to Play & Rules is in Settings."],
-    ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot. Spend them in the shop."],
+  ["#avatarBtn", "You", "Tap your avatar for your profile and stats. Your stars are underneath: win matches to earn them, and fill a court's stars to open the next court."],
+  ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot."],
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away."],
-  ["#starsPill", "Stars", "Win matches to earn stars. Fill a court's stars to open the next court."],
-  ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
+  ["#seasonBtn", "Your rank", "Your title and points this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
-  ["#venueCard .venue.cur", "Courts", "Swipe to see each court: its buy-in, payout, stars and wind."],
-  ["#playBtn", "Play", "Find an opponent at this court and start a match."],
-  ["#shopBtn", "Shop", "Bags, boards, throw effects and more."],
-  ["#passBtn", "Practice", "Play for free, alone or with friends on one phone."],
+  ["#throwBagsBtn", "Throw bags", "Pick a court and find an opponent."],
   ["#rankBtn", "Rankings", "See how you stack up on the leaderboards."],
+  ["#passBtn", "Practice", "Play for free, alone or with friends on one phone."],
+  ["#navbar", "Menu", "The Store, your bags and boards, home, and settings (with How to Play) are always down here."],
 ];
 let tourAt = -1;
 function startTour(again) {
@@ -561,7 +559,7 @@ function endTour() {
   career.tourDone = true; save(); tourAt = -1;
   $("tourSpot").style.display = "none"; $("tour").classList.add("dim");
   const card = $("tourCard"); card.style.left = card.style.top = ""; card.classList.add("mid");
-  card.innerHTML = `<h3>You're all set!</h3><p>You can find <b>How to Play & Rules</b> and this tour any time in <b>Settings</b>: tap your avatar in the top-left corner.</p><button class="btn green" id="tourDone">LET'S PLAY</button>`;
+  card.innerHTML = `<h3>You're all set!</h3><p>You can find <b>How to Play & Rules</b> and this tour any time in <b>Settings</b>, at the bottom right.</p><button class="btn green" id="tourDone">LET'S PLAY</button>`;
   $("tourDone").onclick = () => { $("tour").hidden = true; };
 }
 function showTourStep() {

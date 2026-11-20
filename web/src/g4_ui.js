@@ -241,6 +241,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
+  panel.classList.toggle("slim", S.phase === "throw");
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
@@ -250,7 +251,7 @@ function ui() {
   const side = SIDES[S.player] < 0 ? "Left box" : "Right box";
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${whoName(S.player)} throw</div>`;
   if (S.phase === "aiming") {
-    let plan = `<div class="muted">Tap the board where you want your bag to end up, then drag the yellow ring to pick where it lands first. The guide ignores wind.</div>`;
+    let plan = `<div class="muted">Tap the board where you want your bag to end up, then drag the yellow ring to pick where it lands first. The green guide already allows for the wind.</div>`;
     if (S.ideal) {
       const spin = Math.abs(S.ideal.spin) < 0.05 ? "None" : (S.ideal.spin > 0 ? "Right " : "Left ") + Math.round(Math.abs(S.ideal.spin) * 100) + "%";
       plan = `<div class="chips">
@@ -271,9 +272,9 @@ function ui() {
     $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };
   } else if (S.phase === "throw") {
-    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><button class="btn small" id="backBtn">↩ CHANGE AIM</button></div>
-      <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
-      <div><div class="big">Pull back and let go</div>${(career.throws || 0) < 12 ? `<div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div>` : ""}</div></div>`; // the how-to only for your first dozen throws
+    // while throwing, just one slim row: the court gets the screen
+    panel.innerHTML = `<div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
+      <div class="big">Pull back and let go</div><span class="spacer"></span><button class="btn small" id="backBtn">↩ AIM</button></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
   } else if (S.phase === "bbintro") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
@@ -535,6 +536,22 @@ window.__gcPhoto = url => {
   renderHubExtras();
 };
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
+// ── Clubhouse pages and the bottom bar
+let hubPage = "home";
+function showHubPage(p) {
+  hubPage = p; $("hub").classList.toggle("page-home", p === "home"); $("hub").classList.toggle("page-courts", p === "courts");
+  for (const b of document.querySelectorAll("#navbar button")) b.classList.toggle("on", b.dataset.nav === (p === "courts" ? "home" : p));
+  renderHub();
+}
+$("courtsBack").onclick = () => showHubPage("home");
+$("throwBagsBtn").onclick = () => { initAudio(); showHubPage("courts"); };
+for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
+  const n = b.dataset.nav;
+  if (n === "home") showHubPage("home");
+  else if (n === "store") { shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; }
+  else if (n === "gear") { shopTab = "bags"; openShopNews(); }
+  else if (n === "settings") openAvatars("settings");
+};
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 // Swiping the court card left or right moves to the next or previous court.
 {
@@ -586,7 +603,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
     const item = grantPurchase(id, !!restored);
     if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "spins" ? `+${item.spins} Daily Drop${item.spins > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
-  renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message); if (!$("wheelSheet").hidden && !wheelSpin) openWheel(ok ? "" : message);
+  renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message); if (S.kind === "bullseye" && !$("livesSheet").hidden && $("livesBody").querySelector("[data-bbbuy]")) bbBuyPopup(ok ? "" : message); if (!$("wheelSheet").hidden && !wheelSpin) openWheel(ok ? "" : message);
 };
 window.__restoreDone = count => { shopMsg = count ? "Purchases restored" : "Nothing to restore"; renderShop(); renderHub(); };
 function buy(id) {
@@ -741,7 +758,7 @@ function updatePreview(dt) {
     $("shop").hidden = false;
   }
 }
-$("shopBtn").onclick = () => {
+function openShopNews() { // opens where any newly unlocked cards are
   shopMsg = "";
   const withNews = [["bags", "bag"], ["boards", "board"], ["throw", "trail"], ["hole", "fx"]].find(([, c]) => newCount(c));
   if (withNews) shopTab = withNews[0]; // open where the new cards are

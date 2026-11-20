@@ -256,6 +256,9 @@ body.inhub .score, body.inhub #panel { display: none; }
 .btn.nope, .btn.nope:disabled { background: linear-gradient(#7a8194, #565d6e); box-shadow: 0 5px 0 #2c313d, inset 0 2px 0 rgba(255,255,255,.18); color: #d6dbe6; opacity: .8; pointer-events: none; text-shadow: none; font-size: 16px !important; white-space: normal; line-height: 1.15; }
 .btn.green { background: linear-gradient(#7af0a3, var(--go) 50%, var(--go-dark)); box-shadow: 0 5px 0 #075c2b, inset 0 2px 0 rgba(255,255,255,.35); }
 .pullpad { display: flex; align-items: center; gap: 14px; }
+#panel.slim { min-height: 0 !important; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+#panel.slim .pullpad .bag { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; }
+#panel.slim .pullpad .big { font-size: 18px; }
 .pullpad .bag { width: 64px; height: 64px; flex: none; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--font-display); font-size: 26px; }
 .big { font-family: var(--font-display); font-size: 22px; font-weight: 400; line-height: 1.1; }
 .feedback { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -637,6 +640,23 @@ s.was { opacity: .6; font-size: .8em; }
 .venue .prev { left: -14px; } .venue .next { right: -14px; }
 .locked { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,12,24,.6); display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-size: 20px; line-height: 1.25; pointer-events: none; }
 .hubrow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.hubrow.two { grid-template-columns: 1fr 1fr; }
+/* Pages of the clubhouse: home (perks, cooler, THROW BAGS) and courts (just the court cards). The top and bottom bars stay. */
+#hub.page-home .oncourts, #hub.page-courts .onhome { display: none !important; }
+.hubtop { align-items: flex-start; }
+.mecol { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.hubtop .mecol .avatarbtn { width: 56px; height: 56px; }
+.starsunder { font: 900 13px/1 Nunito, system-ui, sans-serif; background: rgba(10,20,38,.75); border: 2px solid rgba(255,255,255,.7); border-radius: 999px; padding: 2px 8px; color: #fff; }
+.starsunder b { font-family: var(--font-display); font-weight: 400; font-size: 15px; }
+.backbtn { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; background: linear-gradient(#2b4a80, #12203a); color: #fff; font: 400 34px/1 var(--font-display); padding: 0 0 4px; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+.throwbtn { width: 100%; font-size: 30px; padding: 14px; letter-spacing: .04em; }
+.courtshead { position: relative; text-align: center; margin-top: 18px; font-family: var(--font-display); font-size: 26px; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
+.navbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 6px 4px calc(4px + env(safe-area-inset-bottom, 0px)); margin: 4px -8px 0; background: linear-gradient(#1d3563, #0e1a33); border-top: 3px solid #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 0 rgba(0,0,0,.25); }
+.navbar button { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; border: none; background: none; color: var(--ink-dim); }
+.navbar .nic { width: 46px; height: 40px; display: grid; place-items: center; font-size: 24px; border-radius: 12px; border: 2px solid rgba(255,255,255,.5); background: linear-gradient(#2b4a80, #16284a); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.navbar small { font: 900 10px/1 Nunito, system-ui, sans-serif; letter-spacing: .04em; white-space: nowrap; }
+.navbar button.on { color: #fff; } .navbar button.on .nic { border-color: #fff; background: linear-gradient(#ffd84a, #f0a020); transform: translateY(-3px); }
+.navbar .nbadge { position: absolute; top: 0; right: calc(50% - 26px); }
 .btn.small { font-size: 15px; padding: 10px 4px; }
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff1a8); }
@@ -839,30 +859,40 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
 </div>
-<div class="overlay" id="hub">
+<div class="overlay page-home" id="hub">
   <div class="hubhead">
     <div class="hubtop">
-      <div class="hubleft"><button class="avatarbtn" id="avatarBtn" aria-label="Choose avatar"></button></div>
-      <div class="hubright"><button class="pill cappill" id="coinsBtn"><i class="coin"></i><b id="coins">0</b></button><button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button><div class="pill" id="starsPill"><span class="ico" style="background:#2f86ff">⭐</span><b id="stars">0</b></div></div>
+      <button class="pill cappill" id="capsBtn"><i class="bcap"></i><b id="caps">0</b></button>
+      <div class="mecol"><button class="avatarbtn" id="avatarBtn" aria-label="Your profile"></button><div class="starsunder" id="starsPill">⭐ <b id="stars">0</b></div></div>
+      <button class="pill cappill" id="coinsBtn"><i class="coin"></i><b id="coins">0</b></button>
     </div>
-    <div class="hubtitle" id="hubTitle">Cornhole <span>Throwdown</span></div>
-    <div class="gcname" id="gcName" hidden></div>
-    <button class="seasonbadge" id="seasonBtn"></button>
-    <div class="hubperks">
-      <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
-      <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
+    <div class="onhome">
+      <div class="hubtitle" id="hubTitle">Cornhole <span>Throwdown</span></div>
+      <div class="gcname" id="gcName" hidden></div>
+      <button class="seasonbadge" id="seasonBtn"></button>
+      <div class="hubperks">
+        <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
+        <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
+      </div>
     </div>
+    <div class="oncourts courtshead"><button class="backbtn" id="courtsBack" aria-label="Back">‹</button><b>CHOOSE A COURT</b></div>
   </div>
   <div class="hubbottom">
-    <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
-    <div class="cooler" id="cooler"></div>
-    <div class="vcarousel" id="venueCard"></div>
-    <div class="hubrow">
-      <button class="btn small" id="shopBtn">SHOP<i class="nbadge" id="shopBadge" hidden></i></button>
-      <button class="btn small" id="passBtn">PRACTICE</button>
-      <button class="btn small" id="rankBtn">🏆 RANKINGS</button>
+    <div class="onhome">
+      <div class="coolerhead" id="coolerHead">PRIZE COOLER</div>
+      <div class="cooler" id="cooler"></div>
+      <button class="btn green throwbtn" id="throwBagsBtn">THROW BAGS</button>
+      <div class="hubrow two"><button class="btn small" id="rankBtn">🏆 RANKINGS</button><button class="btn small" id="passBtn">PRACTICE</button></div>
     </div>
-    
+    <div class="oncourts">
+      <div class="vcarousel" id="venueCard"></div>
+    </div>
+    <nav class="navbar" id="navbar">
+      <button data-nav="store"><span class="nic">🛒</span><small>STORE</small><i class="nbadge" id="shopBadge" hidden></i></button>
+      <button data-nav="gear"><span class="nic">🎒</span><small>BAGS &amp; BOARDS</small><i class="nbadge" id="gearBadge" hidden></i></button>
+      <button data-nav="home" class="on"><span class="nic">🏠</span><small>HOME</small></button>
+      <button data-nav="settings"><span class="nic">⚙️</span><small>SETTINGS</small></button>
+    </nav>
   </div>
 </div>
 
@@ -935,7 +965,7 @@ s.was { opacity: .6; font-size: .8em; }
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins: 11 at Backyard BBQ, 2 more at each court after, up to 21. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
-      <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
+      <p><b>Wind.</b> Wind bends the bag in flight. The green aiming guide already allows for it, so throw down the middle of the green.
       <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>
@@ -3057,7 +3087,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795209255`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795211357`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4571,7 +4601,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795209255`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795211357`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4582,7 +4612,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795209255`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795211357`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6193,7 +6223,8 @@ function updateAimRig(dt) {
   const L = lv(), p = S.pull, fill = throwing ? p.fill : Math.max(p.fill, 0.2), band = L.powZone * 0.5;
   // Place the rig a few feet in front of the hand, on the line toward the landing spot.
   const rel = release(S.player), to = S.landing || HOLE, d = Math.hypot(to.x - rel.x, to.y - rel.y);
-  const dir = { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
+  // along the real launch line (it aims into the wind), so the green zone shows where to point
+  const dir = S.ideal ? { x: Math.sin(S.ideal.az), y: Math.cos(S.ideal.az) } : { x: (to.x - rel.x) / d, y: (to.y - rel.y) / d };
   const ahead = handFloor() > 0 ? 1.2 : 5.9; // up high (Bullseye Bags) it sits at the edge, at the bottom of the view below the board
   aimRig.position.copy(W(rel.x + dir.x * ahead, rel.y + dir.y * ahead, handFloor() + 0.06));
   // up high, the arrow tips down toward the board below instead of lying flat and pointing at the horizon
@@ -6569,14 +6600,14 @@ const WELCOME_MS = 3 * 86400000;
 function welcomeLeft() { if (career.firstSeen == null) { career.firstSeen = clockNow(); save(); } return career.firstSeen + WELCOME_MS - clockNow(); }
 function offerWelcome() {
   const it = STORE.find(x => x.id === PID("starterpack"));
-  if (!it || career.purchases.includes(it.id) || welcomeLeft() <= 0 || career.welcomeDay === bbDay() || !(career.wins + career.losses) || !$("livesSheet").hidden) return;
+  if (S.phase !== "hub" || $("hub").hidden || !it || career.purchases.includes(it.id) || welcomeLeft() <= 0 || career.welcomeDay === bbDay() || !(career.wins + career.losses) || !$("livesSheet").hidden) return;
   career.welcomeDay = bbDay(); save();
   showChoice(`<div class="lifebig">🎁</div><h2>Welcome Pack</h2><div class="muted"><b>${it.blurb}</b></div>
     <div class="big center" style="margin-top:8px"><s style="opacity:.6">${it.value}</s> <b style="color:var(--gold)">${storePrices[it.id] || it.price}</b> · ${it.off}% OFF</div><div class="muted center">Only for new players · ends in ${timeText(welcomeLeft())}</div>`,
     "GET IT", () => { shopTab = "store"; shopMsg = ""; renderShop(); $("shop").hidden = false; buy(it.id); }, "NOT NOW");
 }
 function offerStarTrade() {
-  const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden) return;
+  const vi = career.roughOffer; if (vi == null || !$("livesSheet").hidden || S.phase !== "hub" || $("hub").hidden) return;
   // coins: 4 buy-ins of the middle court you have open (rounded down), a nudge toward easier courts
   const open = VENUES.filter((_, i) => venueUnlocked(i)).length, mid = VENUES[Math.max(0, Math.floor((open + 1) / 2) - 1)];
   const v = VENUES[vi], want = 3 * v.loss, stars = Math.min(want, career.stars), coins = Math.round(4 * mid.fee * stars / want);
@@ -6652,7 +6683,7 @@ function renderProfile() {
   }
 }
 for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
-$("avatarBtn").onclick = () => openAvatars("settings"); // settings first
+$("avatarBtn").onclick = () => openAvatars("profile"); // your profile and stats
 $("avatarClose").onclick = () => { $("avatarSheet").hidden = true; renderHub(); };
 
 // ── Opening a can: tap, it shakes, the tab pops, a mist sprays out and the prizes come out one at a time.
@@ -6958,19 +6989,17 @@ function renderPractice() {
 // It can be skipped at any step; either way it ends by saying where to find How to Play & Rules and the tour again.
 const TOUR = [
   [null, "👋 Welcome!", "Here's a quick look around the clubhouse. You can skip it any time."],
-  ["#avatarBtn", "Your avatar", "Tap it for <b>Settings</b>, your avatar and your profile. How to Play & Rules is in Settings."],
-    ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot. Spend them in the shop."],
+  ["#avatarBtn", "You", "Tap your avatar for your profile and stats. Your stars are underneath: win matches to earn them, and fill a court's stars to open the next court."],
+  ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot."],
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away."],
-  ["#starsPill", "Stars", "Win matches to earn stars. Fill a court's stars to open the next court."],
-  ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
+  ["#seasonBtn", "Your rank", "Your title and points this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
-  ["#venueCard .venue.cur", "Courts", "Swipe to see each court: its buy-in, payout, stars and wind."],
-  ["#playBtn", "Play", "Find an opponent at this court and start a match."],
-  ["#shopBtn", "Shop", "Bags, boards, throw effects and more."],
-  ["#passBtn", "Practice", "Play for free, alone or with friends on one phone."],
+  ["#throwBagsBtn", "Throw bags", "Pick a court and find an opponent."],
   ["#rankBtn", "Rankings", "See how you stack up on the leaderboards."],
+  ["#passBtn", "Practice", "Play for free, alone or with friends on one phone."],
+  ["#navbar", "Menu", "The Store, your bags and boards, home, and settings (with How to Play) are always down here."],
 ];
 let tourAt = -1;
 function startTour(again) {
@@ -6981,7 +7010,7 @@ function endTour() {
   career.tourDone = true; save(); tourAt = -1;
   $("tourSpot").style.display = "none"; $("tour").classList.add("dim");
   const card = $("tourCard"); card.style.left = card.style.top = ""; card.classList.add("mid");
-  card.innerHTML = `<h3>You're all set!</h3><p>You can find <b>How to Play & Rules</b> and this tour any time in <b>Settings</b>: tap your avatar in the top-left corner.</p><button class="btn green" id="tourDone">LET'S PLAY</button>`;
+  card.innerHTML = `<h3>You're all set!</h3><p>You can find <b>How to Play & Rules</b> and this tour any time in <b>Settings</b>, at the bottom right.</p><button class="btn green" id="tourDone">LET'S PLAY</button>`;
   $("tourDone").onclick = () => { $("tour").hidden = true; };
 }
 function showTourStep() {
@@ -7256,7 +7285,7 @@ function bbToday() {
       const p = { x: (r() * 2 - 1) * (HWb - 0.27), y, angle: r() * 6 };
       if (clear(p)) { bags.push(p); k++; }
     }
-    modes[m] = { dist: 27, wind: Math.round(hard ? 4 + gust * 8 : gust * 5), bags };
+    modes[m] = { dist: 27, wind: Math.round(hard ? 3 + gust * 2 : gust * 2), bags };
   }
   const sunday = homeDate().getUTCDay() === 0; // Hole-in-One Sunday: the hole also wins the exclusive bag
   return (bbToday.cache = { key, scene, side, weather, board, windDir, modes, sunday });
@@ -7418,7 +7447,7 @@ function bbRenderLegend() {
   el.innerHTML = `<h4>Today's prizes <small>${5 - bbWon(mode).length} left</small></h4>${bbPrizeRows(mode)}<p>⭐ Star bag in the hole: <b>x2</b></p>`;
 }
 const markerScale = () => 1;
-const bbPanelTag = () => BB.active ? `Bullseye · ${BB.active.mode === "hard" ? "Harder" : "Easier"}` : ""; // (no court name: it's just a standard court with a different view each day)
+const bbPanelTag = () => BB.active ? `Bullseye · ${BB.active.mode === "hard" ? "Harder" : "Easier"} <button class="btn small blue" id="bbMoreBtn" onclick="bbBuyPopup()">+ THROWS</button>` : ""; // (no court name: it's just a standard court with a different view each day)
 
 // Back to the regular court (on the way back to the clubhouse, or before any match).
 function bbExit() {
@@ -7666,6 +7695,15 @@ function bbBuyRow() {
   const price = id => storePrices[id] || STORE.find(x => x.id === id).price;
   return `<div class="bbbuy">${BB_STORE.map(id => { const it = STORE.find(x => x.id === id); return `<button class="btn blue" data-bbbuy="${id}" ${pendingBuy === id ? "disabled" : ""}><b>${it.throws}</b> throw${it.throws > 1 ? "s" : ""}<small>${pendingBuy === id ? "…" : price(id)}</small></button>`; }).join("")}</div>`;
 }
+function bbBuyPopup(msg = "") {
+  const extra = bbState().extra || 0;
+  showInfo(`<h2>🎯 More throws</h2><div class="muted">${extra ? `You have ${extra} extra throw${extra > 1 ? "s" : ""}.` : "Buy extra Bullseye throws for today's challenge."}</div>${bbBuyRow()}${msg ? `<div class="muted center">${esc(msg)}</div>` : ""}`);
+  for (const b of $("livesBody").querySelectorAll("[data-bbbuy]")) b.onclick = () => {
+    if (!canBuy()) { bbBuyPopup("Purchases are available in the iPhone app."); return; }
+    pendingBuy = b.dataset.bbbuy; postNative("purchase", pendingBuy); bbBuyPopup();
+  };
+}
+window.bbBuyPopup = bbBuyPopup; // (the throw screen's button)
 function bbWireBuy(rerender) {
   for (const b of $("bbBody").querySelectorAll("[data-bbbuy]")) b.onclick = () => {
     if (!canBuy()) { rerender("Purchases are available in the iPhone app."); return; }
@@ -7946,6 +7984,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
+  panel.classList.toggle("slim", S.phase === "throw");
   renderScore();
   const hint = $("hint");
   if (canEdit() && !S.end) { hint.textContent = "Tap where you want the bag to end up"; hint.hidden = false; }
@@ -7955,7 +7994,7 @@ function ui() {
   const side = SIDES[S.player] < 0 ? "Left box" : "Right box";
   const who = `<div class="who"><i style="background:${COL.p[S.player]}"></i>${whoName(S.player)} throw</div>`;
   if (S.phase === "aiming") {
-    let plan = `<div class="muted">Tap the board where you want your bag to end up, then drag the yellow ring to pick where it lands first. The guide ignores wind.</div>`;
+    let plan = `<div class="muted">Tap the board where you want your bag to end up, then drag the yellow ring to pick where it lands first. The green guide already allows for the wind.</div>`;
     if (S.ideal) {
       const spin = Math.abs(S.ideal.spin) < 0.05 ? "None" : (S.ideal.spin > 0 ? "Right " : "Left ") + Math.round(Math.abs(S.ideal.spin) * 100) + "%";
       plan = `<div class="chips">
@@ -7976,9 +8015,9 @@ function ui() {
     $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };
   } else if (S.phase === "throw") {
-    panel.innerHTML = `<div class="row">${who}<span class="spacer"></span><button class="btn small" id="backBtn">↩ CHANGE AIM</button></div>
-      <div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
-      <div><div class="big">Pull back and let go</div>${(career.throws || 0) < 12 ? `<div class="muted">The ring fills with power and the arrow swings, faster the harder you pull. Let go in the gold with the arrow straight. Red is OVERDRIVE.</div>` : ""}</div></div>`; // the how-to only for your first dozen throws
+    // while throwing, just one slim row: the court gets the screen
+    panel.innerHTML = `<div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
+      <div class="big">Pull back and let go</div><span class="spacer"></span><button class="btn small" id="backBtn">↩ AIM</button></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
   } else if (S.phase === "bbintro") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
@@ -8240,6 +8279,22 @@ window.__gcPhoto = url => {
   renderHubExtras();
 };
 window.__gcMessage = m => { const t = document.createElement("div"); t.className = "toast"; t.textContent = m; $("hub").appendChild(t); setTimeout(() => t.remove(), 3400); };
+// ── Clubhouse pages and the bottom bar
+let hubPage = "home";
+function showHubPage(p) {
+  hubPage = p; $("hub").classList.toggle("page-home", p === "home"); $("hub").classList.toggle("page-courts", p === "courts");
+  for (const b of document.querySelectorAll("#navbar button")) b.classList.toggle("on", b.dataset.nav === (p === "courts" ? "home" : p));
+  renderHub();
+}
+$("courtsBack").onclick = () => showHubPage("home");
+$("throwBagsBtn").onclick = () => { initAudio(); showHubPage("courts"); };
+for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
+  const n = b.dataset.nav;
+  if (n === "home") showHubPage("home");
+  else if (n === "store") { shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; }
+  else if (n === "gear") { shopTab = "bags"; openShopNews(); }
+  else if (n === "settings") openAvatars("settings");
+};
 $("rankBtn").onclick = () => { if (nativeBridge && nativeBridge.leaderboards) postNative("leaderboards", ""); else window.__gcMessage("Rankings are in the iPhone app"); };
 // Swiping the court card left or right moves to the next or previous court.
 {
@@ -8291,7 +8346,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
     const item = grantPurchase(id, !!restored);
     if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "spins" ? `+${item.spins} Daily Drop${item.spins > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
-  renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message); if (!$("wheelSheet").hidden && !wheelSpin) openWheel(ok ? "" : message);
+  renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message); if (S.kind === "bullseye" && !$("livesSheet").hidden && $("livesBody").querySelector("[data-bbbuy]")) bbBuyPopup(ok ? "" : message); if (!$("wheelSheet").hidden && !wheelSpin) openWheel(ok ? "" : message);
 };
 window.__restoreDone = count => { shopMsg = count ? "Purchases restored" : "Nothing to restore"; renderShop(); renderHub(); };
 function buy(id) {
@@ -8446,7 +8501,7 @@ function updatePreview(dt) {
     $("shop").hidden = false;
   }
 }
-$("shopBtn").onclick = () => {
+function openShopNews() { // opens where any newly unlocked cards are
   shopMsg = "";
   const withNews = [["bags", "bag"], ["boards", "board"], ["throw", "trail"], ["hole", "fx"]].find(([, c]) => newCount(c));
   if (withNews) shopTab = withNews[0]; // open where the new cards are
