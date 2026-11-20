@@ -65,6 +65,9 @@ function rollCan(odds, boost = 0) {
 function stashCan(can) { if (career.cans.length < COOLER_SIZE) career.cans.push(can); else (career.canBacklog ||= []).push(can); }
 function fillCooler() { const b = career.canBacklog; while (b && b.length && career.cans.length < COOLER_SIZE) career.cans.push(b.shift()); }
 const coolerFull = () => career.cans.length >= COOLER_SIZE;
+// Won cans that arrive while the cooler is full wait in line, up to WIN_QUEUE of them.
+const WIN_QUEUE = 2;
+const winQueueFull = () => (career.canBacklog || []).filter(c => c.won).length >= WIN_QUEUE;
 // Put a can in the cooler; returns false if the cooler is full.
 function giveCan(id, court, instant = false) {
   if (career.cans.length >= COOLER_SIZE) return false;

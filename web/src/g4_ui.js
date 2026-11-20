@@ -205,7 +205,7 @@ function renderScore() {
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
-  $("inningNum").textContent = S.inning;
+  $("inningNum").textContent = S.inning; $("toScore").textContent = "to " + winScore();
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
   renderInOn(); renderBoardInfo();
@@ -371,7 +371,7 @@ function renderInningSheet() {
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
         <div class="pill"><span class="ico" style="background:#ffc93a">🏅</span><b>+${res.season}</b></div>
         ${res.lifeLost ? `<div class="pill"><i class="tkt"></i><b>−1</b></div>` : ""}</div>
-        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
+        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler and waiting line full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
     const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;

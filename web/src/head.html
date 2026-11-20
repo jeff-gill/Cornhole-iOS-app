@@ -795,7 +795,7 @@ s.was { opacity: .6; font-size: .8em; }
   <header class="score">
     <button class="roundbtn" id="menuBtn" aria-label="Pause"><span class="pausebars"><i></i><i></i></span></button>
     <div class="card p0" id="card0"><div class="name" id="name0">You</div><div class="cardrow"><div class="cav" id="av0"></div><div class="cmid"><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div></div>
-    <div class="inning"><div class="courtname" id="courtName"></div><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
+    <div class="inning"><div class="courtname" id="courtName"></div><small>Inning</small><b id="inningNum">1</b><small id="toScore">to 21</small></div>
     <div class="card p1" id="card1"><div class="name" id="name1">CPU</div><div class="cardrow"><div class="cav" id="av1"></div><div class="cmid"><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div></div>
     <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
   </header>
@@ -921,7 +921,7 @@ s.was { opacity: .6; font-size: .8em; }
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
-      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins: 11 at Backyard BBQ, 2 more at each court after, up to 21. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
       <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
       <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
@@ -949,7 +949,7 @@ s.was { opacity: .6; font-size: .8em; }
         <li>A bag that touches the ground, or hits the ground and bounces onto the board, scores nothing and is taken off.</li>
         <li>Points cancel out: only the difference between the two sides counts each inning. Equal scores are a wash.</li></ul></div>
       <div class="rulesec"><h3>🏆 Winning</h3><ul>
-        <li>The first side to reach 21 points at the end of an inning wins.</li></ul></div>
+        <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21.</li></ul></div>
       <div class="rulesec"><h3>🚫 Fouls</h3><ul>
         <li>Stepping past the foul line, throwing from outside your box or throwing out of turn is a foul. A fouled bag scores nothing and is taken off the board.</li>
         <li>Taking too long to throw can also be called as a foul in leagues.</li></ul></div>

@@ -29,10 +29,10 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 // A win pays the pot (both buy-ins). Tuned with simulated throws: a good player sinks about 40% at the Backyard and
 // about 20% on the last courts with the starter bag.
 const VENUES = [
-  { id: "backyard", name: "Backyard BBQ", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 0], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [0, 1], speed: "Normal boards" },
-  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [1, 2], speed: "Grippy boards" },
-  { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [1, 3], speed: "Slick boards" },
+  { id: "backyard", name: "Backyard BBQ", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.30, 0.20], mu: 0.35, wind: [0, 0], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.19, 0.12], mu: 0.33, wind: [0, 1], speed: "Normal boards" },
+  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.16, 0.10], mu: 0.40, wind: [1, 2], speed: "Grippy boards" },
+  { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.13, 0.085], mu: 0.30, wind: [1, 3], speed: "Slick boards" },
   { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [2, 3], speed: "Icy boards" },
   { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [2, 4], speed: "Manicured boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 4], speed: "Sandy boards" },
@@ -43,9 +43,13 @@ const VENUES = [
   { id: "stadium", soon: true, name: "Stadium Finals", sub: "The big show, a packed stadium", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [5, 7], speed: "Fast pro boards" },
 ];
 const pot = v => v.fee * 2;
+// Points to win a match: 11 at the first court, 2 more at each court after, 21 at most (practice is always 21).
+const winScore = (vi = S.venue) => (S.kind === "career" ? Math.min(21, 11 + 2 * vi) : 21);
 const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
 // The house covers your Backyard buy-in if you're short, so you can never get stuck.
-const houseCovers = vi => false; // (no free "on the house" matches any more: the Free Gift covers the first court)
+// Out of coins (less than the first court's buy-in): one Backyard BBQ match a day is on the house, so nobody is ever
+// locked out of playing.
+const houseCovers = vi => vi === 0 && career.coins < VENUES[0].fee && career.freeDay !== bbDay();
 // Twenty coin bags. Prices about double each step (100 coins to 100 million), so each court's winnings buy the next tier
 // or two; the Gold Standard takes a few wins at the last court. Stats rise gradually; a few mid-price bags are specialists.
 const BAGS = [
@@ -165,7 +169,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 20, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
+const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 // The time used for every timer and daily reward. In the iPhone app this is the app's own trusted clock (network
 // time, carried forward with the phone's uptime), so setting the phone's clock forward doesn't skip a wait.
@@ -423,6 +427,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!useLife()) return;
     const fee = houseCovers(vi) ? 0 : v.fee;
+    if (!fee) career.freeDay = bbDay(); // today's free match is used
     career.coins -= fee;
     // Remember the match until it ends properly, so a crash or a quit app can be refunded (see refundMatch).
     career.activeMatch = { vi, fee, at: clockNow() };
@@ -432,7 +437,9 @@ function startMatch(kind, vi, online = null, pick = null) {
       S.opponent = { name: online.name, live: true, skill: 0, rating: 0, stars: online.stars || 0, avatar: online.avatar || "a0" };
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
-      const [hi, lo] = v.cpu, skill = rand(lo, hi);
+      // a rough patch (3 or more losses in a row): the next opponent comes from the easy end and is a bit weaker for
+      // every extra loss, until you win again (never announced)
+      const [hi, lo] = v.cpu, ease = Math.min(5, Math.max(0, (career.loseStreak || 0) - 2)), skill = ease ? hi * (1 + 0.1 * ease) : rand(lo, hi);
       S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       // a CPU's career stars: everything before this court, plus part of this one (more for the tougher ones)
       const before = VENUES.slice(0, vi).reduce((t, x) => t + x.max, 0), k = (hi - skill) / Math.max(1e-6, hi - lo);
@@ -630,7 +637,7 @@ function finishInning() {
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
   S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
-  if (S.scores[best] >= 21) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
+  if (S.scores[best] >= winScore()) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
   if (r.winner === null) showWash();
 }
@@ -668,10 +675,14 @@ function finishMatch() {
   const coins = won ? pot(v) : 0;
   let can = null, coolerFull = false;
   const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
-  if (won) { refundLife(); can = rollCan(null, holes); coolerFull = !giveCan(can, S.venue); }
+  if (won) {
+    refundLife(); can = rollCan(null, holes);
+    if (!giveCan(can, S.venue)) { if (winQueueFull()) coolerFull = true; else (career.canBacklog ||= []).push({ id: can, court: S.venue, won: true }); }
+  }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
+  career.loseStreak = won ? 0 : (career.loseStreak || 0) + 1;
   const newly = updateUnlocks();
   save();
   addSeasonPoints(won ? starsForWin(S.venue) : 1);

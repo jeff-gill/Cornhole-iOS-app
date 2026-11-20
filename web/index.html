@@ -803,7 +803,7 @@ s.was { opacity: .6; font-size: .8em; }
   <header class="score">
     <button class="roundbtn" id="menuBtn" aria-label="Pause"><span class="pausebars"><i></i><i></i></span></button>
     <div class="card p0" id="card0"><div class="name" id="name0">You</div><div class="cardrow"><div class="cav" id="av0"></div><div class="cmid"><div class="dots" id="dots0"></div><div class="live" id="live0"></div></div><div class="pts" id="pts0">0</div></div></div>
-    <div class="inning"><div class="courtname" id="courtName"></div><small>Inning</small><b id="inningNum">1</b><small>to 21</small></div>
+    <div class="inning"><div class="courtname" id="courtName"></div><small>Inning</small><b id="inningNum">1</b><small id="toScore">to 21</small></div>
     <div class="card p1" id="card1"><div class="name" id="name1">CPU</div><div class="cardrow"><div class="cav" id="av1"></div><div class="cmid"><div class="dots" id="dots1"></div><div class="live" id="live1"></div></div><div class="pts" id="pts1">0</div></div></div>
     <button class="roundbtn" id="helpBtn" aria-label="How to play">?</button>
   </header>
@@ -929,7 +929,7 @@ s.was { opacity: .6; font-size: .8em; }
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
-      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to 21 wins. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins: 11 at Backyard BBQ, 2 more at each court after, up to 21. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
       <p><b>Wind.</b> The aiming guide ignores wind. Check the wind arrow and aim off to allow for it.</p>
       <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
@@ -957,7 +957,7 @@ s.was { opacity: .6; font-size: .8em; }
         <li>A bag that touches the ground, or hits the ground and bounces onto the board, scores nothing and is taken off.</li>
         <li>Points cancel out: only the difference between the two sides counts each inning. Equal scores are a wash.</li></ul></div>
       <div class="rulesec"><h3>🏆 Winning</h3><ul>
-        <li>The first side to reach 21 points at the end of an inning wins.</li></ul></div>
+        <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21.</li></ul></div>
       <div class="rulesec"><h3>🚫 Fouls</h3><ul>
         <li>Stepping past the foul line, throwing from outside your box or throwing out of turn is a foul. A fouled bag scores nothing and is taken off the board.</li>
         <li>Taking too long to throw can also be called as a foul in leagues.</li></ul></div>
@@ -1451,10 +1451,10 @@ function shade(hex, amt) { // lighten (amt > 0) or darken (amt < 0) a #rrggbb co
 // A win pays the pot (both buy-ins). Tuned with simulated throws: a good player sinks about 40% at the Backyard and
 // about 20% on the last courts with the starter bag.
 const VENUES = [
-  { id: "backyard", name: "Backyard BBQ", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.22, 0.13], mu: 0.35, wind: [0, 0], speed: "Normal boards" },
-  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.17, 0.105], mu: 0.33, wind: [0, 1], speed: "Normal boards" },
-  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.13, 0.085], mu: 0.40, wind: [1, 2], speed: "Grippy boards" },
-  { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.11, 0.07], mu: 0.30, wind: [1, 3], speed: "Slick boards" },
+  { id: "backyard", name: "Backyard BBQ", sub: "Where it all starts", max: 20, fee: 50, win: 3, loss: 2, swing: 0.55, zone: 0.06, wob: 0.012, cpu: [0.30, 0.20], mu: 0.35, wind: [0, 0], speed: "Normal boards" },
+  { id: "tailgate", name: "Tailgate Lot", sub: "Game-day parking lot", max: 50, fee: 200, win: 6, loss: 4, swing: 0.55, zone: 0.052, wob: 0.018, cpu: [0.19, 0.12], mu: 0.33, wind: [0, 1], speed: "Normal boards" },
+  { id: "beach", name: "Beach Shack", sub: "Sea breeze and sandy boards", max: 100, fee: 800, win: 9, loss: 6, swing: 0.55, zone: 0.047, wob: 0.024, cpu: [0.16, 0.10], mu: 0.40, wind: [1, 2], speed: "Grippy boards" },
+  { id: "brewery", name: "Pizza Patio", sub: "Lunch league on the patio", max: 200, fee: 3000, win: 12, loss: 8, swing: 0.55, zone: 0.043, wob: 0.030, cpu: [0.13, 0.085], mu: 0.30, wind: [1, 3], speed: "Slick boards" },
   { id: "lodge", name: "Mountain Lodge", sub: "Snowfall and frozen fingers", max: 300, fee: 10000, win: 15, loss: 10, swing: 0.55, zone: 0.040, wob: 0.035, cpu: [0.10, 0.062], mu: 0.26, wind: [2, 3], speed: "Icy boards" },
   { id: "bonfire", name: "Golf Club", sub: "The 18th green at Oak Hollow", max: 500, fee: 30000, win: 18, loss: 13, swing: 0.55, zone: 0.038, wob: 0.039, cpu: [0.09, 0.056], mu: 0.36, wind: [2, 4], speed: "Manicured boards" },
   { id: "island", name: "Island Hop", sub: "Throw across the water to the next island", max: 600, fee: 100000, win: 20, loss: 16, swing: 0.55, zone: 0.036, wob: 0.042, cpu: [0.085, 0.052], mu: 0.31, wind: [3, 4], speed: "Sandy boards" },
@@ -1465,9 +1465,13 @@ const VENUES = [
   { id: "stadium", soon: true, name: "Stadium Finals", sub: "The big show, a packed stadium", max: 1100, fee: 30000000, win: 48, loss: 54, swing: 0.55, zone: 0.031, wob: 0.053, cpu: [0.064, 0.036], mu: 0.27, wind: [5, 7], speed: "Fast pro boards" },
 ];
 const pot = v => v.fee * 2;
+// Points to win a match: 11 at the first court, 2 more at each court after, 21 at most (practice is always 21).
+const winScore = (vi = S.venue) => (S.kind === "career" ? Math.min(21, 11 + 2 * vi) : 21);
 const starsForWin = vi => VENUES[vi].win, starsForLoss = vi => VENUES[vi].loss;
 // The house covers your Backyard buy-in if you're short, so you can never get stuck.
-const houseCovers = vi => false; // (no free "on the house" matches any more: the Free Gift covers the first court)
+// Out of coins (less than the first court's buy-in): one Backyard BBQ match a day is on the house, so nobody is ever
+// locked out of playing.
+const houseCovers = vi => vi === 0 && career.coins < VENUES[0].fee && career.freeDay !== bbDay();
 // Twenty coin bags. Prices about double each step (100 coins to 100 million), so each court's winnings buy the next tier
 // or two; the Gold Standard takes a few wins at the last court. Stats rise gradually; a few mid-price bags are specialists.
 const BAGS = [
@@ -1587,7 +1591,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 20, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
+const fresh = () => ({ coins: 250, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 // The time used for every timer and daily reward. In the iPhone app this is the app's own trusted clock (network
 // time, carried forward with the phone's uptime), so setting the phone's clock forward doesn't skip a wait.
@@ -1845,6 +1849,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     if (career.coins < v.fee && !houseCovers(vi)) return;
     if (!useLife()) return;
     const fee = houseCovers(vi) ? 0 : v.fee;
+    if (!fee) career.freeDay = bbDay(); // today's free match is used
     career.coins -= fee;
     // Remember the match until it ends properly, so a crash or a quit app can be refunded (see refundMatch).
     career.activeMatch = { vi, fee, at: clockNow() };
@@ -1854,7 +1859,9 @@ function startMatch(kind, vi, online = null, pick = null) {
       S.opponent = { name: online.name, live: true, skill: 0, rating: 0, stars: online.stars || 0, avatar: online.avatar || "a0" };
       S.gear = [bagById(career.bag), bagById(online.bag)];
     } else {
-      const [hi, lo] = v.cpu, skill = rand(lo, hi);
+      // a rough patch (3 or more losses in a row): the next opponent comes from the easy end and is a bit weaker for
+      // every extra loss, until you win again (never announced)
+      const [hi, lo] = v.cpu, ease = Math.min(5, Math.max(0, (career.loseStreak || 0) - 2)), skill = ease ? hi * (1 + 0.1 * ease) : rand(lo, hi);
       S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       // a CPU's career stars: everything before this court, plus part of this one (more for the tougher ones)
       const before = VENUES.slice(0, vi).reduce((t, x) => t + x.max, 0), k = (hi - skill) / Math.max(1e-6, hi - lo);
@@ -2052,7 +2059,7 @@ function finishInning() {
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
   S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
-  if (S.scores[best] >= 21) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
+  if (S.scores[best] >= winScore()) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
   if (r.winner === null) showWash();
 }
@@ -2090,10 +2097,14 @@ function finishMatch() {
   const coins = won ? pot(v) : 0;
   let can = null, coolerFull = false;
   const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
-  if (won) { refundLife(); can = rollCan(null, holes); coolerFull = !giveCan(can, S.venue); }
+  if (won) {
+    refundLife(); can = rollCan(null, holes);
+    if (!giveCan(can, S.venue)) { if (winQueueFull()) coolerFull = true; else (career.canBacklog ||= []).push({ id: can, court: S.venue, won: true }); }
+  }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
+  career.loseStreak = won ? 0 : (career.loseStreak || 0) + 1;
   const newly = updateUnlocks();
   save();
   addSeasonPoints(won ? starsForWin(S.venue) : 1);
@@ -2301,8 +2312,9 @@ const randomPick = () => ({ name: OPPONENTS[Math.floor(Math.random() * OPPONENTS
 function playCourt(vi, confirmed = false) {
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
-  if (coolerFull() && !confirmed) { // a full cooler means a win can't drop a new can: say so first
-    showChoice(`<h2>Prize Cooler full</h2><div class="muted">Your Prize Cooler already has ${COOLER_SIZE} cans, so you won't get a new Prize Can if you win this match. Open a can first to make room.</div>`,
+  if (coolerFull() && winQueueFull() && !confirmed) { // cooler and its waiting line full: a win can't drop a new can, so say so first
+    const ready = career.cans.some(c => canState(c) === "ready");
+    showChoice(`<h2>Prize Cooler full</h2><div class="muted">Your Prize Cooler already has ${COOLER_SIZE} cans, and ${WIN_QUEUE} more are waiting, so you won't get a new Prize Can if you win this match.<br><br>${ready ? "<b>You have a can ready to open.</b> Open it to make room." : "Open a can to make room. Bottle caps open a can early."}</div>`,
       "PROCEED", () => playCourt(vi, true), "CANCEL");
     return;
   }
@@ -2565,6 +2577,9 @@ function rollCan(odds, boost = 0) {
 function stashCan(can) { if (career.cans.length < COOLER_SIZE) career.cans.push(can); else (career.canBacklog ||= []).push(can); }
 function fillCooler() { const b = career.canBacklog; while (b && b.length && career.cans.length < COOLER_SIZE) career.cans.push(b.shift()); }
 const coolerFull = () => career.cans.length >= COOLER_SIZE;
+// Won cans that arrive while the cooler is full wait in line, up to WIN_QUEUE of them.
+const WIN_QUEUE = 2;
+const winQueueFull = () => (career.canBacklog || []).filter(c => c.won).length >= WIN_QUEUE;
 // Put a can in the cooler; returns false if the cooler is full.
 function giveCan(id, court, instant = false) {
   if (career.cans.length >= COOLER_SIZE) return false;
@@ -3027,7 +3042,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795141519`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795178900`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4541,7 +4556,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795141519`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795178900`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4552,7 +4567,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795141519`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795178900`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6790,7 +6805,7 @@ $("seasonBtn").onclick = openSeason;
 // own coins, caps and cans (about 10% at Rookie, about 60% at Hall of Famer), so buying spins never beats buying outright.
 const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
 const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
-const dailyCoins = () => DAILY_COINS_BY_TITLE[dailyTitle()];
+const dailyCoins = () => Math.round(DAILY_COINS_BY_TITLE[dailyTitle()] * Math.max(1, VENUES[topCourt()].fee / 100)); // bigger as you move up the courts
 const CAN_LADDER = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
 function wheelSlices() {
   const t = dailyTitle(), f = dailyCoins() / 100, up = Math.min(2, t >> 2), can = k => CAN_LADDER[Math.min(CAN_LADDER.length - 1, k + up)];
@@ -6908,7 +6923,7 @@ const TOUR = [
   ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
-  ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most. Tap one to start opening it."],
+  ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
   ["#venueCard .venue.cur", "Courts", "Swipe to see each court: its buy-in, payout, stars and wind."],
   ["#playBtn", "Play", "Find an opponent at this court and start a match."],
   ["#shopBtn", "Shop", "Bags, boards, throw effects and more."],
@@ -6932,6 +6947,12 @@ function showTourStep() {
   while (tourAt < TOUR.length && TOUR[tourAt][0] && !visibleEl(TOUR[tourAt][0])) tourAt++;
   if (tourAt >= TOUR.length) { endTour(); return; }
   const [sel, title, text] = TOUR[tourAt], spot = $("tourSpot"), card = $("tourCard");
+  if (sel === "#cooler" && !career.tourGift) { // only for players who take the tour this far
+    career.tourGift = true;
+    career.cans.push({ id: "black", court: 0, instant: true }, { id: "black", court: 0, start: clockNow() });
+    career.caps += skipCost(career.cans[career.cans.length - 1]);
+    save(); renderHub();
+  }
   const n = TOUR.filter(t => !t[0] || visibleEl(t[0])).length, k = TOUR.slice(0, tourAt + 1).filter(t => !t[0] || visibleEl(t[0])).length;
   card.classList.toggle("mid", !sel);
   card.innerHTML = `<div class="tstep">${k} of ${n}</div><h3>${title}</h3><p>${text}</p>
@@ -7847,7 +7868,7 @@ function renderScore() {
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
-  $("inningNum").textContent = S.inning;
+  $("inningNum").textContent = S.inning; $("toScore").textContent = "to " + winScore();
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
   renderInOn(); renderBoardInfo();
@@ -8013,7 +8034,7 @@ function renderInningSheet() {
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
         <div class="pill"><span class="ico" style="background:#ffc93a">🏅</span><b>+${res.season}</b></div>
         ${res.lifeLost ? `<div class="pill"><i class="tkt"></i><b>−1</b></div>` : ""}</div>
-        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
+        ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler and waiting line full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
     const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;

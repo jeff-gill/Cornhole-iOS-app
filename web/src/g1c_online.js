@@ -15,8 +15,9 @@ const randomPick = () => ({ name: OPPONENTS[Math.floor(Math.random() * OPPONENTS
 function playCourt(vi, confirmed = false) {
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
-  if (coolerFull() && !confirmed) { // a full cooler means a win can't drop a new can: say so first
-    showChoice(`<h2>Prize Cooler full</h2><div class="muted">Your Prize Cooler already has ${COOLER_SIZE} cans, so you won't get a new Prize Can if you win this match. Open a can first to make room.</div>`,
+  if (coolerFull() && winQueueFull() && !confirmed) { // cooler and its waiting line full: a win can't drop a new can, so say so first
+    const ready = career.cans.some(c => canState(c) === "ready");
+    showChoice(`<h2>Prize Cooler full</h2><div class="muted">Your Prize Cooler already has ${COOLER_SIZE} cans, and ${WIN_QUEUE} more are waiting, so you won't get a new Prize Can if you win this match.<br><br>${ready ? "<b>You have a can ready to open.</b> Open it to make room." : "Open a can to make room. Bottle caps open a can early."}</div>`,
       "PROCEED", () => playCourt(vi, true), "CANCEL");
     return;
   }

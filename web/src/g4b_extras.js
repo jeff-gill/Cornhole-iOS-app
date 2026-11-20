@@ -400,7 +400,7 @@ $("seasonBtn").onclick = openSeason;
 // own coins, caps and cans (about 10% at Rookie, about 60% at Hall of Famer), so buying spins never beats buying outright.
 const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
 const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
-const dailyCoins = () => DAILY_COINS_BY_TITLE[dailyTitle()];
+const dailyCoins = () => Math.round(DAILY_COINS_BY_TITLE[dailyTitle()] * Math.max(1, VENUES[topCourt()].fee / 100)); // bigger as you move up the courts
 const CAN_LADDER = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
 function wheelSlices() {
   const t = dailyTitle(), f = dailyCoins() / 100, up = Math.min(2, t >> 2), can = k => CAN_LADDER[Math.min(CAN_LADDER.length - 1, k + up)];
@@ -518,7 +518,7 @@ const TOUR = [
   ["#seasonBtn", "Your season", "Your title and points this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
-  ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most. Tap one to start opening it."],
+  ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
   ["#venueCard .venue.cur", "Courts", "Swipe to see each court: its buy-in, payout, stars and wind."],
   ["#playBtn", "Play", "Find an opponent at this court and start a match."],
   ["#shopBtn", "Shop", "Bags, boards, throw effects and more."],
@@ -542,6 +542,12 @@ function showTourStep() {
   while (tourAt < TOUR.length && TOUR[tourAt][0] && !visibleEl(TOUR[tourAt][0])) tourAt++;
   if (tourAt >= TOUR.length) { endTour(); return; }
   const [sel, title, text] = TOUR[tourAt], spot = $("tourSpot"), card = $("tourCard");
+  if (sel === "#cooler" && !career.tourGift) { // only for players who take the tour this far
+    career.tourGift = true;
+    career.cans.push({ id: "black", court: 0, instant: true }, { id: "black", court: 0, start: clockNow() });
+    career.caps += skipCost(career.cans[career.cans.length - 1]);
+    save(); renderHub();
+  }
   const n = TOUR.filter(t => !t[0] || visibleEl(t[0])).length, k = TOUR.slice(0, tourAt + 1).filter(t => !t[0] || visibleEl(t[0])).length;
   card.classList.toggle("mid", !sel);
   card.innerHTML = `<div class="tstep">${k} of ${n}</div><h3>${title}</h3><p>${text}</p>
