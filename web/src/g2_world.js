@@ -1719,7 +1719,7 @@ function roofFlood(g, x, z, aimX, aimZ) {
   add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 24, 8), pole), x, 12, z, false);
   const head = add(g, box(4, 2.4, 1.2, new THREE.MeshBasicMaterial({ color: 0xfffbe6 })), x, 24, z, false); head.lookAt(aimX, 0, aimZ);
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xfff6d8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 })); s.position.set(x, 24, z); s.scale.setScalar(10); g.add(s); glowSprites.push(s);
-  const l = new THREE.SpotLight(0xfff6e6, 900, 120, 0.7, 0.5, 1.4); l.position.set(x, 24, z); l.target.position.set(aimX, 0, aimZ); g.add(l); g.add(l.target);
+  const l = new THREE.SpotLight(0xfff6e6, 420, 120, 0.7, 0.5, 1.4); l.position.set(x, 24, z); l.target.position.set(aimX, 0, aimZ); g.add(l); g.add(l.target);
 }
 function skyBar(g, x, z, rotY) {
   const b = new THREE.Group(), wood = std(0x3a2a1c), top = std(0x1c1c1c, { roughness: 0.3, metalness: 0.4 });
@@ -2140,7 +2140,7 @@ const VENUE_LOOK = {
   island: { top: [0.08, 0.42, 0.86], mid: [0.40, 0.74, 0.97], horizon: [0.85, 0.95, 1.0], sunGlow: 0.9, night: 0, fog: [0xc8ecff, 140, 460],
     hemi: [0xe6f6ff, 0x3aa8c8, 1.35], sun: [0xfff2d6, 3.3, [16, 34, -4]], exposure: 1.0, dust: 0xe8f8ff },
   rooftop: { top: [0.02, 0.04, 0.14], mid: [0.06, 0.10, 0.26], horizon: [0.20, 0.22, 0.40], sunGlow: 0, night: 1, fog: [0x141a30, 200, 700],
-    hemi: [0xcfdcff, 0x3a3a48, 1.0], sun: [0xfff6e6, 2.4, [-6, 40, 4]], exposure: 1.1, dust: 0xd8d8e0 },
+    hemi: [0xcfdcff, 0x3a3a48, 0.8], sun: [0xfff6e6, 1.5, [-6, 40, 4]], exposure: 1.0, dust: 0xd8d8e0 },
   lakeside: { top: [0.30, 0.50, 0.78], mid: [0.62, 0.76, 0.90], horizon: [0.95, 0.88, 0.78], sunGlow: 0.9, night: 0, fog: [0xd8e4ee, 300, 900],
     hemi: [0xe0eeff, 0x4a6a3a, 1.25], sun: [0xffe6c0, 2.7, [-20, 18, -30]], exposure: 1.05, dust: 0xd8e6d0 },
   canyon: { top: [0.14, 0.42, 0.82], mid: [0.50, 0.73, 0.95], horizon: [0.90, 0.92, 0.94], sunGlow: 0.8, night: 0, fog: [0xd6e6f2, 260, 800],

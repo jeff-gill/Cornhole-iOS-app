@@ -36,7 +36,7 @@ function cancelSearch(playCPU) {
 }
 // ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).
 const ROW = 68; // one reel row = the window's inner height
-const REEL_SPIN = 5, REEL_SLOW = 2; // seconds spinning at full speed, then seconds slowing down to land
+const REEL_SPIN = 3.5, REEL_SLOW = 1.5; // seconds spinning at full speed, then seconds slowing down to land
 function buildReel() {
   const reel = $("oppReel"); reel.innerHTML = "";
   const rows = Array.from({ length: 80 }, randomPick);
@@ -46,6 +46,7 @@ function buildReel() {
 }
 function settleReel(pick, done) {
   const R = search && search.reel; if (!R || R.settle) return;
+  if (search.t < REEL_SPIN) { R.wait = { pick, done }; return; } // always spins the full time first, even if a live match is found fast
   // a steady slow-down: at full speed it would cover speed × dur / 2 while braking evenly to a stop
   const reel = $("oppReel"), at = Math.ceil((R.pos + R.speed * REEL_SLOW / 2) / ROW);
   while (reel.children.length <= at) reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(randomPick().avatar)}<span>${esc(randomPick().name)}</span></div>`);
@@ -162,7 +163,9 @@ document.addEventListener("visibilitychange", () => {
 function updateOnline(dt) {
   if (search) {
     updateReel(dt);
-    if (!search.name && !search.reel.settle) { search.t += dt; if (search.t >= search.limit) cancelSearch(true); }
+    if (!search.reel.settle) search.t += dt;
+    if (search.reel.wait && search.t >= REEL_SPIN) { const w = search.reel.wait; search.reel.wait = null; settleReel(w.pick, w.done); }
+    else if (!search.name && !search.reel.settle && !search.reel.wait && search.t >= search.limit) cancelSearch(true);
     if (search) renderSearch();
   }
   if (S.clock != null && (S.phase === "aiming" || S.phase === "throw")) {

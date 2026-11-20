@@ -832,7 +832,7 @@ s.was { opacity: .6; font-size: .8em; }
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
   <div class="splashtag" id="buildStamp" style="font-size:11px;opacity:.7"></div>
-  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795139286 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
+  <script>document.getElementById("buildStamp").textContent = "Build " + new Date(1795139931 * 1000).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });</script>
 </div>
 <div class="overlay" id="hub">
   <div class="hubhead">
@@ -2300,7 +2300,7 @@ function cancelSearch(playCPU) {
 }
 // ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).
 const ROW = 68; // one reel row = the window's inner height
-const REEL_SPIN = 5, REEL_SLOW = 2; // seconds spinning at full speed, then seconds slowing down to land
+const REEL_SPIN = 3.5, REEL_SLOW = 1.5; // seconds spinning at full speed, then seconds slowing down to land
 function buildReel() {
   const reel = $("oppReel"); reel.innerHTML = "";
   const rows = Array.from({ length: 80 }, randomPick);
@@ -2310,6 +2310,7 @@ function buildReel() {
 }
 function settleReel(pick, done) {
   const R = search && search.reel; if (!R || R.settle) return;
+  if (search.t < REEL_SPIN) { R.wait = { pick, done }; return; } // always spins the full time first, even if a live match is found fast
   // a steady slow-down: at full speed it would cover speed × dur / 2 while braking evenly to a stop
   const reel = $("oppReel"), at = Math.ceil((R.pos + R.speed * REEL_SLOW / 2) / ROW);
   while (reel.children.length <= at) reel.insertAdjacentHTML("beforeend", `<div>${avatarHTML(randomPick().avatar)}<span>${esc(randomPick().name)}</span></div>`);
@@ -2426,7 +2427,9 @@ document.addEventListener("visibilitychange", () => {
 function updateOnline(dt) {
   if (search) {
     updateReel(dt);
-    if (!search.name && !search.reel.settle) { search.t += dt; if (search.t >= search.limit) cancelSearch(true); }
+    if (!search.reel.settle) search.t += dt;
+    if (search.reel.wait && search.t >= REEL_SPIN) { const w = search.reel.wait; search.reel.wait = null; settleReel(w.pick, w.done); }
+    else if (!search.name && !search.reel.settle && !search.reel.wait && search.t >= search.limit) cancelSearch(true);
     if (search) renderSearch();
   }
   if (S.clock != null && (S.phase === "aiming" || S.phase === "throw")) {
@@ -3004,7 +3007,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795139286`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795139931`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4558,7 +4561,7 @@ function roofFlood(g, x, z, aimX, aimZ) {
   add(g, new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 24, 8), pole), x, 12, z, false);
   const head = add(g, box(4, 2.4, 1.2, new THREE.MeshBasicMaterial({ color: 0xfffbe6 })), x, 24, z, false); head.lookAt(aimX, 0, aimZ);
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xfff6d8, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.8 })); s.position.set(x, 24, z); s.scale.setScalar(10); g.add(s); glowSprites.push(s);
-  const l = new THREE.SpotLight(0xfff6e6, 900, 120, 0.7, 0.5, 1.4); l.position.set(x, 24, z); l.target.position.set(aimX, 0, aimZ); g.add(l); g.add(l.target);
+  const l = new THREE.SpotLight(0xfff6e6, 420, 120, 0.7, 0.5, 1.4); l.position.set(x, 24, z); l.target.position.set(aimX, 0, aimZ); g.add(l); g.add(l.target);
 }
 function skyBar(g, x, z, rotY) {
   const b = new THREE.Group(), wood = std(0x3a2a1c), top = std(0x1c1c1c, { roughness: 0.3, metalness: 0.4 });
@@ -4621,7 +4624,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795139286`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795139931`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4632,7 +4635,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795139286`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795139931`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -4979,7 +4982,7 @@ const VENUE_LOOK = {
   island: { top: [0.08, 0.42, 0.86], mid: [0.40, 0.74, 0.97], horizon: [0.85, 0.95, 1.0], sunGlow: 0.9, night: 0, fog: [0xc8ecff, 140, 460],
     hemi: [0xe6f6ff, 0x3aa8c8, 1.35], sun: [0xfff2d6, 3.3, [16, 34, -4]], exposure: 1.0, dust: 0xe8f8ff },
   rooftop: { top: [0.02, 0.04, 0.14], mid: [0.06, 0.10, 0.26], horizon: [0.20, 0.22, 0.40], sunGlow: 0, night: 1, fog: [0x141a30, 200, 700],
-    hemi: [0xcfdcff, 0x3a3a48, 1.0], sun: [0xfff6e6, 2.4, [-6, 40, 4]], exposure: 1.1, dust: 0xd8d8e0 },
+    hemi: [0xcfdcff, 0x3a3a48, 0.8], sun: [0xfff6e6, 1.5, [-6, 40, 4]], exposure: 1.0, dust: 0xd8d8e0 },
   lakeside: { top: [0.30, 0.50, 0.78], mid: [0.62, 0.76, 0.90], horizon: [0.95, 0.88, 0.78], sunGlow: 0.9, night: 0, fog: [0xd8e4ee, 300, 900],
     hemi: [0xe0eeff, 0x4a6a3a, 1.25], sun: [0xffe6c0, 2.7, [-20, 18, -30]], exposure: 1.05, dust: 0xd8e6d0 },
   canyon: { top: [0.14, 0.42, 0.82], mid: [0.50, 0.73, 0.95], horizon: [0.90, 0.92, 0.94], sunGlow: 0.8, night: 0, fog: [0xd6e6f2, 260, 800],
@@ -6868,7 +6871,7 @@ if (!nativeBridge) {
   }
 }
 // Testing: every new build refills the cooler with ready-to-open cans, so there's always something to try.
-const BUILD_ID = "1795139286";
+const BUILD_ID = "1795139931";
 if (testing() && career.testBuild !== BUILD_ID) {
   career.testBuild = BUILD_ID;
   career.cans = ["gold", "purple", "platinum", "diamond"].map(id => ({ id, court: topCourt(), start: Date.now() - 2 * 86400000 }));
@@ -8782,7 +8785,7 @@ postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own
 setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
 
 requestAnimationFrame(frame);
-window.__cornhole = { simulate, applyErrors, windAccel, planThrow, setGlow: v => { glowOn = v; }, ui, showUnlocks, takeDrop, openCanSheet, BAGS, TRAILS, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };
+window.__cornhole = { playCourt, simulate, applyErrors, windAccel, planThrow, setGlow: v => { glowOn = v; }, ui, showUnlocks, takeDrop, openCanSheet, BAGS, TRAILS, finishMatch, finishInning, setYaw: v => { hubYaw = v; }, camera, snapCam: () => { camPos.copy(tPos); camLook.copy(tLook); camera.fov = tFov; camera.updateProjectionMatrix(); }, holeStreak, celebrate, S, career, startMatch, beginThrow, releaseBag, moveMarker, refreshPlan, openHub, fourBagger, buildVenue, VENUES, save, renderHub, bbStart, bbToday, BB, BB_WEATHER, refreshPlan, scene, Raycaster: THREE.Raycaster };
 </script>
 
 </body>
