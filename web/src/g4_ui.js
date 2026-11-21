@@ -555,7 +555,7 @@ function renderHub() {
   if (hubVenue < 0) { renderPracticeCard(); return; }
   sceneVenue = hubVenue;
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
-  buildVenue(v.id); setBoardDesign(career.board); // the clubhouse shows your own board
+  buildVenue(v.id); setBoardDesign(isBeginner() ? "plain" : career.board); // the clubhouse shows your own board (Beginners: the plain one)
   venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
   const prev = hubVenue ? VENUES[hubVenue - 1] : null;
   const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? (VENUES[hubVenue + 1].soon ? "Court " + (hubVenue + 2) + " coming soon" : "to open Court " + (hubVenue + 2)) : "to finish the tour"}</span></div>`;

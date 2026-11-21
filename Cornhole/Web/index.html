@@ -1789,7 +1789,9 @@ function save() {
   if (!nativeBridge) try { localStorage.setItem(SAVE_KEY, json); } catch (e) { /* ignore */ }
 }
 const bagById = id => BAGS.find(b => b.id === id) || RIVAL_BAGS.find(b => b.id === id) || BAGS[0];
-const boardById = id => BOARDS.find(b => b.id === id) || BOARDS[0];
+// Beginners play on a plain board: bare wood with just the outline and hole rings (no stripe or pattern).
+const PLAIN_BOARD = { id: "plain", surf: 0, bounce: 0, name: "Plain Pine", price: 0, paint: "plain", a: "#1f3a6e", b: "#ffc93a" };
+const boardById = id => (id === "plain" ? PLAIN_BOARD : BOARDS.find(b => b.id === id) || BOARDS[0]);
 // Courts marked soon: true are shown as "Coming soon" and can't be played yet (remove the flag to release one).
 const venueUnlocked = i => !VENUES[i].soon && career.unlocked.includes(VENUES[i].id);
 function courtStars(i) { return career.courtStars[VENUES[i].id] || 0; }
@@ -2025,6 +2027,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     : kind === "career" ? BOARDS[Math.floor(Math.random() * Math.min(BOARDS.length, 3 + vi * 2))].id : career.board;
   const hostBoard = online && online.host ? career.board : oppBoard, guestBoard = online && online.host ? oppBoard : career.board;
   S.board = online ? (online.seed & 1 ? hostBoard : guestBoard) : Math.random() < 0.5 ? career.board : oppBoard;
+  if (kind === "career" && !online && isBeginner()) S.board = "plain";
   S.boardMine = S.board === career.board;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
@@ -3221,7 +3224,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795231116`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795231463`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4735,7 +4738,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795231116`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795231463`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4746,7 +4749,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795231116`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795231463`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8495,7 +8498,7 @@ function renderHub() {
   if (hubVenue < 0) { renderPracticeCard(); return; }
   sceneVenue = hubVenue;
   const v = VENUES[hubVenue], open = venueUnlocked(hubVenue), have = courtStars(hubVenue), full = have >= v.max;
-  buildVenue(v.id); setBoardDesign(career.board); // the clubhouse shows your own board
+  buildVenue(v.id); setBoardDesign(isBeginner() ? "plain" : career.board); // the clubhouse shows your own board (Beginners: the plain one)
   venueAmbience(v.id, Math.round((v.wind[0] + v.wind[1]) / 2));
   const prev = hubVenue ? VENUES[hubVenue - 1] : null;
   const track = `<div class="courtstars"><span>⭐ ${have.toLocaleString()} / ${v.max.toLocaleString()}</span><div class="progress"><i style="width:${Math.min(100, have / v.max * 100)}%"></i></div><span class="muted">${full ? "Complete!" : hubVenue < VENUES.length - 1 ? (VENUES[hubVenue + 1].soon ? "Court " + (hubVenue + 2) + " coming soon" : "to open Court " + (hubVenue + 2)) : "to finish the tour"}</span></div>`;
