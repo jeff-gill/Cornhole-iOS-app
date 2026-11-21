@@ -436,7 +436,7 @@ function renderInningBody(body, sheet) {
   const hero = $("inningBody").querySelector(".hero");
   if (hero && hero.querySelector(".vs.left, .vs.right")) setTimeout(() => { if (!sheet.hidden) { sfx.thud(); haptic("thud"); hero.classList.add("landed"); } }, 900);
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
-  if ($("courtsBtn")) $("courtsBtn").onclick = () => { sheet.hidden = true; openHub(); showHubPage("courts"); };
+  if ($("courtsBtn")) $("courtsBtn").onclick = () => { sheet.hidden = true; openHub(); showHubPage("home"); }; // home, where a new can is waiting in the cooler
   if ($("againBtn")) $("againBtn").onclick = () => {
     if (S.online && S.online.gone) return; // they've gone: no rematch
     if (S.online) { wantRematch(); return; }
