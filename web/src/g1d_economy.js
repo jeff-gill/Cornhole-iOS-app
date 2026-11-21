@@ -263,7 +263,7 @@ const TITLES = ["Rookie", "Weekend Warrior", "Backyard Hero", "Local Legend", "S
 const TITLE_ICONS = ["🥉", "🎒", "🏡", "📣", "🎯", "🔥", "⭐", "🏆", "👑"];
 //                Rookie WkndW BkydH LocalL SemiP  Pro  AllSt Champ HallF
 const PROMOTE =  [0.20, 0.20, 0.15, 0.15, 0.10, 0.10, 0.05, 0.02, 0];
-const DEMOTE  =  [0,    0.20, 0.20, 0.20, 0.20, 0.25, 0.25, 0.30, 0.30];
+const DEMOTE  =  [0,    0.20, 0.20, 0.15, 0.15, 0.10, 0.10, 0.05, 0.02]; // balanced: as many come down into each title as go up out of it, so groups stay full
 const MIN_MATCHES_TO_PROMOTE = 10, INACTIVE_FROM = 6; // All-Star and up: not playing costs a title
 const promoteCount = (t, size) => (PROMOTE[t] ? Math.max(1, Math.round(size * PROMOTE[t])) : 0);
 const demoteCount = (t, size) => (DEMOTE[t] ? Math.max(1, Math.round(size * DEMOTE[t])) : 0);
