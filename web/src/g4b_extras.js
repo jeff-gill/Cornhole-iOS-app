@@ -170,9 +170,39 @@ function offerStarTrade() {
     }, "NO THANKS", () => reset());
 }
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
+// ── Can odds: everything a can can hold and how likely it is, shown before anyone buys one (App Store rules).
+// Card rarity follows an item's place in its list: the cheapest third Common, the middle Rare, the priciest third Epic.
+function canRarityOdds(can) {
+  const tot = CARD_CATS.reduce((t, c) => t + c.weight, 0), out = [0, 0, 0];
+  for (const cat of CARD_CATS) {
+    const items = cardItems(cat), n = items.length; if (!n) continue;
+    const w = items.map((_, i) => Math.exp(-can.bias * i / Math.max(1, n - 1))), sw = w.reduce((a, b) => a + b, 0);
+    w.forEach((v, i) => { out[Math.min(2, Math.floor(3 * i / n))] += (cat.weight / tot) * v / sw; });
+  }
+  return out;
+}
+const pct = x => x >= 0.1 ? `${Math.round(x * 100)}%` : `${(x * 100).toFixed(1)}%`;
+function canGuarantee(can) {
+  const fee = VENUES[topCourt()].fee, b = titleCardBonus();
+  return { coins: Math.max(5, Math.round(fee * can.coins[0] / 5) * 5), coinsMax: Math.max(5, Math.round(fee * can.coins[1] / 5) * 5), cards: Math.round(can.cards[0] * b), cardsMax: Math.round(can.cards[1] * b) };
+}
+function canOddsHTML(id, paid) {
+  const can = canById(id), g = canGuarantee(can), it = paid && STORE.find(x => x.kind === "can" && x.can === id);
+  if (it) { const pc = paidCanCoins(it); g.coins = pc[0]; g.coinsMax = pc[1]; }
+  const r = canRarityOdds(can), rank = Math.max(0, CANS.indexOf(can)), tot = CARD_CATS.reduce((t, c) => t + c.weight, 0);
+  const names = { bag: "Bags", board: "Boards", trail: "Trails", fx: "Effects" };
+  return `<div class="odds"><div class="oddshead">${canPic(id)}<div><h2>${can.name}</h2><div class="muted">${can.pulls} prizes${paid ? "" : ` · opens in ${durText(openMs(id))}`}</div></div></div>
+    <div class="oddsbox"><b>Guaranteed</b><div>🪙 ${g.coins.toLocaleString()}–${g.coinsMax.toLocaleString()} coins</div><div>🃏 ${g.cards}–${g.cardsMax} cards in ${can.pulls - 1} stack${can.pulls > 2 ? "s" : ""}</div>${paid ? "" : `<div class="muted">(each card stack has a ${pct(can.life)} chance to be 2–3 bottle caps instead)</div>`}</div>
+    <div class="oddsbox"><b>Bonus</b><div>${pct(0.08 + rank * 0.07)} chance of ${1 + rank * 2}–${1 + rank * 4} extra bottle caps</div></div>
+    <div class="oddsbox"><b>Each card stack is for</b><div class="oddsrow">${CARD_CATS.map(c => `<span>${names[c.key] || c.key} <i>${pct(c.weight / tot)}</i></span>`).join("")}</div>
+      <div class="oddsrow"><span>Common <i>${pct(r[0])}</i></span><span>Rare <i>${pct(r[1])}</i></span><span>Epic <i>${pct(r[2])}</i></span></div>
+      <div class="muted">Cards for an item you already own turn into coins. Coins grow with the best court you've opened.</div></div></div>`;
+}
 function cansInfoHTML() {
   return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Unlock as many as you like at once: the better the can, the longer it takes, and Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
-    <div class="cangrid">${CANS.map(c => `<div>${canPic(c.id)}<span>${c.name}</span></div>`).join("")}</div>`;
+    <div class="cangrid">${CANS.map(c => `<div>${canPic(c.id)}<span>${c.name}</span></div>`).join("")}</div>
+    <table class="oddstable"><tr><th>Can</th><th>Prizes</th><th>Cards</th><th>Common</th><th>Rare</th><th>Epic</th></tr>${CANS.filter(c => !c.daily).map(c => { const g = canGuarantee(c), r = canRarityOdds(c); return `<tr><td>${c.name}</td><td>${c.pulls}</td><td>${g.cards}–${g.cardsMax}</td><td>${pct(r[0])}</td><td>${pct(r[1])}</td><td>${pct(r[2])}</td></tr>`; }).join("")}</table>
+    <div class="muted" style="font-size:12px">Tap a can in the Store for its full odds.</div>`;
 }
 
 

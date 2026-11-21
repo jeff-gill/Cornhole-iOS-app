@@ -697,7 +697,10 @@ function swatch(item, kind) {
 const storePrices = {};
 let pendingBuy = null, shopMsg = "";
 const canBuy = () => !!(nativeBridge && nativeBridge.purchase);
-window.__storePrices = prices => { Object.assign(storePrices, prices || {}); if (!$("shop").hidden) renderShop(); };
+// Where paid random items aren't allowed (Belgium, the Netherlands), the Store doesn't sell cans; the app tells us the storefront.
+let storeCountry = "";
+const noPaidCans = () => ["BEL", "NLD"].includes(storeCountry);
+window.__storePrices = prices => { if (prices && prices.__country) { storeCountry = String(prices.__country); delete prices.__country; } Object.assign(storePrices, prices || {}); if (!$("shop").hidden) renderShop(); };
 window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
@@ -730,12 +733,11 @@ function storeHTML() {
   const parts = [];
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title} <span class="was"><s>${starter.value}</s> ${starter.off}% OFF</span></h4><div class="sub">${starter.blurb}</div>${welcomeLeft() > 0 ? `<div class="sub">Ends in ${timeText(welcomeLeft())}</div>` : ""}${sw(starter.grants)}</div>${btn(starter)}</div>`);
   // Tiles, three across: sets first, then cans, coins and bottle caps.
-  const tile = (it, icon, title, sub = "") => `<div class="storetile">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${icon}</div><h4>${title}</h4>${sub ? `<div class="sub">${sub}</div>` : ""}${btn(it)}</div>`;
+  const tile = (it, icon, title, sub = "", extra = "") => `<div class="storetile">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${icon}</div><h4>${title}</h4>${sub ? `<div class="sub">${sub}</div>` : ""}${btn(it)}${extra}</div>`;
   const grid = tiles => `<div class="storegrid">${tiles.join("")}</div>`;
   const sets = STORE.filter(x => x.kind === "once" && x.id !== starter.id).map(it => tile(it, it.id === PID("trails") ? "✨" : sw(it.grants), it.title));
-  if (career.purchases.includes(starter.id)) sets.push(tile(starter, "⭐", starter.title));
   if (sets.length) parts.push(`<div class="label">Sets</div>`, grid(sets));
-  parts.push(`<div class="label">Cans</div>`, grid(STORE.filter(x => x.kind === "can").map(it => tile(it, canPic(it.can, "store"), it.title.replace(/ can$/, ""), it.blurb.split(":")[0]))));
+  parts.push(`<div class="label">Cans</div>`, grid(STORE.filter(x => x.kind === "can" && !(noPaidCans() )).map(it => { const c = canById(it.can), g = canGuarantee(c); return tile(it, canPic(it.can, "store"), it.title.replace(/ can$/, ""), `${c.pulls} prizes · ${g.cards}+ cards`, `<button class="linkbtn oddslink" data-odds="${it.can}">Odds</button>`); })));
   parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);
   parts.push(`<div class="label">Coins</div>`, grid(STORE.filter(x => x.kind === "coins").map(it => tile(it, it.icon, short(it.coins).replace(/\.0(?=[KM])/, ""), it.title))));
   parts.push(`<div class="label">Bottle caps</div>`, grid(STORE.filter(x => x.kind === "caps").map(it => tile(it, '<i class="bcap" style="width:38px;height:38px"></i>', it.caps.toLocaleString(), it.title))));
@@ -764,6 +766,7 @@ function renderShop() {
     }
     for (const b of list.querySelectorAll("[data-buy]")) b.onclick = () => buy(b.dataset.buy);
     $("oddsBtn").onclick = () => showInfo(cansInfoHTML());
+    for (const b of document.querySelectorAll("[data-odds]")) b.onclick = () => showInfo(canOddsHTML(b.dataset.odds, true));
     $("restoreBtn").onclick = () => { if (!canBuy()) { shopMsg = "Restore works in the iPhone app."; renderShop(); return; } shopMsg = "Restoring…"; postNative("restore", ""); renderShop(); };
     return;
   }

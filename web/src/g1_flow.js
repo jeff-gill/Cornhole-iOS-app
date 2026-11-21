@@ -84,20 +84,28 @@ BAGS.push(
   { id: "inferno", name: "Inferno", premium: PID("set.inferno"), acc: 4, ctrl: 4, spin: 4, feel: "fast", c: "#ff5a00", pattern: "flame" },
 );
 // Store products (prices are placeholders until the App Store reports the real, local ones).
+// A bought can's coins go by its price (not the court), so it's always worth what it costs: 4,000–8,000 coins a dollar.
+const paidCanCoins = it => { const usd = parseFloat(String(it.price).replace(/[^0-9.]/g, "")) || 1; return [Math.round(usd * 4000 / 100) * 100, Math.round(usd * 8000 / 100) * 100]; };
 const STORE = [
   { id: PID("coins.small"), kind: "coins", coins: 20000, price: "$0.99", title: "Handful of Coins", icon: "💵" },
+  { id: PID("coins.pile"), kind: "coins", coins: 70000, price: "$2.99", title: "Pile of Coins", icon: "🪙" },
   { id: PID("coins.medium"), kind: "coins", coins: 150000, price: "$4.99", title: "Bag of Coins", icon: "💰", tag: "BEST VALUE" },
   { id: PID("coins.large"), kind: "coins", coins: 500000, price: "$9.99", title: "Cooler of Coins", icon: "🧊" },
   { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
+  { id: PID("coins.vault"), kind: "coins", coins: 6000000, price: "$49.99", title: "Vault of Coins", icon: "🏦" },
   { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Welcome Pack", coins: 25000, caps: 100, can: "gold", grants: ["bag:firecracker", "board:neon"], tag: "WELCOME OFFER", value: "$9.46", off: 68, blurb: "25,000 coins + 100 bottle caps + a Golden Pop can + Firecracker bags + Neon Nights board" },
   { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
   { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
   { id: PID("caps.450"), kind: "caps", caps: 450, price: "$4.99", title: "Bucket of Caps", tag: "BEST VALUE" },
   { id: PID("caps.1000"), kind: "caps", caps: 1000, price: "$9.99", title: "Crate of Caps" },
-  { id: PID("caps.2200"), kind: "caps", caps: 2200, price: "$19.99", title: "Mountain of Caps" },
-  { id: PID("can.gold"), kind: "can", can: "gold", price: "$2.99", title: "Golden Pop can", icon: "🥫", blurb: "5 prizes: coins and cards" },
-  { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$7.99", title: "Platinum Sparkle can", icon: "🥫", blurb: "7 prizes: coins and lots of cards" },
+  // Paid cans: each shows its odds and a guaranteed minimum before you buy (App Store rules for random items).
+  { id: PID("can.bronze"), kind: "can", can: "bronze", price: "$0.99", title: "Bronze Fizz can", icon: "🥫" },
+  { id: PID("can.silver"), kind: "can", can: "silver", price: "$2.99", title: "Silver Splash can", icon: "🥫" },
+  { id: PID("can.gold"), kind: "can", can: "gold", price: "$4.99", title: "Golden Pop can", icon: "🥫", tag: "BEST VALUE" },
+  { id: PID("can.purple"), kind: "can", can: "purple", price: "$6.99", title: "Royal Purple can", icon: "🥫" },
+  { id: PID("can.platinum"), kind: "can", can: "platinum", price: "$8.99", title: "Platinum Sparkle can", icon: "🥫" },
+  { id: PID("can.diamond"), kind: "can", can: "diamond", price: "$10.99", title: "Diamond Dazzle can", icon: "🥫" },
   { id: PID("wheel.1"), kind: "spins", spins: 1, price: "$0.99", title: "1 Daily Drop", hidden: true },
   { id: PID("wheel.3"), kind: "spins", spins: 3, price: "$1.99", title: "3 Daily Drops", hidden: true },
   { id: PID("wheel.5"), kind: "spins", spins: 5, price: "$2.99", title: "5 Daily Drops", hidden: true },
@@ -288,7 +296,7 @@ function grantPurchase(id, restored) {
   if (item.kind === "spins") { if (!restored) career.spins = (career.spins || 0) + item.spins; save(); return item; }
   if (item.kind === "throws") { if (!restored) bbState().extra += item.throws; save(); return item; }
   if (item.kind === "can") { // a bought can waits outside the cooler if it's full
-    if (!restored) stashCan({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
+    if (!restored) stashCan({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0), paid: true, coins: paidCanCoins(item) });
     save(); return item;
   }
   if (career.purchases.includes(id)) return item;

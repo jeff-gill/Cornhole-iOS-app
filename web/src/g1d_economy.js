@@ -144,9 +144,10 @@ function openCan(index) {
   const prizes = [];
   // Coins: one pile, anywhere in the can's range (often near the bottom).
   const coinRoll = can.coins[0] + (can.coins[1] - can.coins[0]) * Math.random() ** 1.8;
-  const coins = Math.max(5, Math.round(fee * coinRoll / 5) * 5);
+  const coins = Array.isArray(slot.coins) ? Math.round((slot.coins[0] + (slot.coins[1] - slot.coins[0]) * Math.random() ** 1.8) / 100) * 100 // a bought can
+    : Math.max(5, Math.round(fee * coinRoll / 5) * 5);
   career.coins += coins; prizes.push({ kind: "coins", n: coins });
-  if (isBeginner()) { save(); return { can, prizes, streak: slot.streak }; } // Beginners: just coins (cards and caps start at Rookie)
+  if (isBeginner() && !slot.paid) { save(); return { can, prizes, streak: slot.streak }; } // Beginners: just coins (cards and caps start at Rookie); a bought can always has everything it promises
   // Bottle caps: sometimes, more likely (and more of them) in rarer cans.
   const rank = Math.max(0, CANS.indexOf(can));
   if (!can.express && Math.random() < 0.08 + rank * 0.07) { const n = 1 + rank * 2 + Math.floor(Math.random() * (rank * 2 + 1)); career.caps += n; prizes.push({ kind: "caps", n }); }
@@ -154,7 +155,7 @@ function openCan(index) {
   let cards = Math.round((can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5) * titleCardBonus());
   const stacks = Math.min(can.pulls - 1, MAX_CAN_PRIZES - prizes.length); // never more than 9 prizes in all (they fit one screen)
   for (let k = 0; k < stacks; k++) {
-    if (Math.random() < can.life) { const n = 2 + Math.floor(Math.random() * 2); career.caps += n; prizes.push({ kind: "caps", n }); continue; }
+    if (!slot.paid && Math.random() < can.life) { const n = 2 + Math.floor(Math.random() * 2); career.caps += n; prizes.push({ kind: "caps", n }); continue; }
     const n = k === stacks - 1 ? Math.max(1, cards) : Math.max(1, Math.round(cards * (0.2 + Math.random() * 0.5)));
     cards = Math.max(0, cards - n);
     const { cat, it } = pickCardItem(can.bias), res = addCards(cat, it, n);

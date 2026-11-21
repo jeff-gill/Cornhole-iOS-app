@@ -10,9 +10,11 @@ import WebKit
 final class StoreManager {
     static let productIDs = [
         "com.jeffgill.cornhole.coins.small",
+        "com.jeffgill.cornhole.coins.pile",
         "com.jeffgill.cornhole.coins.medium",
         "com.jeffgill.cornhole.coins.large",
         "com.jeffgill.cornhole.coins.huge",
+        "com.jeffgill.cornhole.coins.vault",
         "com.jeffgill.cornhole.starterpack",
         "com.jeffgill.cornhole.set.galaxy",
         "com.jeffgill.cornhole.set.inferno",
@@ -20,9 +22,12 @@ final class StoreManager {
         "com.jeffgill.cornhole.caps.80",
         "com.jeffgill.cornhole.caps.450",
         "com.jeffgill.cornhole.caps.1000",
-        "com.jeffgill.cornhole.caps.2200",
+        "com.jeffgill.cornhole.can.bronze",
+        "com.jeffgill.cornhole.can.silver",
         "com.jeffgill.cornhole.can.gold",
+        "com.jeffgill.cornhole.can.purple",
         "com.jeffgill.cornhole.can.platinum",
+        "com.jeffgill.cornhole.can.diamond",
         "com.jeffgill.cornhole.wheel.1",
         "com.jeffgill.cornhole.wheel.3",
         "com.jeffgill.cornhole.wheel.5",
@@ -51,7 +56,9 @@ final class StoreManager {
     func loadProducts() async {
         guard let list = try? await Product.products(for: Self.productIDs) else { return }
         products = Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0) })
-        let prices = Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0.displayPrice) })
+        var prices = Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0.displayPrice) })
+        // the App Store country (e.g. "BEL"): the game doesn't sell random-prize cans where that isn't allowed
+        if let country = await Storefront.current?.countryCode { prices["__country"] = country }
         if let data = try? JSONSerialization.data(withJSONObject: prices), let json = String(data: data, encoding: .utf8) {
             await callJS("window.__storePrices && window.__storePrices(\(json));")
         }
