@@ -151,6 +151,7 @@ function openCan(index) {
   const coinRoll = can.coins[0] + (can.coins[1] - can.coins[0]) * Math.random() ** 1.8;
   const coins = Math.max(5, Math.round(fee * coinRoll / 5) * 5);
   career.coins += coins; prizes.push({ kind: "coins", n: coins });
+  if (isBeginner()) { save(); return { can, prizes, streak: slot.streak }; } // Beginners: just coins (cards and caps start at Rookie)
   // Bottle caps: sometimes, more likely (and more of them) in rarer cans.
   const rank = Math.max(0, CANS.indexOf(can));
   if (!can.express && Math.random() < 0.08 + rank * 0.07) { const n = 1 + rank * 2 + Math.floor(Math.random() * (rank * 2 + 1)); career.caps += n; prizes.push({ kind: "caps", n }); }
