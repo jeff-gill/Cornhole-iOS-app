@@ -302,7 +302,7 @@ function ui() {
     panel.innerHTML = ""; // (no panel while the bag flies: the court takes the whole screen; the release shows on it)
   } else panel.innerHTML = "";
   // the release result floats on the court while the bag flies
-  const fbf = $("fbFloat"), showFb = S.phase === "flight" && S.feedback.length > 0 && S.kind !== "bullseye";
+  const fbf = $("fbFloat"), showFb = false; // (no release readout: the PERFECT / SWISH / CORNHOLE banners say enough)
   fbf.hidden = !showFb;
   if (showFb) fbf.innerHTML = `<b style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "#fff"}">${S.perfect ? "PERFECT!" : S.overdrive ? "OVERDRIVE!" : "Release"}</b>${S.feedback.filter(f => f.title !== "Overdrive").map(f => `<span>${f.title} <i class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</i></span>`).join("")}`;
   document.body.classList.toggle("nopanel", ["flight", "inning", "over"].includes(S.phase) && S.kind !== "bullseye");
