@@ -222,7 +222,13 @@ function renderProfile() {
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
       <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
-      <button class="linkbtn" id="setReset" style="display:block;margin:14px auto 0;font-size:13px;color:#ff8a7a">Start over (erase my progress)</button>`;
+      <button class="linkbtn" id="setReset" style="display:block;margin:14px auto 0;font-size:13px;color:#ff8a7a">Start over (erase my progress)</button>
+      ${window.__debugBuild || !nativeBridge ? `<button class="btn ghost" id="setTestWins" style="margin-top:10px">🧪 Test: +5 wins</button>` : ""}`;
+    if ($("setTestWins")) $("setTestWins").onclick = () => { // (Xcode builds and the browser preview only: a quick way to test the Rookie step)
+      career.wins = (career.wins || 0) + 5; career.winStreak = (career.winStreak || 0) + 5;
+      if (isBeginner()) { career.graduated = true; career.justGraduated = true; joinSeason(); }
+      save(); closePages(); openHub();
+    };
     $("setReset").onclick = () => showChoice(`<div class="lifebig">⚠️</div><h2>Start over?</h2><div class="muted">This erases your coins, bottle caps, stars, courts, cans and items on every device signed in to your Game Center / iCloud account. It can't be undone.<br><br>Things you bought with real money come back with <b>Restore purchases</b> in the Store.</div>`,
       "ERASE", () => showChoice(`<h2>Are you sure?</h2><div class="muted">Everything goes back to a brand-new game.</div>`, "YES, START OVER", () => {
         // a brand-new player (new guest name too), but without the tutorial and tour

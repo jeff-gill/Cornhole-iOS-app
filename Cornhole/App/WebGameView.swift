@@ -31,6 +31,10 @@ struct WebGameView: UIViewRepresentable {
         // the trusted clock for timers (changing the phone's clock doesn't skip a wait); refreshed from the network below
         controller.addUserScript(WKUserScript(source: "window.__clockOffset = \(TrustedClock.offset());",
                                               injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        #if DEBUG
+        // builds run from Xcode only (never the App Store): shows the testing button in Settings
+        controller.addUserScript(WKUserScript(source: "window.__debugBuild = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        #endif
         if let saved = CareerStore.load() {
             controller.addUserScript(WKUserScript(source: "window.__nativeCareer = \(saved);",
                                                   injectionTime: .atDocumentStart, forMainFrameOnly: true))
