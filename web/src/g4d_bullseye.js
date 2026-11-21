@@ -426,7 +426,7 @@ function bbFinish() {
   const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : {}; // no ring, no prize
   if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); } // gone for the day
   if (p.can) for (let k = 0; k < times; k++) { // the first can opens on the spot; a doubled second one goes in the cooler, locked
-    const id = rollCan(p.can);
+    const id = earnedCan(rollCan(p.can));
     if (k === 0) career.cans.push({ id, court: topCourt(), instant: true }); else stashCan({ id, court: topCourt() });
     got.push({ can: id, later: k > 0 });
   }
@@ -435,7 +435,7 @@ function bbFinish() {
   // Hole-in-One Sunday: sinking the hole also wins the exclusive Hole-in-One bag (a bonus Gold can once you have it)
   if (hit === 4 && A.day.sunday) {
     if (!career.bags.includes("holeinone")) { career.bags.push("holeinone"); (career.newCards ||= {})["bag:holeinone"] = { unlocked: true }; got.push({ bag: "holeinone" }); }
-    else { stashCan({ id: "gold", court: topCourt() }); got.push({ can: "gold", later: true }); }
+    else { const gid = earnedCan("gold"); stashCan({ id: gid, court: topCourt() }); got.push({ can: gid, later: true }); }
   }
   save(); S.phase = "bbdone"; ui();
   if (hit === "miss") sfx.thud();

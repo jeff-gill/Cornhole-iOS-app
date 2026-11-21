@@ -62,6 +62,8 @@ function rollCan(odds, boost = 0) {
 }
 // The cooler never holds more than COOLER_SIZE cans. Cans you're owed while it's full (a store purchase, a season prize)
 // wait in career.canBacklog and drop in as soon as a slot opens.
+// Beginners only ever earn the lowest can (bought cans stay what was paid for).
+const earnedCan = id => (isBeginner() ? "black" : id);
 function stashCan(can) { if (career.cans.length < COOLER_SIZE) career.cans.push(can); else (career.canBacklog ||= []).push(can); }
 function fillCooler() { const b = career.canBacklog; while (b && b.length && career.cans.length < COOLER_SIZE) career.cans.push(b.shift()); }
 const coolerFull = () => career.cans.length >= COOLER_SIZE;

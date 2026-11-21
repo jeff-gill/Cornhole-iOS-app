@@ -513,9 +513,9 @@ function takeDrop() {
   // The drop remembers where the streak stands, so its prize reveal can say so.
   const g = giftState(); g.streak = (g.streak || 0) + 1;
   const bonus = g.streak >= 4, streak = bonus ? 4 : g.streak;
-  if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true, streak });
+  if (pick.can) career.cans.push({ id: earnedCan(pick.can), court: topCourt(), instant: true, streak });
   else career.cans.push({ id: "daily", court: topCourt(), instant: true, streak, drop: pick.card ? (isBeginner() ? { coins: Math.max(25, Math.round(dailyCoins() * 0.4 / 5) * 5) } : { card: wheelCard() }) : { coins: pick.coins, caps: pick.caps } }); // (Beginners: coins, not cards)
-  if (bonus) { g.streak = 0; career.cans.push({ id: rollCan({ bronze: 55, silver: 35, gold: 10 }), court: topCourt(), instant: true, bonus: true }); }
+  if (bonus) { g.streak = 0; career.cans.push({ id: earnedCan(rollCan({ bronze: 55, silver: 35, gold: 10 })), court: topCourt(), instant: true, bonus: true }); }
   save(); renderHub();
   openCanSheet(career.cans.findIndex(c => c.instant && !c.bonus && (c.id === "daily" || c.id === pick.can)));
 }

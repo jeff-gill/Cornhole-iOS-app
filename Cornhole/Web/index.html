@@ -2738,6 +2738,8 @@ function rollCan(odds, boost = 0) {
 }
 // The cooler never holds more than COOLER_SIZE cans. Cans you're owed while it's full (a store purchase, a season prize)
 // wait in career.canBacklog and drop in as soon as a slot opens.
+// Beginners only ever earn the lowest can (bought cans stay what was paid for).
+const earnedCan = id => (isBeginner() ? "black" : id);
 function stashCan(can) { if (career.cans.length < COOLER_SIZE) career.cans.push(can); else (career.canBacklog ||= []).push(can); }
 function fillCooler() { const b = career.canBacklog; while (b && b.length && career.cans.length < COOLER_SIZE) career.cans.push(b.shift()); }
 const coolerFull = () => career.cans.length >= COOLER_SIZE;
@@ -3225,7 +3227,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795232239`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795232374`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4739,7 +4741,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795232239`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795232374`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4750,7 +4752,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795232239`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795232374`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -7127,9 +7129,9 @@ function takeDrop() {
   // The drop remembers where the streak stands, so its prize reveal can say so.
   const g = giftState(); g.streak = (g.streak || 0) + 1;
   const bonus = g.streak >= 4, streak = bonus ? 4 : g.streak;
-  if (pick.can) career.cans.push({ id: pick.can, court: topCourt(), instant: true, streak });
+  if (pick.can) career.cans.push({ id: earnedCan(pick.can), court: topCourt(), instant: true, streak });
   else career.cans.push({ id: "daily", court: topCourt(), instant: true, streak, drop: pick.card ? (isBeginner() ? { coins: Math.max(25, Math.round(dailyCoins() * 0.4 / 5) * 5) } : { card: wheelCard() }) : { coins: pick.coins, caps: pick.caps } }); // (Beginners: coins, not cards)
-  if (bonus) { g.streak = 0; career.cans.push({ id: rollCan({ bronze: 55, silver: 35, gold: 10 }), court: topCourt(), instant: true, bonus: true }); }
+  if (bonus) { g.streak = 0; career.cans.push({ id: earnedCan(rollCan({ bronze: 55, silver: 35, gold: 10 })), court: topCourt(), instant: true, bonus: true }); }
   save(); renderHub();
   openCanSheet(career.cans.findIndex(c => c.instant && !c.bonus && (c.id === "daily" || c.id === pick.can)));
 }
@@ -7848,7 +7850,7 @@ function bbFinish() {
   const p = typeof hit === "number" ? BB_PRIZES[A.mode][hit] : {}; // no ring, no prize
   if (typeof hit === "number") { const wl = bbWon(A.mode); wl.push(hit); } // gone for the day
   if (p.can) for (let k = 0; k < times; k++) { // the first can opens on the spot; a doubled second one goes in the cooler, locked
-    const id = rollCan(p.can);
+    const id = earnedCan(rollCan(p.can));
     if (k === 0) career.cans.push({ id, court: topCourt(), instant: true }); else stashCan({ id, court: topCourt() });
     got.push({ can: id, later: k > 0 });
   }
@@ -7857,7 +7859,7 @@ function bbFinish() {
   // Hole-in-One Sunday: sinking the hole also wins the exclusive Hole-in-One bag (a bonus Gold can once you have it)
   if (hit === 4 && A.day.sunday) {
     if (!career.bags.includes("holeinone")) { career.bags.push("holeinone"); (career.newCards ||= {})["bag:holeinone"] = { unlocked: true }; got.push({ bag: "holeinone" }); }
-    else { stashCan({ id: "gold", court: topCourt() }); got.push({ can: "gold", later: true }); }
+    else { const gid = earnedCan("gold"); stashCan({ id: gid, court: topCourt() }); got.push({ can: gid, later: true }); }
   }
   save(); S.phase = "bbdone"; ui();
   if (hit === "miss") sfx.thud();
