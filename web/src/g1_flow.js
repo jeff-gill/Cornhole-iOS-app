@@ -510,7 +510,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   S.boardMine = S.board === career.board;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
-  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.capEnd = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
+  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.capEnd = null; S.potPaid = false; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   { // this match's team colours (live matches: the shared seed picks the pair, the host takes the first colour)
     const r = online ? rng(online.seed + 17) : Math.random, pair = TEAM_PAIRS[Math.floor(r() * TEAM_PAIRS.length)], swap = online ? !online.host : r() < 0.5;
     S.teamC = swap ? [pair[1], pair[0]] : [pair[0], pair[1]];

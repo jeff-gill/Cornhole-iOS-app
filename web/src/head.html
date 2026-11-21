@@ -133,6 +133,14 @@ body.inhub .score, body.inhub #panel { display: none; }
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
 /* the pot: both buy-ins fly out of the player tiles into this bubble while you pick your bag */
 #potBubble { position: fixed; left: 50%; top: 200px; transform: translateX(-50%); z-index: 25; display: flex; align-items: center; gap: 6px; padding: 4px 14px 4px 10px; border-radius: 999px; background: linear-gradient(#2b4a80, #12203a); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); pointer-events: none; }
+.overpot { display: flex; width: max-content; margin: 0 auto 8px; align-items: center; gap: 6px; padding: 3px 14px 3px 10px; border-radius: 999px; background: linear-gradient(#2b4a80, #12203a); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); transition: opacity .4s .3s; }
+.overpot span { font: 900 12px/1 Nunito, system-ui, sans-serif; letter-spacing: .08em; color: var(--ink-dim); }
+.overpot .coin { width: 24px; height: 24px; } .overpot .coin::after { font-size: 14px; }
+.overpot b { font-family: var(--font-display); font-weight: 400; font-size: 22px; color: #fff; font-variant-numeric: tabular-nums; min-width: 1.6em; }
+.overpot.empty { opacity: .45; }
+.hero .hp.paid { animation: tilepaid .5s cubic-bezier(.3,1.6,.5,1); }
+@keyframes tilepaid { 0% { transform: scale(1); } 45% { transform: scale(1.07); box-shadow: 0 0 26px rgba(255,201,58,.9); } 100% { transform: scale(1); } }
+.mini tr.final td { background: rgba(255,201,58,.12); } .mini tr.final td:first-child { border-radius: 10px 0 0 10px; } .mini tr.final td:last-child { border-radius: 0 10px 10px 0; }
 #potBubble span { font: 900 12px/1 Nunito, system-ui, sans-serif; letter-spacing: .08em; color: var(--ink-dim); }
 #potBubble .coin { width: 26px; height: 26px; } #potBubble .coin::after { font-size: 15px; }
 #potBubble b { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: #fff; font-variant-numeric: tabular-nums; min-width: 1.6em; }

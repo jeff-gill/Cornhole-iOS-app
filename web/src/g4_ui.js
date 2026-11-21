@@ -348,13 +348,14 @@ function scorecardHTML() {
   // The points bubble sits on the bottom inside corner of the winner's tile (it drops in; see head.html).
   const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
     : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${COL.bubble}"><span class="flipin">+${h.awarded}</span></div>`; // always green: no player tile is ever green
-  const rows = S.history.slice(0, -1).map((r, n) => {
+  const over = S.phase === "over", last = S.history.length - 1; // the match is over: list every inning, the last one too
+  const rows = (over ? S.history : S.history.slice(0, -1)).map((r, n) => {
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
     const pts = r.winner === null ? `<span class="pts wash">WASH</span>` : `<span class="pts" style="--c:linear-gradient(${COL.pl[r.winner]}, ${COL.p[r.winner]} 55%, ${COL.pd[r.winner]})">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
-    return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}</tr>`;
+    return `<tr${over && n === last ? ' class="final"' : ""}><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}</tr>`;
   }).reverse().join("");
   return `<div class="hero">${side(0)}${side(1)}${badge}</div>
-    ${rows ? `<div class="hist"><div class="histh"><span>Earlier innings</span><span>On | In under each score</span></div>
+    ${rows ? `<div class="hist"><div class="histh"><span>${over ? "Innings" : "Earlier innings"}</span><span>On | In under each score</span></div>
       <table class="mini"><tbody>${rows}</tbody></table></div>` : ""}`;
 }
 // Totals count up for whoever scored.
@@ -399,7 +400,9 @@ function renderInningSheet() {
         + `${gotCan && res.holes ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const { again, off, O, no } = againState();
-    body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${scorecardHTML()}${rewards}
+    const potAmt = S.kind === "career" ? pot(venue()) : 0;
+    const potHTML = potAmt ? `<div class="overpot" id="overPot"><span>POT</span><i class="coin"></i><b id="overPotAmt">${S.potPaid ? 0 : short(potAmt)}</b></div>` : "";
+    body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${potHTML}${scorecardHTML()}${rewards}
       <button class="btn go ${no ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>
       ${S.kind === "career" ? `<button class="btn" id="courtsBtn">RETURN HOME</button>` : ""}`;
   } else {
@@ -407,6 +410,20 @@ function renderInningSheet() {
       <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
   }
   renderInningBody(body, sheet);
+  if (S.phase === "over" && $("overPot") && !S.potPaid) { S.potPaid = true; setTimeout(potPayout, 1100); }
+}
+// The pot pays out: its coins pour into the winner's tile (a draw: half back to each).
+function potPayout() {
+  const potEl = $("overPot"), tiles = document.querySelectorAll("#inningBody .hero .hp"); if (!potEl || tiles.length < 2) return;
+  const amt = pot(venue()), to = S.winner === null ? [0, 1] : [S.winner], src = potEl.getBoundingClientRect(), N = 10; let landed = 0;
+  for (let i = 0; i < N; i++) {
+    const t = tiles[to[i % to.length]].getBoundingClientRect(), c = document.createElement("i"); c.className = "coin flycoin";
+    const x0 = src.left + src.width / 2, y0 = src.top + src.height / 2, tx = t.left + t.width / 2 + (Math.random() - 0.5) * 50, ty = t.top + t.height * 0.4;
+    c.style.left = x0 + "px"; c.style.top = y0 + "px"; document.body.appendChild(c);
+    setTimeout(() => { c.style.transform = `translate(${tx - x0}px, ${ty - y0}px) scale(.85)`; c.style.opacity = "0"; }, i * 90);
+    setTimeout(() => { c.remove(); landed++; const a = $("overPotAmt"); if (a) a.textContent = short(Math.round(amt * (1 - landed / N))); if (landed % 3 === 0) sfx.tick(); }, i * 90 + 700);
+  }
+  setTimeout(() => { for (const k of to) { tiles[k].classList.remove("paid"); void tiles[k].offsetWidth; tiles[k].classList.add("paid"); } potEl.classList.add("empty"); sfx.win(); haptic("success"); }, N * 90 + 760);
 }
 // The rematch button: what it says and whether it can be tapped.
 function againState() {

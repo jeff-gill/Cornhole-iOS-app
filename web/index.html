@@ -141,6 +141,14 @@ body.inhub .score, body.inhub #panel { display: none; }
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
 /* the pot: both buy-ins fly out of the player tiles into this bubble while you pick your bag */
 #potBubble { position: fixed; left: 50%; top: 200px; transform: translateX(-50%); z-index: 25; display: flex; align-items: center; gap: 6px; padding: 4px 14px 4px 10px; border-radius: 999px; background: linear-gradient(#2b4a80, #12203a); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); pointer-events: none; }
+.overpot { display: flex; width: max-content; margin: 0 auto 8px; align-items: center; gap: 6px; padding: 3px 14px 3px 10px; border-radius: 999px; background: linear-gradient(#2b4a80, #12203a); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); transition: opacity .4s .3s; }
+.overpot span { font: 900 12px/1 Nunito, system-ui, sans-serif; letter-spacing: .08em; color: var(--ink-dim); }
+.overpot .coin { width: 24px; height: 24px; } .overpot .coin::after { font-size: 14px; }
+.overpot b { font-family: var(--font-display); font-weight: 400; font-size: 22px; color: #fff; font-variant-numeric: tabular-nums; min-width: 1.6em; }
+.overpot.empty { opacity: .45; }
+.hero .hp.paid { animation: tilepaid .5s cubic-bezier(.3,1.6,.5,1); }
+@keyframes tilepaid { 0% { transform: scale(1); } 45% { transform: scale(1.07); box-shadow: 0 0 26px rgba(255,201,58,.9); } 100% { transform: scale(1); } }
+.mini tr.final td { background: rgba(255,201,58,.12); } .mini tr.final td:first-child { border-radius: 10px 0 0 10px; } .mini tr.final td:last-child { border-radius: 0 10px 10px 0; }
 #potBubble span { font: 900 12px/1 Nunito, system-ui, sans-serif; letter-spacing: .08em; color: var(--ink-dim); }
 #potBubble .coin { width: 26px; height: 26px; } #potBubble .coin::after { font-size: 15px; }
 #potBubble b { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: #fff; font-variant-numeric: tabular-nums; min-width: 1.6em; }
@@ -2092,7 +2100,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   S.boardMine = S.board === career.board;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
-  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.capEnd = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
+  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.capEnd = null; S.potPaid = false; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   { // this match's team colours (live matches: the shared seed picks the pair, the host takes the first colour)
     const r = online ? rng(online.seed + 17) : Math.random, pair = TEAM_PAIRS[Math.floor(r() * TEAM_PAIRS.length)], swap = online ? !online.host : r() < 0.5;
     S.teamC = swap ? [pair[1], pair[0]] : [pair[0], pair[1]];
@@ -3342,7 +3350,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795294321`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795294403`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4856,7 +4864,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795294321`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795294403`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4867,7 +4875,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795294321`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795294403`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8451,13 +8459,14 @@ function scorecardHTML() {
   // The points bubble sits on the bottom inside corner of the winner's tile (it drops in; see head.html).
   const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
     : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${COL.bubble}"><span class="flipin">+${h.awarded}</span></div>`; // always green: no player tile is ever green
-  const rows = S.history.slice(0, -1).map((r, n) => {
+  const over = S.phase === "over", last = S.history.length - 1; // the match is over: list every inning, the last one too
+  const rows = (over ? S.history : S.history.slice(0, -1)).map((r, n) => {
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
     const pts = r.winner === null ? `<span class="pts wash">WASH</span>` : `<span class="pts" style="--c:linear-gradient(${COL.pl[r.winner]}, ${COL.p[r.winner]} 55%, ${COL.pd[r.winner]})">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
-    return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}</tr>`;
+    return `<tr${over && n === last ? ' class="final"' : ""}><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}</tr>`;
   }).reverse().join("");
   return `<div class="hero">${side(0)}${side(1)}${badge}</div>
-    ${rows ? `<div class="hist"><div class="histh"><span>Earlier innings</span><span>On | In under each score</span></div>
+    ${rows ? `<div class="hist"><div class="histh"><span>${over ? "Innings" : "Earlier innings"}</span><span>On | In under each score</span></div>
       <table class="mini"><tbody>${rows}</tbody></table></div>` : ""}`;
 }
 // Totals count up for whoever scored.
@@ -8502,7 +8511,9 @@ function renderInningSheet() {
         + `${gotCan && res.holes ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const { again, off, O, no } = againState();
-    body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${scorecardHTML()}${rewards}
+    const potAmt = S.kind === "career" ? pot(venue()) : 0;
+    const potHTML = potAmt ? `<div class="overpot" id="overPot"><span>POT</span><i class="coin"></i><b id="overPotAmt">${S.potPaid ? 0 : short(potAmt)}</b></div>` : "";
+    body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${potHTML}${scorecardHTML()}${rewards}
       <button class="btn go ${no ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>
       ${S.kind === "career" ? `<button class="btn" id="courtsBtn">RETURN HOME</button>` : ""}`;
   } else {
@@ -8510,6 +8521,20 @@ function renderInningSheet() {
       <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
   }
   renderInningBody(body, sheet);
+  if (S.phase === "over" && $("overPot") && !S.potPaid) { S.potPaid = true; setTimeout(potPayout, 1100); }
+}
+// The pot pays out: its coins pour into the winner's tile (a draw: half back to each).
+function potPayout() {
+  const potEl = $("overPot"), tiles = document.querySelectorAll("#inningBody .hero .hp"); if (!potEl || tiles.length < 2) return;
+  const amt = pot(venue()), to = S.winner === null ? [0, 1] : [S.winner], src = potEl.getBoundingClientRect(), N = 10; let landed = 0;
+  for (let i = 0; i < N; i++) {
+    const t = tiles[to[i % to.length]].getBoundingClientRect(), c = document.createElement("i"); c.className = "coin flycoin";
+    const x0 = src.left + src.width / 2, y0 = src.top + src.height / 2, tx = t.left + t.width / 2 + (Math.random() - 0.5) * 50, ty = t.top + t.height * 0.4;
+    c.style.left = x0 + "px"; c.style.top = y0 + "px"; document.body.appendChild(c);
+    setTimeout(() => { c.style.transform = `translate(${tx - x0}px, ${ty - y0}px) scale(.85)`; c.style.opacity = "0"; }, i * 90);
+    setTimeout(() => { c.remove(); landed++; const a = $("overPotAmt"); if (a) a.textContent = short(Math.round(amt * (1 - landed / N))); if (landed % 3 === 0) sfx.tick(); }, i * 90 + 700);
+  }
+  setTimeout(() => { for (const k of to) { tiles[k].classList.remove("paid"); void tiles[k].offsetWidth; tiles[k].classList.add("paid"); } potEl.classList.add("empty"); sfx.win(); haptic("success"); }, N * 90 + 760);
 }
 // The rematch button: what it says and whether it can be tapped.
 function againState() {
