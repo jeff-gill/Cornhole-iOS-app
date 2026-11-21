@@ -250,7 +250,7 @@ function renderProfile() {
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       ${isCreator() ? `<div class="setrow"><span>👑 Creator<br><small class="muted">${career.creator ? "Maxed out · off the leaderboards and seasons" : "Unlock everything, fill coins and caps"}</small></span><button class="btn small" id="setMax">MAX ME OUT</button></div>` : ""}
       <div class="setrow"><span>🔔 Alerts (Daily Drops, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
-      ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}${window.__debugBuild && gcPlayerId ? `<br><span class="gcid" id="gcIdCopy">Player ID: ${esc(gcPlayerId)} (tap to copy)</span>${gcIdTemporary ? `<br><span style="color:#ff8a7a">⚠️ Temporary ID: it changes until Game Center is turned on for this app in App Store Connect</span>` : ""}` : ""}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
+      ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
       <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
@@ -272,7 +272,6 @@ function renderProfile() {
     $("setTerms").onclick = () => openLink(LEGAL_URL + "terms.html");
     if ($("setGc")) $("setGc").onclick = () => postNative("gamecenter", "signin-now");
     if ($("setMax")) $("setMax").onclick = () => { if (!isCreator()) return; maxOut(); sfx.win(); haptic("success"); renderProfile(); };
-    if ($("gcIdCopy")) $("gcIdCopy").onclick = () => { try { navigator.clipboard.writeText(gcPlayerId); $("gcIdCopy").textContent = "Player ID copied!"; } catch (e) { /* select it by hand */ } };
     $("setTour").onclick = () => { $("avatarSheet").hidden = true; startTour(true); };
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
     $("setMusic").onclick = () => { toggleMusic(); renderProfile(); };
