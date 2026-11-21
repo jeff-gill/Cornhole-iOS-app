@@ -94,7 +94,7 @@ function rulesHTML() {
     `At the Backyard BBQ, the first ${QUIT_WARNINGS} times this happens you get a warning and a refund instead.`,
   ])}
   ${sec("🛟", "Glitches and refunds", [
-    "If the game freezes or crashes while it's on your screen, the match is stopped and refunded: your buy-in comes back and no stars are lost.",
+    "If the game freezes or crashes while it's on your screen, the match is stopped and refunded: your entry fee comes back and no stars are lost.",
     "If you were out of the app when it closed, there's no refund (see Leaving the app).",
   ])}
   ${sec("🌬️", "Wind", [
@@ -103,7 +103,7 @@ function rulesHTML() {
     "Faint streaks drift across the court in the wind's direction. The aiming guide doesn't allow for wind.",
   ])}
   ${sec("⭐", "Stars and courts", [
-    "A win earns stars at that court and the buy-in prize. A loss costs some stars.",
+    "A win earns stars at that court and the prize. A loss costs some stars.",
     "Fill a court's star track to open the next court.",
   ])}
   ${sec("🎯", "Bullseye Bags", [
@@ -121,7 +121,7 @@ function rulesHTML() {
   ${sec("🎡", "Daily Drop", [
     "A free Daily Drop every 4 hours, and up to 2 wait for you. Tap it for coins, bottle caps, bag and board cards, and now and then a can.",
     "Open 4 Daily Drops in a row for a bonus can. If 2 are left waiting, the streak starts over.",
-    "You can play as long as you can afford the buy-in, and the Daily Drops keep the first court in reach.",
+    "You can play as long as you can afford the entry fee, and the Daily Drops keep the first court in reach.",
   ])}
   ${sec("🥫", "Prize cans", [
     `Win a match to get a prize can. Your Prize Cooler holds ${COOLER_SIZE}.`,
@@ -582,7 +582,7 @@ function openPractice() { renderPractice(); $("practiceSheet").hidden = false; }
 function renderPractice() {
   const P = practiceCfg(), v = VENUES[hubVenue];
   const slots = P.players === 1 ? [["You", 0]] : P.players === 2 ? [["Player 1", 0], ["Player 2", 1]] : [["Team 1 · A", 0], ["Team 2 · A", 1], ["Team 1 · B", 0], ["Team 2 · B", 1]];
-  $("practiceBody").innerHTML = `<h2>Practice</h2><div class="muted">${esc(v.name)} · no buy-in or stars</div>
+  $("practiceBody").innerHTML = `<h2>Practice</h2><div class="muted">${esc(v.name)} · no entry fee or stars</div>
     <div class="label">Players</div>
     <div class="seg" id="pPlayers">${[1, 2, 4].map(n => `<button data-n="${n}" class="${P.players === n ? "on" : ""}">${n}</button>`).join("")}</div>
     <div class="label">Names</div>
@@ -608,7 +608,7 @@ function renderPractice() {
 const TOUR = [
   [null, "👋 Welcome!", "Here's a quick look around the clubhouse. You can skip it any time."],
   ["#avatarBtn", "You", "Tap your avatar for your profile and stats. Your stars are underneath: win matches to earn them, and fill a court's stars to open the next court."],
-  ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot."],
+  ["#coinsBtn", "Coins", "Coins pay a court's entry fee, and the winner takes the prize."],
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away."],
   ["#seasonBtn", "Your rank", "Your title and the coins you've won this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],

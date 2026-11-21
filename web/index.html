@@ -1092,9 +1092,9 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
-      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins (11 at Backyard BBQ, 2 more at each court after, up to 21), and you have to win by 2, so a close match can run past the target. A match lasts 8 innings at most: then the higher score wins; if the scores are tied, more cornholes in the match wins, then more bags on the board, and if that's tied too it's a draw (your buy-in comes back and no stars change). Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins (11 at Backyard BBQ, 2 more at each court after, up to 21), and you have to win by 2, so a close match can run past the target. A match lasts 8 innings at most: then the higher score wins; if the scores are tied, more cornholes in the match wins, then more bags on the board, and if that's tied too it's a draw (your entry fee comes back and no stars change). Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
       <p><b>Wind.</b> Wind bends the bag in flight. The green aiming guide already allows for it, so throw down the middle of the green.
-      <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
+      <p><b>Career.</b> Both players put in the entry fee and the <b>winner takes the prize</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
       <p class="muted">Tip: in Safari, tap Share, then Add to Home Screen, to open this like an app. Your career is saved on this device.</p>
     </div>
@@ -1121,7 +1121,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
         <li>Points cancel out: only the difference between the two sides counts each inning. Equal scores are a wash.</li></ul></div>
       <div class="rulesec"><h3>🏆 Winning</h3><ul>
         <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21. You have to win by 2, so a close match keeps going past the target.</li>
-        <li>8 innings at most. After the 8th, the higher score wins. Tied? More cornholes in the match wins, then more bags on the board. Still tied: a draw, your buy-in comes back and no stars change.</li></ul></div>
+        <li>8 innings at most. After the 8th, the higher score wins. Tied? More cornholes in the match wins, then more bags on the board. Still tied: a draw, your entry fee comes back and no stars change.</li></ul></div>
       <div class="rulesec"><h3>🚫 Fouls</h3><ul>
         <li>Stepping past the foul line, throwing from outside your box or throwing out of turn is a foul. A fouled bag scores nothing and is taken off the board.</li>
         <li>Taking too long to throw can also be called as a foul in leagues.</li></ul></div>
@@ -1132,7 +1132,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
   </div>
 </div>
 
-<div id="potBubble" hidden><span>POT</span><i class="coin"></i><b id="potAmt">0</b></div>
+<div id="potBubble" hidden><span>PRIZE</span><i class="coin"></i><b id="potAmt">0</b></div>
 <div class="overlay" id="bagPick" hidden><div class="sheet" id="bagPickBody"></div></div>
 <div class="overlay" id="inningSheet" hidden>
   <div class="sheet" id="inningBody"></div>
@@ -3365,7 +3365,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795295988`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795296138`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4879,7 +4879,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795295988`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795296138`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4890,7 +4890,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795295988`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795296138`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6813,7 +6813,7 @@ function rulesHTML() {
     `At the Backyard BBQ, the first ${QUIT_WARNINGS} times this happens you get a warning and a refund instead.`,
   ])}
   ${sec("🛟", "Glitches and refunds", [
-    "If the game freezes or crashes while it's on your screen, the match is stopped and refunded: your buy-in comes back and no stars are lost.",
+    "If the game freezes or crashes while it's on your screen, the match is stopped and refunded: your entry fee comes back and no stars are lost.",
     "If you were out of the app when it closed, there's no refund (see Leaving the app).",
   ])}
   ${sec("🌬️", "Wind", [
@@ -6822,7 +6822,7 @@ function rulesHTML() {
     "Faint streaks drift across the court in the wind's direction. The aiming guide doesn't allow for wind.",
   ])}
   ${sec("⭐", "Stars and courts", [
-    "A win earns stars at that court and the buy-in prize. A loss costs some stars.",
+    "A win earns stars at that court and the prize. A loss costs some stars.",
     "Fill a court's star track to open the next court.",
   ])}
   ${sec("🎯", "Bullseye Bags", [
@@ -6840,7 +6840,7 @@ function rulesHTML() {
   ${sec("🎡", "Daily Drop", [
     "A free Daily Drop every 4 hours, and up to 2 wait for you. Tap it for coins, bottle caps, bag and board cards, and now and then a can.",
     "Open 4 Daily Drops in a row for a bonus can. If 2 are left waiting, the streak starts over.",
-    "You can play as long as you can afford the buy-in, and the Daily Drops keep the first court in reach.",
+    "You can play as long as you can afford the entry fee, and the Daily Drops keep the first court in reach.",
   ])}
   ${sec("🥫", "Prize cans", [
     `Win a match to get a prize can. Your Prize Cooler holds ${COOLER_SIZE}.`,
@@ -7301,7 +7301,7 @@ function openPractice() { renderPractice(); $("practiceSheet").hidden = false; }
 function renderPractice() {
   const P = practiceCfg(), v = VENUES[hubVenue];
   const slots = P.players === 1 ? [["You", 0]] : P.players === 2 ? [["Player 1", 0], ["Player 2", 1]] : [["Team 1 · A", 0], ["Team 2 · A", 1], ["Team 1 · B", 0], ["Team 2 · B", 1]];
-  $("practiceBody").innerHTML = `<h2>Practice</h2><div class="muted">${esc(v.name)} · no buy-in or stars</div>
+  $("practiceBody").innerHTML = `<h2>Practice</h2><div class="muted">${esc(v.name)} · no entry fee or stars</div>
     <div class="label">Players</div>
     <div class="seg" id="pPlayers">${[1, 2, 4].map(n => `<button data-n="${n}" class="${P.players === n ? "on" : ""}">${n}</button>`).join("")}</div>
     <div class="label">Names</div>
@@ -7327,7 +7327,7 @@ function renderPractice() {
 const TOUR = [
   [null, "👋 Welcome!", "Here's a quick look around the clubhouse. You can skip it any time."],
   ["#avatarBtn", "You", "Tap your avatar for your profile and stats. Your stars are underneath: win matches to earn them, and fill a court's stars to open the next court."],
-  ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot."],
+  ["#coinsBtn", "Coins", "Coins pay a court's entry fee, and the winner takes the prize."],
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away."],
   ["#seasonBtn", "Your rank", "Your title and the coins you've won this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
@@ -8550,14 +8550,14 @@ function renderInningSheet() {
         </div>`;
     const gotCan = res.can && !res.coolerFull;
     // a won can: its picture on the left, as tall as the two rows beside it (the rewards, then what you won)
-    const rewards = S.kind === "career" && res.draw ? `<div class="center big">${res.refund ? `Your <i class="coin"></i> ${short(res.refund)} buy-in is back. ` : ""}No stars won or lost.</div>` : S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
+    const rewards = S.kind === "career" && res.draw ? `<div class="center big">${res.refund ? `Your <i class="coin"></i> ${short(res.refund)} entry fee is back. ` : ""}No stars won or lost.</div>` : S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
         <div class="rwtext">You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}</div></div></div>`
         : pills + (res.can ? `<div class="center big" style="color:${COL.gold}">Cooler and waiting line full, so no can this time</div>` : ""))
         + `${gotCan && res.holes ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const { again, off, O, no } = againState();
     const potAmt = S.kind === "career" ? pot(venue()) : 0;
-    const potHTML = potAmt ? `<div class="overpot" id="overPot"><span>POT</span><i class="coin"></i><b id="overPotAmt">${S.potPaid ? 0 : short(potAmt)}</b></div>` : "";
+    const potHTML = potAmt ? `<div class="overpot" id="overPot"><span>PRIZE</span><i class="coin"></i><b id="overPotAmt">${S.potPaid ? 0 : short(potAmt)}</b></div>` : "";
     body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${potHTML}${scorecardHTML()}${rewards}
       <button class="btn go ${no ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>
       ${S.kind === "career" ? `<button class="btn" id="courtsBtn">RETURN HOME</button>` : ""}`;
@@ -8715,7 +8715,7 @@ const practicePeek = cls => `<div class="venue side ${cls}" data-go="-1"><div cl
 function renderPracticeCard() {
   const v = VENUES[sceneVenue];
   $("venueCard").innerHTML = `<div class="venue cur"><div class="lvlno">Free play</div><h3>Practice</h3>
-    <div class="muted" style="margin:6px 0 4px">No buy-in, no stars. Play alone or with friends on one phone.</div>
+    <div class="muted" style="margin:6px 0 4px">No entry fee, no stars. Play alone or with friends on one phone.</div>
     <button class="btn green go" id="playBtn">PRACTICE · FREE</button></div>${`<div class="venue side next" data-go="0"><div class="lvlno">Court 1 of ${VENUES.length}</div><h3>${esc(VENUES[0].name)}</h3></div>`}
     <div class="vdots"><i class="on"></i>${VENUES.map(() => `<i></i>`).join("")}</div>`;
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
@@ -8747,7 +8747,7 @@ function renderHub() {
   // The side cards show the same top as the front card (centred label and name), so nothing jumps as they swipe in.
   const peek = (i, cls) => i === -1 ? practicePeek(cls) : i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
   $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", v.wind[0] === v.wind[1] ? `${v.wind[0]}` : `${v.wind[0]}–${v.wind[1]}`)}</div>
+    <div class="facts">${chip("Entry", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", v.wind[0] === v.wind[1] ? `${v.wind[0]}` : `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : v.soon ? `<div class="locked">🚧 Coming soon</div>` : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
     <div class="vdots"><i></i>${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
@@ -9039,7 +9039,7 @@ $("menuBtn").onclick = () => {
   S.pauseClocked = clocked;
   pausedPhase = S.phase; S.phase = "paused"; renderPauseClock();
   renderSoundButtons();
-  $("forfeitNote").textContent = S.kind === "career" ? `Quitting counts as a loss: −${starsForLoss(S.venue)} ⭐ and your opponent keeps the pot.` : "";
+  $("forfeitNote").textContent = S.kind === "career" ? `Quitting counts as a loss: −${starsForLoss(S.venue)} ⭐ and your opponent takes the prize.` : "";
   $("pause").hidden = false;
 };
 $("resumeBtn").onclick = () => { $("pause").hidden = true; S.phase = pausedPhase || "aiming"; S.pauseClocked = false; ui(); };
@@ -9061,7 +9061,7 @@ function tickPausedClock(dt) {
 $("forfeitBtn").onclick = () => {
   const careerMatch = S.kind === "career", fee = career.activeMatch ? career.activeMatch.fee : 0;
   const lose = careerMatch
-    ? [`−${starsForLoss(S.venue)} ⭐ at ${esc(venue().name)}`, fee ? `Your buy-in: <i class="coin"></i> ${short(fee)} (your opponent takes the pot)` : null].filter(Boolean)
+    ? [`−${starsForLoss(S.venue)} ⭐ at ${esc(venue().name)}`, fee ? `Your entry fee: <i class="coin"></i> ${short(fee)} (your opponent takes the prize)` : null].filter(Boolean)
     : S.kind === "bullseye" ? [S.lastId == null ? "Nothing: you haven't thrown yet, so you keep this throw." : "This throw (your bag is already in the air)."]
     : ["Nothing: practice games are free. This one just ends."];
   $("pause").hidden = true;
@@ -9218,15 +9218,15 @@ function glitchOut() {
   const career_ = S.kind === "career", r = career_ ? refundMatch() : null;
   glitching = true; try { openHub(); } finally { glitching = false; }
   showInfo(`<div class="lifebig">🛠️</div><h2>Sorry about that!</h2><div class="muted">Something went wrong and the ${career_ ? "match" : "game"} got stuck, so we stopped it.${
-    r ? ` ${r.fee ? `Your buy-in (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.` : ""}</div>`);
+    r ? ` ${r.fee ? `Your entry fee (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.` : ""}</div>`);
 }
 // A match that never finished last time (the app was closed or crashed in the middle of it).
 function settleInterruptedMatch() {
   const r = refundMatch(); if (!r) return;
   showInfo(r.refunded
     ? r.warning
-      ? `<div class="lifebig">⚠️</div><h2>Warning ${r.warning} of ${QUIT_WARNINGS}</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app. This time ${r.fee ? `your buy-in (<i class="coin"></i> ${short(r.fee)}) is back and ` : ""}no stars were lost, but closing the app mid-match counts as a quit${r.warning < QUIT_WARNINGS ? "" : " from now on"}.</div>`
-      : `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. ${r.fee ? `Your buy-in (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.</div>`
+      ? `<div class="lifebig">⚠️</div><h2>Warning ${r.warning} of ${QUIT_WARNINGS}</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app. This time ${r.fee ? `your entry fee (<i class="coin"></i> ${short(r.fee)}) is back and ` : ""}no stars were lost, but closing the app mid-match counts as a quit${r.warning < QUIT_WARNINGS ? "" : " from now on"}.</div>`
+      : `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. ${r.fee ? `Your entry fee (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.</div>`
     : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app, so it counts as a loss (−${r.stars} ⭐).</div>`);
 }
 

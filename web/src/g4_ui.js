@@ -394,14 +394,14 @@ function renderInningSheet() {
         </div>`;
     const gotCan = res.can && !res.coolerFull;
     // a won can: its picture on the left, as tall as the two rows beside it (the rewards, then what you won)
-    const rewards = S.kind === "career" && res.draw ? `<div class="center big">${res.refund ? `Your <i class="coin"></i> ${short(res.refund)} buy-in is back. ` : ""}No stars won or lost.</div>` : S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
+    const rewards = S.kind === "career" && res.draw ? `<div class="center big">${res.refund ? `Your <i class="coin"></i> ${short(res.refund)} entry fee is back. ` : ""}No stars won or lost.</div>` : S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
         <div class="rwtext">You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}</div></div></div>`
         : pills + (res.can ? `<div class="center big" style="color:${COL.gold}">Cooler and waiting line full, so no can this time</div>` : ""))
         + `${gotCan && res.holes ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const { again, off, O, no } = againState();
     const potAmt = S.kind === "career" ? pot(venue()) : 0;
-    const potHTML = potAmt ? `<div class="overpot" id="overPot"><span>POT</span><i class="coin"></i><b id="overPotAmt">${S.potPaid ? 0 : short(potAmt)}</b></div>` : "";
+    const potHTML = potAmt ? `<div class="overpot" id="overPot"><span>PRIZE</span><i class="coin"></i><b id="overPotAmt">${S.potPaid ? 0 : short(potAmt)}</b></div>` : "";
     body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${potHTML}${scorecardHTML()}${rewards}
       <button class="btn go ${no ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>
       ${S.kind === "career" ? `<button class="btn" id="courtsBtn">RETURN HOME</button>` : ""}`;
@@ -559,7 +559,7 @@ const practicePeek = cls => `<div class="venue side ${cls}" data-go="-1"><div cl
 function renderPracticeCard() {
   const v = VENUES[sceneVenue];
   $("venueCard").innerHTML = `<div class="venue cur"><div class="lvlno">Free play</div><h3>Practice</h3>
-    <div class="muted" style="margin:6px 0 4px">No buy-in, no stars. Play alone or with friends on one phone.</div>
+    <div class="muted" style="margin:6px 0 4px">No entry fee, no stars. Play alone or with friends on one phone.</div>
     <button class="btn green go" id="playBtn">PRACTICE · FREE</button></div>${`<div class="venue side next" data-go="0"><div class="lvlno">Court 1 of ${VENUES.length}</div><h3>${esc(VENUES[0].name)}</h3></div>`}
     <div class="vdots"><i class="on"></i>${VENUES.map(() => `<i></i>`).join("")}</div>`;
   for (const el of $("venueCard").querySelectorAll("[data-go]")) el.onclick = () => { hubVenue = +el.dataset.go; renderHub(); };
@@ -591,7 +591,7 @@ function renderHub() {
   // The side cards show the same top as the front card (centred label and name), so nothing jumps as they swipe in.
   const peek = (i, cls) => i === -1 ? practicePeek(cls) : i < 0 || i >= VENUES.length ? "" : `<div class="venue side ${cls}" data-go="${i}"><div class="lvlno">Court ${i + 1} of ${VENUES.length}</div><h3>${venueUnlocked(i) ? "" : "🔒 "}${esc(VENUES[i].name)}</h3></div>`;
   $("venueCard").innerHTML = `${peek(hubVenue - 1, "prev")}<div class="venue cur"><div class="lvlno">Court ${hubVenue + 1} of ${VENUES.length}</div><h3>${esc(v.name)}</h3>
-    <div class="facts">${chip("Buy-in", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", v.wind[0] === v.wind[1] ? `${v.wind[0]}` : `${v.wind[0]}–${v.wind[1]}`)}</div>
+    <div class="facts">${chip("Entry", houseCovers(hubVenue) ? "Free" : '<i class="coin"></i> ' + short(v.fee))}${chip("Payout", '<i class="coin"></i> ' + short(pot(v)))}${chip("Stars", `+${starsForWin(hubVenue)}/−${starsForLoss(hubVenue)}`)}${chip("Wind", v.wind[0] === v.wind[1] ? `${v.wind[0]}` : `${v.wind[0]}–${v.wind[1]}`)}</div>
     ${open ? track : ""}
     ${open ? "" : v.soon ? `<div class="locked">🚧 Coming soon</div>` : `<div class="locked">🔒 Earn all ${prev.max} ⭐<br>at ${esc(prev.name)}</div>`}<button class="btn green go" id="playBtn"></button></div>${peek(hubVenue + 1, "next")}
     <div class="vdots"><i></i>${VENUES.map((_, i) => `<i class="${i === hubVenue ? "on" : ""}"></i>`).join("")}</div>`;
@@ -883,7 +883,7 @@ $("menuBtn").onclick = () => {
   S.pauseClocked = clocked;
   pausedPhase = S.phase; S.phase = "paused"; renderPauseClock();
   renderSoundButtons();
-  $("forfeitNote").textContent = S.kind === "career" ? `Quitting counts as a loss: −${starsForLoss(S.venue)} ⭐ and your opponent keeps the pot.` : "";
+  $("forfeitNote").textContent = S.kind === "career" ? `Quitting counts as a loss: −${starsForLoss(S.venue)} ⭐ and your opponent takes the prize.` : "";
   $("pause").hidden = false;
 };
 $("resumeBtn").onclick = () => { $("pause").hidden = true; S.phase = pausedPhase || "aiming"; S.pauseClocked = false; ui(); };
@@ -905,7 +905,7 @@ function tickPausedClock(dt) {
 $("forfeitBtn").onclick = () => {
   const careerMatch = S.kind === "career", fee = career.activeMatch ? career.activeMatch.fee : 0;
   const lose = careerMatch
-    ? [`−${starsForLoss(S.venue)} ⭐ at ${esc(venue().name)}`, fee ? `Your buy-in: <i class="coin"></i> ${short(fee)} (your opponent takes the pot)` : null].filter(Boolean)
+    ? [`−${starsForLoss(S.venue)} ⭐ at ${esc(venue().name)}`, fee ? `Your entry fee: <i class="coin"></i> ${short(fee)} (your opponent takes the prize)` : null].filter(Boolean)
     : S.kind === "bullseye" ? [S.lastId == null ? "Nothing: you haven't thrown yet, so you keep this throw." : "This throw (your bag is already in the air)."]
     : ["Nothing: practice games are free. This one just ends."];
   $("pause").hidden = true;
@@ -1062,15 +1062,15 @@ function glitchOut() {
   const career_ = S.kind === "career", r = career_ ? refundMatch() : null;
   glitching = true; try { openHub(); } finally { glitching = false; }
   showInfo(`<div class="lifebig">🛠️</div><h2>Sorry about that!</h2><div class="muted">Something went wrong and the ${career_ ? "match" : "game"} got stuck, so we stopped it.${
-    r ? ` ${r.fee ? `Your buy-in (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.` : ""}</div>`);
+    r ? ` ${r.fee ? `Your entry fee (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.` : ""}</div>`);
 }
 // A match that never finished last time (the app was closed or crashed in the middle of it).
 function settleInterruptedMatch() {
   const r = refundMatch(); if (!r) return;
   showInfo(r.refunded
     ? r.warning
-      ? `<div class="lifebig">⚠️</div><h2>Warning ${r.warning} of ${QUIT_WARNINGS}</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app. This time ${r.fee ? `your buy-in (<i class="coin"></i> ${short(r.fee)}) is back and ` : ""}no stars were lost, but closing the app mid-match counts as a quit${r.warning < QUIT_WARNINGS ? "" : " from now on"}.</div>`
-      : `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. ${r.fee ? `Your buy-in (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.</div>`
+      ? `<div class="lifebig">⚠️</div><h2>Warning ${r.warning} of ${QUIT_WARNINGS}</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app. This time ${r.fee ? `your entry fee (<i class="coin"></i> ${short(r.fee)}) is back and ` : ""}no stars were lost, but closing the app mid-match counts as a quit${r.warning < QUIT_WARNINGS ? "" : " from now on"}.</div>`
+      : `<div class="lifebig">🛟</div><h2>Match refunded</h2><div class="muted">Your last match at ${esc(r.court)} was cut off by a problem on our end. ${r.fee ? `Your entry fee (<i class="coin"></i> ${short(r.fee)}) is back, and n` : "N"}o stars were lost.</div>`
     : `<div class="lifebig">🚪</div><h2>Match counted as a quit</h2><div class="muted">Your last match at ${esc(r.court)} was closed while you were out of the app, so it counts as a loss (−${r.stars} ⭐).</div>`);
 }
 
