@@ -252,7 +252,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
-  panel.classList.toggle("slim", S.phase === "throw" || S.phase === "cpu" || S.phase === "remote" || S.phase === "aiming"); // throwing (yours or theirs): a slim panel, the court gets the screen
+  panel.classList.toggle("slim", ["throw", "cpu", "remote", "aiming", "flight", "inning", "over"].includes(S.phase)); // (every match panel sized to what it shows) // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
   const learning = !career.tutorialDone; // the on-court hints only while learning; after that the ⓘ button has them
