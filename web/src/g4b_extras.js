@@ -255,7 +255,13 @@ function renderProfile() {
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
       <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
       <button class="linkbtn" id="setReset" style="display:block;margin:14px auto 0;font-size:13px;color:#ff8a7a">Start over (erase my progress)</button>
-      ${window.__debugBuild || !nativeBridge ? `<button class="btn ghost" id="setTestWins" style="margin-top:10px">🧪 Test: +5 wins</button>` : ""}`;
+      ${window.__debugBuild || !nativeBridge ? `<button class="btn ghost" id="setTestWins" style="margin-top:10px">🧪 Test: +5 wins</button><button class="btn ghost" id="setTestNew" style="margin-top:8px">🧪 Test: unlock 3 new items</button>` : ""}`;
+    if ($("setTestNew")) $("setTestNew").onclick = () => { // (Xcode builds and the browser preview only: try out the NEW! badges)
+      const pools = [["bag", BAGS, career.bags], ["board", BOARDS, career.boards], ["trail", TRAILS, career.trails]];
+      let n = 0;
+      for (const [k, list, mine] of pools) { const it = list.find(x => !x.premium && x.price > 0 && !mine.includes(x.id)); if (it) { mine.push(it.id); (career.newCards ||= {})[`${k}:${it.id}`] = { unlocked: true }; n++; } }
+      save(); renderHub(); sfx.win(); $("setTestNew").textContent = n ? `🧪 ${n} new items: see Bags & Boards` : "🧪 Nothing left to unlock";
+    };
     if ($("setTestWins")) $("setTestWins").onclick = () => { // (Xcode builds and the browser preview only: a quick way to test the Rookie step)
       career.wins = (career.wins || 0) + 5; career.winStreak = (career.winStreak || 0) + 5;
       if (isBeginner()) { career.graduated = true; career.justGraduated = true; joinSeason(); }
