@@ -410,7 +410,7 @@ holeHalo.renderOrder = 6; holeHalo.visible = false; scene.add(holeHalo);
 let haloLevel = 0;
 function setHoleHalo(level) {
   haloLevel = level;
-  holeHalo.visible = level >= 2;
+  holeHalo.visible = false; // (no glowing ring around the hole)
   if (level >= 2) { flatOnBoard(holeHalo, HOLE); holeHalo.position.y += 0.006; }
 }
 function shockwave(color, size = 6) {
