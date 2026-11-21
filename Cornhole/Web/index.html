@@ -1011,6 +1011,8 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     </div>
     <nav class="navbar" id="navbar">
       <button data-nav="settings"><span class="nic">⚙️</span><small>SETTINGS</small></button>
+      <button data-nav="rank"><span class="nic">🏆</span><small>RANKINGS</small></button>
+      <button data-nav="home" class="on"><span class="nic">🏠</span><small>HOME</small></button>
       <button data-nav="gear"><span class="nic"><svg viewBox="200 120 660 860" width="50" height="50" aria-hidden="true">
         <defs><radialGradient id="navBagG" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#ff9a8a"/><stop offset="0.5" stop-color="#ff4b3a"/><stop offset="1" stop-color="#d42a1c"/></radialGradient>
         <linearGradient id="navBoardG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d6a4"/><stop offset="1" stop-color="#dcb07a"/></linearGradient></defs>
@@ -1021,8 +1023,6 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
         <g transform="rotate(-22 560 330)"><rect x="420" y="190" width="280" height="280" rx="60" fill="url(#navBagG)" stroke="#7a1208" stroke-width="16"/>
         <rect x="460" y="230" width="200" height="200" rx="34" fill="none" stroke="#ffe4de" stroke-width="12" stroke-dasharray="26 22"/></g>
       </svg></span><small>BAGS &amp;<br>BOARDS</small><i class="nbadge" id="gearBadge" hidden></i></button>
-      <button data-nav="home" class="on"><span class="nic">🏠</span><small>HOME</small></button>
-      <button data-nav="rank"><span class="nic">🏆</span><small>RANKINGS</small></button>
       <button data-nav="store"><span class="nic"><svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true">
         <defs><linearGradient id="navCoinG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#e8a417"/></linearGradient></defs>
         <g stroke="#9a6400" stroke-width="2"><ellipse cx="26" cy="49" rx="17" ry="6" fill="#d89412"/><rect x="9" y="41" width="34" height="8" fill="#e8a417" stroke="none"/><ellipse cx="26" cy="41" rx="17" ry="6" fill="url(#navCoinG)"/>
@@ -3377,7 +3377,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795303092`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795303121`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4891,7 +4891,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795303092`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795303121`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4902,7 +4902,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795303092`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795303121`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
