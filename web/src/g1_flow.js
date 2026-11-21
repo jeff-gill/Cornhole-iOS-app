@@ -533,7 +533,7 @@ function refreshPlan() {
   S.landing = S.plan.landing; S.ideal = S.plan.ideal;
   S.prev = simulate(S.ideal, S.player);
   S.push = null;
-  if (S.prev.hit && S.landD > 0.1) { // a bag in the way: yours gets pushed onto the finish spot, anyone else's gets pushed through
+  if (S.prev.hit && S.landD > 0.1 && !S.stick) { // a bag in the way (never on STICK IT: that's always the high, drop-and-stay throw): yours gets pushed onto the finish spot, anyone else's gets pushed through
     const base = S.ideal, t = S.prev.own ? solvePush(base, S.landing, S.end, S.player, S.prev.own, false) : solveThrough(base, S.landing, S.end, S.player);
     if (t) { S.push = { extra: t.speed / base.speed - 1 }; S.ideal = t; }
   }
@@ -549,7 +549,7 @@ function moveMarker(kind, p) {
   } else if (S.plan) {
     const v = { x: p.x - S.end.x, y: p.y - S.end.y };
     S.landD = Math.hypot(v.x, v.y); S.landPhi = wrap(heading(v) - heading(S.plan.z.back));
-    S.tut.dragged = true;
+    S.tut.dragged = true; S.stick = false;
   }
   refreshPlan(); ui();
 }
@@ -566,14 +566,14 @@ function beginTurn() {
   if (isCPU(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.cpuT = 0; S.cpuErr = null; S.pull = { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 }; S.phase = "cpu"; }
   else if (isRemote(S.player)) { S.landing = S.end = S.ideal = S.prev = S.plan = null; S.planVersion++; S.online.waitT = 0; S.phase = "remote"; }
   else {
-    const s = S.saved[S.player]; S.end = s ? s[0] : null; S.landD = s ? s[1] : null; S.landPhi = s ? s[2] : 0;
+    const s = S.saved[S.player]; S.end = s ? s[0] : null; S.landD = s ? s[1] : null; S.landPhi = s ? s[2] : 0; S.stick = !!(s && s[3]);
     S.phase = "aiming"; refreshPlan();
   }
   ui();
 }
 function beginThrow() {
   if (!canEdit() || !S.ideal) return;
-  S.saved[S.player] = [S.end, S.landD, S.landPhi];
+  S.saved[S.player] = [S.end, S.landD, S.landPhi, S.stick];
   S.errors = { dir: 0, pow: 0, ht: 0 };
   S.pull = { active: false, startY: 0, fill: 0, raw: 0, phase: 0, swing: 0 };
   S.phase = "throw"; sfx.tick(); haptic("tap"); ui();
@@ -815,7 +815,7 @@ function cpuTurn() {
   // no computer 4-baggers at the Backyard or against a Beginner: with 3 already in, it rushes the last one
   if ((S.venue === 0 || isBeginner()) && S.world.bags.filter(b => b.owner === S.player && b.state === "inHole").length >= 3) S.cpuErr.dir = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.4);
   S.end = { ...S.cpuPlan.end };
-  S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0;
+  S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0; S.stick = false;
   refreshPlan();
   if (S.ideal && S.wind.mph > 0) {
     const c = contact(S.ideal), a = windAccel(), tt = c.time;

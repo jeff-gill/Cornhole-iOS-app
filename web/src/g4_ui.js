@@ -283,8 +283,8 @@ function ui() {
       <p><b>STICK IT</b> lands it right on the spot with no slide. <b>CLEAR</b> starts over.</p>
       <p>3. Tap <b>THROW</b>, then <b>pull down and let go</b> when the ring is in the gold and the arrow points up the middle of the green.</p>
       <p>The green guide already allows for the wind. Bags in the way get pushed: yours onto the spot, theirs out of the way.</p></div>`);
-    $("clearBtn").onclick = () => { S.end = null; S.landD = null; S.landPhi = 0; refreshPlan(); ui(); };
-    $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; refreshPlan(); ui(); } };
+    $("clearBtn").onclick = () => { S.end = null; S.landD = null; S.landPhi = 0; S.stick = false; refreshPlan(); ui(); };
+    $("stickBtn").onclick = () => { if (S.end) { S.landD = 0; S.landPhi = 0; S.stick = true; refreshPlan(); ui(); } };
     $("throwBtn").onclick = () => { initAudio(); beginThrow(); };
   } else if (S.phase === "throw") {
     // while throwing, just one slim row: the court gets the screen
