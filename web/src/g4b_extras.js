@@ -250,7 +250,7 @@ function renderProfile() {
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       ${isCreator() ? `<div class="setrow"><span>👑 Creator<br><small class="muted">${career.creator ? "Maxed out · off the leaderboards and seasons" : "Unlock everything, fill coins and caps"}</small></span><button class="btn small" id="setMax">MAX ME OUT</button></div>` : ""}
       <div class="setrow"><span>🔔 Alerts (Daily Drops, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
-      ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}${window.__debugBuild && gcPlayerId ? `<br><span class="gcid" id="gcIdCopy">Player ID: ${esc(gcPlayerId)} (tap to copy)</span>` : ""}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
+      ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}${window.__debugBuild && gcPlayerId ? `<br><span class="gcid" id="gcIdCopy">Player ID: ${esc(gcPlayerId)} (tap to copy)</span>${gcIdTemporary ? `<br><span style="color:#ff8a7a">⚠️ Temporary ID: it changes until Game Center is turned on for this app in App Store Connect</span>` : ""}` : ""}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
       <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
@@ -421,11 +421,11 @@ $("canDone").onclick = () => {
   if (i >= 0) { delete career.cans[i].bonus; save(); const t = document.createElement("div"); t.className = "toast"; t.textContent = "4 in a row! Here's a bonus can 🎉"; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); setTimeout(() => openCanSheet(i), 700); }
 };
 
-let gcSignedIn = "", gcPlayerId = "";
+let gcSignedIn = "", gcPlayerId = "", gcIdTemporary = false;
 // The game's creator: recognised only by their Game Center account (Apple signs them in; there's no code to type).
 // Their Settings get a Creator section; a maxed-out creator account is kept off the leaderboards and season groups.
 const CREATOR_GC = 114616474; // (a fingerprint of the creator's Game Center player ID, not the ID itself)
-const isCreator = () => !!gcPlayerId && hashStr(gcPlayerId) === CREATOR_GC;
+const isCreator = () => !!window.__debugBuild || (!!gcPlayerId && hashStr(gcPlayerId) === CREATOR_GC); // (Xcode builds always, for testing)
 function maxOut() {
   career.bags = BAGS.map(b => b.id); career.boards = BOARDS.map(b => b.id); career.trails = TRAILS.map(t => t.id); career.effects = EFFECTS.map(e => e.id);
   for (const v of VENUES) if (!v.soon) { if (!career.unlocked.includes(v.id)) career.unlocked.push(v.id); career.courtStars[v.id] = v.max; }

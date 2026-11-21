@@ -3373,7 +3373,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795302709`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795302994`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4887,7 +4887,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795302709`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795302994`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4898,7 +4898,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795302709`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795302994`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6977,7 +6977,7 @@ function renderProfile() {
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
       ${isCreator() ? `<div class="setrow"><span>👑 Creator<br><small class="muted">${career.creator ? "Maxed out · off the leaderboards and seasons" : "Unlock everything, fill coins and caps"}</small></span><button class="btn small" id="setMax">MAX ME OUT</button></div>` : ""}
       <div class="setrow"><span>🔔 Alerts (Daily Drops, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
-      ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}${window.__debugBuild && gcPlayerId ? `<br><span class="gcid" id="gcIdCopy">Player ID: ${esc(gcPlayerId)} (tap to copy)</span>` : ""}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
+      ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}${window.__debugBuild && gcPlayerId ? `<br><span class="gcid" id="gcIdCopy">Player ID: ${esc(gcPlayerId)} (tap to copy)</span>${gcIdTemporary ? `<br><span style="color:#ff8a7a">⚠️ Temporary ID: it changes until Game Center is turned on for this app in App Store Connect</span>` : ""}` : ""}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
       <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
@@ -7148,11 +7148,11 @@ $("canDone").onclick = () => {
   if (i >= 0) { delete career.cans[i].bonus; save(); const t = document.createElement("div"); t.className = "toast"; t.textContent = "4 in a row! Here's a bonus can 🎉"; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); setTimeout(() => openCanSheet(i), 700); }
 };
 
-let gcSignedIn = "", gcPlayerId = "";
+let gcSignedIn = "", gcPlayerId = "", gcIdTemporary = false;
 // The game's creator: recognised only by their Game Center account (Apple signs them in; there's no code to type).
 // Their Settings get a Creator section; a maxed-out creator account is kept off the leaderboards and season groups.
 const CREATOR_GC = 114616474; // (a fingerprint of the creator's Game Center player ID, not the ID itself)
-const isCreator = () => !!gcPlayerId && hashStr(gcPlayerId) === CREATOR_GC;
+const isCreator = () => !!window.__debugBuild || (!!gcPlayerId && hashStr(gcPlayerId) === CREATOR_GC); // (Xcode builds always, for testing)
 function maxOut() {
   career.bags = BAGS.map(b => b.id); career.boards = BOARDS.map(b => b.id); career.trails = TRAILS.map(t => t.id); career.effects = EFFECTS.map(e => e.id);
   for (const v of VENUES) if (!v.soon) { if (!career.unlocked.includes(v.id)) career.unlocked.push(v.id); career.courtStars[v.id] = v.max; }
@@ -8785,7 +8785,7 @@ function renderHub() {
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
 // Game Center: your handle defaults to your Game Center name until you choose your own.
 window.__gcPlayer = p => {
-  gcSignedIn = p ? String(p.name || "Signed in") : ""; gcPlayerId = p && p.id ? String(p.id) : "";
+  gcSignedIn = p ? String(p.name || "Signed in") : ""; gcPlayerId = p && p.id ? String(p.id) : ""; gcIdTemporary = !!(p && p.persistent === false);
   if (!$("avatarSheet").hidden && ptab === "settings") renderProfile();
   if (p && p.name && !career.handleSet) { career.handle = String(p.name).slice(0, 24); save(); }
   if (p) { postScores(); joinSeason(); }

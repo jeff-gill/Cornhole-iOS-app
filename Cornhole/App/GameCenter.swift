@@ -240,7 +240,8 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
     private func reportPlayer() {
         let player = GKLocalPlayer.local
         guard player.isAuthenticated else { callJS("window.__gcPlayer && window.__gcPlayer(null)"); return }
-        let info = ["name": player.displayName, "id": player.gamePlayerID]
+        // persistent is false while the game isn't set up for Game Center in App Store Connect: the IDs are then temporary
+        let info: [String: Any] = ["name": player.displayName, "id": player.gamePlayerID, "persistent": player.scopedIDsArePersistent()]
         guard let data = try? JSONSerialization.data(withJSONObject: info), let json = String(data: data, encoding: .utf8) else { return }
         callJS("window.__gcPlayer && window.__gcPlayer(\(json))")
         // the career saved in their Game Center account (a new iPhone or iPad picks up where they left off)
