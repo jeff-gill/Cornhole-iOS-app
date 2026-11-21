@@ -40,7 +40,6 @@ function skipCan(i) {
   career.caps -= cost; slot.start = clockNow() - openMs(slot.id); save();
   return true;
 }
-const anyTicking = () => career.cans.some(c => canState(c) === "ticking");
 function startCan(i) {
   const slot = career.cans[i];
   if (!slot || canState(slot) !== "idle") return false; // (any number can unlock at the same time)

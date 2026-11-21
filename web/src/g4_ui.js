@@ -511,7 +511,6 @@ function openHub() {
 // Idle clubhouse: after 5 seconds without a touch it fades to 50% so the court shows through. The first tap only wakes it
 // (back to 100%), so nothing gets pressed by accident; after that the buttons work as usual.
 let hubIdleT = null;
-const hubSheetOpen = () => [...document.querySelectorAll(".overlay")].some(o => o.id !== "hub" && !o.hidden);
 function hubWake() {
   $("hub").classList.remove("idle"); clearTimeout(hubIdleT);
   // (the clubhouse no longer fades: the courts have their own page now, so nothing hides the view)
