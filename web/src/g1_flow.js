@@ -451,7 +451,7 @@ function startMatch(kind, vi, online = null, pick = null) {
       // a hot streak (3 or more wins in a row): each opponent is sharper than the last, faster the longer it runs
       const [hi, lo] = v.cpu, ease = Math.min(5, Math.max(0, (career.loseStreak || 0) - 2)), heat = Math.max(0, (career.winStreak || 0) - 2);
       const skill = ease ? hi * (1 + 0.1 * ease) : heat ? lo * (1 - Math.min(0.5, 0.04 * heat ** 1.6)) : rand(lo, hi);
-      S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, style: (pick && pick.style) || CPU_STYLES[Math.floor(Math.random() * CPU_STYLES.length)].id, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       // a CPU's career stars: everything before this court, plus part of this one (more for the tougher ones)
       const before = VENUES.slice(0, vi).reduce((t, x) => t + x.max, 0), k = (hi - skill) / Math.max(1e-6, hi - lo);
       S.opponent.stars = before + Math.round(v.max * (0.15 + 0.8 * k * Math.random()));
@@ -655,7 +655,8 @@ function finishInning() {
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
   S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
-  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { // reach the target and win by 2 S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
+  // reach the target and win by 2
+  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
   if (r.winner === null) showWash();
 }
@@ -748,7 +749,7 @@ function handleEvents(evts) {
 }
 // Computer: plans like a decent player, partly allows for the wind (better players allow for more), then throws with skill-based error.
 function cpuTurn() {
-  S.cpuPlan = cpuPlan(S.player, S.world.bags);
+  S.cpuPlan = cpuPlan(S.player, S.world.bags, S.opponent && S.opponent.style);
   const sk = S.opponent ? S.opponent.skill : 0.25;
   S.cpuErr = { dir: gauss(sk), pow: gauss(sk) }; // decided now, so its power ring and arrow (shown as it winds up) end on them
   S.end = { ...S.cpuPlan.end };

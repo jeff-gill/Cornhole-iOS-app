@@ -58,3 +58,9 @@ cat web/vendor/three-LICENSE.txt > Cornhole/Web/third-party-licenses.txt
 printf '\n\n---- Lilita One ----\n' >> Cornhole/Web/third-party-licenses.txt; cat web/vendor/lilita-one-OFL.txt >> Cornhole/Web/third-party-licenses.txt
 printf '\n\n---- Nunito ----\n' >> Cornhole/Web/third-party-licenses.txt; cat web/vendor/nunito-OFL.txt >> Cornhole/Web/third-party-licenses.txt
 echo "built web/index.html, build/artifact.html and Cornhole/Web/"
+# Syntax check: every source file must parse (catches a broken edit before it ships).
+for f in web/src/engine.js web/src/g*.js; do
+  cp "$f" /tmp/.cornhole-check.mjs
+  node --check /tmp/.cornhole-check.mjs >/dev/null 2>&1 || { echo "SYNTAX ERROR in $f"; node --check /tmp/.cornhole-check.mjs; exit 1; }
+done
+rm -f /tmp/.cornhole-check.mjs

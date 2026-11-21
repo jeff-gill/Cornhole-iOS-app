@@ -426,12 +426,28 @@ function segDist(p, a, b) {
   const t = clamp(((p.x - a.x) * abx + (p.y - a.y) * aby) / l2, 0, 1);
   return Math.hypot(p.x - (a.x + abx * t), p.y - (a.y + aby * t));
 }
-function cpuPlan(pl, bags) {
+// Computer playing styles. Each match pairs a random name with a random style and a skill level for the court.
+const CPU_STYLES = [
+  { id: "steady", name: "Steady" },     // the all-rounder
+  { id: "slider", name: "Slider" },     // low throws that slide up into the hole
+  { id: "airmail", name: "Air Mailer" }, // high lobs that try to drop straight in
+  { id: "blocker", name: "Blocker" },   // parks bags in front of the hole to block your lane
+  { id: "pusher", name: "Pusher" },     // loves knocking its own bags in
+];
+function cpuPlan(pl, bags, style = "steady") {
   const o = release(pl), D = Math.hypot(HOLE.x - o.x, HOLE.y - o.y), dir = { x: (HOLE.x - o.x) / D, y: (HOLE.y - o.y) / D };
-  const landing = { x: HOLE.x - dir.x * 1.7, y: HOLE.y - dir.y * 1.7 }, end = { x: HOLE.x + dir.x * 0.1, y: HOLE.y + dir.y * 0.1 };
+  const back = style === "slider" ? 2.6 : style === "airmail" ? 0.35 : 1.7; // how far short of the hole it lands
+  const landing = { x: HOLE.x - dir.x * back, y: HOLE.y - dir.y * back }, end = { x: HOLE.x + dir.x * 0.1, y: HOLE.y + dir.y * 0.1 };
+  const mine = bags.filter(b => onSurface(b) && b.owner === pl), theirs = bags.filter(b => onSurface(b) && b.owner !== pl);
+  // a blocker parks a bag about 2 ft in front of the hole when it has none there yet (more often once you've scored)
+  if (style === "blocker" && !mine.some(b => dist(b, HOLE) < 2.6 && b.y < HOLE.y) && Math.random() < (theirs.length ? 0.55 : 0.3)) {
+    const at = { x: HOLE.x - dir.x * 2.1, y: HOLE.y - dir.y * 2.1 };
+    return { landing: { x: at.x - dir.x * 0.9, y: at.y - dir.y * 0.9 }, end: at, label: "Block" };
+  }
   const blocker = bags.filter(onSurface).find(b => segDist(b, landing, HOLE) < 0.42);
-  if (!blocker) return { landing, end, label: "Slide it in" };
-  if (blocker.owner === pl && dist(blocker, HOLE) < 1.6 && dist(blocker, landing) > 0.5) return { landing, end: { ...HOLE }, label: "Push it in" };
+  if (!blocker) return { landing, end, label: style === "airmail" ? "Drop it in" : "Slide it in" };
+  if (blocker.owner === pl && dist(blocker, HOLE) < (style === "pusher" ? 2.6 : 1.6) && dist(blocker, landing) > 0.5) return { landing, end: { ...HOLE }, label: "Push it in" };
+  if (style === "airmail") return { landing: { ...HOLE }, end: { ...HOLE }, label: "Airmail" };
   if (blocker.owner !== pl && dist(blocker, HOLE) < 0.9 && Math.random() < 0.5)
     return { landing: { x: blocker.x - dir.x * 0.9, y: blocker.y - dir.y * 0.9 }, end: { x: HOLE.x + dir.x * 0.4, y: HOLE.y + dir.y * 0.4 }, label: "Push through" };
   return { landing: { ...HOLE }, end: { ...HOLE }, label: "Airmail" };

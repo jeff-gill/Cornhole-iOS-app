@@ -17,7 +17,7 @@ function freshPick() {
   const recent = (career.recentOpps ||= []), pool = OPPONENTS.filter(n => !recent.includes(n));
   const name = pool[Math.floor(Math.random() * pool.length)] || OPPONENTS[0];
   recent.push(name); if (recent.length > 30) recent.shift();
-  return { name, avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id };
+  return { name, avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id, style: CPU_STYLES[Math.floor(Math.random() * CPU_STYLES.length)].id };
 }
 function playCourt(vi, confirmed = false) {
   const v = VENUES[vi];
@@ -39,7 +39,7 @@ function cancelSearch(playCPU) {
   if (search.online) postNative("net", JSON.stringify({ op: "cancel" }));
   search.online = false;
   if (!playCPU) { search = null; $("searching").hidden = true; return; }
-  const pick = freshPick(), vi = search.vi;
+  const pick = freshPick(), vi = search.vi; search.pick = pick;
   settleReel(pick, () => { search = null; $("searching").hidden = true; startMatch("career", vi, null, pick); });
 }
 // ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).

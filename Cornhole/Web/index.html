@@ -1487,12 +1487,28 @@ function segDist(p, a, b) {
   const t = clamp(((p.x - a.x) * abx + (p.y - a.y) * aby) / l2, 0, 1);
   return Math.hypot(p.x - (a.x + abx * t), p.y - (a.y + aby * t));
 }
-function cpuPlan(pl, bags) {
+// Computer playing styles. Each match pairs a random name with a random style and a skill level for the court.
+const CPU_STYLES = [
+  { id: "steady", name: "Steady" },     // the all-rounder
+  { id: "slider", name: "Slider" },     // low throws that slide up into the hole
+  { id: "airmail", name: "Air Mailer" }, // high lobs that try to drop straight in
+  { id: "blocker", name: "Blocker" },   // parks bags in front of the hole to block your lane
+  { id: "pusher", name: "Pusher" },     // loves knocking its own bags in
+];
+function cpuPlan(pl, bags, style = "steady") {
   const o = release(pl), D = Math.hypot(HOLE.x - o.x, HOLE.y - o.y), dir = { x: (HOLE.x - o.x) / D, y: (HOLE.y - o.y) / D };
-  const landing = { x: HOLE.x - dir.x * 1.7, y: HOLE.y - dir.y * 1.7 }, end = { x: HOLE.x + dir.x * 0.1, y: HOLE.y + dir.y * 0.1 };
+  const back = style === "slider" ? 2.6 : style === "airmail" ? 0.35 : 1.7; // how far short of the hole it lands
+  const landing = { x: HOLE.x - dir.x * back, y: HOLE.y - dir.y * back }, end = { x: HOLE.x + dir.x * 0.1, y: HOLE.y + dir.y * 0.1 };
+  const mine = bags.filter(b => onSurface(b) && b.owner === pl), theirs = bags.filter(b => onSurface(b) && b.owner !== pl);
+  // a blocker parks a bag about 2 ft in front of the hole when it has none there yet (more often once you've scored)
+  if (style === "blocker" && !mine.some(b => dist(b, HOLE) < 2.6 && b.y < HOLE.y) && Math.random() < (theirs.length ? 0.55 : 0.3)) {
+    const at = { x: HOLE.x - dir.x * 2.1, y: HOLE.y - dir.y * 2.1 };
+    return { landing: { x: at.x - dir.x * 0.9, y: at.y - dir.y * 0.9 }, end: at, label: "Block" };
+  }
   const blocker = bags.filter(onSurface).find(b => segDist(b, landing, HOLE) < 0.42);
-  if (!blocker) return { landing, end, label: "Slide it in" };
-  if (blocker.owner === pl && dist(blocker, HOLE) < 1.6 && dist(blocker, landing) > 0.5) return { landing, end: { ...HOLE }, label: "Push it in" };
+  if (!blocker) return { landing, end, label: style === "airmail" ? "Drop it in" : "Slide it in" };
+  if (blocker.owner === pl && dist(blocker, HOLE) < (style === "pusher" ? 2.6 : 1.6) && dist(blocker, landing) > 0.5) return { landing, end: { ...HOLE }, label: "Push it in" };
+  if (style === "airmail") return { landing: { ...HOLE }, end: { ...HOLE }, label: "Airmail" };
   if (blocker.owner !== pl && dist(blocker, HOLE) < 0.9 && Math.random() < 0.5)
     return { landing: { x: blocker.x - dir.x * 0.9, y: blocker.y - dir.y * 0.9 }, end: { x: HOLE.x + dir.x * 0.4, y: HOLE.y + dir.y * 0.4 }, label: "Push through" };
   return { landing: { ...HOLE }, end: { ...HOLE }, label: "Airmail" };
@@ -1956,7 +1972,7 @@ function startMatch(kind, vi, online = null, pick = null) {
       // a hot streak (3 or more wins in a row): each opponent is sharper than the last, faster the longer it runs
       const [hi, lo] = v.cpu, ease = Math.min(5, Math.max(0, (career.loseStreak || 0) - 2)), heat = Math.max(0, (career.winStreak || 0) - 2);
       const skill = ease ? hi * (1 + 0.1 * ease) : heat ? lo * (1 - Math.min(0.5, 0.04 * heat ** 1.6)) : rand(lo, hi);
-      S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
+      S.opponent = { avatar: pick ? pick.avatar : AVATARS[Math.floor(Math.random() * AVATARS.length)].id, name: pick ? pick.name : OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], skill, style: (pick && pick.style) || CPU_STYLES[Math.floor(Math.random() * CPU_STYLES.length)].id, rating: 1 + Math.round((hi - skill) / Math.max(1e-6, hi - lo) * 2) };
       // a CPU's career stars: everything before this court, plus part of this one (more for the tougher ones)
       const before = VENUES.slice(0, vi).reduce((t, x) => t + x.max, 0), k = (hi - skill) / Math.max(1e-6, hi - lo);
       S.opponent.stars = before + Math.round(v.max * (0.15 + 0.8 * k * Math.random()));
@@ -2160,7 +2176,8 @@ function finishInning() {
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
   S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
-  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { // reach the target and win by 2 S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
+  // reach the target and win by 2
+  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
   ui();
   if (r.winner === null) showWash();
 }
@@ -2253,7 +2270,7 @@ function handleEvents(evts) {
 }
 // Computer: plans like a decent player, partly allows for the wind (better players allow for more), then throws with skill-based error.
 function cpuTurn() {
-  S.cpuPlan = cpuPlan(S.player, S.world.bags);
+  S.cpuPlan = cpuPlan(S.player, S.world.bags, S.opponent && S.opponent.style);
   const sk = S.opponent ? S.opponent.skill : 0.25;
   S.cpuErr = { dir: gauss(sk), pow: gauss(sk) }; // decided now, so its power ring and arrow (shown as it winds up) end on them
   S.end = { ...S.cpuPlan.end };
@@ -2421,7 +2438,7 @@ function freshPick() {
   const recent = (career.recentOpps ||= []), pool = OPPONENTS.filter(n => !recent.includes(n));
   const name = pool[Math.floor(Math.random() * pool.length)] || OPPONENTS[0];
   recent.push(name); if (recent.length > 30) recent.shift();
-  return { name, avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id };
+  return { name, avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id, style: CPU_STYLES[Math.floor(Math.random() * CPU_STYLES.length)].id };
 }
 function playCourt(vi, confirmed = false) {
   const v = VENUES[vi];
@@ -2443,7 +2460,7 @@ function cancelSearch(playCPU) {
   if (search.online) postNative("net", JSON.stringify({ op: "cancel" }));
   search.online = false;
   if (!playCPU) { search = null; $("searching").hidden = true; return; }
-  const pick = freshPick(), vi = search.vi;
+  const pick = freshPick(), vi = search.vi; search.pick = pick;
   settleReel(pick, () => { search = null; $("searching").hidden = true; startMatch("career", vi, null, pick); });
 }
 // ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).
@@ -3156,7 +3173,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795219424`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795219554`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4670,7 +4687,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795219424`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795219554`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4681,7 +4698,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795219424`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795219554`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
