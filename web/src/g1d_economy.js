@@ -344,7 +344,7 @@ window.__seasonEntries = msg => {
     if (!s.pending) return;
     const G = myGroup(withBots(msg.entries, s.pending.title, s.pending.id), msg.me, s.pending.id);
     settleSeason(G.rank, G.size);
-  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(withBots(msg.entries, s.title, s.id), msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("livesSheet").hidden) openSeason(); }
+  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(withBots(msg.entries, s.title, s.id), msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("rankSheet").hidden) openSeason(); }
 };
 // rank/size: your place in your group last season (0 if unknown: no Game Center and no CPU group to compare with).
 function settleSeason(rank, size) {

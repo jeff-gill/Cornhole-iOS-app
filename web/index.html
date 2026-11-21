@@ -664,6 +664,14 @@ s.was { opacity: .6; font-size: .8em; }
 .overlay:not(.page):has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
 .infobtn { width: 26px; height: 26px; margin-left: 8px; border-radius: 50%; border: 2px solid #fff; background: #2f86ff; color: #fff; font: 900 15px/1 Georgia, serif; font-style: italic; padding: 0; flex: none; }
 #livesSheet > .sheet { max-height: calc(100dvh - 96px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; } /* tall pop-ups (the season ladder) scroll */
+#rankBody .tabs { grid-template-columns: 1fr 1fr 1.2fr; position: sticky; top: -6px; z-index: 5; background: #14254a; box-shadow: 0 -30px 0 18px var(--deck-2), 0 6px 10px rgba(6,12,24,.5); }
+#rankBody .ladder.group { max-height: none; height: calc(100dvh - var(--topbar-h, 110px) - var(--navbar-h, 96px) - 250px); min-height: 220px; padding-right: 18px; scrollbar-width: none; }
+#rankBody .ladder.group::-webkit-scrollbar { display: none; }
+.gwrap { position: relative; }
+.gbar { position: absolute; top: 4px; bottom: 4px; right: 2px; width: 8px; border-radius: 4px; background: rgba(255,255,255,.18); pointer-events: none; }
+.gbar i { position: absolute; left: 0; right: 0; border-radius: 4px; background: #fff; box-shadow: 0 0 6px rgba(255,255,255,.6); }
+.lbbtn { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; font-size: 18px; padding: 14px 16px; }
+.lbbtn span { font-size: 28px; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 /* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
@@ -968,6 +976,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>
+<div class="overlay page" id="rankSheet" hidden><div class="sheet" id="rankBody"></div></div>
 <div class="overlay page" id="practiceSheet" hidden><div class="sheet" id="practiceBody"></div></div>
 <div class="overlay page" id="shop" hidden>
   <div class="sheet">
@@ -2984,7 +2993,7 @@ window.__seasonEntries = msg => {
     if (!s.pending) return;
     const G = myGroup(withBots(msg.entries, s.pending.title, s.pending.id), msg.me, s.pending.id);
     settleSeason(G.rank, G.size);
-  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(withBots(msg.entries, s.title, s.id), msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("livesSheet").hidden) openSeason(); }
+  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(withBots(msg.entries, s.title, s.id), msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("rankSheet").hidden) openSeason(); }
 };
 // rank/size: your place in your group last season (0 if unknown: no Game Center and no CPU group to compare with).
 function settleSeason(rank, size) {
@@ -3170,7 +3179,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795220192`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795227146`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4684,7 +4693,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795220192`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795227146`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4695,7 +4704,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795220192`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795227146`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6952,31 +6961,44 @@ function renderSeasonBadge() {
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
 }
-function openSeason() {
+let rankTab = "group";
+function openSeason(tab) {
+  if (tab) rankTab = tab;
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
   if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, myHandle()]], s.title, s.id), "me", s.id), me: "me" };
   const G = S.groupStandings;
   if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
-  let group = "";
+  let group = `<div class="muted center" style="margin-top:20px">Your group shows here once Game Center has the season's scores.</div>`;
   if (G && G.size) {
     const up = promoteCount(s.title, G.size), down = demoteCount(s.title, G.size);
     const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
     const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
     const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
-    // the whole group, scrolling, with a line under the promotion places and one above the relegation places
     const list = G.list.map((e, i) => (i === G.size - down && down ? `<div class="zoneline down">▼ RELEGATION LINE ▼</div>` : "") + row(e, i + 1) + (i + 1 === up ? `<div class="zoneline up">▲ PROMOTION LINE ▲</div>` : "")).join("");
-    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder group" id="groupList">${list}</div>
+    group = `<div class="label">Your group (${G.size} players)</div><div class="gwrap"><div class="ladder group" id="groupList">${list}</div><div class="gbar" id="groupBar"><i></i></div></div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
-  showInfo(`<h2>Season ladder <button class="infobtn" id="seasonInfoBtn" aria-label="How seasons work">i</button></h2>
-    <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
-    <div class="muted infotext" id="seasonInfo" hidden>Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
-    <div class="ladder">${rows}</div>`);
-  $("seasonInfoBtn").onclick = () => { $("seasonInfo").hidden = !$("seasonInfo").hidden; };
-  const me = document.querySelector("#groupList .me"); // start the list at your own row
-  if (me) { const gl = $("groupList"); gl.scrollTop = me.offsetTop - gl.offsetTop - gl.clientHeight / 2 + me.clientHeight / 2; }
+  const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
+  const body = rankTab === "group" ? head + group
+    : rankTab === "ladder" ? `${head}<div class="muted infotext">Win: the court's win stars in points. Loss: 1 point for playing. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
+    : `<div class="muted">The worldwide Game Center leaderboards.</div>
+      <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
+  $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "LADDER"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
+  for (const b of $("rankBody").querySelectorAll("[data-rt]")) b.onclick = () => openSeason(b.dataset.rt);
+  for (const b of $("rankBody").querySelectorAll("[data-lb]")) b.onclick = () => openRankings();
+  closePages(); $("rankSheet").hidden = false; $("rankSheet").classList.add("noback");
+  const gl = $("groupList");
+  if (gl) {
+    const me = gl.querySelector(".me"); // start the list at your own row
+    if (me) gl.scrollTop = me.offsetTop - gl.clientHeight / 2 + me.clientHeight / 2;
+    const bar = $("groupBar").firstElementChild, sync = () => { // the white scroll indicator
+      const h = gl.clientHeight, H = gl.scrollHeight, track = $("groupBar").clientHeight, th = Math.max(28, track * h / Math.max(h, H));
+      bar.style.height = th + "px"; bar.style.top = ((track - th) * (gl.scrollTop / Math.max(1, H - h))) + "px";
+    };
+    gl.onscroll = sync; requestAnimationFrame(sync);
+  }
 }
 function showSeasonResult() {
   const L = seasonState().last; if (!L || L.shown) return;
@@ -6988,7 +7010,7 @@ function showSeasonResult() {
     ${L.reward ? `<div class="big" style="color:${COL.gold}">🥫 Season prize: ${canById(L.reward).name} can (in your cooler)</div>` : ""}`);
   if (up) { sfx.win(); haptic("success"); }
 }
-$("seasonBtn").onclick = openSeason;
+$("seasonBtn").onclick = () => openSeason("group");
 
 // ── Daily Drop (Golf Clash's free chest): a free prize every 4 hours, up to 2 waiting, given straight away. These are its prizes.
 // Small, steady prizes: opening all six a day comes to about 150-200 coins, 1-2 bottle caps and 1-2 bag or board cards
@@ -8427,13 +8449,13 @@ function showHubPage(p) {
 }
 $("courtsBack").onclick = () => showHubPage("home");
 $("throwBagsBtn").onclick = () => { initAudio(); showHubPage("courts"); };
-const PAGES = ["shop", "avatarSheet", "bbSheet", "helpSheet", "practiceSheet"];
+const PAGES = ["shop", "avatarSheet", "bbSheet", "helpSheet", "practiceSheet", "rankSheet"];
 function closePages() { for (const id of PAGES) $(id).hidden = true; }
 function shopMode(m) { const el = $("shop"); el.classList.toggle("mode-store", m === "store"); el.classList.toggle("mode-gear", m === "gear"); $("shopTitle").textContent = m === "store" ? "Store" : m === "gear" ? "Bags & Boards" : "Pro Shop"; }
 for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
   const n = b.dataset.nav;
-  if (n === "rank") { openRankings(); return; }
   closePages();
+  if (n === "rank") { openSeason(); return; }
   if (n === "home") showHubPage("home");
   else if (n === "store") { shopMode("store"); shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); }
   else if (n === "gear") { shopMode("gear"); shopTab = "bags"; openShopNews(); $("shop").classList.add("noback"); }
@@ -8441,7 +8463,7 @@ for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
 };
 // which bottom-bar button is lit: the page that's open, else Home
 function syncNavbar() {
-  const on = !$("shop").hidden ? ($("shop").classList.contains("mode-store") ? "store" : "gear") : !$("avatarSheet").hidden && $("avatarSheet").classList.contains("noback") ? "settings" : "home";
+  const on = !$("rankSheet").hidden ? "rank" : !$("shop").hidden ? ($("shop").classList.contains("mode-store") ? "store" : "gear") : !$("avatarSheet").hidden && $("avatarSheet").classList.contains("noback") ? "settings" : "home";
   for (const b of document.querySelectorAll("#navbar button")) { const lit = b.dataset.nav === on; if (b.classList.contains("on") !== lit) b.classList.toggle("on", lit); }
   const top = $("hub").querySelector(".hubtop"), nav = $("navbar");
   if (!$("hub").hidden && top && nav) {

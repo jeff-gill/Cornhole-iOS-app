@@ -393,31 +393,44 @@ function renderSeasonBadge() {
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
 }
-function openSeason() {
+let rankTab = "group";
+function openSeason(tab) {
+  if (tab) rankTab = tab;
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
   if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, myHandle()]], s.title, s.id), "me", s.id), me: "me" };
   const G = S.groupStandings;
   if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
-  let group = "";
+  let group = `<div class="muted center" style="margin-top:20px">Your group shows here once Game Center has the season's scores.</div>`;
   if (G && G.size) {
     const up = promoteCount(s.title, G.size), down = demoteCount(s.title, G.size);
     const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
     const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
     const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
-    // the whole group, scrolling, with a line under the promotion places and one above the relegation places
     const list = G.list.map((e, i) => (i === G.size - down && down ? `<div class="zoneline down">▼ RELEGATION LINE ▼</div>` : "") + row(e, i + 1) + (i + 1 === up ? `<div class="zoneline up">▲ PROMOTION LINE ▲</div>` : "")).join("");
-    group = `<div class="label">Your group (${G.size} players)</div><div class="ladder group" id="groupList">${list}</div>
+    group = `<div class="label">Your group (${G.size} players)</div><div class="gwrap"><div class="ladder group" id="groupList">${list}</div><div class="gbar" id="groupBar"><i></i></div></div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
-  showInfo(`<h2>Season ladder <button class="infobtn" id="seasonInfoBtn" aria-label="How seasons work">i</button></h2>
-    <div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">Win: the court's win stars in points. Loss: 1 point for playing. ${days} day${days > 1 ? "s" : ""} left this season.</div>
-    <div class="muted infotext" id="seasonInfo" hidden>Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up (top 20% at Rookie down to the top 2% at Champion) and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can: Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one can better for every title above Rookie. Each title also adds 5% more cards to every can you open.</div>${group}
-    <div class="ladder">${rows}</div>`);
-  $("seasonInfoBtn").onclick = () => { $("seasonInfo").hidden = !$("seasonInfo").hidden; };
-  const me = document.querySelector("#groupList .me"); // start the list at your own row
-  if (me) { const gl = $("groupList"); gl.scrollTop = me.offsetTop - gl.offsetTop - gl.clientHeight / 2 + me.clientHeight / 2; }
+  const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
+  const body = rankTab === "group" ? head + group
+    : rankTab === "ladder" ? `${head}<div class="muted infotext">Win: the court's win stars in points. Loss: 1 point for playing. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
+    : `<div class="muted">The worldwide Game Center leaderboards.</div>
+      <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
+  $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "LADDER"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
+  for (const b of $("rankBody").querySelectorAll("[data-rt]")) b.onclick = () => openSeason(b.dataset.rt);
+  for (const b of $("rankBody").querySelectorAll("[data-lb]")) b.onclick = () => openRankings();
+  closePages(); $("rankSheet").hidden = false; $("rankSheet").classList.add("noback");
+  const gl = $("groupList");
+  if (gl) {
+    const me = gl.querySelector(".me"); // start the list at your own row
+    if (me) gl.scrollTop = me.offsetTop - gl.clientHeight / 2 + me.clientHeight / 2;
+    const bar = $("groupBar").firstElementChild, sync = () => { // the white scroll indicator
+      const h = gl.clientHeight, H = gl.scrollHeight, track = $("groupBar").clientHeight, th = Math.max(28, track * h / Math.max(h, H));
+      bar.style.height = th + "px"; bar.style.top = ((track - th) * (gl.scrollTop / Math.max(1, H - h))) + "px";
+    };
+    gl.onscroll = sync; requestAnimationFrame(sync);
+  }
 }
 function showSeasonResult() {
   const L = seasonState().last; if (!L || L.shown) return;
@@ -429,7 +442,7 @@ function showSeasonResult() {
     ${L.reward ? `<div class="big" style="color:${COL.gold}">🥫 Season prize: ${canById(L.reward).name} can (in your cooler)</div>` : ""}`);
   if (up) { sfx.win(); haptic("success"); }
 }
-$("seasonBtn").onclick = openSeason;
+$("seasonBtn").onclick = () => openSeason("group");
 
 // ── Daily Drop (Golf Clash's free chest): a free prize every 4 hours, up to 2 waiting, given straight away. These are its prizes.
 // Small, steady prizes: opening all six a day comes to about 150-200 coins, 1-2 bottle caps and 1-2 bag or board cards

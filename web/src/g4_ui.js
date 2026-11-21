@@ -565,13 +565,13 @@ function showHubPage(p) {
 }
 $("courtsBack").onclick = () => showHubPage("home");
 $("throwBagsBtn").onclick = () => { initAudio(); showHubPage("courts"); };
-const PAGES = ["shop", "avatarSheet", "bbSheet", "helpSheet", "practiceSheet"];
+const PAGES = ["shop", "avatarSheet", "bbSheet", "helpSheet", "practiceSheet", "rankSheet"];
 function closePages() { for (const id of PAGES) $(id).hidden = true; }
 function shopMode(m) { const el = $("shop"); el.classList.toggle("mode-store", m === "store"); el.classList.toggle("mode-gear", m === "gear"); $("shopTitle").textContent = m === "store" ? "Store" : m === "gear" ? "Bags & Boards" : "Pro Shop"; }
 for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
   const n = b.dataset.nav;
-  if (n === "rank") { openRankings(); return; }
   closePages();
+  if (n === "rank") { openSeason(); return; }
   if (n === "home") showHubPage("home");
   else if (n === "store") { shopMode("store"); shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); }
   else if (n === "gear") { shopMode("gear"); shopTab = "bags"; openShopNews(); $("shop").classList.add("noback"); }
@@ -579,7 +579,7 @@ for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
 };
 // which bottom-bar button is lit: the page that's open, else Home
 function syncNavbar() {
-  const on = !$("shop").hidden ? ($("shop").classList.contains("mode-store") ? "store" : "gear") : !$("avatarSheet").hidden && $("avatarSheet").classList.contains("noback") ? "settings" : "home";
+  const on = !$("rankSheet").hidden ? "rank" : !$("shop").hidden ? ($("shop").classList.contains("mode-store") ? "store" : "gear") : !$("avatarSheet").hidden && $("avatarSheet").classList.contains("noback") ? "settings" : "home";
   for (const b of document.querySelectorAll("#navbar button")) { const lit = b.dataset.nav === on; if (b.classList.contains("on") !== lit) b.classList.toggle("on", lit); }
   const top = $("hub").querySelector(".hubtop"), nav = $("navbar");
   if (!$("hub").hidden && top && nav) {

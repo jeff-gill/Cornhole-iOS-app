@@ -656,6 +656,14 @@ s.was { opacity: .6; font-size: .8em; }
 .overlay:not(.page):has(> .sheetback) { padding-top: calc(66px + env(safe-area-inset-top, 0px)) !important; }
 .infobtn { width: 26px; height: 26px; margin-left: 8px; border-radius: 50%; border: 2px solid #fff; background: #2f86ff; color: #fff; font: 900 15px/1 Georgia, serif; font-style: italic; padding: 0; flex: none; }
 #livesSheet > .sheet { max-height: calc(100dvh - 96px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow-y: auto; } /* tall pop-ups (the season ladder) scroll */
+#rankBody .tabs { grid-template-columns: 1fr 1fr 1.2fr; position: sticky; top: -6px; z-index: 5; background: #14254a; box-shadow: 0 -30px 0 18px var(--deck-2), 0 6px 10px rgba(6,12,24,.5); }
+#rankBody .ladder.group { max-height: none; height: calc(100dvh - var(--topbar-h, 110px) - var(--navbar-h, 96px) - 250px); min-height: 220px; padding-right: 18px; scrollbar-width: none; }
+#rankBody .ladder.group::-webkit-scrollbar { display: none; }
+.gwrap { position: relative; }
+.gbar { position: absolute; top: 4px; bottom: 4px; right: 2px; width: 8px; border-radius: 4px; background: rgba(255,255,255,.18); pointer-events: none; }
+.gbar i { position: absolute; left: 0; right: 0; border-radius: 4px; background: #fff; box-shadow: 0 0 6px rgba(255,255,255,.6); }
+.lbbtn { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; font-size: 18px; padding: 14px 16px; }
+.lbbtn span { font-size: 28px; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 /* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
@@ -960,6 +968,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <button class="btn green" id="canDone" hidden>COLLECT</button>
   </div>
 </div>
+<div class="overlay page" id="rankSheet" hidden><div class="sheet" id="rankBody"></div></div>
 <div class="overlay page" id="practiceSheet" hidden><div class="sheet" id="practiceBody"></div></div>
 <div class="overlay page" id="shop" hidden>
   <div class="sheet">
