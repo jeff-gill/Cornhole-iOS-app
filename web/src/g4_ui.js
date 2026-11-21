@@ -755,7 +755,7 @@ function renderShop() {
     if (n) b.insertAdjacentHTML("beforeend", `<i class="nbadge">${n}</i>`);
   }
   // An item's badge: NEW! when cards have just unlocked it (it's now yours to equip).
-  const itemBadge = (catKey, id) => { const nb = (career.newCards || {})[`${catKey}:${id}`]; return nb && nb.unlocked ? `<i class="nbadge item-badge">NEW!</i>` : ""; };
+  const itemBadge = (catKey, id) => { const nb = (career.newCards || {})[`${catKey}:${id}`]; return nb && nb.unlocked ? `<i class="nbadge item-badge" data-new="${catKey}:${id}">NEW!</i>` : ""; };
   const list = $("shopItems"); list.innerHTML = "";
   if (shopTab === "store") {
     list.innerHTML = storeHTML();
@@ -797,6 +797,7 @@ function renderShop() {
       }
       row.appendChild(btns); list.appendChild(row);
     }
+    wireNewBadges();
     return;
   }
   const items = shopTab === "bags" ? BAGS : BOARDS;
@@ -827,6 +828,20 @@ function renderShop() {
       };
     }
     row.appendChild(btn); list.appendChild(row);
+  }
+  wireNewBadges();
+}
+// A NEW! item counts as seen once it's tapped: its badge goes, and the tab and Bags & Boards counts drop by one.
+function wireNewBadges() {
+  for (const bd of document.querySelectorAll("#shopItems [data-new]")) {
+    const row = bd.parentElement, key = bd.dataset.new;
+    row.addEventListener("click", () => {
+      if (!career.newCards || !career.newCards[key]) return;
+      delete career.newCards[key]; save(); bd.remove();
+      const TAB_CAT = { bags: "bag", boards: "board", throw: "trail", hole: "fx" };
+      for (const b of document.querySelectorAll("#shop .tabs button")) { const n = TAB_CAT[b.dataset.tab] ? newCount(TAB_CAT[b.dataset.tab]) : 0; b.querySelector(".nbadge")?.remove(); if (n) b.insertAdjacentHTML("beforeend", `<i class="nbadge">${n}</i>`); }
+      const nb = newCount(); $("gearBadge").hidden = !nb; $("gearBadge").textContent = nb;
+    }, true);
   }
 }
 // Shop previews: hide the shop, play the effect where you can see it, then come back.
@@ -864,14 +879,8 @@ function openShopNews() { // opens where any newly unlocked cards are
   if (withNews) shopTab = withNews[0]; // open where the new cards are
   renderShop(); $("shop").hidden = false;
 };
-// Leaving a tab (or closing the shop) marks its new cards as seen.
-function seenTab(tab) {
-  const cat = { bags: "bag", boards: "board", throw: "trail", hole: "fx" }[tab]; if (!cat || !career.newCards) return;
-  for (const k of Object.keys(career.newCards)) if (k.startsWith(cat + ":")) delete career.newCards[k];
-  save();
-}
-$("shopClose").onclick = () => { seenTab(shopTab); $("shop").hidden = true; renderHub(); };
-for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { if (b.dataset.tab !== shopTab) seenTab(shopTab); shopTab = b.dataset.tab; renderShop(); };
+$("shopClose").onclick = () => { $("shop").hidden = true; renderHub(); };
+for (const b of document.querySelectorAll("#shop .tabs button")) b.onclick = () => { shopTab = b.dataset.tab; renderShop(); }; // (NEW! items stay new until tapped)
 let pausedPhase = null;
 // Pausing during your throw: the first pause of a match stops the throw clock for 5 seconds, then it runs again; any
 // later pause leaves the clock running, with a warning. (Pausing when no clock is running stops the game as before.)
