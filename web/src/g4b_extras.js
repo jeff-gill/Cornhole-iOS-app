@@ -396,7 +396,7 @@ function beginnerHTML() {
 function renderSeasonBadge() {
   if (isBeginner()) { $("seasonBtn").innerHTML = `🌱 <b>Beginner</b> · ${beginnerHTML()}`; return; }
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
-  $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
+  $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · <i class="coin" style="width:15px;height:15px;vertical-align:-2px"></i> ${short(s.points)} won · ${days} day${days > 1 ? "s" : ""} left`;
 }
 let rankTab = "group";
 function openSeason(tab) {
@@ -413,16 +413,16 @@ function openSeason(tab) {
     // promotion places go to real players only (computer players can't move up); relegation counts everyone
     let rr = 0; const realAt = G.list.map(e => (isBot(e) ? 0 : ++rr)), lastUp = realAt.findIndex(n => n === up);
     const zone = (r, i) => (realAt[i] && realAt[i] <= up ? " up" : r > G.size - down ? " down" : "");
-    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r, r - 1)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
+    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r, r - 1)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small><i class="coin" style="width:13px;height:13px;vertical-align:-2px"></i> ${short(e[1])}</small></div>`;
     const myZone = zone(G.rank, G.rank - 1), where = myZone === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : myZone === " down" ? "You're in the demotion zone." : "";
     const list = G.list.map((e, i) => (i === G.size - down && down ? `<div class="zoneline down">▼ RELEGATION LINE ▼</div>` : "") + row(e, i + 1) + (i === lastUp ? `<div class="zoneline up">▲ PROMOTION LINE ▲</div>` : "")).join("");
     group = `<div class="label">Your group (${G.size} players)</div><div class="gwrap"><div class="ladder group" id="groupList">${list}</div><div class="gbar" id="groupBar"><i></i></div></div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
-  const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
+  const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · <i class="coin" style="width:20px;height:20px;vertical-align:-3px"></i> ${short(s.points)} won</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
   const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and start climbing the season titles.</div>`;
   const body = isBeginner() && rankTab !== "gc" ? learner : rankTab === "group" ? head + group
-    : rankTab === "ladder" ? `${head}<div class="muted infotext">Win: the court's win stars in points. Loss: 1 point for playing. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
+    : rankTab === "ladder" ? `${head}<div class="muted infotext">Your season score is the coins you win from matches this month. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
     : `<div class="muted">The worldwide Game Center leaderboards.</div>
       <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
   $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "TITLES"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
@@ -446,7 +446,7 @@ function showSeasonResult() {
   const up = L.to > L.from, down = L.to < L.from;
   showInfo(`<div class="lifebig">${TITLE_ICONS[L.to]}</div><h2>${up ? "Promoted!" : down ? "Moved down" : "Season over"}</h2>
     <div class="big">${up ? `You're now a ${TITLES[L.to]}` : down ? `You're back to ${TITLES[L.to]}` : `You stay a ${TITLES[L.to]}`}</div>
-    <div class="muted">Last season you scored ${L.points} points${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}. A new season has started.</div>
+    <div class="muted">Last season you won ${short(L.points)} coins${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}. A new season has started.</div>
     ${L.reward ? `<div class="big" style="color:${COL.gold}">🥫 Season prize: ${canById(L.reward).name} can (in your cooler)</div>` : ""}`);
   if (up) { sfx.win(); haptic("success"); }
 }
@@ -575,7 +575,7 @@ const TOUR = [
   ["#avatarBtn", "You", "Tap your avatar for your profile and stats. Your stars are underneath: win matches to earn them, and fill a court's stars to open the next court."],
   ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot."],
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away."],
-  ["#seasonBtn", "Your rank", "Your title and points this month. Tap it to see your group and the promotion line."],
+  ["#seasonBtn", "Your rank", "Your title and the coins you've won this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],

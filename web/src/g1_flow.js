@@ -716,8 +716,8 @@ function finishMatch() {
   const newly = updateUnlocks();
   save();
   if (isBeginner() && won && career.wins >= BEGINNER_WINS && career.winStreak >= 2) { career.graduated = true; career.justGraduated = true; save(); }
-  if (!isBeginner()) addSeasonPoints(won ? starsForWin(S.venue) : 1);
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? starsForWin(S.venue) : 1 };
+  if (!isBeginner()) addSeasonPoints(won ? coins : 0); // the season score: coins won from matches this month
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? coins : 0 };
   postScores();
 }
 // A court's stars stay between 0 and its max.

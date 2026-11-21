@@ -2248,8 +2248,8 @@ function finishMatch() {
   const newly = updateUnlocks();
   save();
   if (isBeginner() && won && career.wins >= BEGINNER_WINS && career.winStreak >= 2) { career.graduated = true; career.justGraduated = true; save(); }
-  if (!isBeginner()) addSeasonPoints(won ? starsForWin(S.venue) : 1);
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? starsForWin(S.venue) : 1 };
+  if (!isBeginner()) addSeasonPoints(won ? coins : 0); // the season score: coins won from matches this month
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? coins : 0 };
   postScores();
 }
 // A court's stars stay between 0 and its max.
@@ -2940,7 +2940,7 @@ const titleCardBonus = () => 1 + 0.05 * (career.season ? career.season.title : 0
 const seasonId = (d = new Date(clockNow())) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 const seasonEnds = () => { const d = new Date(clockNow()); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
 // Without Game Center (the browser preview), a season is judged against fixed point lines for your title instead.
-const offlinePromoteAt = t => 40 + t * 35, offlineDemoteBelow = t => 5 + t * 6;
+const offlinePromoteAt = t => 2000 * 3 ** t, offlineDemoteBelow = t => 200 * 3 ** t; // (coins won in the month)
 function seasonState() {
   career.season ||= { id: seasonId(), title: 0, points: 0, played: 0, last: null };
   return career.season;
@@ -2994,7 +2994,7 @@ const isBot = e => String(e[0]).startsWith("cpu:");
 function makeBots(n, season, title, group) {
   const d = new Date(clockNow()), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
   const progress = season === seasonId() ? clamp((clockNow() - start) / (seasonEnds() - start), 0, 1) : 1;
-  const mean = title === 0 ? 35 : 60, bots = [];
+  const mean = title === 0 ? 1500 : 6000, bots = []; // a month of match winnings, in coins
   for (let i = 0; i < n; i++) {
     const h = hashStr(`bot|${season}|${title}|${group}|${i}`), u = (h % 100000) / 100000;
     const final = Math.round(-Math.log(1 - u * 0.995) * mean);
@@ -3009,7 +3009,10 @@ window.__seasonEntries = msg => {
     if (!s.pending) return;
     const G = groupFor(msg.entries, msg.me, s.pending.id, s.pending.title);
     settleSeason(G.rank, G.size, G.realRank);
-  } else if (msg.op === "standings") { S.groupStandings = { ...groupFor(msg.entries, msg.me, s.id, s.title), me: msg.me }; if (typeof openSeason === "function" && !$("rankSheet").hidden) openSeason(); }
+  } else if (msg.op === "standings") {
+    // you're always in your own group, even before your first score reaches Game Center
+    const me = msg.me || "me", entries = msg.entries.some(e => e[0] === me) ? msg.entries : msg.entries.concat([[me, s.points, myHandle(), s.joined || 9e9]]);
+    S.groupStandings = { ...groupFor(entries, me, s.id, s.title), me }; if (typeof openSeason === "function" && !$("rankSheet").hidden) openSeason(); }
 };
 // rank/size: your place in your group last season (0 if unknown: no Game Center and no CPU group to compare with).
 function settleSeason(rank, size, realRank = rank) {
@@ -3195,7 +3198,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795229006`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795229139`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4709,7 +4712,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795229006`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795229139`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4720,7 +4723,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795229006`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795229139`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6980,7 +6983,7 @@ function beginnerHTML() {
 function renderSeasonBadge() {
   if (isBeginner()) { $("seasonBtn").innerHTML = `🌱 <b>Beginner</b> · ${beginnerHTML()}`; return; }
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
-  $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
+  $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · <i class="coin" style="width:15px;height:15px;vertical-align:-2px"></i> ${short(s.points)} won · ${days} day${days > 1 ? "s" : ""} left`;
 }
 let rankTab = "group";
 function openSeason(tab) {
@@ -6997,16 +7000,16 @@ function openSeason(tab) {
     // promotion places go to real players only (computer players can't move up); relegation counts everyone
     let rr = 0; const realAt = G.list.map(e => (isBot(e) ? 0 : ++rr)), lastUp = realAt.findIndex(n => n === up);
     const zone = (r, i) => (realAt[i] && realAt[i] <= up ? " up" : r > G.size - down ? " down" : "");
-    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r, r - 1)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
+    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r, r - 1)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small><i class="coin" style="width:13px;height:13px;vertical-align:-2px"></i> ${short(e[1])}</small></div>`;
     const myZone = zone(G.rank, G.rank - 1), where = myZone === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : myZone === " down" ? "You're in the demotion zone." : "";
     const list = G.list.map((e, i) => (i === G.size - down && down ? `<div class="zoneline down">▼ RELEGATION LINE ▼</div>` : "") + row(e, i + 1) + (i === lastUp ? `<div class="zoneline up">▲ PROMOTION LINE ▲</div>` : "")).join("");
     group = `<div class="label">Your group (${G.size} players)</div><div class="gwrap"><div class="ladder group" id="groupList">${list}</div><div class="gbar" id="groupBar"><i></i></div></div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
-  const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
+  const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · <i class="coin" style="width:20px;height:20px;vertical-align:-3px"></i> ${short(s.points)} won</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
   const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and start climbing the season titles.</div>`;
   const body = isBeginner() && rankTab !== "gc" ? learner : rankTab === "group" ? head + group
-    : rankTab === "ladder" ? `${head}<div class="muted infotext">Win: the court's win stars in points. Loss: 1 point for playing. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
+    : rankTab === "ladder" ? `${head}<div class="muted infotext">Your season score is the coins you win from matches this month. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
     : `<div class="muted">The worldwide Game Center leaderboards.</div>
       <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
   $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "TITLES"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
@@ -7030,7 +7033,7 @@ function showSeasonResult() {
   const up = L.to > L.from, down = L.to < L.from;
   showInfo(`<div class="lifebig">${TITLE_ICONS[L.to]}</div><h2>${up ? "Promoted!" : down ? "Moved down" : "Season over"}</h2>
     <div class="big">${up ? `You're now a ${TITLES[L.to]}` : down ? `You're back to ${TITLES[L.to]}` : `You stay a ${TITLES[L.to]}`}</div>
-    <div class="muted">Last season you scored ${L.points} points${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}. A new season has started.</div>
+    <div class="muted">Last season you won ${short(L.points)} coins${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}. A new season has started.</div>
     ${L.reward ? `<div class="big" style="color:${COL.gold}">🥫 Season prize: ${canById(L.reward).name} can (in your cooler)</div>` : ""}`);
   if (up) { sfx.win(); haptic("success"); }
 }
@@ -7159,7 +7162,7 @@ const TOUR = [
   ["#avatarBtn", "You", "Tap your avatar for your profile and stats. Your stars are underneath: win matches to earn them, and fill a court's stars to open the next court."],
   ["#coinsBtn", "Coins", "Coins pay a court's buy-in, and the winner takes the pot."],
   ["#capsBtn", "Bottle caps", "Use bottle caps to open a prize can right away."],
-  ["#seasonBtn", "Your rank", "Your title and points this month. Tap it to see your group and the promotion line."],
+  ["#seasonBtn", "Your rank", "Your title and the coins you've won this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
   ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
@@ -8288,7 +8291,7 @@ function renderInningSheet() {
     const rewards = S.kind === "career" ? `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
-        <div class="pill"><span class="ico" style="background:#ffc93a">🏅</span><b>+${res.season}</b></div>
+        ${res.season ? `<div class="pill"><span class="ico" style="background:#ffc93a">🏅</span><b>+${short(res.season)}</b></div>` : ""}
         ${res.lifeLost ? `<div class="pill"><i class="tkt"></i><b>−1</b></div>` : ""}</div>
         ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler and waiting line full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";

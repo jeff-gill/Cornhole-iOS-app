@@ -280,7 +280,7 @@ const titleCardBonus = () => 1 + 0.05 * (career.season ? career.season.title : 0
 const seasonId = (d = new Date(clockNow())) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 const seasonEnds = () => { const d = new Date(clockNow()); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); };
 // Without Game Center (the browser preview), a season is judged against fixed point lines for your title instead.
-const offlinePromoteAt = t => 40 + t * 35, offlineDemoteBelow = t => 5 + t * 6;
+const offlinePromoteAt = t => 2000 * 3 ** t, offlineDemoteBelow = t => 200 * 3 ** t; // (coins won in the month)
 function seasonState() {
   career.season ||= { id: seasonId(), title: 0, points: 0, played: 0, last: null };
   return career.season;
@@ -334,7 +334,7 @@ const isBot = e => String(e[0]).startsWith("cpu:");
 function makeBots(n, season, title, group) {
   const d = new Date(clockNow()), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
   const progress = season === seasonId() ? clamp((clockNow() - start) / (seasonEnds() - start), 0, 1) : 1;
-  const mean = title === 0 ? 35 : 60, bots = [];
+  const mean = title === 0 ? 1500 : 6000, bots = []; // a month of match winnings, in coins
   for (let i = 0; i < n; i++) {
     const h = hashStr(`bot|${season}|${title}|${group}|${i}`), u = (h % 100000) / 100000;
     const final = Math.round(-Math.log(1 - u * 0.995) * mean);
@@ -349,7 +349,10 @@ window.__seasonEntries = msg => {
     if (!s.pending) return;
     const G = groupFor(msg.entries, msg.me, s.pending.id, s.pending.title);
     settleSeason(G.rank, G.size, G.realRank);
-  } else if (msg.op === "standings") { S.groupStandings = { ...groupFor(msg.entries, msg.me, s.id, s.title), me: msg.me }; if (typeof openSeason === "function" && !$("rankSheet").hidden) openSeason(); }
+  } else if (msg.op === "standings") {
+    // you're always in your own group, even before your first score reaches Game Center
+    const me = msg.me || "me", entries = msg.entries.some(e => e[0] === me) ? msg.entries : msg.entries.concat([[me, s.points, myHandle(), s.joined || 9e9]]);
+    S.groupStandings = { ...groupFor(entries, me, s.id, s.title), me }; if (typeof openSeason === "function" && !$("rankSheet").hidden) openSeason(); }
 };
 // rank/size: your place in your group last season (0 if unknown: no Game Center and no CPU group to compare with).
 function settleSeason(rank, size, realRank = rank) {
