@@ -392,7 +392,8 @@ function renderInningSheet() {
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
     const { again, off, O } = againState();
     body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${scorecardHTML()}${rewards}
-      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>`;
+      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>
+      ${S.kind === "career" ? `<button class="btn" id="courtsBtn">🏟️ CHOOSE A COURT</button>` : ""}`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
       <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
@@ -435,6 +436,7 @@ function renderInningBody(body, sheet) {
   const hero = $("inningBody").querySelector(".hero");
   if (hero && hero.querySelector(".vs.left, .vs.right")) setTimeout(() => { if (!sheet.hidden) { sfx.thud(); haptic("thud"); hero.classList.add("landed"); } }, 900);
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
+  if ($("courtsBtn")) $("courtsBtn").onclick = () => { sheet.hidden = true; openHub(); showHubPage("courts"); };
   if ($("againBtn")) $("againBtn").onclick = () => {
     if (S.online && S.online.gone) return; // they've gone: no rematch
     if (S.online) { wantRematch(); return; }
