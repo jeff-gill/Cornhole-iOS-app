@@ -420,6 +420,7 @@ function bbCamera(mode, narrow) {
 function bbFinish() {
   const A = BB.active; if (!A || A.done) return;
   A.done = true; bbState().used = null;
+  if (!A.preview && typeof chProgress === "function") chProgress("bb", 1);
   const b = S.world.bags.find(x => x.id === S.lastId), hit = S.lastId == null ? "time" : bbHit(b, A.mode); // "time": the clock ran out
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];

@@ -978,7 +978,15 @@ function step(now) {
       releaseBag({ dir: e.dir, pow: e.pow, ht: 0 });
     }
   } else if (S.phase === "flight") {
-    S.acc += dt;
+    // slow motion for a big throw: normal speed for the first half of the flight, then easing down to a third,
+    // held while it lands and slides, then back up to speed
+    let rate = 1;
+    if (S.slow) {
+      const b = S.world.bags.find(x => x.id === S.lastId);
+      if (b && b.state === "flying") { const k = clamp((b.ft / b.c.time - 0.5) / 0.5, 0, 1); rate = 1 - 0.68 * k * k * (3 - 2 * k); }
+      else { S.slow.after += dt; rate = S.slow.after < 1.4 ? 0.32 : Math.min(1, 0.32 + (S.slow.after - 1.4) * 1.2); if (rate >= 1) S.slow = null; }
+    }
+    S.acc += dt * rate;
     while (S.acc >= T.dt) { S.world.step(T.dt); S.acc -= T.dt; }
     const ev = S.world.events; S.world.events = []; handleEvents(ev);
     if (ev.length) renderScore();

@@ -518,6 +518,25 @@ body.bbmode .score > .card, body.bbmode .score > .inning, body.bbmode .iobox, bo
 body.bbmode .score { padding-bottom: 0; min-height: var(--toprow); }
 body.bbmode #app { width: 100%; }
 body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; left: 0; right: 0; top: calc(var(--toprow) - 38px); text-align: center; font-family: var(--font-display); font-size: 20px; color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; }
+.chlist { display: grid; gap: 8px; margin: 12px 0; text-align: left; }
+.chrow { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.15); }
+.chrow.claimed { opacity: .6; }
+.chtext { flex: 1; min-width: 0; } .chtext b { display: block; font-size: 15px; margin-bottom: 6px; }
+.chbar { position: relative; height: 18px; border-radius: 9px; background: rgba(0,0,0,.35); overflow: hidden; }
+.chbar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(#7af0a8, var(--go)); border-radius: 9px; }
+.chbar span { position: relative; display: block; text-align: center; font: 900 12px/18px Nunito, system-ui, sans-serif; text-shadow: 0 1px 0 rgba(0,0,0,.5); }
+.chprize { flex: none; font: 900 13px/1.5 Nunito, system-ui, sans-serif; text-align: right; } .chprize .coin, .chprize .bcap { width: 15px; height: 15px; vertical-align: -3px; }
+.chok { flex: none; width: 36px; text-align: center; font-size: 24px; color: var(--go); }
+.chrow .chclaim { flex: none; width: auto; padding: 8px 12px; }
+.chbonus { margin: 4px 0 10px; font-weight: 900; color: var(--gold); } .chbonus.done { color: var(--ink-dim); }
+#chBonus { margin-bottom: 10px; }
+/* the three clubhouse perks side by side, equal widths: icon on top, name, then status */
+.hubperks { display: grid !important; grid-template-columns: repeat(3, 1fr); align-items: stretch; }
+.hubperks .dailybtn { flex-direction: column; justify-content: flex-start; text-align: center; gap: 2px; padding: 8px 4px; width: auto; }
+.hubperks .dailybtn > span:last-child { display: block; }
+.hubperks .dailybtn b { font-size: 14px; line-height: 1.05; }
+.hubperks .dailybtn small { display: block; margin-top: 3px; line-height: 1.15; }
+.hubperks .chbtn { filter: none; }
 .hubperks { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 0 4px; }
 .hubperks .dailybtn { margin: 0; }
 .bbbtn { margin-left: auto !important; }
@@ -914,6 +933,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
       <div class="hubperks">
         <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
         <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
+        <button class="dailybtn chbtn" id="chBtn"><span class="gift">📋</span><span><b>Challenges</b><small id="chSub"></small></span></button>
       </div>
     </div>
     <div class="oncourts courtshead"><button class="backbtn" id="courtsBack" aria-label="Back">‹</button><b>CHOOSE A COURT</b></div>

@@ -638,8 +638,20 @@ function remoteThrow(m) {
   S.feedback = m.feedback || []; S.overdrive = !!m.overdrive; S.perfect = !!m.perfect;
   launchBag(m.actual);
 }
+// A throw worth watching in slow motion: going for a 4-bagger, or the inning's last bag when it can still win the
+// inning for the thrower, or end the match.
+function dramaticThrow() {
+  if (S.kind === "bullseye" || !S.world) return false;
+  const p = S.player, o = 1 - p;
+  if (S.thrown[p] === 3 && S.world.bags.filter(b => b.owner === p && bagPoints(b) === 3).length === 3) return true;
+  if (S.thrown[p] !== 3 || S.thrown[o] < 4) return false;
+  const r = inningResult(), w = winScore(), diff = r.raw[p] - r.raw[o];
+  const ends = d => { const a = diff + d, sc = [...S.scores]; if (a > 0) sc[p] += a; else if (a < 0) sc[o] -= a; const best = sc[0] >= sc[1] ? 0 : 1; return sc[best] >= w && sc[best] - sc[1 - best] >= 2; };
+  return (diff <= 0 && diff + 3 > 0) || [0, 1, 3].some(d => ends(d) !== ends(0));
+}
 function launchBag(actual) {
   S.clock = null;
+  S.slow = dramaticThrow() ? { after: 0 } : null;
   S.lastId = S.world.launch(actual, S.player);
   S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh(); haptic("release");
   if (S.player === 0) S.tut.thrown = true;
@@ -648,7 +660,7 @@ function launchBag(actual) {
 }
 // Out of time: that bag is lost.
 function timeUp() {
-  S.clock = null; S.pull.active = false; S.feedback = [];
+  S.clock = null; S.slow = null; S.pull.active = false; S.feedback = [];
   (S.lost ||= [[], []])[S.player].push(S.thrown[S.player]); // this bag shows as a red X in the player's tile
   S.thrown[S.player]++; S.settleT = -1.7; S.acc = 0; S.phase = "flight"; S.lastId = null; // hold 3 s before the next throw
   const m = $("timeupMsg"); m.hidden = false; clearTimeout(timeUp.t); timeUp.t = setTimeout(() => { m.hidden = true; }, 3000);
@@ -727,6 +739,7 @@ function finishMatch() {
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
+  if (typeof chMatch === "function") chMatch(won, S.venue, S.history);
   career.loseStreak = won ? 0 : (career.loseStreak || 0) + 1;
   career.winStreak = won ? (career.winStreak || 0) + 1 : 0;
   // a rough patch (10 losses in a row, or 8 of the last 10, checked only after a loss, at most once a

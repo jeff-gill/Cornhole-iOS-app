@@ -140,6 +140,7 @@ function openCan(index) {
   const slot = career.cans[index]; if (!slot) return null;
   const can = canById(slot.id), fee = VENUES[clamp(slot.court | 0, 0, VENUES.length - 1)].fee;
   career.cans.splice(index, 1);
+  if (typeof chProgress === "function") chProgress("can", 1);
   if (slot.drop) { // a Daily Drop can: its one prize was picked when it dropped; it's paid as it opens
     const d = slot.drop, prizes = [];
     if (d.coins) { career.coins += d.coins; prizes.push({ kind: "coins", n: d.coins }); }

@@ -526,6 +526,25 @@ body.bbmode .score > .card, body.bbmode .score > .inning, body.bbmode .iobox, bo
 body.bbmode .score { padding-bottom: 0; min-height: var(--toprow); }
 body.bbmode #app { width: 100%; }
 body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; left: 0; right: 0; top: calc(var(--toprow) - 38px); text-align: center; font-family: var(--font-display); font-size: 20px; color: var(--gold); text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; }
+.chlist { display: grid; gap: 8px; margin: 12px 0; text-align: left; }
+.chrow { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.15); }
+.chrow.claimed { opacity: .6; }
+.chtext { flex: 1; min-width: 0; } .chtext b { display: block; font-size: 15px; margin-bottom: 6px; }
+.chbar { position: relative; height: 18px; border-radius: 9px; background: rgba(0,0,0,.35); overflow: hidden; }
+.chbar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(#7af0a8, var(--go)); border-radius: 9px; }
+.chbar span { position: relative; display: block; text-align: center; font: 900 12px/18px Nunito, system-ui, sans-serif; text-shadow: 0 1px 0 rgba(0,0,0,.5); }
+.chprize { flex: none; font: 900 13px/1.5 Nunito, system-ui, sans-serif; text-align: right; } .chprize .coin, .chprize .bcap { width: 15px; height: 15px; vertical-align: -3px; }
+.chok { flex: none; width: 36px; text-align: center; font-size: 24px; color: var(--go); }
+.chrow .chclaim { flex: none; width: auto; padding: 8px 12px; }
+.chbonus { margin: 4px 0 10px; font-weight: 900; color: var(--gold); } .chbonus.done { color: var(--ink-dim); }
+#chBonus { margin-bottom: 10px; }
+/* the three clubhouse perks side by side, equal widths: icon on top, name, then status */
+.hubperks { display: grid !important; grid-template-columns: repeat(3, 1fr); align-items: stretch; }
+.hubperks .dailybtn { flex-direction: column; justify-content: flex-start; text-align: center; gap: 2px; padding: 8px 4px; width: auto; }
+.hubperks .dailybtn > span:last-child { display: block; }
+.hubperks .dailybtn b { font-size: 14px; line-height: 1.05; }
+.hubperks .dailybtn small { display: block; margin-top: 3px; line-height: 1.15; }
+.hubperks .chbtn { filter: none; }
 .hubperks { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 0 4px; }
 .hubperks .dailybtn { margin: 0; }
 .bbbtn { margin-left: auto !important; }
@@ -922,6 +941,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
       <div class="hubperks">
         <button class="dailybtn" id="dailyBtn"><span class="gift">🎁</span><span><b>Daily Drop</b><small id="dailySub"></small></span></button>
         <button class="dailybtn bbbtn" id="bbBtn"><span class="gift">🎯</span><span><b>Bullseye Bags</b><small id="bbSub"></small></span></button>
+        <button class="dailybtn chbtn" id="chBtn"><span class="gift">📋</span><span><b>Challenges</b><small id="chSub"></small></span></button>
       </div>
     </div>
     <div class="oncourts courtshead"><button class="backbtn" id="courtsBack" aria-label="Back">‹</button><b>CHOOSE A COURT</b></div>
@@ -2178,8 +2198,20 @@ function remoteThrow(m) {
   S.feedback = m.feedback || []; S.overdrive = !!m.overdrive; S.perfect = !!m.perfect;
   launchBag(m.actual);
 }
+// A throw worth watching in slow motion: going for a 4-bagger, or the inning's last bag when it can still win the
+// inning for the thrower, or end the match.
+function dramaticThrow() {
+  if (S.kind === "bullseye" || !S.world) return false;
+  const p = S.player, o = 1 - p;
+  if (S.thrown[p] === 3 && S.world.bags.filter(b => b.owner === p && bagPoints(b) === 3).length === 3) return true;
+  if (S.thrown[p] !== 3 || S.thrown[o] < 4) return false;
+  const r = inningResult(), w = winScore(), diff = r.raw[p] - r.raw[o];
+  const ends = d => { const a = diff + d, sc = [...S.scores]; if (a > 0) sc[p] += a; else if (a < 0) sc[o] -= a; const best = sc[0] >= sc[1] ? 0 : 1; return sc[best] >= w && sc[best] - sc[1 - best] >= 2; };
+  return (diff <= 0 && diff + 3 > 0) || [0, 1, 3].some(d => ends(d) !== ends(0));
+}
 function launchBag(actual) {
   S.clock = null;
+  S.slow = dramaticThrow() ? { after: 0 } : null;
   S.lastId = S.world.launch(actual, S.player);
   S.thrown[S.player]++; S.settleT = 0; S.acc = 0; S.relT = 0; S.phase = "flight"; sfx.whoosh(); haptic("release");
   if (S.player === 0) S.tut.thrown = true;
@@ -2188,7 +2220,7 @@ function launchBag(actual) {
 }
 // Out of time: that bag is lost.
 function timeUp() {
-  S.clock = null; S.pull.active = false; S.feedback = [];
+  S.clock = null; S.slow = null; S.pull.active = false; S.feedback = [];
   (S.lost ||= [[], []])[S.player].push(S.thrown[S.player]); // this bag shows as a red X in the player's tile
   S.thrown[S.player]++; S.settleT = -1.7; S.acc = 0; S.phase = "flight"; S.lastId = null; // hold 3 s before the next throw
   const m = $("timeupMsg"); m.hidden = false; clearTimeout(timeUp.t); timeUp.t = setTimeout(() => { m.hidden = true; }, 3000);
@@ -2267,6 +2299,7 @@ function finishMatch() {
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
   career.coins += coins;
   if (won) career.wins++; else career.losses++;
+  if (typeof chMatch === "function") chMatch(won, S.venue, S.history);
   career.loseStreak = won ? 0 : (career.loseStreak || 0) + 1;
   career.winStreak = won ? (career.winStreak || 0) + 1 : 0;
   // a rough patch (10 losses in a row, or 8 of the last 10, checked only after a loss, at most once a
@@ -2863,6 +2896,7 @@ function openCan(index) {
   const slot = career.cans[index]; if (!slot) return null;
   const can = canById(slot.id), fee = VENUES[clamp(slot.court | 0, 0, VENUES.length - 1)].fee;
   career.cans.splice(index, 1);
+  if (typeof chProgress === "function") chProgress("can", 1);
   if (slot.drop) { // a Daily Drop can: its one prize was picked when it dropped; it's paid as it opens
     const d = slot.drop, prizes = [];
     if (d.coins) { career.coins += d.coins; prizes.push({ kind: "coins", n: d.coins }); }
@@ -3265,7 +3299,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795276388`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795277173`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4779,7 +4813,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795276388`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795277173`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4790,7 +4824,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795276388`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795277173`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6640,6 +6674,7 @@ const topCourt = () => VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0)
 
 function renderHubExtras() {
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
+  if (typeof renderChallengesBtn === "function") renderChallengesBtn();
   $("caps").textContent = bigNum(career.caps);
   fillCooler();
   const cooler = $("cooler"); cooler.innerHTML = "";
@@ -7245,6 +7280,83 @@ function showTourStep() {
 }
 function visibleEl(sel) { const el = document.querySelector(sel); if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.closest("[hidden]"); }
 
+// ───────────────────────── Daily Challenges: three small goals a day (they change at midnight, home time).
+// Each pays a few coins and bottle caps; finish all three for a bonus can. Matches count only against real opponents
+// (career and online), not practice.
+const CH_POOL = [
+  { k: "win", need: 2, text: n => `Win ${n} matches` },
+  { k: "play", need: 3, text: n => `Play ${n} matches` },
+  { k: "holes", need: [4, 8], text: n => `Sink ${n} cornholes` },
+  { k: "on", need: [8, 14], text: n => `Land ${n} bags on the board` },
+  { k: "innings", need: [5, 9], text: n => `Win ${n} innings` },
+  { k: "twobag", need: 1, text: () => "Get a 2-bagger or better" },
+  { k: "court", need: 1, text: (n, vi) => `Win a match at ${VENUES[vi].name}` },
+  { k: "bb", need: 1, text: () => "Throw a bag in Bullseye Bags" },
+  { k: "can", need: 1, text: () => "Open a Prize Can" },
+];
+const chReward = () => ({ coins: Math.max(15, Math.round(VENUES[topCourt()].fee * 0.15 / 5) * 5), caps: 2 });
+function challenges() {
+  const day = bbDay(), c = career.challenges;
+  if (c && c.day === day && Array.isArray(c.list)) return c;
+  let h = hashStr(`ch|${day}|${career.handle || ""}`);
+  const r = () => ((h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) >>> 0) % 10000) / 10000;
+  const pool = CH_POOL.slice(), list = [];
+  while (list.length < 3 && pool.length) {
+    const t = pool.splice(Math.floor(r() * pool.length), 1)[0];
+    if (t.k === "court" && topCourt() === 0) continue; // needs a choice of courts
+    const need = Array.isArray(t.need) ? t.need[0] + Math.floor(r() * (t.need[1] - t.need[0] + 1)) : t.need;
+    list.push({ k: t.k, need, got: 0, claimed: false, vi: t.k === "court" ? Math.floor(r() * (topCourt() + 1)) : 0 });
+  }
+  career.challenges = { day, list, bonus: false }; save();
+  return career.challenges;
+}
+const chText = c => { const t = CH_POOL.find(x => x.k === c.k); return t ? t.text(c.need, c.vi) : c.k; };
+function chProgress(k, n = 1, vi = null) {
+  if (!(n > 0)) return;
+  const C = challenges(); let moved = false;
+  for (const c of C.list) if (c.k === k && (k !== "court" || c.vi === vi) && c.got < c.need) { const was = c.got; c.got = Math.min(c.need, c.got + n); moved = moved || c.got !== was; if (c.got >= c.need) setTimeout(() => window.__gcMessage && window.__gcMessage(`✅ Challenge done: ${chText(c)}`), 1200); }
+  if (moved) { save(); renderChallengesBtn(); }
+}
+// one finished match (career or online): everything it counts toward
+function chMatch(won, vi, history) {
+  const mine = h => (h || []).reduce((a, r) => a + r, 0);
+  chProgress("play", 1);
+  if (won) { chProgress("win", 1); chProgress("court", 1, vi); }
+  chProgress("holes", mine(history.map(r => r.hole[0])));
+  chProgress("on", mine(history.map(r => r.on[0])));
+  chProgress("innings", history.filter(r => r.winner === 0).length);
+  if (history.some(r => r.hole[0] >= 2)) chProgress("twobag", 1);
+}
+const chReady = () => { const C = challenges(); return C.list.filter(c => c.got >= c.need && !c.claimed).length + (C.list.every(c => c.claimed) && !C.bonus ? 1 : 0); };
+function renderChallengesBtn() {
+  const b = $("chBtn"); if (!b) return;
+  const C = challenges(), done = C.list.filter(c => c.got >= c.need).length, ready = chReady();
+  b.classList.toggle("ready", ready > 0);
+  $("chSub").textContent = ready ? "Reward ready!" : done === C.list.length ? "All done today!" : `${done} of ${C.list.length} done`;
+}
+function openChallenges() {
+  const C = challenges(), R = chReward(), allClaimed = C.list.every(c => c.claimed);
+  const rows = C.list.map((c, i) => {
+    const done = c.got >= c.need, pct = Math.round(100 * c.got / c.need);
+    return `<div class="chrow${c.claimed ? " claimed" : ""}"><div class="chtext"><b>${esc(chText(c))}</b>
+      <div class="chbar"><i style="width:${pct}%"></i><span>${c.got} / ${c.need}</span></div></div>
+      ${c.claimed ? `<div class="chok">✓</div>` : done ? `<button class="btn green small chclaim" data-ch="${i}">CLAIM</button>`
+        : `<div class="chprize"><i class="coin"></i> ${R.coins}<br><i class="bcap"></i> ${R.caps}</div>`}</div>`;
+  }).join("");
+  const bonus = C.bonus ? `<div class="chbonus done">🥫 Bonus can collected. New challenges at midnight!</div>`
+    : allClaimed ? `<button class="btn green" id="chBonus">🥫 CLAIM BONUS CAN</button>` : `<div class="chbonus">Finish all three for a bonus can 🥫</div>`;
+  showInfo(`<h2>📋 Daily Challenges</h2><div class="muted">New ones every day at midnight. Matches against opponents count (not practice).</div><div class="chlist">${rows}</div>${bonus}`);
+  for (const b of document.querySelectorAll(".chclaim")) b.onclick = () => {
+    const c = C.list[+b.dataset.ch]; if (!c || c.claimed || c.got < c.need) return;
+    c.claimed = true; career.coins += R.coins; career.caps += R.caps; save(); sfx.win(); haptic("success"); renderHub(); renderChallengesBtn(); openChallenges();
+  };
+  if ($("chBonus")) $("chBonus").onclick = () => {
+    if (C.bonus || !C.list.every(c => c.claimed)) return;
+    C.bonus = true; stashCan({ id: earnedCan("white"), court: topCourt() }); save(); sfx.win(); haptic("success"); renderHub(); renderChallengesBtn(); openChallenges();
+  };
+}
+$("chBtn").onclick = () => { initAudio(); openChallenges(); };
+
 // ───────────────────────── The can opening, in 3D (and the small can pictures made from the same model)
 // A glossy metal can (lathe-shaped body, printed label, lid and pull tab) spins in front of light rays in its rarity
 // colour. Tap: it shakes harder and harder, the tab snaps up and a burst of fizz sprays out with a flash.
@@ -7845,6 +7957,7 @@ function bbCamera(mode, narrow) {
 function bbFinish() {
   const A = BB.active; if (!A || A.done) return;
   A.done = true; bbState().used = null;
+  if (!A.preview && typeof chProgress === "function") chProgress("bb", 1);
   const b = S.world.bags.find(x => x.id === S.lastId), hit = S.lastId == null ? "time" : bbHit(b, A.mode); // "time": the clock ran out
   const star = S.world.bags.find(x => x.star), doubled = !!star && star.state === "inHole";
   const times = doubled ? 2 : 1, got = [];
@@ -8925,7 +9038,15 @@ function step(now) {
       releaseBag({ dir: e.dir, pow: e.pow, ht: 0 });
     }
   } else if (S.phase === "flight") {
-    S.acc += dt;
+    // slow motion for a big throw: normal speed for the first half of the flight, then easing down to a third,
+    // held while it lands and slides, then back up to speed
+    let rate = 1;
+    if (S.slow) {
+      const b = S.world.bags.find(x => x.id === S.lastId);
+      if (b && b.state === "flying") { const k = clamp((b.ft / b.c.time - 0.5) / 0.5, 0, 1); rate = 1 - 0.68 * k * k * (3 - 2 * k); }
+      else { S.slow.after += dt; rate = S.slow.after < 1.4 ? 0.32 : Math.min(1, 0.32 + (S.slow.after - 1.4) * 1.2); if (rate >= 1) S.slow = null; }
+    }
+    S.acc += dt * rate;
     while (S.acc >= T.dt) { S.world.step(T.dt); S.acc -= T.dt; }
     const ev = S.world.events; S.world.events = []; handleEvents(ev);
     if (ev.length) renderScore();

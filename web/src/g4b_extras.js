@@ -21,6 +21,7 @@ const topCourt = () => VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0)
 
 function renderHubExtras() {
   $("avatarBtn").innerHTML = avatarHTML(career.avatar);
+  if (typeof renderChallengesBtn === "function") renderChallengesBtn();
   $("caps").textContent = bigNum(career.caps);
   fillCooler();
   const cooler = $("cooler"); cooler.innerHTML = "";
@@ -625,3 +626,80 @@ function showTourStep() {
   card.style.top = below ? r.bottom + 16 + "px" : Math.max(16, r.top - 16 - card.offsetHeight) + "px";
 }
 function visibleEl(sel) { const el = document.querySelector(sel); if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.closest("[hidden]"); }
+
+// ───────────────────────── Daily Challenges: three small goals a day (they change at midnight, home time).
+// Each pays a few coins and bottle caps; finish all three for a bonus can. Matches count only against real opponents
+// (career and online), not practice.
+const CH_POOL = [
+  { k: "win", need: 2, text: n => `Win ${n} matches` },
+  { k: "play", need: 3, text: n => `Play ${n} matches` },
+  { k: "holes", need: [4, 8], text: n => `Sink ${n} cornholes` },
+  { k: "on", need: [8, 14], text: n => `Land ${n} bags on the board` },
+  { k: "innings", need: [5, 9], text: n => `Win ${n} innings` },
+  { k: "twobag", need: 1, text: () => "Get a 2-bagger or better" },
+  { k: "court", need: 1, text: (n, vi) => `Win a match at ${VENUES[vi].name}` },
+  { k: "bb", need: 1, text: () => "Throw a bag in Bullseye Bags" },
+  { k: "can", need: 1, text: () => "Open a Prize Can" },
+];
+const chReward = () => ({ coins: Math.max(15, Math.round(VENUES[topCourt()].fee * 0.15 / 5) * 5), caps: 2 });
+function challenges() {
+  const day = bbDay(), c = career.challenges;
+  if (c && c.day === day && Array.isArray(c.list)) return c;
+  let h = hashStr(`ch|${day}|${career.handle || ""}`);
+  const r = () => ((h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d) >>> 0) % 10000) / 10000;
+  const pool = CH_POOL.slice(), list = [];
+  while (list.length < 3 && pool.length) {
+    const t = pool.splice(Math.floor(r() * pool.length), 1)[0];
+    if (t.k === "court" && topCourt() === 0) continue; // needs a choice of courts
+    const need = Array.isArray(t.need) ? t.need[0] + Math.floor(r() * (t.need[1] - t.need[0] + 1)) : t.need;
+    list.push({ k: t.k, need, got: 0, claimed: false, vi: t.k === "court" ? Math.floor(r() * (topCourt() + 1)) : 0 });
+  }
+  career.challenges = { day, list, bonus: false }; save();
+  return career.challenges;
+}
+const chText = c => { const t = CH_POOL.find(x => x.k === c.k); return t ? t.text(c.need, c.vi) : c.k; };
+function chProgress(k, n = 1, vi = null) {
+  if (!(n > 0)) return;
+  const C = challenges(); let moved = false;
+  for (const c of C.list) if (c.k === k && (k !== "court" || c.vi === vi) && c.got < c.need) { const was = c.got; c.got = Math.min(c.need, c.got + n); moved = moved || c.got !== was; if (c.got >= c.need) setTimeout(() => window.__gcMessage && window.__gcMessage(`✅ Challenge done: ${chText(c)}`), 1200); }
+  if (moved) { save(); renderChallengesBtn(); }
+}
+// one finished match (career or online): everything it counts toward
+function chMatch(won, vi, history) {
+  const mine = h => (h || []).reduce((a, r) => a + r, 0);
+  chProgress("play", 1);
+  if (won) { chProgress("win", 1); chProgress("court", 1, vi); }
+  chProgress("holes", mine(history.map(r => r.hole[0])));
+  chProgress("on", mine(history.map(r => r.on[0])));
+  chProgress("innings", history.filter(r => r.winner === 0).length);
+  if (history.some(r => r.hole[0] >= 2)) chProgress("twobag", 1);
+}
+const chReady = () => { const C = challenges(); return C.list.filter(c => c.got >= c.need && !c.claimed).length + (C.list.every(c => c.claimed) && !C.bonus ? 1 : 0); };
+function renderChallengesBtn() {
+  const b = $("chBtn"); if (!b) return;
+  const C = challenges(), done = C.list.filter(c => c.got >= c.need).length, ready = chReady();
+  b.classList.toggle("ready", ready > 0);
+  $("chSub").textContent = ready ? "Reward ready!" : done === C.list.length ? "All done today!" : `${done} of ${C.list.length} done`;
+}
+function openChallenges() {
+  const C = challenges(), R = chReward(), allClaimed = C.list.every(c => c.claimed);
+  const rows = C.list.map((c, i) => {
+    const done = c.got >= c.need, pct = Math.round(100 * c.got / c.need);
+    return `<div class="chrow${c.claimed ? " claimed" : ""}"><div class="chtext"><b>${esc(chText(c))}</b>
+      <div class="chbar"><i style="width:${pct}%"></i><span>${c.got} / ${c.need}</span></div></div>
+      ${c.claimed ? `<div class="chok">✓</div>` : done ? `<button class="btn green small chclaim" data-ch="${i}">CLAIM</button>`
+        : `<div class="chprize"><i class="coin"></i> ${R.coins}<br><i class="bcap"></i> ${R.caps}</div>`}</div>`;
+  }).join("");
+  const bonus = C.bonus ? `<div class="chbonus done">🥫 Bonus can collected. New challenges at midnight!</div>`
+    : allClaimed ? `<button class="btn green" id="chBonus">🥫 CLAIM BONUS CAN</button>` : `<div class="chbonus">Finish all three for a bonus can 🥫</div>`;
+  showInfo(`<h2>📋 Daily Challenges</h2><div class="muted">New ones every day at midnight. Matches against opponents count (not practice).</div><div class="chlist">${rows}</div>${bonus}`);
+  for (const b of document.querySelectorAll(".chclaim")) b.onclick = () => {
+    const c = C.list[+b.dataset.ch]; if (!c || c.claimed || c.got < c.need) return;
+    c.claimed = true; career.coins += R.coins; career.caps += R.caps; save(); sfx.win(); haptic("success"); renderHub(); renderChallengesBtn(); openChallenges();
+  };
+  if ($("chBonus")) $("chBonus").onclick = () => {
+    if (C.bonus || !C.list.every(c => c.claimed)) return;
+    C.bonus = true; stashCan({ id: earnedCan("white"), court: topCourt() }); save(); sfx.win(); haptic("success"); renderHub(); renderChallengesBtn(); openChallenges();
+  };
+}
+$("chBtn").onclick = () => { initAudio(); openChallenges(); };
