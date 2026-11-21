@@ -161,14 +161,14 @@ body.inhub .score, body.inhub #panel { display: none; }
 /* the board check sits below the player tiles and the pot, so both stay in view: a tighter layout */
 #bagPick { align-items: flex-start; padding-top: var(--bptop, 240px); background: rgba(6,12,24,.3); }
 #bagPick > .sheet { padding: 12px 14px 14px; max-height: calc(100dvh - var(--bptop, 240px) - max(12px, env(safe-area-inset-bottom, 0px))); overflow-y: auto; }
-#bagPick h2 { font-size: 22px; margin: 0 0 6px; }
-#bagPick .bpboard { padding: 6px 8px; gap: 10px; } #bagPick .bpboard img { width: 30px; height: 60px; }
-#bagPick .bpboard b { font-size: 17px; } #bagPick .bpboard small { margin-bottom: 0; } #bagPick .bpboard div { font-size: 13px; }
+#bagPick h2 { font-size: 24px; margin: 0 0 8px; }
+#bagPick .bpboard { padding: 10px 12px; gap: 14px; } #bagPick .bpboard img { width: 62px; height: 124px; }
+#bagPick .bpboard b { font-size: 21px; } #bagPick .bpboard small { margin-bottom: 4px; } #bagPick .bpboard div { font-size: 15px; }
 #bagPick .bpsuggest { font-size: 13px; padding: 6px 8px; margin-top: 8px; }
 #bagPick .label { margin: 8px 0 2px; }
 #bagPick .bplist { gap: 8px; max-height: none; overflow: visible; }
 #bagPick .bpbag { padding: 10px 6px 8px; gap: 2px; font-size: 14px; border-radius: 14px; }
-#bagPick .bpbag canvas { width: 46px; height: 46px; }
+#bagPick .bpbag canvas { width: 60px; height: 60px; }
 #bagPick .bpbag small { font-size: 12px; }
 #bagPick .bpstats { grid-template-columns: auto repeat(5, 8px); gap: 3px 2px; margin-top: 2px; }
 #bagPick .bpstats em { font-size: 11px; padding-right: 4px; } #bagPick .bpstats i { width: 8px; height: 8px; border-radius: 2px; }
@@ -2000,7 +2000,7 @@ function renderBagPick() { // (the suggested bag is listed first)
       <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
     <div class="label">${career.bags.length > 1 ? "Your best two bags for this board" : "Your bag for this board"}</div>
     <div class="bplist" style="grid-template-columns:repeat(${Math.min(2, career.bags.length)}, 1fr)">${rankBagsFor(d).slice(0, 2).map(b => b.id).map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
-      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="72" height="72"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
+      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag && career.bags.length > 1 ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="72" height="72"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
         <div class="bpstats"><em>Accuracy</em>${dots("acc")}<em>Control</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
@@ -3353,7 +3353,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795294635`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795294828`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4867,7 +4867,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795294635`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795294828`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4878,7 +4878,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795294635`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795294828`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);

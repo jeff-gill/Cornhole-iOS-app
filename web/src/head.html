@@ -149,14 +149,14 @@ body.inhub .score, body.inhub #panel { display: none; }
 /* the board check sits below the player tiles and the pot, so both stay in view: a tighter layout */
 #bagPick { align-items: flex-start; padding-top: var(--bptop, 240px); background: rgba(6,12,24,.3); }
 #bagPick > .sheet { padding: 12px 14px 14px; max-height: calc(100dvh - var(--bptop, 240px) - max(12px, env(safe-area-inset-bottom, 0px))); overflow-y: auto; }
-#bagPick h2 { font-size: 22px; margin: 0 0 6px; }
-#bagPick .bpboard { padding: 6px 8px; gap: 10px; } #bagPick .bpboard img { width: 30px; height: 60px; }
-#bagPick .bpboard b { font-size: 17px; } #bagPick .bpboard small { margin-bottom: 0; } #bagPick .bpboard div { font-size: 13px; }
+#bagPick h2 { font-size: 24px; margin: 0 0 8px; }
+#bagPick .bpboard { padding: 10px 12px; gap: 14px; } #bagPick .bpboard img { width: 62px; height: 124px; }
+#bagPick .bpboard b { font-size: 21px; } #bagPick .bpboard small { margin-bottom: 4px; } #bagPick .bpboard div { font-size: 15px; }
 #bagPick .bpsuggest { font-size: 13px; padding: 6px 8px; margin-top: 8px; }
 #bagPick .label { margin: 8px 0 2px; }
 #bagPick .bplist { gap: 8px; max-height: none; overflow: visible; }
 #bagPick .bpbag { padding: 10px 6px 8px; gap: 2px; font-size: 14px; border-radius: 14px; }
-#bagPick .bpbag canvas { width: 46px; height: 46px; }
+#bagPick .bpbag canvas { width: 60px; height: 60px; }
 #bagPick .bpbag small { font-size: 12px; }
 #bagPick .bpstats { grid-template-columns: auto repeat(5, 8px); gap: 3px 2px; margin-top: 2px; }
 #bagPick .bpstats em { font-size: 11px; padding-right: 4px; } #bagPick .bpstats i { width: 8px; height: 8px; border-radius: 2px; }

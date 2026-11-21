@@ -406,7 +406,7 @@ function renderBagPick() { // (the suggested bag is listed first)
       <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
     <div class="label">${career.bags.length > 1 ? "Your best two bags for this board" : "Your bag for this board"}</div>
     <div class="bplist" style="grid-template-columns:repeat(${Math.min(2, career.bags.length)}, 1fr)">${rankBagsFor(d).slice(0, 2).map(b => b.id).map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
-      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="72" height="72"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
+      return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag && career.bags.length > 1 ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="72" height="72"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
         <div class="bpstats"><em>Accuracy</em>${dots("acc")}<em>Control</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
     <div class="bpfit">With ${esc(cur.name)}, bags slide <i>${slideWith(cur, d).toLowerCase()}</i> on this board. ${bagFit(cur, d)}</div>
     <div class="bptimer"><i style="width:${S.pickT / BAG_PICK_SECS * 100}%"></i></div>
