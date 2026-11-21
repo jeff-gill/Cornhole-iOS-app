@@ -99,7 +99,7 @@ function tone(freq, dur, type = "sine", vol = 0.25, when = 0, slideTo = 0) {
   o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + 0.02);
 }
 // Recorded effects (web/assets/sfx, from Pixabay). Each falls back to its made-up sound until it has loaded.
-const SFX_FILES = { thudHard: "assets/sfx/thud-hard.mp3", soft1: "assets/sfx/thud-soft1.mp3", soft2: "assets/sfx/thud-soft2.mp3", soft3: "assets/sfx/thud-soft3.mp3", soft4: "assets/sfx/thud-soft4.mp3", scrape: "assets/sfx/scrape.mp3", ground: "assets/sfx/ground.mp3" };
+const SFX_FILES = { thudHard: "assets/sfx/thud-hard.mp3", soft1: "assets/sfx/thud-soft1.mp3", soft2: "assets/sfx/thud-soft2.mp3", soft3: "assets/sfx/thud-soft3.mp3", soft4: "assets/sfx/thud-soft4.mp3", scrape: "assets/sfx/scrape.mp3", ground: "assets/sfx/ground.mp3", cheer: "assets/sfx/cheer.mp3" };
 const sfxBufs = {}, sfxLoading = {};
 function loadSfx() {
   if (!audio) return;
@@ -130,8 +130,9 @@ const sfx = {
   whoosh: () => burst({ dur: 0.38, freq: 900, q: 0.7, vol: 0.22, type: "bandpass", attack: 0.12, sweep: 2.4 }),
   thud: () => { burst({ dur: 0.16, freq: 520, vol: 0.9, sweep: 0.4 }); tone(95, 0.14, "sine", 0.55, 0, 50); },   // canvas bag on plywood
   grass: () => playSample("ground", 0.7, 0.95 + Math.random() * 0.1) || burst({ dur: 0.14, freq: 1400, vol: 0.35, sweep: 0.5 }),
-  cheer: (len = 1.6, vol = 0.3) => { burst({ dur: len, freq: 1200, q: 0.5, vol, type: "bandpass", attack: 0.25 }); burst({ dur: len * 0.8, freq: 2600, q: 0.6, vol: vol * 0.5, type: "bandpass", attack: 0.2, when: 0.05 }); },
-  hole: () => { burst({ dur: 0.22, freq: 260, vol: 0.7, sweep: 0.3 }); tone(523, 0.14, "triangle", 0.22, 0.06); tone(784, 0.32, "triangle", 0.22, 0.18); sfx.cheer(1.5, 0.22); },
+  // the recorded crowd: bigger moments cheer louder and longer
+  cheer: (len = 1.6, vol = 0.3) => playSample("cheer", clamp(vol * 2.4, 0.4, 1), 0.97 + Math.random() * 0.06, 0, len + 1.4) || (burst({ dur: len, freq: 1200, q: 0.5, vol, type: "bandpass", attack: 0.25 }), burst({ dur: len * 0.8, freq: 2600, q: 0.6, vol: vol * 0.5, type: "bandpass", attack: 0.2, when: 0.05 })),
+  hole: () => { burst({ dur: 0.22, freq: 260, vol: 0.7, sweep: 0.3 }); sfx.cheer(1.5, 0.22); },
   boom: () => { burst({ dur: 0.9, freq: 160, vol: 0.9, sweep: 0.35 }); for (let k = 0; k < 7; k++) burst({ dur: 0.05, freq: 3000 + Math.random() * 3000, vol: 0.12, type: "highpass", when: 0.25 + Math.random() * 0.6 }); },
   win: () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, "triangle", 0.2, i * 0.12)); sfx.cheer(2.2, 0.3); },
 };
