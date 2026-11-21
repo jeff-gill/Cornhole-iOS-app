@@ -393,7 +393,7 @@ function renderInningSheet() {
     const { again, off, O } = againState();
     body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${scorecardHTML()}${rewards}
       <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>
-      ${S.kind === "career" ? `<button class="btn" id="courtsBtn">🏟️ CHOOSE A COURT</button>` : ""}`;
+      ${S.kind === "career" ? `<button class="btn" id="courtsBtn">BACK TO COURTS</button>` : ""}`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
       <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
