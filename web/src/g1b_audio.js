@@ -40,7 +40,7 @@ function setMusic(on) {
 }
 // ── Music: real recorded tracks (web/assets/music, from Pixabay), looped. The menus play the clubhouse song; it fades
 // out when a match starts and back in on the clubhouse.
-const MUSIC_FILES = { hub: "assets/music/hub-country.mp3" };
+const MUSIC_FILES = { hub: "assets/music/hub-music.mp3" };
 const MUSIC_LEVEL = 0.75;
 let musicWant = "hub", musicPlaying = null;
 const musicBufs = {}, musicLoading = {};
@@ -111,10 +111,11 @@ function loadSfx() {
       .then(buf => { sfxBufs[k] = buf; }).catch(() => { sfxLoading[k] = false; });
   }
 }
-function playSample(k, vol = 1, rate = 1, when = 0, fadeOver = 0) {
+function playSample(k, vol = 1, rate = 1, when = 0, fadeOver = 0, attack = 0) {
   if (!audio || !sfxBufs[k]) return false;
   const src = audio.createBufferSource(), g = audio.createGain(), t = audio.currentTime + when;
-  src.buffer = sfxBufs[k]; src.playbackRate.value = rate; g.gain.setValueAtTime(vol, t);
+  src.buffer = sfxBufs[k]; src.playbackRate.value = rate;
+  if (attack) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); } else g.gain.setValueAtTime(vol, t);
   if (fadeOver) { g.gain.setValueAtTime(vol, t + fadeOver * 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + fadeOver); }
   src.connect(g).connect(master); src.start(t); if (fadeOver) src.stop(t + fadeOver + 0.05);
   return true;
@@ -131,7 +132,7 @@ const sfx = {
   thud: () => { burst({ dur: 0.16, freq: 520, vol: 0.9, sweep: 0.4 }); tone(95, 0.14, "sine", 0.55, 0, 50); },   // canvas bag on plywood
   grass: () => playSample("ground", 0.7, 0.95 + Math.random() * 0.1) || burst({ dur: 0.14, freq: 1400, vol: 0.35, sweep: 0.5 }),
   // the recorded crowd: bigger moments cheer louder and longer
-  cheer: (len = 1.6, vol = 0.3) => playSample("cheer", clamp(vol * 2.4, 0.4, 1), 0.97 + Math.random() * 0.06, 0, len + 1.4) || (burst({ dur: len, freq: 1200, q: 0.5, vol, type: "bandpass", attack: 0.25 }), burst({ dur: len * 0.8, freq: 2600, q: 0.6, vol: vol * 0.5, type: "bandpass", attack: 0.2, when: 0.05 })),
+  cheer: (len = 1.6, vol = 0.3) => playSample("cheer", clamp(vol * 2.4, 0.4, 1), 0.97 + Math.random() * 0.06, 0, len + 3.4, 0.35) || (burst({ dur: len, freq: 1200, q: 0.5, vol, type: "bandpass", attack: 0.25 }), burst({ dur: len * 0.8, freq: 2600, q: 0.6, vol: vol * 0.5, type: "bandpass", attack: 0.2, when: 0.05 })),
   hole: () => { burst({ dur: 0.22, freq: 260, vol: 0.7, sweep: 0.3 }); sfx.cheer(1.5, 0.22); },
   boom: () => { burst({ dur: 0.9, freq: 160, vol: 0.9, sweep: 0.35 }); for (let k = 0; k < 7; k++) burst({ dur: 0.05, freq: 3000 + Math.random() * 3000, vol: 0.12, type: "highpass", when: 0.25 + Math.random() * 0.6 }); },
   win: () => { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, "triangle", 0.2, i * 0.12)); sfx.cheer(2.2, 0.3); },
