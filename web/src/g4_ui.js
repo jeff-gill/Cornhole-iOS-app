@@ -576,7 +576,7 @@ function fitName(el) {
 }
 const refitNames = () => { for (const p of [0, 1]) { const nm = $("name" + p); if (nm) fitName(nm); } };
 addEventListener("resize", refitNames); document.fonts?.ready.then(refitNames);
-function short(n) { return bigNum(n); } // 1.5K, 2.3M ... one decimal
+function short(n) { return String(bigNum(n)).replace(/\.0(?=[KMB])/, ""); } // 1.5K, 2.3M ... one decimal (10K, not 10.0K)
 function renderHub() {
   $("coins").textContent = bigNum(career.coins);
   $("stars").textContent = bigNum(career.stars);
@@ -735,11 +735,11 @@ function storeHTML() {
   // Tiles, three across: sets first, then cans, coins and bottle caps.
   const tile = (it, icon, title, sub = "", extra = "") => `<div class="storetile">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${icon}</div><h4>${title}</h4>${sub ? `<div class="sub">${sub}</div>` : ""}${btn(it)}${extra}</div>`;
   const grid = tiles => `<div class="storegrid">${tiles.join("")}</div>`;
-  const sets = STORE.filter(x => x.kind === "once" && x.id !== starter.id).map(it => tile(it, it.id === PID("trails") ? "✨" : sw(it.grants), it.title));
+  const sets = STORE.filter(x => x.kind === "once" && x.id !== starter.id).map(it => tile(it, it.id === PID("trails") ? "✨" : sw(it.grants), it.title, "", `<button class="linkbtn oddslink" data-set="${it.id}">What's inside</button>`).replace('<div class="storetile">', `<div class="storetile settile" data-setile="${it.id}">`));
   if (sets.length) parts.push(`<div class="label">Sets</div>`, grid(sets));
   parts.push(`<div class="label">Cans</div>`, grid(STORE.filter(x => x.kind === "can" && !(noPaidCans() )).map(it => { const c = canById(it.can), g = canGuarantee(c); return tile(it, canPic(it.can, "store"), it.title.replace(/ can$/, ""), `${c.pulls} prizes · ${g.cards}+ cards`, `<button class="linkbtn oddslink" data-odds="${it.can}">Odds</button>`); })));
   parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);
-  parts.push(`<div class="label">Coins</div>`, grid(STORE.filter(x => x.kind === "coins").map(it => tile(it, it.icon, short(it.coins).replace(/\.0(?=[KM])/, ""), it.title))));
+  parts.push(`<div class="label">Coins</div>`, grid(STORE.filter(x => x.kind === "coins").map(it => tile(it, it.icon, short(it.coins), it.title))));
   parts.push(`<div class="label">Bottle caps</div>`, grid(STORE.filter(x => x.kind === "caps").map(it => tile(it, '<i class="bcap" style="width:38px;height:38px"></i>', it.caps.toLocaleString(), it.title))));
   parts.push(`<div class="storenote">No ads, ever. Coins and items are for the game only and have no cash value. Your progress is saved to your Game Center account.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
   if (shopMsg) parts.push(`<div class="shoptoast">${esc(shopMsg)}</div>`);
@@ -767,6 +767,7 @@ function renderShop() {
     for (const b of list.querySelectorAll("[data-buy]")) b.onclick = () => buy(b.dataset.buy);
     $("oddsBtn").onclick = () => showInfo(cansInfoHTML());
     for (const b of document.querySelectorAll("[data-odds]")) b.onclick = () => showInfo(canOddsHTML(b.dataset.odds, true));
+    for (const t of list.querySelectorAll("[data-setile]")) t.onclick = e => { if (!e.target.closest("[data-buy]")) openSetInfo(t.dataset.setile); };
     $("restoreBtn").onclick = () => { if (!canBuy()) { shopMsg = "Restore works in the iPhone app."; renderShop(); return; } shopMsg = "Restoring…"; postNative("restore", ""); renderShop(); };
     return;
   }
@@ -1105,4 +1106,34 @@ function potIntro() {
     }
   }
   setTimeout(() => { $("potAmt").textContent = short(amt); bub.classList.remove("pop"); void bub.offsetWidth; bub.classList.add("pop"); sfx.thud(); haptic("light"); }, 250 + N * 110 + 55 + 760);
+}
+
+// What's in a set: every item, what it does, and whether you could ever get it another way (and how likely that is).
+function openSetInfo(id) {
+  const it = STORE.find(x => x.id === id); if (!it) return;
+  const lists = { bag: BAGS, board: BOARDS, trail: TRAILS, fx: EFFECTS }, names = { bag: "Bags", board: "Board", trail: "Throw trail", fx: "Cornhole effect" };
+  const gold = canById("gold"), tot = CARD_CATS.reduce((t, c) => t + c.weight, 0);
+  const rows = it.grants.map(g => {
+    const [k, iid] = g.split(":"), x = (lists[k] || []).find(y => y.id === iid); if (!x) return "";
+    const pic = k === "bag" || k === "board" ? `<canvas data-sw="${g}" width="80" height="80"></canvas>` : `<div class="seticon">${x.icon || "✨"}</div>`;
+    const what = k === "bag" ? `Accuracy ${x.acc} · Control ${x.ctrl} · Spin ${x.spin} · ${FEEL[x.feel].label} slide` : k === "board" ? `Surface ${SURF_NAMES[x.surf || 0]} · Bounce ${BOUNCE_NAMES[x.bounce || 0]}` : esc(x.blurb || "");
+    let how;
+    if (x.premium) how = `<b class="excl">Only in this set</b>: never in cans or the shop.`;
+    else {
+      const cat = catByKey(k), items = cardItems(cat), i = items.indexOf(x), n = items.length;
+      const w = items.map((_, j) => Math.exp(-gold.bias * j / Math.max(1, n - 1))), p = i < 0 ? 0 : (cat.weight / tot) * w[i] / w.reduce((a, b) => a + b, 0);
+      how = `Also in the shop for <i class="coin"></i> ${short(x.price)}, or collect ${cardsNeeded(cat, x)} cards from cans (about ${pct(p)} of the card stacks in a Golden Pop can).`;
+    }
+    const own = (k === "bag" ? career.bags : k === "board" ? career.boards : k === "trail" ? career.trails : career.effects).includes(iid);
+    return `<div class="setrow2">${pic}<div><b>${esc(x.name)}</b> <small>${names[k]}${own ? " · yours already" : ""}</small><div class="muted">${what}</div><div class="sethow">${how}</div></div></div>`;
+  }).join("");
+  const owned = career.purchases.includes(it.id);
+  showInfo(`<h2>${esc(it.title)}</h2><div class="muted">${esc(it.blurb || "")}</div><div class="setlist">${rows}</div>
+    ${owned ? `<div class="big center">✅ You own this set</div>` : `<button class="btn green" id="setBuy">BUY · ${storePrices[it.id] || it.price}</button>`}`);
+  for (const c of $("livesBody").querySelectorAll("canvas[data-sw]")) {
+    const [type, key] = c.dataset.sw.split(":"), ctx = c.getContext("2d");
+    if (type === "bag") paintBag(ctx, 80, 80, bagById(key));
+    else { const tmp = document.createElement("canvas"); tmp.width = 80; tmp.height = 160; paintBoard(tmp.getContext("2d"), 80, 160, boardById(key)); ctx.drawImage(tmp, 20, 0, 40, 80); }
+  }
+  if ($("setBuy")) $("setBuy").onclick = () => { $("livesSheet").hidden = true; buy(it.id); };
 }
