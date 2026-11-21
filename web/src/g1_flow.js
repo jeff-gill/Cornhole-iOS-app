@@ -250,7 +250,7 @@ window.__cloudCareer = raw => {
   } catch (e) { /* not a career */ }
 };
 // Game Center leaderboards (in the iPhone app): total stars, wins and 4-baggers.
-const postScores = () => postNative("score", JSON.stringify({ stars: career.stars, wins: career.wins, fourBaggers: career.fourBaggers || 0 }));
+const postScores = () => career.creator ? null : postNative("score", JSON.stringify({ stars: career.stars, wins: career.wins, fourBaggers: career.fourBaggers || 0 }));
 // Your handle: your own choice, else your Game Center name, else "guest-" and ten digits.
 function myHandle() {
   if (!career.handle) { career.handle = "guest-" + String(Math.floor(Math.random() * 1e10)).padStart(10, "0"); save(); }

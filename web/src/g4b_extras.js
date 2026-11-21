@@ -248,6 +248,7 @@ function renderProfile() {
       <div class="setrow vol"><span>🎵 Music</span><input type="range" id="musicVolIn" min="0" max="100" value="${Math.round(musicVol * 100)}" aria-label="Music volume"><button class="btn small" id="setMusic">${musicOn ? "ON" : "OFF"}</button></div>
       <div class="setrow vol"><span>🔊 Effects</span><input type="range" id="sfxVolIn" min="0" max="100" value="${Math.round(sfxVol * 100)}" aria-label="Effects volume"><button class="btn small" id="setSfx">${sfxOn ? "ON" : "OFF"}</button></div>
       <div class="setrow"><span>📳 Haptics</span><button class="btn small" id="setHaptics">${career.haptics !== false ? "ON" : "OFF"}</button></div>
+      ${isCreator() ? `<div class="setrow"><span>👑 Creator<br><small class="muted">${career.creator ? "Maxed out · off the leaderboards and seasons" : "Unlock everything, fill coins and caps"}</small></span><button class="btn small" id="setMax">MAX ME OUT</button></div>` : ""}
       <div class="setrow"><span>🔔 Alerts (Daily Drops, cans ready)</span><button class="btn small" id="setAlerts">${career.alerts ? "ON" : "OFF"}</button></div>
       ${nativeBridge && nativeBridge.gamecenter ? `<div class="setrow"><span>🎮 Game Center<br><small class="muted">${gcSignedIn ? `Signed in as ${esc(gcSignedIn)}` : "Not signed in: needed for Rankings and online play"}${window.__debugBuild && gcPlayerId ? `<br><span class="gcid" id="gcIdCopy">Player ID: ${esc(gcPlayerId)} (tap to copy)</span>` : ""}</small></span>${gcSignedIn ? "" : `<button class="btn small" id="setGc">SIGN IN</button>`}</div>` : ""}
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
@@ -270,6 +271,7 @@ function renderProfile() {
     $("setPrivacy").onclick = () => openLink(LEGAL_URL + "privacy.html");
     $("setTerms").onclick = () => openLink(LEGAL_URL + "terms.html");
     if ($("setGc")) $("setGc").onclick = () => postNative("gamecenter", "signin-now");
+    if ($("setMax")) $("setMax").onclick = () => { if (!isCreator()) return; maxOut(); sfx.win(); haptic("success"); renderProfile(); };
     if ($("gcIdCopy")) $("gcIdCopy").onclick = () => { try { navigator.clipboard.writeText(gcPlayerId); $("gcIdCopy").textContent = "Player ID copied!"; } catch (e) { /* select it by hand */ } };
     $("setTour").onclick = () => { $("avatarSheet").hidden = true; startTour(true); };
     $("setHelp").onclick = () => { $("avatarSheet").hidden = true; $("helpSheet").hidden = false; };
@@ -419,7 +421,18 @@ $("canDone").onclick = () => {
   if (i >= 0) { delete career.cans[i].bonus; save(); const t = document.createElement("div"); t.className = "toast"; t.textContent = "4 in a row! Here's a bonus can 🎉"; $("hub").appendChild(t); setTimeout(() => t.remove(), 2600); setTimeout(() => openCanSheet(i), 700); }
 };
 
-let gcSignedIn = "", gcPlayerId = ""; // the Game Center name once the iPhone app reports a signed-in player
+let gcSignedIn = "", gcPlayerId = "";
+// The game's creator: recognised only by their Game Center account (Apple signs them in; there's no code to type).
+// Their Settings get a Creator section; a maxed-out creator account is kept off the leaderboards and season groups.
+const CREATOR_GC = 114616474; // (a fingerprint of the creator's Game Center player ID, not the ID itself)
+const isCreator = () => !!gcPlayerId && hashStr(gcPlayerId) === CREATOR_GC;
+function maxOut() {
+  career.bags = BAGS.map(b => b.id); career.boards = BOARDS.map(b => b.id); career.trails = TRAILS.map(t => t.id); career.effects = EFFECTS.map(e => e.id);
+  for (const v of VENUES) if (!v.soon) { if (!career.unlocked.includes(v.id)) career.unlocked.push(v.id); career.courtStars[v.id] = v.max; }
+  career.coins = Math.max(career.coins, 50000000); career.caps = Math.max(career.caps, 100000);
+  career.graduated = true; career.tutorialDone = true; career.tourDone = true; career.creator = true;
+  updateUnlocks(); save(); renderHub();
+} // the Game Center name once the iPhone app reports a signed-in player
 // The privacy policy and terms of service (published from the repository's docs/ folder with GitHub Pages).
 const LEGAL_URL = "https://jeff-gill.github.io/Cornhole-iOS-app/";
 function openLink(url) { if (nativeBridge && nativeBridge.open) postNative("open", url); else window.open(url, "_blank", "noopener"); }

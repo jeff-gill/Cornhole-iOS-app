@@ -280,13 +280,13 @@ function joinSeason() {
   if (isBeginner()) return;
   const s = seasonState(); rollSeason();
   if (!s.joined) { s.joined = secondsIntoSeason(); save(); }
-  postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined }));
+  if (!career.creator) postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined })); // (the creator's maxed account stays off the boards)
 }
 function addSeasonPoints(n) {
   const s = seasonState(); rollSeason();
   if (!s.joined) s.joined = secondsIntoSeason();
   s.points += n; s.played++; save();
-  postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined }));
+  if (!career.creator) postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined })); // (the creator's maxed account stays off the boards)
 }
 // Called on launch and in the clubhouse: if the month has turned, settle last season. The iPhone app asks Game Center
 // where you finished in your group in last month's league (window.__seasonEntries); otherwise the offline lines decide.
