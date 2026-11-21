@@ -729,21 +729,16 @@ function storeHTML() {
   const starter = STORE.find(x => x.id === PID("starterpack"));
   const parts = [];
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title} <span class="was"><s>${starter.value}</s> ${starter.off}% OFF</span></h4><div class="sub">${starter.blurb}</div>${welcomeLeft() > 0 ? `<div class="sub">Ends in ${timeText(welcomeLeft())}</div>` : ""}${sw(starter.grants)}</div>${btn(starter)}</div>`);
-  parts.push(`<div class="label">Coins</div>`);
-  for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
-  parts.push(`<div class="label">Bottle caps</div>`);
-  for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
-  parts.push(`<div class="label">Cans</div>`);
-  for (const it of STORE.filter(x => x.kind === "can")) {
-    const ic = it.kind === "can" ? canPic(it.can, "store") : it.icon;
-    parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
-  }
+  // Tiles, three across: sets first, then cans, coins and bottle caps.
+  const tile = (it, icon, title, sub = "") => `<div class="storetile">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${icon}</div><h4>${title}</h4>${sub ? `<div class="sub">${sub}</div>` : ""}${btn(it)}</div>`;
+  const grid = tiles => `<div class="storegrid">${tiles.join("")}</div>`;
+  const sets = STORE.filter(x => x.kind === "once" && x.id !== starter.id).map(it => tile(it, it.id === PID("trails") ? "✨" : sw(it.grants), it.title));
+  if (career.purchases.includes(starter.id)) sets.push(tile(starter, "⭐", starter.title));
+  if (sets.length) parts.push(`<div class="label">Sets</div>`, grid(sets));
+  parts.push(`<div class="label">Cans</div>`, grid(STORE.filter(x => x.kind === "can").map(it => tile(it, canPic(it.can, "store"), it.title.replace(/ can$/, ""), it.blurb.split(":")[0]))));
   parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);
-  parts.push(`<div class="label">Exclusive sets</div>`);
-  for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
-    parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
-  }
-  if (career.purchases.includes(starter.id)) parts.push(`<div class="storeitem"><div class="ic">⭐</div><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div></div>${btn(starter)}</div>`);
+  parts.push(`<div class="label">Coins</div>`, grid(STORE.filter(x => x.kind === "coins").map(it => tile(it, it.icon, short(it.coins).replace(/\.0(?=[KM])/, ""), it.title))));
+  parts.push(`<div class="label">Bottle caps</div>`, grid(STORE.filter(x => x.kind === "caps").map(it => tile(it, '<i class="bcap" style="width:38px;height:38px"></i>', it.caps.toLocaleString(), it.title))));
   parts.push(`<div class="storenote">No ads, ever. Coins and items are for the game only and have no cash value. Your progress is saved to your Game Center account.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
   if (shopMsg) parts.push(`<div class="shoptoast">${esc(shopMsg)}</div>`);
   return parts.join("");

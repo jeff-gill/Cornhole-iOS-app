@@ -826,6 +826,15 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .swipehint span { display: inline-block; animation: bob 1.2s ease-in-out infinite; color: var(--gold); font-size: 18px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 /* Store */
+.storegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+.storetile { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3px; padding: 12px 6px 8px; border-radius: 16px; background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.18); min-width: 0; }
+.storetile .ic { width: 58px; height: 58px; display: grid; place-items: center; font-size: 32px; border-radius: 14px; background: rgba(0,0,0,.25); }
+.storetile .ic .canpic { width: 52px; height: 58px; object-fit: contain; }
+.storetile .ic .swrow { display: flex; gap: 2px; } .storetile .ic .swrow canvas { width: 26px; height: 26px; }
+.storetile h4 { margin: 2px 0 0; font-family: var(--font-display); font-weight: 400; font-size: 16px; line-height: 1.05; }
+.storetile .sub { font-size: 11px; line-height: 1.15; color: var(--ink-dim); font-weight: 800; flex: 1; }
+.storetile .btn { width: 100%; margin-top: 4px; font-size: 15px; padding: 8px 2px; min-width: 0; }
+.storetile .tag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-family: var(--font-display); font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--gold); color: #3a2600; }
 .storeitem { position: relative; display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; border-radius: 18px; padding: 12px;
   background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border: 3px solid rgba(255,255,255,.18); }
 .storeitem.hero { grid-template-columns: 1fr auto; background: linear-gradient(135deg, #ff7a3a, #ff2e88 55%, #7a3aff); border-color: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.3); }

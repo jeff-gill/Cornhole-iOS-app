@@ -834,6 +834,15 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .swipehint span { display: inline-block; animation: bob 1.2s ease-in-out infinite; color: var(--gold); font-size: 18px; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 /* Store */
+.storegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+.storetile { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3px; padding: 12px 6px 8px; border-radius: 16px; background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.18); min-width: 0; }
+.storetile .ic { width: 58px; height: 58px; display: grid; place-items: center; font-size: 32px; border-radius: 14px; background: rgba(0,0,0,.25); }
+.storetile .ic .canpic { width: 52px; height: 58px; object-fit: contain; }
+.storetile .ic .swrow { display: flex; gap: 2px; } .storetile .ic .swrow canvas { width: 26px; height: 26px; }
+.storetile h4 { margin: 2px 0 0; font-family: var(--font-display); font-weight: 400; font-size: 16px; line-height: 1.05; }
+.storetile .sub { font-size: 11px; line-height: 1.15; color: var(--ink-dim); font-weight: 800; flex: 1; }
+.storetile .btn { width: 100%; margin-top: 4px; font-size: 15px; padding: 8px 2px; min-width: 0; }
+.storetile .tag { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-family: var(--font-display); font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--gold); color: #3a2600; }
 .storeitem { position: relative; display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; border-radius: 18px; padding: 12px;
   background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border: 3px solid rgba(255,255,255,.18); }
 .storeitem.hero { grid-template-columns: 1fr auto; background: linear-gradient(135deg, #ff7a3a, #ff2e88 55%, #7a3aff); border-color: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.3); }
@@ -3342,7 +3351,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795295663`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795295755`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4856,7 +4865,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795295663`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795295755`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4867,7 +4876,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795295663`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795295755`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8832,21 +8841,16 @@ function storeHTML() {
   const starter = STORE.find(x => x.id === PID("starterpack"));
   const parts = [];
   if (!career.purchases.includes(starter.id)) parts.push(`<div class="storeitem hero"><span class="tag">${starter.tag}</span><div><h4>${starter.title} <span class="was"><s>${starter.value}</s> ${starter.off}% OFF</span></h4><div class="sub">${starter.blurb}</div>${welcomeLeft() > 0 ? `<div class="sub">Ends in ${timeText(welcomeLeft())}</div>` : ""}${sw(starter.grants)}</div>${btn(starter)}</div>`);
-  parts.push(`<div class="label">Coins</div>`);
-  for (const it of STORE.filter(x => x.kind === "coins")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${it.icon}</div><div><h4>${short(it.coins)} coins</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
-  parts.push(`<div class="label">Bottle caps</div>`);
-  for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
-  parts.push(`<div class="label">Cans</div>`);
-  for (const it of STORE.filter(x => x.kind === "can")) {
-    const ic = it.kind === "can" ? canPic(it.can, "store") : it.icon;
-    parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
-  }
+  // Tiles, three across: sets first, then cans, coins and bottle caps.
+  const tile = (it, icon, title, sub = "") => `<div class="storetile">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic">${icon}</div><h4>${title}</h4>${sub ? `<div class="sub">${sub}</div>` : ""}${btn(it)}</div>`;
+  const grid = tiles => `<div class="storegrid">${tiles.join("")}</div>`;
+  const sets = STORE.filter(x => x.kind === "once" && x.id !== starter.id).map(it => tile(it, it.id === PID("trails") ? "✨" : sw(it.grants), it.title));
+  if (career.purchases.includes(starter.id)) sets.push(tile(starter, "⭐", starter.title));
+  if (sets.length) parts.push(`<div class="label">Sets</div>`, grid(sets));
+  parts.push(`<div class="label">Cans</div>`, grid(STORE.filter(x => x.kind === "can").map(it => tile(it, canPic(it.can, "store"), it.title.replace(/ can$/, ""), it.blurb.split(":")[0]))));
   parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);
-  parts.push(`<div class="label">Exclusive sets</div>`);
-  for (const it of STORE.filter(x => x.kind === "once" && x.id !== starter.id)) {
-    parts.push(`<div class="storeitem"><div class="ic">${it.id === PID("trails") ? "✨" : "🎁"}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div>${it.id === PID("trails") ? "" : sw(it.grants)}</div>${btn(it)}</div>`);
-  }
-  if (career.purchases.includes(starter.id)) parts.push(`<div class="storeitem"><div class="ic">⭐</div><div><h4>${starter.title}</h4><div class="sub">${starter.blurb}</div></div>${btn(starter)}</div>`);
+  parts.push(`<div class="label">Coins</div>`, grid(STORE.filter(x => x.kind === "coins").map(it => tile(it, it.icon, short(it.coins).replace(/\.0(?=[KM])/, ""), it.title))));
+  parts.push(`<div class="label">Bottle caps</div>`, grid(STORE.filter(x => x.kind === "caps").map(it => tile(it, '<i class="bcap" style="width:38px;height:38px"></i>', it.caps.toLocaleString(), it.title))));
   parts.push(`<div class="storenote">No ads, ever. Coins and items are for the game only and have no cash value. Your progress is saved to your Game Center account.<br><button class="linkbtn" id="restoreBtn">Restore purchases</button></div>`);
   if (shopMsg) parts.push(`<div class="shoptoast">${esc(shopMsg)}</div>`);
   return parts.join("");
