@@ -404,8 +404,7 @@ function renderBagPick() { // (the suggested bag is listed first)
   $("bagPickBody").innerHTML = `<h2>Board check</h2>
     <div class="bpboard"><img src="${tex.toDataURL()}" alt=""><div><b>${esc(d.name)}</b><small>${S.boardMine ? "Your board" : S.online ? esc(S.names[1]) + "'s board" : "Your opponent's board"}</small>
       <div>Surface <i>${SURF_NAMES[d.surf || 0]}</i> <small style="display:inline">(how far bags slide)</small></div><div>Bounce <i>${BOUNCE_NAMES[d.bounce || 0]}</i> <small style="display:inline">(how they land)</small></div></div></div>
-    <div class="bpsuggest">We picked <b>${esc(bagById(S.bestBag).name)}</b> for this board. Tap another bag to change it.</div>
-    <div class="label">Your best two bags for this board</div>
+    <div class="label">${career.bags.length > 1 ? "Your best two bags for this board" : "Your bag for this board"}</div>
     <div class="bplist" style="grid-template-columns:repeat(${Math.min(2, career.bags.length)}, 1fr)">${rankBagsFor(d).slice(0, 2).map(b => b.id).map(id => { const b = bagById(id), dots = k => [1, 2, 3, 4, 5].map(n => `<i class="${n <= b[k] ? "on" : ""}"></i>`).join("");
       return `<button class="bpbag${b.id === cur.id ? " on" : ""}" data-bag="${b.id}">${b.id === S.bestBag ? '<em class="bpbest">⭐ BEST</em>' : ""}<canvas width="72" height="72"></canvas><span>${esc(b.name)}</span><small>${FEEL[b.feel].label} slide</small>
         <div class="bpstats"><em>Accuracy</em>${dots("acc")}<em>Control</em>${dots("ctrl")}<em>Spin</em>${dots("spin")}</div><b class="bpres">→ ${slideWith(b, d)}</b></button>`; }).join("")}</div>
