@@ -679,6 +679,10 @@ s.was { opacity: .6; font-size: .8em; }
 #navbar button.locked .nic { filter: grayscale(.7) brightness(.8); }
 #inningBody { position: relative; }
 .backbtn.overback { position: absolute; left: 10px; top: 10px; transform: none; z-index: 3; }
+body.nopanel #panel { display: none; }
+#fbFloat { position: absolute; top: 132px; left: 50%; transform: translateX(-50%); z-index: 4; pointer-events: none; display: flex; gap: 10px; align-items: center; padding: 6px 14px; border-radius: 999px; background: rgba(10,20,38,.8); border: 2px solid rgba(255,255,255,.6); font: 900 13px/1.2 Nunito, system-ui, sans-serif; white-space: nowrap; }
+#fbFloat b { font-family: var(--font-display); font-weight: 400; font-size: 17px; }
+#fbFloat i { font-style: normal; color: var(--gold); } #fbFloat i.perfect { color: #3ee07a; }
 #screenMsg { position: fixed; left: 0; right: 0; top: 42%; z-index: 80; text-align: center; padding: 18px 16px; background: linear-gradient(90deg, rgba(10,20,38,0), rgba(10,20,38,.92) 15%, rgba(10,20,38,.92) 85%, rgba(10,20,38,0)); color: #fff; font-family: var(--font-display); font-size: 24px; text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; opacity: 0; transform: scaleY(.2); transition: opacity .2s, transform .25s cubic-bezier(.3,1.5,.5,1); }
 #screenMsg.show { opacity: 1; transform: none; }
 #screenMsg b { color: var(--gold); font-weight: 400; }
@@ -885,7 +889,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
-    <div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
+    <div id="fbFloat" hidden></div><div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
@@ -3213,7 +3217,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795230406`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795230573`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4727,7 +4731,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795230406`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795230573`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4738,7 +4742,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795230406`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795230573`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8060,6 +8064,7 @@ function updateCamera(dt) {
     k = 5;
   } else {
     tPos.set(rel.x * 0.4, narrow ? 6.3 : 5.6, -(FY - (narrow ? 3.8 : 4.4))); tLook.set(0, 0.3, -(FY + 2.0));
+    fov = narrow ? 42 : 36; // closer on the board while the bags settle
   }
   const t = 1 - Math.exp(-dt * k); tFov = fov;
   if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = lerp(camera.fov, fov, t); camera.updateProjectionMatrix(); }
@@ -8228,11 +8233,15 @@ function ui() {
   } else if (S.phase === "remote") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[1])} is lining up…</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (S.phase === "cpu") {
-    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[S.player])} is ${S.cpuPlan ? "going for: " + esc(S.cpuPlan.label) : "lining up…"}</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
+    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[S.player])} is lining up…</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (["flight", "inning", "over"].includes(S.phase)) {
-    panel.innerHTML = S.feedback.length ? `<div class="center big" style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "inherit"}">${S.perfect ? "Perfect throw!" : S.overdrive ? "Overdrive!" : "Release"}</div>
-      <div class="feedback" style="grid-template-columns:repeat(${S.feedback.length},1fr)">${S.feedback.map(f => `<div class="fb"><small>${f.title}</small><b class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</b></div>`).join("")}</div>` : "";
+    panel.innerHTML = ""; // (no panel while the bag flies: the court takes the whole screen; the release shows on it)
   } else panel.innerHTML = "";
+  // the release result floats on the court while the bag flies
+  const fbf = $("fbFloat"), showFb = S.phase === "flight" && S.feedback.length > 0 && S.kind !== "bullseye";
+  fbf.hidden = !showFb;
+  if (showFb) fbf.innerHTML = `<b style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "#fff"}">${S.perfect ? "PERFECT!" : S.overdrive ? "OVERDRIVE!" : "Release"}</b>${S.feedback.filter(f => f.title !== "Overdrive").map(f => `<span>${f.title} <i class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</i></span>`).join("")}`;
+  document.body.classList.toggle("nopanel", ["flight", "inning", "over"].includes(S.phase) && S.kind !== "bullseye");
   updateHUD(); renderClock();
   renderInningSheet(); bbRenderLegend();
 }

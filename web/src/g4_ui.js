@@ -128,6 +128,7 @@ function updateCamera(dt) {
     k = 5;
   } else {
     tPos.set(rel.x * 0.4, narrow ? 6.3 : 5.6, -(FY - (narrow ? 3.8 : 4.4))); tLook.set(0, 0.3, -(FY + 2.0));
+    fov = narrow ? 42 : 36; // closer on the board while the bags settle
   }
   const t = 1 - Math.exp(-dt * k); tFov = fov;
   if (Math.abs(camera.fov - fov) > 0.01) { camera.fov = lerp(camera.fov, fov, t); camera.updateProjectionMatrix(); }
@@ -296,11 +297,15 @@ function ui() {
   } else if (S.phase === "remote") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[1])} is lining up…</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (S.phase === "cpu") {
-    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[S.player])} is ${S.cpuPlan ? "going for: " + esc(S.cpuPlan.label) : "lining up…"}</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
+    panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">${esc(S.names[S.player])} is lining up…</div><div class="muted">${side} · ${S.wind.mph} mph wind</div></div>`;
   } else if (["flight", "inning", "over"].includes(S.phase)) {
-    panel.innerHTML = S.feedback.length ? `<div class="center big" style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "inherit"}">${S.perfect ? "Perfect throw!" : S.overdrive ? "Overdrive!" : "Release"}</div>
-      <div class="feedback" style="grid-template-columns:repeat(${S.feedback.length},1fr)">${S.feedback.map(f => `<div class="fb"><small>${f.title}</small><b class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</b></div>`).join("")}</div>` : "";
+    panel.innerHTML = ""; // (no panel while the bag flies: the court takes the whole screen; the release shows on it)
   } else panel.innerHTML = "";
+  // the release result floats on the court while the bag flies
+  const fbf = $("fbFloat"), showFb = S.phase === "flight" && S.feedback.length > 0 && S.kind !== "bullseye";
+  fbf.hidden = !showFb;
+  if (showFb) fbf.innerHTML = `<b style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "#fff"}">${S.perfect ? "PERFECT!" : S.overdrive ? "OVERDRIVE!" : "Release"}</b>${S.feedback.filter(f => f.title !== "Overdrive").map(f => `<span>${f.title} <i class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</i></span>`).join("")}`;
+  document.body.classList.toggle("nopanel", ["flight", "inning", "over"].includes(S.phase) && S.kind !== "bullseye");
   updateHUD(); renderClock();
   renderInningSheet(); bbRenderLegend();
 }
