@@ -275,7 +275,7 @@ function ui() {
       <div class="btns">
         <button class="btn" id="clearBtn" ${S.end ? "" : "disabled"}>CLEAR</button>
         <button class="btn" id="stickBtn" ${S.end ? "" : "disabled"}>STICK IT</button>
-        <button class="btn go red" id="throwBtn" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]} 50%, ${COL.pd[S.player]})" ${S.ideal ? "" : "disabled"}>THROW</button>
+        <button class="btn go red throwgo" id="throwBtn" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]} 50%, ${COL.pd[S.player]})" ${S.ideal ? "" : "disabled"}>THROW</button>
       </div>`;
     $("aimInfo").onclick = () => showInfo(`<h2>How to aim</h2><div class="muted" style="text-align:left;line-height:1.45">
       <p>1. <b>Tap the board</b> where you want your bag to end up.</p>
@@ -396,10 +396,10 @@ function renderInningSheet() {
         : pills + (res.can ? `<div class="center big" style="color:${COL.gold}">Cooler and waiting line full, so no can this time</div>` : ""))
         + `${gotCan && res.holes ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
-    const { again, off, O } = againState();
+    const { again, off, O, no } = againState();
     body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${scorecardHTML()}${rewards}
-      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>
-      ${S.kind === "career" ? `<button class="btn" id="courtsBtn">LEAVE</button>` : ""}`;
+      <button class="btn go ${no ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>
+      ${S.kind === "career" ? `<button class="btn" id="courtsBtn">RETURN HOME</button>` : ""}`;
   } else {
     body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
       <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
@@ -411,20 +411,20 @@ function againState() {
   const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
   const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
   const again = !canAgain ? "NOT ENOUGH COINS"
-      : bot && S.botRematch === "asking" ? `WAITING FOR ${who}…`
-      : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
+      : bot && S.botRematch === "asking" ? "WAITING FOR AN ANSWER…"
+      : bot && S.botRematch === "declined" ? "REMATCH DECLINED"
       : bot ? `REMATCH · <i class="coin"></i> ${short(fee)}`
       : !O ? "PLAY AGAIN" + (fee ? ` · <i class="coin"></i> ${short(fee)}` : "")
-      : O.gone ? (O.noRematch ? `${who} doesn't want a rematch` : `${who} left the match`)
-      : R.me ? `WAITING FOR ${who}…`
-      : R.them ? `${who} WANTS A THROWDOWN REMATCH! · <i class="coin"></i> ${short(fee)}`
+      : O.gone ? (O.noRematch ? "REMATCH DECLINED" : "OPPONENT LEFT")
+      : R.me ? "WAITING FOR AN ANSWER…"
+      : R.them ? `ACCEPT REMATCH · <i class="coin"></i> ${short(fee)}`
       : `THROWDOWN REMATCH · <i class="coin"></i> ${short(fee)}`;
-  return { again, O, off: !(canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking") };
+  return { again, O, no: !!(O && O.gone) || S.botRematch === "declined", off: !(canAgain && !(O && R.me) && S.botRematch !== "asking") };
 }
 // Update just the rematch button (the card and its score bubble stay put).
 function refreshAgain() {
   const b = $("againBtn"); if (!b || S.phase !== "over") return;
-  const { again, off, O } = againState(); b.innerHTML = again; b.disabled = off; b.classList.toggle("nope", !!(O && O.gone)); b.classList.toggle("green", !(O && O.gone));
+  const { again, off, no } = againState(); b.innerHTML = again; b.disabled = off; b.classList.toggle("nope", no); b.classList.toggle("green", !no);
 }
 // A big message across the screen (rematch answers and the like).
 function screenMsg(text) {
@@ -442,9 +442,10 @@ function renderInningBody(body, sheet) {
   const hero = $("inningBody").querySelector(".hero");
   if (hero && hero.querySelector(".vs.left, .vs.right")) setTimeout(() => { if (!sheet.hidden) { sfx.thud(); haptic("thud"); hero.classList.add("landed"); } }, 900);
   $("nextBtn").onclick = () => { if (S.phase === "over") { sheet.hidden = true; openHub(); } else dismissScorecard(0, -1); };
-  if ($("courtsBtn")) $("courtsBtn").onclick = () => { sheet.hidden = true; openHub(); showHubPage("home"); }; // home, where a new can is waiting in the cooler
+  const goHome = () => { sheet.hidden = true; openHub(); showHubPage("home"); }; // home, where a new can is waiting in the cooler
+  if ($("courtsBtn")) $("courtsBtn").onclick = goHome;
   if ($("againBtn")) $("againBtn").onclick = () => {
-    if (S.online && S.online.gone) return; // they've gone: no rematch
+    if ((S.online && S.online.gone) || S.botRematch === "declined") { goHome(); return; } // no rematch: back to the clubhouse, like Return Home
     if (S.online) { wantRematch(); return; }
     if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
       S.botRematch = "asking"; refreshAgain(); screenMsg(`Asking <b>${esc(S.names[1])}</b> for a rematch…`);
