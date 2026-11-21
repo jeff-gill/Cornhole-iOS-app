@@ -502,7 +502,7 @@ function openHub() {
   if (hubVenue >= 0 && !venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
-  if (career.justGraduated) { career.justGraduated = false; save(); setTimeout(() => { sfx.win(); haptic("success"); showInfo(`<div class="lifebig">🎓</div><h2>You're a Rookie!</h2><div class="muted">Bags &amp; Boards is unlocked, your cans can be better than Backyard Black now, and you're on this month's season titles. Nice throwing!</div>`); }, 700); }
+  if (career.justGraduated) { career.justGraduated = false; save(); setTimeout(() => { sfx.win(); haptic("success"); showInfo(`<div class="lifebig">🎓</div><h2>You're a Rookie!</h2><div class="muted">Bags &amp; Boards is unlocked, your cans can be better than Picnic White now, and you're on this month's season titles. Nice throwing!</div>`); }, 700); }
   else if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
   else if (S.kind === "career") setTimeout(offerWelcome, 900);
 

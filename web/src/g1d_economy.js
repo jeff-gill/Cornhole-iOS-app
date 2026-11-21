@@ -9,8 +9,8 @@
 // the best can pays only about a win's worth); cards: total item cards;
 // bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🎟️ life.
 const CANS = [
-  { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.05, 0.15], cards: [2, 4], bias: 5, life: 0.01 },
-  { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.08, 0.2], cards: [4, 7], bias: 4.5, life: 0.015 },
+  { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 40, pulls: 2, coins: [0.05, 0.15], cards: [2, 4], bias: 5, life: 0.01 },
+  { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 25, pulls: 3, coins: [0.08, 0.2], cards: [4, 7], bias: 4.5, life: 0.015 },
   { id: "bronze", name: "Bronze Fizz", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.12, 0.3], cards: [6, 10], bias: 4, life: 0.02 },
   { id: "silver", name: "Silver Splash", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.2, 0.4], cards: [10, 16], bias: 3.4, life: 0.03 },
   { id: "gold", name: "Golden Pop", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [0.3, 0.6], cards: [16, 26], bias: 2.8, life: 0.04 },
@@ -21,7 +21,7 @@ const CANS = [
   { id: "express", name: "Express Pop", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.12, 0.3], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
 ];
 // How long a can takes to open once you start it (several can unlock at once). The better the can, the longer the wait.
-const OPEN_MIN = { black: 15, white: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
+const OPEN_MIN = { white: 15, black: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
 const openMs = id => OPEN_MIN[id] * 60000;
 const durText = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Math.round(m / 60)}h` : `${m}m`; };
 const timeText = ms => { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`; };
@@ -63,7 +63,7 @@ function rollCan(odds, boost = 0) {
 // The cooler never holds more than COOLER_SIZE cans. Cans you're owed while it's full (a store purchase, a season prize)
 // wait in career.canBacklog and drop in as soon as a slot opens.
 // Beginners only ever earn the lowest can (bought cans stay what was paid for).
-const earnedCan = id => (isBeginner() ? "black" : id);
+const earnedCan = id => (isBeginner() ? "white" : id);
 function stashCan(can) { if (career.cans.length < COOLER_SIZE) career.cans.push(can); else (career.canBacklog ||= []).push(can); }
 function fillCooler() { const b = career.canBacklog; while (b && b.length && career.cans.length < COOLER_SIZE) career.cans.push(b.shift()); }
 const coolerFull = () => career.cans.length >= COOLER_SIZE;
@@ -270,9 +270,9 @@ const DEMOTE  =  [0,    0.20, 0.20, 0.15, 0.15, 0.10, 0.10, 0.05, 0.02]; // bala
 const MIN_MATCHES_TO_PROMOTE = 10, INACTIVE_FROM = 6; // All-Star and up: not playing costs a title
 const promoteCount = (t, size) => (PROMOTE[t] ? Math.max(1, Math.round(size * PROMOTE[t])) : 0);
 const demoteCount = (t, size) => (DEMOTE[t] ? Math.max(1, Math.round(size * DEMOTE[t])) : 0);
-// End-of-season can by place in your group: 1st Platinum, 2nd Gold, 3rd Silver, the rest of the top 20 Backyard Black.
+// End-of-season can by place in your group: 1st Platinum, 2nd Gold, 3rd Silver, the rest of the top 20 Picnic White.
 // Each title above Rookie moves every reward up one can (up to Diamond).
-const SEASON_CANS = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
+const SEASON_CANS = ["white", "black", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
 function seasonRewardCan(title, rank, size) {
   if (!rank || rank > Math.min(20, size)) return null;
   const base = rank === 1 ? 6 : rank === 2 ? 4 : rank === 3 ? 3 : 0; // platinum, gold, silver, black

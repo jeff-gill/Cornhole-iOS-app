@@ -428,7 +428,7 @@ function openSeason(tab) {
   const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · <i class="coin" style="width:20px;height:20px;vertical-align:-3px"></i> ${short(s.points)} won</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
   const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and start climbing the season titles.</div>`;
   const body = isBeginner() && rankTab !== "gc" ? learner : rankTab === "group" ? head + group
-    : rankTab === "ladder" ? `${head}<div class="muted infotext">Your season score is the coins you win from matches this month. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
+    : rankTab === "ladder" ? `${head}<div class="muted infotext">Your season score is the coins you win from matches this month. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Picnic White for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
     : `<div class="muted">The worldwide Game Center leaderboards.</div>
       <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
   $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "TITLES"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
@@ -468,7 +468,7 @@ $("seasonBtn").onclick = () => openSeason("group");
 const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
 const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
 const dailyCoins = () => Math.round(DAILY_COINS_BY_TITLE[dailyTitle()] * Math.max(1, VENUES[topCourt()].fee / 100)); // bigger as you move up the courts
-const CAN_LADDER = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
+const CAN_LADDER = ["white", "black", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
 function wheelSlices() {
   const t = dailyTitle(), f = dailyCoins() / 100, up = Math.min(2, t >> 2), can = k => CAN_LADDER[Math.min(CAN_LADDER.length - 1, k + up)];
   const co = n => Math.round(n * f / 5) * 5;
@@ -607,7 +607,7 @@ function showTourStep() {
   const [sel, title, text] = TOUR[tourAt], spot = $("tourSpot"), card = $("tourCard");
   if (sel === "#cooler" && !career.tourGift) { // only for players who take the tour this far
     career.tourGift = true;
-    career.cans.push({ id: "black", court: 0, instant: true }, { id: "black", court: 0, start: clockNow() });
+    career.cans.push({ id: "white", court: 0, instant: true }, { id: "white", court: 0, start: clockNow() });
     career.caps += skipCost(career.cans[career.cans.length - 1]);
     save(); renderHub();
   }

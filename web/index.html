@@ -1729,7 +1729,7 @@ const nativeBridge = (() => { try { return window.webkit && window.webkit.messag
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
 const haptic = kind => { if (career.haptics !== false) postNative("haptic", kind); };
 // Beginner: every new player starts here. Win BEGINNER_WINS matches, the last two in a row, to become a Rookie. Until
-// then Bags & Boards stays locked, every can you win is a Backyard Black, and there's no season ladder yet.
+// then Bags & Boards stays locked, every can you win is a Picnic White, and there's no season ladder yet.
 const BEGINNER_WINS = 5;
 const isBeginner = () => career.graduated === false;
 let career = fresh();
@@ -2242,7 +2242,7 @@ function finishMatch() {
   let can = null, coolerFull = false;
   const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
   if (won) {
-    refundLife(); can = isBeginner() ? "black" : rollCan(null, holes); // (Beginners only win the lowest can)
+    refundLife(); can = isBeginner() ? "white" : rollCan(null, holes); // (Beginners only win the lowest can)
     if (!giveCan(can, S.venue)) { if (winQueueFull()) coolerFull = true; else (career.canBacklog ||= []).push({ id: can, court: S.venue, won: true }); }
   }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
@@ -2681,8 +2681,8 @@ $("searchCancel").onclick = () => { if (!search) return; if (search.online) post
 // the best can pays only about a win's worth); cards: total item cards;
 // bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🎟️ life.
 const CANS = [
-  { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 40, pulls: 2, coins: [0.05, 0.15], cards: [2, 4], bias: 5, life: 0.01 },
-  { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 25, pulls: 3, coins: [0.08, 0.2], cards: [4, 7], bias: 4.5, life: 0.015 },
+  { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 40, pulls: 2, coins: [0.05, 0.15], cards: [2, 4], bias: 5, life: 0.01 },
+  { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 25, pulls: 3, coins: [0.08, 0.2], cards: [4, 7], bias: 4.5, life: 0.015 },
   { id: "bronze", name: "Bronze Fizz", color: "#b06a32", rim: "#e0a070", odds: 15, pulls: 3, coins: [0.12, 0.3], cards: [6, 10], bias: 4, life: 0.02 },
   { id: "silver", name: "Silver Splash", color: "#a8b0bc", rim: "#eef2f8", odds: 10.5, pulls: 4, coins: [0.2, 0.4], cards: [10, 16], bias: 3.4, life: 0.03 },
   { id: "gold", name: "Golden Pop", color: "#e8b020", rim: "#fff0a0", odds: 6, pulls: 5, coins: [0.3, 0.6], cards: [16, 26], bias: 2.8, life: 0.04 },
@@ -2693,7 +2693,7 @@ const CANS = [
   { id: "express", name: "Express Pop", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.12, 0.3], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
 ];
 // How long a can takes to open once you start it (several can unlock at once). The better the can, the longer the wait.
-const OPEN_MIN = { black: 15, white: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
+const OPEN_MIN = { white: 15, black: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
 const openMs = id => OPEN_MIN[id] * 60000;
 const durText = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Math.round(m / 60)}h` : `${m}m`; };
 const timeText = ms => { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`; };
@@ -2735,7 +2735,7 @@ function rollCan(odds, boost = 0) {
 // The cooler never holds more than COOLER_SIZE cans. Cans you're owed while it's full (a store purchase, a season prize)
 // wait in career.canBacklog and drop in as soon as a slot opens.
 // Beginners only ever earn the lowest can (bought cans stay what was paid for).
-const earnedCan = id => (isBeginner() ? "black" : id);
+const earnedCan = id => (isBeginner() ? "white" : id);
 function stashCan(can) { if (career.cans.length < COOLER_SIZE) career.cans.push(can); else (career.canBacklog ||= []).push(can); }
 function fillCooler() { const b = career.canBacklog; while (b && b.length && career.cans.length < COOLER_SIZE) career.cans.push(b.shift()); }
 const coolerFull = () => career.cans.length >= COOLER_SIZE;
@@ -2942,9 +2942,9 @@ const DEMOTE  =  [0,    0.20, 0.20, 0.15, 0.15, 0.10, 0.10, 0.05, 0.02]; // bala
 const MIN_MATCHES_TO_PROMOTE = 10, INACTIVE_FROM = 6; // All-Star and up: not playing costs a title
 const promoteCount = (t, size) => (PROMOTE[t] ? Math.max(1, Math.round(size * PROMOTE[t])) : 0);
 const demoteCount = (t, size) => (DEMOTE[t] ? Math.max(1, Math.round(size * DEMOTE[t])) : 0);
-// End-of-season can by place in your group: 1st Platinum, 2nd Gold, 3rd Silver, the rest of the top 20 Backyard Black.
+// End-of-season can by place in your group: 1st Platinum, 2nd Gold, 3rd Silver, the rest of the top 20 Picnic White.
 // Each title above Rookie moves every reward up one can (up to Diamond).
-const SEASON_CANS = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
+const SEASON_CANS = ["white", "black", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
 function seasonRewardCan(title, rank, size) {
   if (!rank || rank > Math.min(20, size)) return null;
   const base = rank === 1 ? 6 : rank === 2 ? 4 : rank === 3 ? 3 : 0; // platinum, gold, silver, black
@@ -3223,7 +3223,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795232374`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795232440`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4737,7 +4737,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795232374`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795232440`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4748,7 +4748,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795232374`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795232440`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -7040,7 +7040,7 @@ function openSeason(tab) {
   const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · <i class="coin" style="width:20px;height:20px;vertical-align:-3px"></i> ${short(s.points)} won</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
   const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and start climbing the season titles.</div>`;
   const body = isBeginner() && rankTab !== "gc" ? learner : rankTab === "group" ? head + group
-    : rankTab === "ladder" ? `${head}<div class="muted infotext">Your season score is the coins you win from matches this month. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
+    : rankTab === "ladder" ? `${head}<div class="muted infotext">Your season score is the coins you win from matches this month. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Picnic White for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
     : `<div class="muted">The worldwide Game Center leaderboards.</div>
       <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
   $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "TITLES"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
@@ -7080,7 +7080,7 @@ $("seasonBtn").onclick = () => openSeason("group");
 const DAILY_COINS_BY_TITLE = [100, 200, 350, 600, 1000, 1600, 2500, 4000, 6000];
 const dailyTitle = () => clamp(seasonState().title | 0, 0, DAILY_COINS_BY_TITLE.length - 1);
 const dailyCoins = () => Math.round(DAILY_COINS_BY_TITLE[dailyTitle()] * Math.max(1, VENUES[topCourt()].fee / 100)); // bigger as you move up the courts
-const CAN_LADDER = ["black", "white", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
+const CAN_LADDER = ["white", "black", "bronze", "silver", "gold", "purple", "platinum", "diamond"];
 function wheelSlices() {
   const t = dailyTitle(), f = dailyCoins() / 100, up = Math.min(2, t >> 2), can = k => CAN_LADDER[Math.min(CAN_LADDER.length - 1, k + up)];
   const co = n => Math.round(n * f / 5) * 5;
@@ -7219,7 +7219,7 @@ function showTourStep() {
   const [sel, title, text] = TOUR[tourAt], spot = $("tourSpot"), card = $("tourCard");
   if (sel === "#cooler" && !career.tourGift) { // only for players who take the tour this far
     career.tourGift = true;
-    career.cans.push({ id: "black", court: 0, instant: true }, { id: "black", court: 0, start: clockNow() });
+    career.cans.push({ id: "white", court: 0, instant: true }, { id: "white", court: 0, start: clockNow() });
     career.caps += skipCost(career.cans[career.cans.length - 1]);
     save(); renderHub();
   }
@@ -8444,7 +8444,7 @@ function openHub() {
   if (hubVenue >= 0 && !venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
-  if (career.justGraduated) { career.justGraduated = false; save(); setTimeout(() => { sfx.win(); haptic("success"); showInfo(`<div class="lifebig">🎓</div><h2>You're a Rookie!</h2><div class="muted">Bags &amp; Boards is unlocked, your cans can be better than Backyard Black now, and you're on this month's season titles. Nice throwing!</div>`); }, 700); }
+  if (career.justGraduated) { career.justGraduated = false; save(); setTimeout(() => { sfx.win(); haptic("success"); showInfo(`<div class="lifebig">🎓</div><h2>You're a Rookie!</h2><div class="muted">Bags &amp; Boards is unlocked, your cans can be better than Picnic White now, and you're on this month's season titles. Nice throwing!</div>`); }, 700); }
   else if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
   else if (S.kind === "career") setTimeout(offerWelcome, 900);
 

@@ -187,7 +187,7 @@ const nativeBridge = (() => { try { return window.webkit && window.webkit.messag
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
 const haptic = kind => { if (career.haptics !== false) postNative("haptic", kind); };
 // Beginner: every new player starts here. Win BEGINNER_WINS matches, the last two in a row, to become a Rookie. Until
-// then Bags & Boards stays locked, every can you win is a Backyard Black, and there's no season ladder yet.
+// then Bags & Boards stays locked, every can you win is a Picnic White, and there's no season ladder yet.
 const BEGINNER_WINS = 5;
 const isBeginner = () => career.graduated === false;
 let career = fresh();
@@ -700,7 +700,7 @@ function finishMatch() {
   let can = null, coolerFull = false;
   const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
   if (won) {
-    refundLife(); can = isBeginner() ? "black" : rollCan(null, holes); // (Beginners only win the lowest can)
+    refundLife(); can = isBeginner() ? "white" : rollCan(null, holes); // (Beginners only win the lowest can)
     if (!giveCan(can, S.venue)) { if (winQueueFull()) coolerFull = true; else (career.canBacklog ||= []).push({ id: can, court: S.venue, won: true }); }
   }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
