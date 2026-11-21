@@ -482,7 +482,7 @@ function startMatch(kind, vi, online = null, pick = null) {
     : kind === "career" ? BOARDS[Math.floor(Math.random() * Math.min(BOARDS.length, 3 + vi * 2))].id : career.board;
   const hostBoard = online && online.host ? career.board : oppBoard, guestBoard = online && online.host ? oppBoard : career.board;
   S.board = online ? (online.seed & 1 ? hostBoard : guestBoard) : Math.random() < 0.5 ? career.board : oppBoard;
-  if (kind === "career" && !online && isBeginner()) S.board = "plain";
+  if (!online && isBeginner()) S.board = "plain"; // Beginners: the plain board in every match (career and practice)
   S.boardMine = S.board === career.board;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
