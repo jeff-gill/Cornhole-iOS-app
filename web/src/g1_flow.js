@@ -164,7 +164,13 @@ const BOARDS = [
 const OPPONENTS = ["SliderSam22", "airmail_annie", "BagBoss_Bob", "TailgateTina", "SandyShores7", "BigEarl88", "HoopsHannah", "the_professor",
   "LeftyLou", "SwishRod", "Cornelius_9", "FourBagFran", "KernelKing", "WoodyBoards", "BlockerBetty", "dirtbag_dave", "CornStar21",
   "PushShotPete", "AceHoleAmy", "Sir_Slides", "DropZoneDan", "Bagzilla", "HoleyMoly", "CornDog_77", "TossBoss", "ringer_rae",
-  "BackyardBeast", "Kernel_Kate", "SlideRule", "LuckyLobs", "CornFlake_5", "ThrowdownTom"];
+  "BackyardBeast", "Kernel_Kate", "SlideRule", "LuckyLobs", "CornFlake_5", "ThrowdownTom",
+  // 32 more, so early players don't keep meeting the same faces
+  "BeanBagBarb", "PlywoodPaul", "HoleInOneHal", "SlidingSue", "CornerPocketKyle", "BagsByBecca", "TossUpTerry", "RingTossRita",
+  "Woody_Wagner", "AirmailAl", "SliceAndDice_Di", "BullseyeBen", "FrontRowFiona", "LongShotLarry", "CorntopCarla", "DeadDropDeb",
+  "StickyFingersSam", "ThirtyFootTed", "GoldenTossGina", "SpinCycleSid", "BackboardBree", "PitchPerfectPam", "LaneLegendLou", "BlueRibbonBo",
+  "SunnySlider", "CornCobCoach", "NeatNudgeNed", "HighArcHarper", "LuckyLaceyLu", "TopShelfTori", "QuietStormQuin", "BagSlingerBo"
+];
 const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neutral", slide: 1 }, fast: { label: "Fast", slide: 1.14 } };
 
 // ───────────────────────── Saved career (this device only)

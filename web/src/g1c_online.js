@@ -12,6 +12,13 @@ const canGoOnline = () => !!(nativeBridge && nativeBridge.net) && career.tutoria
 // player who has reached the Stadium never meets a beginner, even back at the Backyard.
 const bracket = vi => (vi + 1) * 100 + VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0);
 const randomPick = () => ({ name: OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)], avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id });
+// The opponent you actually play: never one of the last 30 you met, so the faces keep changing.
+function freshPick() {
+  const recent = (career.recentOpps ||= []), pool = OPPONENTS.filter(n => !recent.includes(n));
+  const name = pool[Math.floor(Math.random() * pool.length)] || OPPONENTS[0];
+  recent.push(name); if (recent.length > 30) recent.shift();
+  return { name, avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)].id };
+}
 function playCourt(vi, confirmed = false) {
   const v = VENUES[vi];
   if (career.coins < v.fee && !houseCovers(vi)) return;
@@ -32,7 +39,7 @@ function cancelSearch(playCPU) {
   if (search.online) postNative("net", JSON.stringify({ op: "cancel" }));
   search.online = false;
   if (!playCPU) { search = null; $("searching").hidden = true; return; }
-  const pick = randomPick(), vi = search.vi;
+  const pick = freshPick(), vi = search.vi;
   settleReel(pick, () => { search = null; $("searching").hidden = true; startMatch("career", vi, null, pick); });
 }
 // ── The opponent reel: names and avatars spin past, then slow down and land on your opponent (like a slot machine).
