@@ -191,6 +191,7 @@ function updateHUD() {
     $("windMph").textContent = `${S.wind.mph} mph`;
     // Screen up is down-range, so the arrow points the way the wind blows across the lane.
     $("windArrow").setAttribute("transform", `rotate(${(S.wind.dir * 180 / Math.PI).toFixed(1)})`);
+    $("windArrow").style.display = S.wind.mph > 0 ? "" : "none"; // calm: no direction to show
   }
 }
 
