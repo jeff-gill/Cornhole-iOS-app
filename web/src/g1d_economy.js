@@ -287,8 +287,9 @@ function seasonState() {
 }
 function addSeasonPoints(n) {
   const s = seasonState(); rollSeason();
+  if (!s.joined) s.joined = Math.max(1, Math.floor((clockNow() - Date.UTC(new Date(clockNow()).getUTCFullYear(), new Date(clockNow()).getUTCMonth(), 1)) / 1000)); // seconds into the season
   s.points += n; s.played++; save();
-  postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points }));
+  postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined }));
 }
 // Called on launch and in the clubhouse: if the month has turned, settle last season. The iPhone app asks Game Center
 // where you finished in your group in last month's league (window.__seasonEntries); otherwise the offline lines decide.
@@ -302,16 +303,21 @@ function rollSeason() {
 const GROUP_MAX = 100;
 // FNV-1a hash of player + season: decides each player's group the same way on every phone.
 function hashStr(t) { let h = 0x811c9dc5; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193); } return h >>> 0; }
-// entries: [[playerId, score, name], ...] for a whole league. Players are ordered by a hash of their ID and the season,
-// then cut into even groups of at most 100, so every phone gets exactly the same groups whatever order the list
-// arrived in. Returns your group (best first, ties broken by ID) and your place in it.
-function myGroup(entries, me, season) {
-  const n = entries.length, groups = Math.max(1, Math.ceil(n / GROUP_MAX)), per = Math.ceil(n / groups) || 1;
-  const key = e => hashStr(String(e[0]) + "|" + season);
-  const order = [...entries].sort((a, b) => key(a) - key(b) || (String(a[0]) < String(b[0]) ? -1 : 1));
-  const at = order.findIndex(e => e[0] === me), g = at < 0 ? 0 : Math.floor(at / per);
-  const list = order.slice(g * per, g * per + per).sort((a, b) => b[1] - a[1] || (String(a[0]) < String(b[0]) ? -1 : 1));
-  return { list, rank: list.findIndex(e => e[0] === me) + 1, size: list.length };
+// entries: [[playerId, score, name, joined], ...] for a whole league (joined: seconds into the season of their first
+// score). Groups fill in the order players join: the first 100 are group 1, the next 100 group 2, and so on, so groups
+// never reshuffle during the month and every phone works them out the same way. The newest, unfilled group is topped
+// up with computer players (see BOT_FILL); each new player who joins takes a computer player's place.
+function groupFor(entries, me, season, title) {
+  const order = [...entries].sort((a, b) => (+a[3] || 0) - (+b[3] || 0) || (String(a[0]) < String(b[0]) ? -1 : 1));
+  const at = Math.max(0, order.findIndex(e => e[0] === me)), g = Math.floor(at / GROUP_MAX);
+  let list = order.slice(g * GROUP_MAX, g * GROUP_MAX + GROUP_MAX);
+  const fill = (BOT_FILL[title] || 0) - list.length;
+  if (fill > 0) list = list.concat(makeBots(fill, season, title, g));
+  list.sort((a, b) => b[1] - a[1] || (String(a[0]) < String(b[0]) ? -1 : 1));
+  // computer players (names with made-up points) can never be promoted: the move-up places go to real players only,
+  // so "realRank" is your place among the real players; relegation uses your overall place (they can fill the bottom)
+  const real = list.filter(e => !isBot(e)), rank = list.findIndex(e => e[0] === me) + 1;
+  return { list, rank, size: list.length, realRank: real.findIndex(e => e[0] === me) + 1 };
 }
 // CPU players fill the first two titles while they're short on people: Rookie groups up to 100, Weekend Warrior up to
 // 50, none above that, and none at all once a league has that many real players. They're made the same way on every
@@ -324,42 +330,41 @@ function botHandle(h) {
   const a = BOT_FIRST[h % 20], b = BOT_LAST[(h >>> 8) % 10], n = (h >>> 12) % 100, style = (h >>> 20) % 3;
   return style === 0 ? `${a}${b}${n}` : style === 1 ? `${a.toLowerCase()}_${b.toLowerCase()}` : `${b}${a}${n % 10}`;
 }
-function withBots(entries, title, season) {
-  const want = (BOT_FILL[title] || 0) - entries.length;
-  if (want <= 0) return entries;
+const isBot = e => String(e[0]).startsWith("cpu:");
+function makeBots(n, season, title, group) {
   const d = new Date(clockNow()), start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
   const progress = season === seasonId() ? clamp((clockNow() - start) / (seasonEnds() - start), 0, 1) : 1;
   const mean = title === 0 ? 35 : 60, bots = [];
-  for (let i = 0; i < want; i++) {
-    const h = hashStr(`bot|${season}|${title}|${i}`), u = (h % 100000) / 100000;
+  for (let i = 0; i < n; i++) {
+    const h = hashStr(`bot|${season}|${title}|${group}|${i}`), u = (h % 100000) / 100000;
     const final = Math.round(-Math.log(1 - u * 0.995) * mean);
-    bots.push([`cpu:${i}`, Math.round(final * progress), botHandle(h)]);
+    bots.push([`cpu:${group}:${i}`, Math.round(final * progress), botHandle(h)]);
   }
-  return entries.concat(bots);
+  return bots;
 }
 window.__seasonEntries = msg => {
   if (!msg || !Array.isArray(msg.entries)) return;
   const s = seasonState();
   if (msg.op === "result") {
     if (!s.pending) return;
-    const G = myGroup(withBots(msg.entries, s.pending.title, s.pending.id), msg.me, s.pending.id);
-    settleSeason(G.rank, G.size);
-  } else if (msg.op === "standings") { S.groupStandings = { ...myGroup(withBots(msg.entries, s.title, s.id), msg.me, s.id), me: msg.me }; if (typeof openSeason === "function" && !$("rankSheet").hidden) openSeason(); }
+    const G = groupFor(msg.entries, msg.me, s.pending.id, s.pending.title);
+    settleSeason(G.rank, G.size, G.realRank);
+  } else if (msg.op === "standings") { S.groupStandings = { ...groupFor(msg.entries, msg.me, s.id, s.title), me: msg.me }; if (typeof openSeason === "function" && !$("rankSheet").hidden) openSeason(); }
 };
 // rank/size: your place in your group last season (0 if unknown: no Game Center and no CPU group to compare with).
-function settleSeason(rank, size) {
+function settleSeason(rank, size, realRank = rank) {
   const s = seasonState(), p = s.pending; if (!p) return;
-  if (!rank && BOT_FILL[p.title]) { const G = myGroup(withBots([["me", p.points, "You"]], p.title, p.id), "me", p.id); rank = G.rank; size = G.size; }
+  if (!rank && BOT_FILL[p.title]) { const G = groupFor([["me", p.points, "You", 1]], "me", p.id, p.title); rank = G.rank; size = G.size; realRank = G.realRank; }
   let move = 0;
   if (!p.played) move = p.title >= INACTIVE_FROM ? -1 : 0;                      // only the top three titles punish sitting out
   else if (rank && size) {
-    if (rank <= promoteCount(p.title, size) && p.played >= MIN_MATCHES_TO_PROMOTE) move = 1;
+    if (realRank <= promoteCount(p.title, size) && p.played >= MIN_MATCHES_TO_PROMOTE) move = 1; // (computer players never take a promotion place)
     else if (rank > size - demoteCount(p.title, size)) move = -1;
   } else move = p.points >= offlinePromoteAt(p.title) && p.played >= MIN_MATCHES_TO_PROMOTE ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
   const title = clamp(p.title + move, 0, TITLES.length - 1);
   const reward = p.played && rank && size ? seasonRewardCan(p.title, rank, size) : null;
   if (reward) stashCan({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // waits if the cooler is full
-  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
+  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, joined: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
   save();
   if (typeof showSeasonResult === "function") showSeasonResult();
 }

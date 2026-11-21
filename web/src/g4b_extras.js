@@ -404,16 +404,18 @@ function openSeason(tab) {
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   const rows = TITLES.map((t, i) => `<div class="${i === s.title ? "me" : i > s.title ? "locked2" : ""}"><span>${TITLE_ICONS[i]}</span><span>${t}${i === s.title ? " <small>YOU</small>" : ""}</span><small>${i === TITLES.length - 1 ? "Top title" : `Top ${Math.round(PROMOTE[i] * 100)}% up`}${i ? ` · +${i * 5}% cards` : ""}</small></div>`).reverse().join("");
   // In the browser preview there's no Game Center, so the first two titles show your group of CPU players.
-  if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...myGroup(withBots([["me", s.points, myHandle()]], s.title, s.id), "me", s.id), me: "me" };
+  if (!(nativeBridge && nativeBridge.season) && BOT_FILL[s.title]) S.groupStandings = { ...groupFor([["me", s.points, myHandle(), 1]], "me", s.id, s.title), me: "me" };
   const G = S.groupStandings;
   if (!G && nativeBridge && nativeBridge.season && !openSeason.asked) { openSeason.asked = true; postNative("season", JSON.stringify({ op: "standings", title: s.title })); }
   let group = `<div class="muted center" style="margin-top:20px">Your group shows here once Game Center has the season's scores.</div>`;
   if (G && G.size) {
     const up = promoteCount(s.title, G.size), down = demoteCount(s.title, G.size);
-    const zone = r => (r <= up ? " up" : r > G.size - down ? " down" : "");
-    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
-    const where = zone(G.rank) === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : zone(G.rank) === " down" ? "You're in the demotion zone." : "";
-    const list = G.list.map((e, i) => (i === G.size - down && down ? `<div class="zoneline down">▼ RELEGATION LINE ▼</div>` : "") + row(e, i + 1) + (i + 1 === up ? `<div class="zoneline up">▲ PROMOTION LINE ▲</div>` : "")).join("");
+    // promotion places go to real players only (computer players can't move up); relegation counts everyone
+    let rr = 0; const realAt = G.list.map(e => (isBot(e) ? 0 : ++rr)), lastUp = realAt.findIndex(n => n === up);
+    const zone = (r, i) => (realAt[i] && realAt[i] <= up ? " up" : r > G.size - down ? " down" : "");
+    const row = (e, r) => `<div class="${e[0] === G.me ? "me" : ""}${zone(r, r - 1)}"><span>${r}</span><span>${esc(String(e[2] || "Player"))}</span><small>${e[1]} pts</small></div>`;
+    const myZone = zone(G.rank, G.rank - 1), where = myZone === " up" ? (s.played >= MIN_MATCHES_TO_PROMOTE ? "You're in the promotion zone!" : `You're in the promotion zone. Play ${MIN_MATCHES_TO_PROMOTE - s.played} more match${MIN_MATCHES_TO_PROMOTE - s.played > 1 ? "es" : ""} to qualify.`) : myZone === " down" ? "You're in the demotion zone." : "";
+    const list = G.list.map((e, i) => (i === G.size - down && down ? `<div class="zoneline down">▼ RELEGATION LINE ▼</div>` : "") + row(e, i + 1) + (i === lastUp ? `<div class="zoneline up">▲ PROMOTION LINE ▲</div>` : "")).join("");
     group = `<div class="label">Your group (${G.size} players)</div><div class="gwrap"><div class="ladder group" id="groupList">${list}</div><div class="gbar" id="groupBar"><i></i></div></div>
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }

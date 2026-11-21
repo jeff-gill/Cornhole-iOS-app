@@ -122,7 +122,9 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
         let id = "com.jeffgill.cornhole.season.t\(title)"
         guard GKLocalPlayer.local.isAuthenticated else { if op != "submit" { sendEntries(op, [], me: "") }; return }
         if op == "submit", let points = (msg["points"] as? NSNumber)?.intValue {
-            GKLeaderboard.submitScore(points, context: 0, player: GKLocalPlayer.local, leaderboardIDs: [id]) { _ in }
+            // context: when you joined this season (seconds in), so every phone fills groups in the same join order
+            let joined = (msg["joined"] as? NSNumber)?.intValue ?? 0
+            GKLeaderboard.submitScore(points, context: max(0, joined), player: GKLocalPlayer.local, leaderboardIDs: [id]) { _ in }
             return
         }
         GKLeaderboard.loadLeaderboards(IDs: [id]) { [weak self] boards, _ in
@@ -141,7 +143,7 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
     /// Every entry on a leaderboard, 100 at a time (capped at 20,000 players).
     private func loadAll(_ board: GKLeaderboard, from start: Int = 1, into list: [[Any]] = [], done: @escaping ([[Any]]) -> Void) {
         board.loadEntries(for: .global, timeScope: .allTime, range: NSRange(location: start, length: 100)) { [weak self] _, entries, total, _ in
-            let more = list + (entries ?? []).map { [$0.player.gamePlayerID, $0.score, $0.player.displayName] }
+            let more = list + (entries ?? []).map { [$0.player.gamePlayerID, $0.score, $0.player.displayName, $0.context] }
             if let entries, !entries.isEmpty, more.count < total, more.count < 20_000 { self?.loadAll(board, from: start + 100, into: more, done: done) }
             else { done(more) }
         }
