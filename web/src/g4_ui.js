@@ -1128,7 +1128,11 @@ function openSetInfo(id) {
     return `<div class="setrow2">${pic}<div><b>${esc(x.name)}</b> <small>${names[k]}${own ? " · yours already" : ""}</small><div class="muted">${what}</div><div class="sethow">${how}</div></div></div>`;
   }).join("");
   const owned = career.purchases.includes(it.id);
-  showInfo(`<h2>${esc(it.title)}</h2><div class="muted">${esc(it.blurb || "")}</div><div class="setlist">${rows}</div>
+  // what the set's shop items would cost in coins (exclusives on top)
+  let worth = 0, excl = 0;
+  for (const g of it.grants) { const [k, iid] = g.split(":"), x = (lists[k] || []).find(y => y.id === iid); if (!x) continue; if (x.premium) excl++; else worth += x.price || 0; }
+  const worthLine = worth ? `<div class="setworth">Worth <i class="coin"></i> ${short(worth)} in the shop${excl ? ` + ${excl} exclusive${excl > 1 ? "s" : ""}` : ""}</div>` : excl ? `<div class="setworth">${excl} exclusive item${excl > 1 ? "s" : ""}</div>` : "";
+  showInfo(`<h2>${esc(it.title)}</h2><div class="muted">${esc(it.blurb || "")}</div>${worthLine}<div class="setlist">${rows}</div>
     ${owned ? `<div class="big center">✅ You own this set</div>` : `<button class="btn green" id="setBuy">BUY · ${storePrices[it.id] || it.price}</button>`}`);
   for (const c of $("livesBody").querySelectorAll("canvas[data-sw]")) {
     const [type, key] = c.dataset.sw.split(":"), ctx = c.getContext("2d");

@@ -94,7 +94,7 @@ const STORE = [
   { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
   { id: PID("coins.vault"), kind: "coins", coins: 6000000, price: "$49.99", title: "Vault of Coins", icon: "🏦" },
   { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Welcome Pack", coins: 25000, caps: 100, can: "gold", grants: ["bag:firecracker", "board:neon"], tag: "WELCOME OFFER", value: "$9.46", off: 68, blurb: "25,000 coins + 100 bottle caps + a Golden Pop can + Firecracker bags + Neon Nights board" },
-  { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
+  { id: PID("set.galaxy"), kind: "once", price: "$4.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
   { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
   { id: PID("caps.450"), kind: "caps", caps: 450, price: "$4.99", title: "Bucket of Caps", tag: "BEST VALUE" },
@@ -112,7 +112,7 @@ const STORE = [
   { id: PID("bullseye.1"), kind: "throws", throws: 1, price: "$0.99", title: "1 Bullseye throw", hidden: true },
   { id: PID("bullseye.3"), kind: "throws", throws: 3, price: "$1.99", title: "3 Bullseye throws", hidden: true },
   { id: PID("bullseye.5"), kind: "throws", throws: 5, price: "$2.99", title: "5 Bullseye throws", hidden: true },
-  { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
+  { id: PID("trails"), kind: "once", price: "$2.99", title: "Trail Pack", grants: ["trail:ice", "trail:stars", "trail:rainbow"], blurb: "Ice, Stars and Rainbow throw trails" },
 ];
 // Throw effects: a trail behind your bag in flight (shop "Throw" tab).
 const TRAILS = [

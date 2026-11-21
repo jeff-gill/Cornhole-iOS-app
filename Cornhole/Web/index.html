@@ -844,6 +844,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .oddsrow { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 2px 0; } .oddsrow i { font-style: normal; font-weight: 900; color: #fff; }
 .oddstable { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0 6px; } .oddstable th { color: var(--ink-dim); font-weight: 900; text-align: left; padding: 2px 3px; } .oddstable td { padding: 3px; border-top: 1px solid rgba(255,255,255,.1); }
 .settile { cursor: pointer; }
+.setworth { margin-top: 6px; font-weight: 900; color: var(--gold); } .setworth .coin { width: 16px; height: 16px; vertical-align: -3px; }
 .setlist { display: grid; gap: 10px; margin: 12px 0; text-align: left; }
 .setrow2 { display: flex; gap: 12px; align-items: flex-start; padding: 10px; border-radius: 14px; background: rgba(255,255,255,.07); }
 .setrow2 canvas { width: 60px; height: 60px; flex: none; border-radius: 10px; } .setrow2 .seticon { width: 60px; height: 60px; flex: none; display: grid; place-items: center; font-size: 36px; border-radius: 10px; background: rgba(0,0,0,.25); }
@@ -1708,7 +1709,7 @@ const STORE = [
   { id: PID("coins.huge"), kind: "coins", coins: 2000000, price: "$19.99", title: "Truckload of Coins", icon: "🛻" },
   { id: PID("coins.vault"), kind: "coins", coins: 6000000, price: "$49.99", title: "Vault of Coins", icon: "🏦" },
   { id: PID("starterpack"), kind: "once", price: "$2.99", title: "Welcome Pack", coins: 25000, caps: 100, can: "gold", grants: ["bag:firecracker", "board:neon"], tag: "WELCOME OFFER", value: "$9.46", off: 68, blurb: "25,000 coins + 100 bottle caps + a Golden Pop can + Firecracker bags + Neon Nights board" },
-  { id: PID("set.galaxy"), kind: "once", price: "$3.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
+  { id: PID("set.galaxy"), kind: "once", price: "$4.99", title: "Galaxy Set", grants: ["bag:galaxy", "board:galaxyb", "trail:galaxy"], blurb: "Exclusive Galaxy bags and board, plus the Galaxy trail" },
   { id: PID("set.inferno"), kind: "once", price: "$3.99", title: "Inferno Set", grants: ["bag:inferno", "board:infernob", "trail:fire"], blurb: "Exclusive Inferno bags and board, plus the Fire trail" },
   { id: PID("caps.80"), kind: "caps", caps: 80, price: "$0.99", title: "Handful of Caps" },
   { id: PID("caps.450"), kind: "caps", caps: 450, price: "$4.99", title: "Bucket of Caps", tag: "BEST VALUE" },
@@ -1726,7 +1727,7 @@ const STORE = [
   { id: PID("bullseye.1"), kind: "throws", throws: 1, price: "$0.99", title: "1 Bullseye throw", hidden: true },
   { id: PID("bullseye.3"), kind: "throws", throws: 3, price: "$1.99", title: "3 Bullseye throws", hidden: true },
   { id: PID("bullseye.5"), kind: "throws", throws: 5, price: "$2.99", title: "5 Bullseye throws", hidden: true },
-  { id: PID("trails"), kind: "once", price: "$1.99", title: "Trail Pack", grants: ["trail:sparkle", "trail:ice", "trail:stars", "trail:rainbow"], blurb: "Sparkle, Ice, Stars and Rainbow throw trails" },
+  { id: PID("trails"), kind: "once", price: "$2.99", title: "Trail Pack", grants: ["trail:ice", "trail:stars", "trail:rainbow"], blurb: "Ice, Stars and Rainbow throw trails" },
 ];
 // Throw effects: a trail behind your bag in flight (shop "Throw" tab).
 const TRAILS = [
@@ -3375,7 +3376,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795296299`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795302124`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4889,7 +4890,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795296299`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795302124`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4900,7 +4901,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795296299`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795302124`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -9294,7 +9295,11 @@ function openSetInfo(id) {
     return `<div class="setrow2">${pic}<div><b>${esc(x.name)}</b> <small>${names[k]}${own ? " · yours already" : ""}</small><div class="muted">${what}</div><div class="sethow">${how}</div></div></div>`;
   }).join("");
   const owned = career.purchases.includes(it.id);
-  showInfo(`<h2>${esc(it.title)}</h2><div class="muted">${esc(it.blurb || "")}</div><div class="setlist">${rows}</div>
+  // what the set's shop items would cost in coins (exclusives on top)
+  let worth = 0, excl = 0;
+  for (const g of it.grants) { const [k, iid] = g.split(":"), x = (lists[k] || []).find(y => y.id === iid); if (!x) continue; if (x.premium) excl++; else worth += x.price || 0; }
+  const worthLine = worth ? `<div class="setworth">Worth <i class="coin"></i> ${short(worth)} in the shop${excl ? ` + ${excl} exclusive${excl > 1 ? "s" : ""}` : ""}</div>` : excl ? `<div class="setworth">${excl} exclusive item${excl > 1 ? "s" : ""}</div>` : "";
+  showInfo(`<h2>${esc(it.title)}</h2><div class="muted">${esc(it.blurb || "")}</div>${worthLine}<div class="setlist">${rows}</div>
     ${owned ? `<div class="big center">✅ You own this set</div>` : `<button class="btn green" id="setBuy">BUY · ${storePrices[it.id] || it.price}</button>`}`);
   for (const c of $("livesBody").querySelectorAll("canvas[data-sw]")) {
     const [type, key] = c.dataset.sw.split(":"), ctx = c.getContext("2d");
