@@ -328,9 +328,6 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 .avpick .avatar img, .avatarbtn .avatar img, .avatar.sm img { object-fit: contain; }
 .avatar.sm { width: 22px; height: 22px; font-size: 13px; vertical-align: -4px; margin-right: 5px; border: 2px solid rgba(255,255,255,.8); }
-.livespill { color: #fff; font: inherit; }
-.livespill b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
-.livespill small { font-size: 11px; color: var(--ink-dim); font-weight: 900; }
 @keyframes canbob { 50% { transform: translateY(-3px); } }
 .minican { width: 20px; height: 32px; border-radius: 5px 5px 4px 4px; box-shadow: inset -4px 0 0 rgba(0,0,0,.25), inset 3px 0 0 rgba(255,255,255,.35); position: relative; }
 .minican::before { content: ""; position: absolute; left: 2px; right: 2px; top: -3px; height: 4px; border-radius: 3px; background: inherit; filter: brightness(1.3); }
@@ -395,13 +392,9 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubright .pill, .hubleft .pill { padding: 2px 8px 2px 3px; gap: 4px; border-width: 2px; }
 .hubtop .pill b { font-size: 16px; }
 .hubtop .pill .ico, .hubtop .pill > .coin, .hubtop .pill > .bcap { width: 24px; height: 24px; font-size: 13px; }
-.tkt { display: inline-block; width: 1.35em; height: 1em; vertical-align: -0.15em; flex: none; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2048%27%3E%3Cg%20transform%3D%27rotate%28-12%2032%2024%29%27%3E%3Cpath%20d%3D%27M6%2010h52v8a6%206%200%200%200%200%2012v8H6v-8a6%206%200%200%200%200-12z%27%20fill%3D%27%23a01810%27%20transform%3D%27translate%280%202%29%27/%3E%3Cpath%20d%3D%27M6%2010h52v8a6%206%200%200%200%200%2012v8H6v-8a6%206%200%200%200%200-12z%27%20fill%3D%27%23e8392b%27%20stroke%3D%27%23fff%27%20stroke-width%3D%272.2%27%20stroke-linejoin%3D%27round%27/%3E%3Cpath%20d%3D%27M22%2012v24%27%20stroke%3D%27%23fff%27%20stroke-width%3D%272%27%20stroke-dasharray%3D%273%203%27/%3E%3Cpolygon%20points%3D%2738.0%2C17.0%2039.9%2C21.9%2045.1%2C22.2%2041.0%2C25.5%2042.4%2C30.6%2038.0%2C27.7%2033.6%2C30.6%2035.0%2C25.5%2030.9%2C22.2%2036.1%2C21.9%27%20fill%3D%27%23ffe27a%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2717%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2722%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2727%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
-.pill > .tkt { width: 34px; height: 26px; vertical-align: middle; }
-.tkt.big { width: 84px; height: 62px; }
 .hubtop .pill > .coin::after { font-size: 15px; }
 .hubleft, .hubright { gap: 5px; min-width: 0; }
 .hubtop .avatarbtn { width: 38px; height: 38px; flex: none; }
-.livespill small { white-space: nowrap; }
 .giftpill .gico { font-size: 20px; line-height: 1; }
 .giftpill.ready { border-color: var(--gold); box-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 12px rgba(255,201,58,.7); animation: canbob 1.4s ease-in-out infinite; }
 #splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 22px; background: radial-gradient(circle at 50% 35%, #2b4a80, #0b1528 75%); transition: opacity .5s ease; }
@@ -622,7 +615,6 @@ s.was { opacity: .6; font-size: .8em; }
 .prizegrid .ptile.new { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,201,58,.45), 0 5px 0 rgba(0,0,0,.35); }
 .prizegrid .ptile .pic { font-size: 34px; line-height: 1.1; }
 .prizegrid .ptile .pic .coin.big, .prizegrid .ptile .pic .bcap.big { width: 40px; height: 40px; } .prizegrid .ptile .pic .coin.big::after { font-size: 26px; }
-.prizegrid .ptile .pic .tkt.big { width: 50px; height: 38px; }
 .prizegrid .ptile canvas { width: 46px; height: 46px; }
 .prizegrid .ptile b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 15px; line-height: 1.1; margin-top: 4px; }
 .prizegrid .ptile small { display: block; font-size: 11px; font-weight: 900; color: var(--ink-dim); }
@@ -1730,7 +1722,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ graduated: false, coins: 500, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
+const fresh = () => ({ graduated: false, coins: 500, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {},  alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 // The time used for every timer and daily reward. In the iPhone app this is the app's own trusted clock (network
 // time, carried forward with the phone's uptime), so setting the phone's clock forward doesn't skip a wait.
@@ -1842,7 +1834,6 @@ function grantPurchase(id, restored) {
   if (item.kind === "caps") { if (!restored) career.caps += item.caps; save(); return item; }
   if (item.kind === "spins") { if (!restored) career.spins = (career.spins || 0) + item.spins; save(); return item; }
   if (item.kind === "throws") { if (!restored) bbState().extra += item.throws; save(); return item; }
-  if (item.kind === "lives") { if (!restored) { career.lives += item.lives; scheduleLivesAlert(); } save(); return item; }
   if (item.kind === "can") { // a bought can waits outside the cooler if it's full
     if (!restored) stashCan({ id: item.can, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) });
     save(); return item;
@@ -2019,7 +2010,6 @@ function startMatch(kind, vi, online = null, pick = null) {
   if (kind === "career") S.practice = null;
   if (kind === "career") {
     if (career.coins < v.fee && !houseCovers(vi)) return;
-    if (!useLife()) return;
     const fee = houseCovers(vi) ? 0 : v.fee;
     if (!fee) career.freeDay = bbDay(); // today's free match is used
     career.coins -= fee;
@@ -2278,7 +2268,7 @@ function finishMatch() {
   let can = null, coolerFull = false;
   const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
   if (won) {
-    refundLife(); can = isBeginner() ? "white" : rollCan(null, holes); // (Beginners only win the lowest can)
+    can = isBeginner() ? "white" : rollCan(null, holes); // (Beginners only win the lowest can)
     if (!giveCan(can, S.venue)) { if (winQueueFull()) coolerFull = true; else (career.canBacklog ||= []).push({ id: can, court: S.venue, won: true }); }
   }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
@@ -2295,7 +2285,7 @@ function finishMatch() {
   save();
   if (isBeginner() && won && career.wins >= BEGINNER_WINS && career.winStreak >= 2) { career.graduated = true; career.justGraduated = true; save(); joinSeason(); }
   if (!isBeginner()) addSeasonPoints(won ? coins : 0); // the season score: coins won from matches this month
-  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? coins : 0 };
+  S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, season: won ? coins : 0 };
   postScores();
 }
 // A court's stars stay between 0 and its max.
@@ -2747,7 +2737,7 @@ $("searchCancel").onclick = () => { if (!search) return; if (search.online) post
 // ── Cans (the game's chests). Rarer cans hold more prizes and better ones, but any can can be a dud.
 // pulls: how many prizes pop out; coins: range in buy-ins of the court the can came from (kept close together, so even
 // the best can pays only about a win's worth); cards: total item cards;
-// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🎟️ life.
+// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a few bonus bottle caps.
 const CANS = [
   { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 40, pulls: 2, coins: [0.05, 0.15], cards: [2, 4], bias: 5, life: 0.01 },
   { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 25, pulls: 3, coins: [0.08, 0.2], cards: [4, 7], bias: 4.5, life: 0.015 },
@@ -2900,7 +2890,7 @@ function openCan(index) {
   let cards = Math.round((can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5) * titleCardBonus());
   const stacks = Math.min(can.pulls - 1, MAX_CAN_PRIZES - prizes.length); // never more than 9 prizes in all (they fit one screen)
   for (let k = 0; k < stacks; k++) {
-    if (Math.random() < can.life) { const n = 2 + Math.floor(Math.random() * 2); career.caps += n; prizes.push({ kind: "caps", n }); continue; } // (used to be a ticket)
+    if (Math.random() < can.life) { const n = 2 + Math.floor(Math.random() * 2); career.caps += n; prizes.push({ kind: "caps", n }); continue; }
     const n = k === stacks - 1 ? Math.max(1, cards) : Math.max(1, Math.round(cards * (0.2 + Math.random() * 0.5)));
     cards = Math.max(0, cards - n);
     const { cat, it } = pickCardItem(can.bias), res = addCards(cat, it, n);
@@ -2910,14 +2900,6 @@ function openCan(index) {
   return { can, prizes, streak: slot.streak };
 }
 
-// ── No more lives (tickets). Matches are limited only by coins; the Free Gift (below) keeps everyone able to play the
-// first court (the Daily Drop wheel's free spins keep it in reach). These stubs keep the old call sites harmless (a match never uses up anything but its buy-in).
-const MAX_LIVES = 5;
-function tickLives() { if (!(career.lives >= 1)) career.lives = MAX_LIVES; }
-const nextLifeIn = () => 0;
-function useLife() { return true; }
-function refundLife() {}
-tickLives(); // an old save that ran out of tickets is never blocked
 
 // ── Daily Drop free spins: one every 4 hours, and up to 2 wait for you (like Golf Clash's free chest). Open 4 in a row
 // for a bonus can; letting 2 pile up resets the streak (g.streak, 0-3). The wheel itself
@@ -2944,7 +2926,6 @@ function scheduleGiftAlert() {
   if (g.n >= GIFT_MAX) postNative("notify", JSON.stringify({ op: "cancel" }));
   else postNative("notify", JSON.stringify({ op: "schedule", at: g.at + (GIFT_MAX - g.n) * GIFT_MS, title: "Your Daily Drops are ready! 🎁", body: "Two free prizes are waiting for you." }));
 }
-const scheduleLivesAlert = scheduleGiftAlert; // (old name, still called in a few places)
 
 // ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends.
 // If it never ends properly while the game was on screen (it crashed or froze), the buy-in comes back and
@@ -2956,14 +2937,14 @@ function refundMatch() {
   career.activeMatch = null;
   if (m.bg && m.vi === 0 && (career.quitWarnings || 0) < QUIT_WARNINGS) { // the Backyard forgives it 3 times, with a warning
     career.quitWarnings = (career.quitWarnings || 0) + 1;
-    career.coins += m.fee; refundLife(); save();
+    career.coins += m.fee; save();
     return { refunded: true, warning: career.quitWarnings, fee: m.fee, court: VENUES[m.vi].name };
   }
   if (m.bg) { // left the app mid-match and it was closed
     addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
     return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };
   }
-  career.coins += m.fee; refundLife(); save();
+  career.coins += m.fee; save();
   return { refunded: true, fee: m.fee, court: VENUES[m.vi].name };
 }
 // Going to the background mid-match marks it; coming back clears the mark.
@@ -3291,7 +3272,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795275800`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795276278`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4805,7 +4786,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795275800`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795276278`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4816,7 +4797,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795275800`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795276278`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6644,7 +6625,7 @@ function updateWindStreaks(dt) {
   });
 }
 
-// ───────────────────────── Clubhouse extras: avatar, lives, the cooler of cans, and opening a can
+// ───────────────────────── Clubhouse extras: avatar, the cooler of cans, and opening a can
 // Coin and cap totals: exact up to 999, then 1.0K, 1.00M, 1.00B, 1.00T (rounded down, so it never shows more than you
 // have). Tapping a total shows the exact number.
 function bigNum(n) {
@@ -6765,7 +6746,7 @@ function rulesHTML() {
   ${sec("🎡", "Daily Drop", [
     "A free Daily Drop every 4 hours, and up to 2 wait for you. Tap it for coins, bottle caps, bag and board cards, and now and then a can.",
     "Open 4 Daily Drops in a row for a bonus can. If 2 are left waiting, the streak starts over.",
-    "There are no lives: you can play as long as you can afford the buy-in, and the Daily Drops keep the first court in reach.",
+    "You can play as long as you can afford the buy-in, and the Daily Drops keep the first court in reach.",
   ])}
   ${sec("🥫", "Prize cans", [
     `Win a match to get a prize can. Your Prize Cooler holds ${COOLER_SIZE}.`,
@@ -6892,7 +6873,7 @@ function renderProfile() {
     $("sfxVolIn").oninput = e => { initAudio(); setVolume("sfx", e.target.value / 100); };
     $("sfxVolIn").onchange = () => sfx.tick();
     $("setHaptics").onclick = () => { career.haptics = career.haptics === false; save(); haptic("tap"); renderProfile(); };
-    $("setAlerts").onclick = () => { career.alerts = !career.alerts; save(); if (career.alerts) postNative("notify", JSON.stringify({ op: "permission" })); scheduleLivesAlert(); renderProfile(); };
+    $("setAlerts").onclick = () => { career.alerts = !career.alerts; save(); if (career.alerts) postNative("notify", JSON.stringify({ op: "permission" })); scheduleGiftAlert(); renderProfile(); };
   }
 }
 for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
@@ -6949,7 +6930,6 @@ function mistFrame(now) {
 function prizeHTML(p) {
   if (p.kind === "coins") return { pic: `<div class="pic"><i class="coin big"></i></div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `<i class="coin"></i> ${short(p.n)}` };
   if (p.kind === "caps") return { pic: `<div class="pic"><i class="bcap big"></i></div>`, line: `<b>+${p.n} bottle cap${p.n === 1 ? "" : "s"}</b><small>Open cans early with these</small>`, chip: `<i class="bcap"></i> ${p.n}` };
-  if (p.kind === "life") return { pic: `<div class="pic"><i class="tkt big"></i></div>`, line: `<b>+1 life!</b><small>A bonus ticket</small>`, chip: '<i class="tkt"></i> +1' };
   const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
   const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];
   const status = p.unlocked ? `<small class="new">UNLOCKED!</small>` : p.owned ? `<small>Already yours: +${p.coins.toLocaleString()} coins</small>` : `<small>${p.have} / ${p.need} cards</small>`;
@@ -6971,7 +6951,6 @@ function showPrizeSummary() {
     const t = document.createElement("div"); t.className = "ptile" + (p.unlocked ? " new" : ""); t.style.animationDelay = `${i * 0.06}s`;
     if (p.kind === "coins") t.innerHTML = `<div class="pic"><i class="coin big"></i></div><b>+${short(p.n)}</b><small>coins</small>`;
     else if (p.kind === "caps") t.innerHTML = `<div class="pic"><i class="bcap big"></i></div><b>+${p.n}</b><small>bottle caps</small>`;
-    else if (p.kind === "life") t.innerHTML = `<div class="pic"><i class="tkt big"></i></div><b>+1</b><small>ticket</small>`;
     else {
       const h = prizeHTML(p);
       t.innerHTML = `${h.pic}<b>${p.n} × ${esc(p.name)}</b><small class="${p.unlocked ? "new" : ""}">${p.unlocked ? "UNLOCKED!" : p.owned ? `+${short(p.coins)} coins` : `${p.have}/${p.need} cards`}</small>`;
@@ -6998,7 +6977,7 @@ function nextPrize() {
     if (cv.dataset.cat === "bag") paintBag(ctx, 96, 96, bagById(cv.dataset.id));
     else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(cv.dataset.id)); ctx.drawImage(tmp, 24, 0, 48, 96); }
   }
-  if (p.unlocked || p.kind === "life") { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
+  if (p.unlocked) { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
   // NEXT (and COLLECT ALL while more are left) under the prize; the last one finishes
   const more = R.shown < R.prizes.length;
   $("canNav").hidden = false; $("canSkip").hidden = !more; $("canNext").textContent = more ? `NEXT · ${R.prizes.length - R.shown} LEFT` : "FINISH";
@@ -8325,7 +8304,7 @@ function scorecardHTML() {
     : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${COL.bubble}"><span class="flipin">+${h.awarded}</span></div>`; // always green: no player tile is ever green
   const rows = S.history.slice(0, -1).map((r, n) => {
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
-    const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:linear-gradient(${COL.pl[r.winner]}, ${COL.p[r.winner]} 55%, ${COL.pd[r.winner]})">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
+    const pts = r.winner === null ? `<span class="pts wash">WASH</span>` : `<span class="pts" style="--c:linear-gradient(${COL.pl[r.winner]}, ${COL.p[r.winner]} 55%, ${COL.pd[r.winner]})">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
     return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}</tr>`;
   }).reverse().join("");
   return `<div class="hero">${side(0)}${side(1)}${badge}</div>
@@ -8362,7 +8341,7 @@ function renderInningSheet() {
     const pills = `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
-        ${res.lifeLost ? `<div class="pill"><i class="tkt"></i><b>−1</b></div>` : ""}</div>`;
+        </div>`;
     const gotCan = res.can && !res.coolerFull;
     // a won can: its picture on the left, as tall as the two rows beside it (the rewards, then what you won)
     const rewards = S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
@@ -8556,9 +8535,8 @@ function renderHub() {
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
   const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
-  const noLives = false; // (no lives any more)
-  play.disabled = !open || (!afford && !noLives);
-  play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? (dailyReady() ? "NOT ENOUGH COINS · OPEN 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
+  play.disabled = !open || !afford;
+  play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : !afford ? (dailyReady() ? "NOT ENOUGH COINS · OPEN 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
 // Game Center: your handle defaults to your Game Center name until you choose your own.
@@ -8658,7 +8636,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "spins" ? `+${item.spins} Daily Drop${item.spins > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "spins" ? `+${item.spins} Daily Drop${item.spins > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
   renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message); if (S.kind === "bullseye" && !$("livesSheet").hidden && $("livesBody").querySelector("[data-bbbuy]")) bbBuyPopup(ok ? "" : message); if (!$("wheelSheet").hidden && !wheelSpin) openWheel(ok ? "" : message);
 };
@@ -8690,8 +8668,8 @@ function storeHTML() {
   parts.push(`<div class="label">Bottle caps</div>`);
   for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Cans</div>`);
-  for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
-    const ic = it.kind === "can" ? canPic(it.can, "store") : it.kind === "lives" ? `<i class="tkt" style="width:46px;height:34px"></i>` : it.icon;
+  for (const it of STORE.filter(x => x.kind === "can")) {
+    const ic = it.kind === "can" ? canPic(it.can, "store") : it.icon;
     parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
   }
   parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);

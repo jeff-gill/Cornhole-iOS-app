@@ -350,7 +350,7 @@ function scorecardHTML() {
     : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${COL.bubble}"><span class="flipin">+${h.awarded}</span></div>`; // always green: no player tile is ever green
   const rows = S.history.slice(0, -1).map((r, n) => {
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
-    const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:linear-gradient(${COL.pl[r.winner]}, ${COL.p[r.winner]} 55%, ${COL.pd[r.winner]})">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
+    const pts = r.winner === null ? `<span class="pts wash">WASH</span>` : `<span class="pts" style="--c:linear-gradient(${COL.pl[r.winner]}, ${COL.p[r.winner]} 55%, ${COL.pd[r.winner]})">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
     return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}</tr>`;
   }).reverse().join("");
   return `<div class="hero">${side(0)}${side(1)}${badge}</div>
@@ -387,7 +387,7 @@ function renderInningSheet() {
     const pills = `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
-        ${res.lifeLost ? `<div class="pill"><i class="tkt"></i><b>−1</b></div>` : ""}</div>`;
+        </div>`;
     const gotCan = res.can && !res.coolerFull;
     // a won can: its picture on the left, as tall as the two rows beside it (the rewards, then what you won)
     const rewards = S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
@@ -581,9 +581,8 @@ function renderHub() {
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
   const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
-  const noLives = false; // (no lives any more)
-  play.disabled = !open || (!afford && !noLives);
-  play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : noLives ? `NO LIVES · <i class="tkt"></i> IN ${clockText(nextLifeIn())}` : !afford ? (dailyReady() ? "NOT ENOUGH COINS · OPEN 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
+  play.disabled = !open || !afford;
+  play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : !afford ? (dailyReady() ? "NOT ENOUGH COINS · OPEN 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
 }
 // Game Center: the iPhone app signs the player in and opens Apple's leaderboards.
 // Game Center: your handle defaults to your Game Center name until you choose your own.
@@ -683,7 +682,7 @@ window.__purchaseComplete = (id, ok, message, restored) => {
   if (pendingBuy === id) pendingBuy = null;
   if (ok) {
     const item = grantPurchase(id, !!restored);
-    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "lives" ? "+5 tickets!" : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "spins" ? `+${item.spins} Daily Drop${item.spins > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
+    if (item && !restored) { shopMsg = item.kind === "coins" ? `+${item.coins.toLocaleString()} coins!` : item.kind === "caps" ? `+${item.caps} bottle caps!` : item.kind === "throws" ? `+${item.throws} Bullseye throw${item.throws > 1 ? "s" : ""}!` : item.kind === "spins" ? `+${item.spins} Daily Drop${item.spins > 1 ? "s" : ""}!` : item.kind === "can" ? (career.canBacklog?.length ? `${item.title} will go in your cooler when a slot opens.` : `${item.title} is in your cooler!`) : `${item.title} unlocked!`; sfx.win(); haptic("success"); }
   } else if (message) shopMsg = message;
   renderShop(); renderHub(); if (!$("bbSheet").hidden) renderBBSheet(ok ? "" : message); if (S.kind === "bullseye" && !$("livesSheet").hidden && $("livesBody").querySelector("[data-bbbuy]")) bbBuyPopup(ok ? "" : message); if (!$("wheelSheet").hidden && !wheelSpin) openWheel(ok ? "" : message);
 };
@@ -715,8 +714,8 @@ function storeHTML() {
   parts.push(`<div class="label">Bottle caps</div>`);
   for (const it of STORE.filter(x => x.kind === "caps")) parts.push(`<div class="storeitem">${it.tag ? `<span class="tag">${it.tag}</span>` : ""}<div class="ic"><i class="bcap" style="width:40px;height:40px"></i></div><div><h4>${it.caps.toLocaleString()} caps</h4><div class="sub">${it.title}</div></div>${btn(it)}</div>`);
   parts.push(`<div class="label">Cans</div>`);
-  for (const it of STORE.filter(x => x.kind === "lives" || x.kind === "can")) {
-    const ic = it.kind === "can" ? canPic(it.can, "store") : it.kind === "lives" ? `<i class="tkt" style="width:46px;height:34px"></i>` : it.icon;
+  for (const it of STORE.filter(x => x.kind === "can")) {
+    const ic = it.kind === "can" ? canPic(it.can, "store") : it.icon;
     parts.push(`<div class="storeitem"><div class="ic">${ic}</div><div><h4>${it.title}</h4><div class="sub">${it.blurb}</div></div>${btn(it)}</div>`);
   }
   parts.push(`<div class="storenote"><button class="linkbtn" id="oddsBtn">What's in a can?</button></div>`);

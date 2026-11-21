@@ -1,5 +1,5 @@
 
-// ───────────────────────── Clubhouse extras: avatar, lives, the cooler of cans, and opening a can
+// ───────────────────────── Clubhouse extras: avatar, the cooler of cans, and opening a can
 // Coin and cap totals: exact up to 999, then 1.0K, 1.00M, 1.00B, 1.00T (rounded down, so it never shows more than you
 // have). Tapping a total shows the exact number.
 function bigNum(n) {
@@ -120,7 +120,7 @@ function rulesHTML() {
   ${sec("🎡", "Daily Drop", [
     "A free Daily Drop every 4 hours, and up to 2 wait for you. Tap it for coins, bottle caps, bag and board cards, and now and then a can.",
     "Open 4 Daily Drops in a row for a bonus can. If 2 are left waiting, the streak starts over.",
-    "There are no lives: you can play as long as you can afford the buy-in, and the Daily Drops keep the first court in reach.",
+    "You can play as long as you can afford the buy-in, and the Daily Drops keep the first court in reach.",
   ])}
   ${sec("🥫", "Prize cans", [
     `Win a match to get a prize can. Your Prize Cooler holds ${COOLER_SIZE}.`,
@@ -247,7 +247,7 @@ function renderProfile() {
     $("sfxVolIn").oninput = e => { initAudio(); setVolume("sfx", e.target.value / 100); };
     $("sfxVolIn").onchange = () => sfx.tick();
     $("setHaptics").onclick = () => { career.haptics = career.haptics === false; save(); haptic("tap"); renderProfile(); };
-    $("setAlerts").onclick = () => { career.alerts = !career.alerts; save(); if (career.alerts) postNative("notify", JSON.stringify({ op: "permission" })); scheduleLivesAlert(); renderProfile(); };
+    $("setAlerts").onclick = () => { career.alerts = !career.alerts; save(); if (career.alerts) postNative("notify", JSON.stringify({ op: "permission" })); scheduleGiftAlert(); renderProfile(); };
   }
 }
 for (const b of document.querySelectorAll(".ptabs button")) b.onclick = () => { ptab = b.dataset.ptab; renderProfile(); };
@@ -304,7 +304,6 @@ function mistFrame(now) {
 function prizeHTML(p) {
   if (p.kind === "coins") return { pic: `<div class="pic"><i class="coin big"></i></div>`, line: `<b>+${p.n.toLocaleString()} coins</b>`, chip: `<i class="coin"></i> ${short(p.n)}` };
   if (p.kind === "caps") return { pic: `<div class="pic"><i class="bcap big"></i></div>`, line: `<b>+${p.n} bottle cap${p.n === 1 ? "" : "s"}</b><small>Open cans early with these</small>`, chip: `<i class="bcap"></i> ${p.n}` };
-  if (p.kind === "life") return { pic: `<div class="pic"><i class="tkt big"></i></div>`, line: `<b>+1 life!</b><small>A bonus ticket</small>`, chip: '<i class="tkt"></i> +1' };
   const icon = p.cat === "trail" ? (TRAILS.find(t => t.id === p.id) || {}).icon : p.cat === "fx" ? (EFFECTS.find(t => t.id === p.id) || {}).icon : "";
   const kind = { bag: "Bag", board: "Board", trail: "Throw effect", fx: "Cornhole effect" }[p.cat];
   const status = p.unlocked ? `<small class="new">UNLOCKED!</small>` : p.owned ? `<small>Already yours: +${p.coins.toLocaleString()} coins</small>` : `<small>${p.have} / ${p.need} cards</small>`;
@@ -326,7 +325,6 @@ function showPrizeSummary() {
     const t = document.createElement("div"); t.className = "ptile" + (p.unlocked ? " new" : ""); t.style.animationDelay = `${i * 0.06}s`;
     if (p.kind === "coins") t.innerHTML = `<div class="pic"><i class="coin big"></i></div><b>+${short(p.n)}</b><small>coins</small>`;
     else if (p.kind === "caps") t.innerHTML = `<div class="pic"><i class="bcap big"></i></div><b>+${p.n}</b><small>bottle caps</small>`;
-    else if (p.kind === "life") t.innerHTML = `<div class="pic"><i class="tkt big"></i></div><b>+1</b><small>ticket</small>`;
     else {
       const h = prizeHTML(p);
       t.innerHTML = `${h.pic}<b>${p.n} × ${esc(p.name)}</b><small class="${p.unlocked ? "new" : ""}">${p.unlocked ? "UNLOCKED!" : p.owned ? `+${short(p.coins)} coins` : `${p.have}/${p.need} cards`}</small>`;
@@ -353,7 +351,7 @@ function nextPrize() {
     if (cv.dataset.cat === "bag") paintBag(ctx, 96, 96, bagById(cv.dataset.id));
     else { const tmp = document.createElement("canvas"); tmp.width = 96; tmp.height = 192; paintBoard(tmp.getContext("2d"), 96, 192, boardById(cv.dataset.id)); ctx.drawImage(tmp, 24, 0, 48, 96); }
   }
-  if (p.unlocked || p.kind === "life") { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
+  if (p.unlocked) { sfx.win(); haptic("success"); } else { sfx.tick(); haptic("light"); }
   // NEXT (and COLLECT ALL while more are left) under the prize; the last one finishes
   const more = R.shown < R.prizes.length;
   $("canNav").hidden = false; $("canSkip").hidden = !more; $("canNext").textContent = more ? `NEXT · ${R.prizes.length - R.shown} LEFT` : "FINISH";

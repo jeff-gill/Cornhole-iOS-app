@@ -316,9 +316,6 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 .avpick .avatar img, .avatarbtn .avatar img, .avatar.sm img { object-fit: contain; }
 .avatar.sm { width: 22px; height: 22px; font-size: 13px; vertical-align: -4px; margin-right: 5px; border: 2px solid rgba(255,255,255,.8); }
-.livespill { color: #fff; font: inherit; }
-.livespill b { font-family: var(--font-display); font-size: 18px; font-weight: 400; }
-.livespill small { font-size: 11px; color: var(--ink-dim); font-weight: 900; }
 @keyframes canbob { 50% { transform: translateY(-3px); } }
 .minican { width: 20px; height: 32px; border-radius: 5px 5px 4px 4px; box-shadow: inset -4px 0 0 rgba(0,0,0,.25), inset 3px 0 0 rgba(255,255,255,.35); position: relative; }
 .minican::before { content: ""; position: absolute; left: 2px; right: 2px; top: -3px; height: 4px; border-radius: 3px; background: inherit; filter: brightness(1.3); }
@@ -383,13 +380,9 @@ h2 { margin: 0; font-family: var(--font-display); font-size: 32px; text-align: c
 .hubright .pill, .hubleft .pill { padding: 2px 8px 2px 3px; gap: 4px; border-width: 2px; }
 .hubtop .pill b { font-size: 16px; }
 .hubtop .pill .ico, .hubtop .pill > .coin, .hubtop .pill > .bcap { width: 24px; height: 24px; font-size: 13px; }
-.tkt { display: inline-block; width: 1.35em; height: 1em; vertical-align: -0.15em; flex: none; background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2048%27%3E%3Cg%20transform%3D%27rotate%28-12%2032%2024%29%27%3E%3Cpath%20d%3D%27M6%2010h52v8a6%206%200%200%200%200%2012v8H6v-8a6%206%200%200%200%200-12z%27%20fill%3D%27%23a01810%27%20transform%3D%27translate%280%202%29%27/%3E%3Cpath%20d%3D%27M6%2010h52v8a6%206%200%200%200%200%2012v8H6v-8a6%206%200%200%200%200-12z%27%20fill%3D%27%23e8392b%27%20stroke%3D%27%23fff%27%20stroke-width%3D%272.2%27%20stroke-linejoin%3D%27round%27/%3E%3Cpath%20d%3D%27M22%2012v24%27%20stroke%3D%27%23fff%27%20stroke-width%3D%272%27%20stroke-dasharray%3D%273%203%27/%3E%3Cpolygon%20points%3D%2738.0%2C17.0%2039.9%2C21.9%2045.1%2C22.2%2041.0%2C25.5%2042.4%2C30.6%2038.0%2C27.7%2033.6%2C30.6%2035.0%2C25.5%2030.9%2C22.2%2036.1%2C21.9%27%20fill%3D%27%23ffe27a%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2717%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2722%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3Crect%20x%3D%2710%27%20y%3D%2727%27%20width%3D%277%27%20height%3D%272.4%27%20rx%3D%271.2%27%20fill%3D%27%23fff%27%20opacity%3D%27.8%27/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 0 rgba(0,0,0,.35)); }
-.pill > .tkt { width: 34px; height: 26px; vertical-align: middle; }
-.tkt.big { width: 84px; height: 62px; }
 .hubtop .pill > .coin::after { font-size: 15px; }
 .hubleft, .hubright { gap: 5px; min-width: 0; }
 .hubtop .avatarbtn { width: 38px; height: 38px; flex: none; }
-.livespill small { white-space: nowrap; }
 .giftpill .gico { font-size: 20px; line-height: 1; }
 .giftpill.ready { border-color: var(--gold); box-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 12px rgba(255,201,58,.7); animation: canbob 1.4s ease-in-out infinite; }
 #splash { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; justify-items: center; gap: 22px; background: radial-gradient(circle at 50% 35%, #2b4a80, #0b1528 75%); transition: opacity .5s ease; }
@@ -610,7 +603,6 @@ s.was { opacity: .6; font-size: .8em; }
 .prizegrid .ptile.new { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,201,58,.45), 0 5px 0 rgba(0,0,0,.35); }
 .prizegrid .ptile .pic { font-size: 34px; line-height: 1.1; }
 .prizegrid .ptile .pic .coin.big, .prizegrid .ptile .pic .bcap.big { width: 40px; height: 40px; } .prizegrid .ptile .pic .coin.big::after { font-size: 26px; }
-.prizegrid .ptile .pic .tkt.big { width: 50px; height: 38px; }
 .prizegrid .ptile canvas { width: 46px; height: 46px; }
 .prizegrid .ptile b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 15px; line-height: 1.1; margin-top: 4px; }
 .prizegrid .ptile small { display: block; font-size: 11px; font-weight: 900; color: var(--ink-dim); }

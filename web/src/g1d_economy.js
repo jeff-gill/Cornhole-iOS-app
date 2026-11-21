@@ -7,7 +7,7 @@
 // ── Cans (the game's chests). Rarer cans hold more prizes and better ones, but any can can be a dud.
 // pulls: how many prizes pop out; coins: range in buy-ins of the court the can came from (kept close together, so even
 // the best can pays only about a win's worth); cards: total item cards;
-// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a 🎟️ life.
+// bias: how far up the rarity ladder its cards reach (higher = rarer items); life: chance per prize of a few bonus bottle caps.
 const CANS = [
   { id: "white", name: "Picnic White", color: "#f2f2f6", rim: "#b8b8c4", odds: 40, pulls: 2, coins: [0.05, 0.15], cards: [2, 4], bias: 5, life: 0.01 },
   { id: "black", name: "Backyard Black", color: "#1c1c22", rim: "#5a5a66", odds: 25, pulls: 3, coins: [0.08, 0.2], cards: [4, 7], bias: 4.5, life: 0.015 },
@@ -160,7 +160,7 @@ function openCan(index) {
   let cards = Math.round((can.cards[0] + (can.cards[1] - can.cards[0]) * Math.random() ** 1.5) * titleCardBonus());
   const stacks = Math.min(can.pulls - 1, MAX_CAN_PRIZES - prizes.length); // never more than 9 prizes in all (they fit one screen)
   for (let k = 0; k < stacks; k++) {
-    if (Math.random() < can.life) { const n = 2 + Math.floor(Math.random() * 2); career.caps += n; prizes.push({ kind: "caps", n }); continue; } // (used to be a ticket)
+    if (Math.random() < can.life) { const n = 2 + Math.floor(Math.random() * 2); career.caps += n; prizes.push({ kind: "caps", n }); continue; }
     const n = k === stacks - 1 ? Math.max(1, cards) : Math.max(1, Math.round(cards * (0.2 + Math.random() * 0.5)));
     cards = Math.max(0, cards - n);
     const { cat, it } = pickCardItem(can.bias), res = addCards(cat, it, n);
@@ -170,14 +170,6 @@ function openCan(index) {
   return { can, prizes, streak: slot.streak };
 }
 
-// ── No more lives (tickets). Matches are limited only by coins; the Free Gift (below) keeps everyone able to play the
-// first court (the Daily Drop wheel's free spins keep it in reach). These stubs keep the old call sites harmless (a match never uses up anything but its buy-in).
-const MAX_LIVES = 5;
-function tickLives() { if (!(career.lives >= 1)) career.lives = MAX_LIVES; }
-const nextLifeIn = () => 0;
-function useLife() { return true; }
-function refundLife() {}
-tickLives(); // an old save that ran out of tickets is never blocked
 
 // ── Daily Drop free spins: one every 4 hours, and up to 2 wait for you (like Golf Clash's free chest). Open 4 in a row
 // for a bonus can; letting 2 pile up resets the streak (g.streak, 0-3). The wheel itself
@@ -204,7 +196,6 @@ function scheduleGiftAlert() {
   if (g.n >= GIFT_MAX) postNative("notify", JSON.stringify({ op: "cancel" }));
   else postNative("notify", JSON.stringify({ op: "schedule", at: g.at + (GIFT_MAX - g.n) * GIFT_MS, title: "Your Daily Drops are ready! 🎁", body: "Two free prizes are waiting for you." }));
 }
-const scheduleLivesAlert = scheduleGiftAlert; // (old name, still called in a few places)
 
 // ── Glitch protection. A career match is remembered (career.activeMatch) from the buy-in until it ends.
 // If it never ends properly while the game was on screen (it crashed or froze), the buy-in comes back and
@@ -216,14 +207,14 @@ function refundMatch() {
   career.activeMatch = null;
   if (m.bg && m.vi === 0 && (career.quitWarnings || 0) < QUIT_WARNINGS) { // the Backyard forgives it 3 times, with a warning
     career.quitWarnings = (career.quitWarnings || 0) + 1;
-    career.coins += m.fee; refundLife(); save();
+    career.coins += m.fee; save();
     return { refunded: true, warning: career.quitWarnings, fee: m.fee, court: VENUES[m.vi].name };
   }
   if (m.bg) { // left the app mid-match and it was closed
     addCourtStars(m.vi, -starsForLoss(m.vi)); career.losses++; updateUnlocks(); save();
     return { refunded: false, stars: starsForLoss(m.vi), court: VENUES[m.vi].name };
   }
-  career.coins += m.fee; refundLife(); save();
+  career.coins += m.fee; save();
   return { refunded: true, fee: m.fee, court: VENUES[m.vi].name };
 }
 // Going to the background mid-match marks it; coming back clears the mark.
