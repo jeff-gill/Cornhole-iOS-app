@@ -349,10 +349,9 @@ function scorecardHTML() {
   const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
     : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${COL.bubble}"><span class="flipin">+${h.awarded}</span></div>`; // always green: no player tile is ever green
   const rows = S.history.slice(0, -1).map((r, n) => {
-    const rc = ROW_COLORS[n % ROW_COLORS.length];
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
-    const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:${rc}">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
-    return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}<td class="tt"><span style="color:${COL.pl[0]}">${r.totals[0]}</span>–<span style="color:${COL.pl[1]}">${r.totals[1]}</span></td></tr>`;
+    const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:linear-gradient(${COL.pl[r.winner]}, ${COL.p[r.winner]} 55%, ${COL.pd[r.winner]})">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
+    return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}</tr>`;
   }).reverse().join("");
   return `<div class="hero">${side(0)}${side(1)}${badge}</div>
     ${rows ? `<div class="hist"><div class="histh"><span>Earlier innings</span><span>On | In under each score</span></div>

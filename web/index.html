@@ -775,7 +775,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .mini td.rs b { display: block; font-family: var(--font-display); font-size: 20px; font-weight: 400; line-height: 1; }
 .mini td.rs small { font-size: 11px; opacity: .85; }
 .mini td.tt { font-family: var(--font-display); font-size: 17px; white-space: nowrap; }
-.mini .pts { display: inline-block; min-width: 44px; padding: 1px 8px; border-radius: 999px; font-family: var(--font-display); font-size: 15px; color: #12203a; background: var(--c); }
+.mini .pts { display: inline-block; min-width: 44px; padding: 1px 8px; border-radius: 999px; font-family: var(--font-display); font-size: 15px; color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,.35); background: var(--c); border: 2px solid rgba(255,255,255,.85); }
 .mini .pts.wash { background: rgba(255,255,255,.12); color: var(--ink-dim); }
 .hero .vs { position: absolute; bottom: 0; z-index: 2; width: 60px; height: 60px; font-size: 20px; }
 /* The points bubble lands on the outer bottom corner of the winning tile (well away from the middle, so it's plain
@@ -3287,7 +3287,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795274868`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795275345`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4801,7 +4801,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795274868`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795275345`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4812,7 +4812,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795274868`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795275345`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8320,10 +8320,9 @@ function scorecardHTML() {
   const badge = h.winner === null ? `<div class="vs wash">WASH</div>`
     : `<div class="vs ${h.winner === 0 ? "left" : "right"}" style="--c:${COL.bubble}"><span class="flipin">+${h.awarded}</span></div>`; // always green: no player tile is ever green
   const rows = S.history.slice(0, -1).map((r, n) => {
-    const rc = ROW_COLORS[n % ROW_COLORS.length];
     const cell = p => `<td class="rs" style="color:${COL.pl[p]}"><b>${r.raw[p]}</b><small>${r.on[p]} | ${r.hole[p]}</small></td>`;
-    const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:${rc}">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
-    return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}<td class="tt"><span style="color:${COL.pl[0]}">${r.totals[0]}</span>–<span style="color:${COL.pl[1]}">${r.totals[1]}</span></td></tr>`;
+    const pts = r.winner === null ? `<span class="pts wash">–</span>` : `<span class="pts" style="--c:linear-gradient(${COL.pl[r.winner]}, ${COL.p[r.winner]} 55%, ${COL.pd[r.winner]})">${r.winner === 0 ? "◀" : ""}+${r.awarded}${r.winner === 1 ? "▶" : ""}</span>`;
+    return `<tr><td class="no">${r.inning}</td>${cell(0)}<td>${pts}</td>${cell(1)}</tr>`;
   }).reverse().join("");
   return `<div class="hero">${side(0)}${side(1)}${badge}</div>
     ${rows ? `<div class="hist"><div class="histh"><span>Earlier innings</span><span>On | In under each score</span></div>
