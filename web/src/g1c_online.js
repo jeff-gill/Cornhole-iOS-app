@@ -106,7 +106,7 @@ window.__net = m => {
   }
   else if (m.t === "nomatch") { if (search && !search.name && !(search.reel && search.reel.settle)) cancelSearch(true); }
   else if (m.t === "left" || m.t === "quit") opponentLeft();
-  else if (m.t === "rematch" && S.online) { S.online.rematch.them = true; tryRematch(); }
+  else if (m.t === "rematch" && S.online) { S.online.rematch.them = true; if (!S.online.rematch.me) screenMsg(`<b>${esc(S.names[1])}</b> wants a rematch!`); tryRematch(); }
   else if (m.t === "resetup" && S.online && !S.online.host) {
     S.online.rematch.setup = { seed: m.seed | 0, flip: m.flip === 1 ? -1 : 1, lead: m.lead === 0 ? 1 : 0 };
     tryRematch();
@@ -126,7 +126,7 @@ function tryStartOnline() {
 }
 function opponentLeft() {
   if (search) { cancelSearch(true); return; }
-  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; renderInningSheet(); return; } // left instead of a rematch
+  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b> left: no rematch`); return; } // left instead of a rematch
   if (!S.online || S.phase === "over" || S.phase === "hub") return;
   S.online.gone = true;
   S.winner = 0; S.phase = "over"; finishMatch();
@@ -138,12 +138,12 @@ function opponentLeft() {
 function wantRematch() {
   const O = S.online; if (!O || O.gone || O.rematch.me) return;
   if (career.coins < venue().fee && !houseCovers(S.venue)) return;
-  O.rematch.me = true; netSend({ t: "rematch" }); renderInningSheet(); tryRematch();
+  O.rematch.me = true; netSend({ t: "rematch" }); refreshAgain(); if (!O.rematch.them) screenMsg(`Waiting for <b>${esc(S.names[1])}</b>…`); tryRematch();
 }
 function tryRematch() {
   const O = S.online; if (!O || S.phase !== "over") return;
   const R = O.rematch;
-  if (!R.me || !R.them) { renderInningSheet(); return; }
+  if (!R.me || !R.them) { refreshAgain(); return; }
   if (O.host && !R.setup) {
     R.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
     netSend({ t: "resetup", ...R.setup });

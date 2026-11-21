@@ -665,6 +665,11 @@ s.was { opacity: .6; font-size: .8em; }
 .lbbtn { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; font-size: 18px; padding: 14px 16px; }
 .lbbtn span { font-size: 28px; }
 #navbar button.locked .nic { filter: grayscale(.7) brightness(.8); }
+#inningBody { position: relative; }
+.backbtn.overback { position: absolute; left: 10px; top: 10px; transform: none; z-index: 3; }
+#screenMsg { position: fixed; left: 0; right: 0; top: 42%; z-index: 80; text-align: center; padding: 18px 16px; background: linear-gradient(90deg, rgba(10,20,38,0), rgba(10,20,38,.92) 15%, rgba(10,20,38,.92) 85%, rgba(10,20,38,0)); color: #fff; font-family: var(--font-display); font-size: 24px; text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; opacity: 0; transform: scaleY(.2); transition: opacity .2s, transform .25s cubic-bezier(.3,1.5,.5,1); }
+#screenMsg.show { opacity: 1; transform: none; }
+#screenMsg b { color: var(--gold); font-weight: 400; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 /* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }

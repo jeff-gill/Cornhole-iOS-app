@@ -673,6 +673,11 @@ s.was { opacity: .6; font-size: .8em; }
 .lbbtn { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; font-size: 18px; padding: 14px 16px; }
 .lbbtn span { font-size: 28px; }
 #navbar button.locked .nic { filter: grayscale(.7) brightness(.8); }
+#inningBody { position: relative; }
+.backbtn.overback { position: absolute; left: 10px; top: 10px; transform: none; z-index: 3; }
+#screenMsg { position: fixed; left: 0; right: 0; top: 42%; z-index: 80; text-align: center; padding: 18px 16px; background: linear-gradient(90deg, rgba(10,20,38,0), rgba(10,20,38,.92) 15%, rgba(10,20,38,.92) 85%, rgba(10,20,38,0)); color: #fff; font-family: var(--font-display); font-size: 24px; text-shadow: 0 2px 0 rgba(0,0,0,.4); pointer-events: none; opacity: 0; transform: scaleY(.2); transition: opacity .2s, transform .25s cubic-bezier(.3,1.5,.5,1); }
+#screenMsg.show { opacity: 1; transform: none; }
+#screenMsg b { color: var(--gold); font-weight: 400; }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 /* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
@@ -2540,7 +2545,7 @@ window.__net = m => {
   }
   else if (m.t === "nomatch") { if (search && !search.name && !(search.reel && search.reel.settle)) cancelSearch(true); }
   else if (m.t === "left" || m.t === "quit") opponentLeft();
-  else if (m.t === "rematch" && S.online) { S.online.rematch.them = true; tryRematch(); }
+  else if (m.t === "rematch" && S.online) { S.online.rematch.them = true; if (!S.online.rematch.me) screenMsg(`<b>${esc(S.names[1])}</b> wants a rematch!`); tryRematch(); }
   else if (m.t === "resetup" && S.online && !S.online.host) {
     S.online.rematch.setup = { seed: m.seed | 0, flip: m.flip === 1 ? -1 : 1, lead: m.lead === 0 ? 1 : 0 };
     tryRematch();
@@ -2560,7 +2565,7 @@ function tryStartOnline() {
 }
 function opponentLeft() {
   if (search) { cancelSearch(true); return; }
-  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; renderInningSheet(); return; } // left instead of a rematch
+  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b> left: no rematch`); return; } // left instead of a rematch
   if (!S.online || S.phase === "over" || S.phase === "hub") return;
   S.online.gone = true;
   S.winner = 0; S.phase = "over"; finishMatch();
@@ -2572,12 +2577,12 @@ function opponentLeft() {
 function wantRematch() {
   const O = S.online; if (!O || O.gone || O.rematch.me) return;
   if (career.coins < venue().fee && !houseCovers(S.venue)) return;
-  O.rematch.me = true; netSend({ t: "rematch" }); renderInningSheet(); tryRematch();
+  O.rematch.me = true; netSend({ t: "rematch" }); refreshAgain(); if (!O.rematch.them) screenMsg(`Waiting for <b>${esc(S.names[1])}</b>…`); tryRematch();
 }
 function tryRematch() {
   const O = S.online; if (!O || S.phase !== "over") return;
   const R = O.rematch;
-  if (!R.me || !R.them) { renderInningSheet(); return; }
+  if (!R.me || !R.them) { refreshAgain(); return; }
   if (O.host && !R.setup) {
     R.setup = { seed: Math.floor(Math.random() * 2 ** 31), flip: Math.random() < 0.5 ? 1 : -1, lead: Math.random() < 0.5 ? 0 : 1 };
     netSend({ t: "resetup", ...R.setup });
@@ -3205,7 +3210,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795229820`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795230184`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4719,7 +4724,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795229820`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795230184`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4730,7 +4735,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795229820`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795230184`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8308,9 +8313,20 @@ function renderInningSheet() {
         ${res.lifeLost ? `<div class="pill"><i class="tkt"></i><b>−1</b></div>` : ""}</div>
         ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler and waiting line full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
-    const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
-    const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
-    const again = !canAgain ? "NOT ENOUGH COINS"
+    const { again, off, O } = againState();
+    body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${scorecardHTML()}${rewards}
+      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>`;
+  } else {
+    body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
+      <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
+  }
+  renderInningBody(body, sheet);
+}
+// The rematch button: what it says and whether it can be tapped.
+function againState() {
+  const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
+  const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
+  const again = !canAgain ? "NOT ENOUGH COINS"
       : bot && S.botRematch === "asking" ? `WAITING FOR ${who}…`
       : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
       : bot ? `REMATCH · <i class="coin"></i> ${short(fee)}`
@@ -8319,13 +8335,21 @@ function renderInningSheet() {
       : R.me ? `WAITING FOR ${who}…`
       : R.them ? `${who} WANTS A THROWDOWN REMATCH! · <i class="coin"></i> ${short(fee)}`
       : `THROWDOWN REMATCH · <i class="coin"></i> ${short(fee)}`;
-    body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || bot ? 'style="font-size:19px"' : ""} ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
-      <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
-  } else {
-    body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
-      <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
-  }
+  return { again, O, off: !(canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking") };
+}
+// Update just the rematch button (the card and its score bubble stay put).
+function refreshAgain() {
+  const b = $("againBtn"); if (!b || S.phase !== "over") return;
+  const { again, off, O } = againState(); b.innerHTML = again; b.disabled = off; b.classList.toggle("nope", !!(O && O.gone)); b.classList.toggle("green", !(O && O.gone));
+}
+// A big message across the screen (rematch answers and the like).
+function screenMsg(text) {
+  let el = $("screenMsg");
+  if (!el) { el = document.createElement("div"); el.id = "screenMsg"; document.body.appendChild(el); }
+  el.innerHTML = text; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+  clearTimeout(screenMsg.t); screenMsg.t = setTimeout(() => el.classList.remove("show"), 2600);
+}
+function renderInningBody(body, sheet) {
   $("inningBody").innerHTML = body;
   const wrap = $("inningBody").querySelector(".card-wrap");
   if (wrap) wrap.scrollTop = wrap.scrollHeight;
@@ -8338,8 +8362,8 @@ function renderInningSheet() {
     if (S.online && S.online.gone) return; // they've gone: no rematch
     if (S.online) { wantRematch(); return; }
     if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
-      S.botRematch = "asking"; renderInningSheet();
-      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; renderInningSheet(); } }, 2000 + Math.random() * 5000);
+      S.botRematch = "asking"; refreshAgain(); screenMsg(`Asking <b>${esc(S.names[1])}</b> for a rematch…`);
+      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b>: Not this time!`); sfx.thud(); } }, 2000 + Math.random() * 3000);
       return;
     }
     sheet.hidden = true; const k = S.kind, v = S.venue; openHub();

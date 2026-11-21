@@ -384,9 +384,20 @@ function renderInningSheet() {
         ${res.lifeLost ? `<div class="pill"><i class="tkt"></i><b>−1</b></div>` : ""}</div>
         ${res.can ? `<div class="center big" style="color:${COL.gold}">${res.coolerFull ? "Cooler and waiting line full, so no can this time" : `🥫 You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}`}</div>${res.holes && !res.coolerFull ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}` : ""}
         ${res.newly.length ? `<div class="center big" style="color:${COL.gold}">Unlocked: ${res.newly.map(esc).join(", ")}!</div>` : ""}` : "";
-    const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
-    const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
-    const again = !canAgain ? "NOT ENOUGH COINS"
+    const { again, off, O } = againState();
+    body = `<button class="backbtn overback" id="nextBtn" aria-label="Back to the clubhouse">‹</button>${head}${scorecardHTML()}${rewards}
+      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || S.kind === "career" ? 'style="font-size:19px"' : ""} ${off ? "disabled" : ""}>${again}</button>`;
+  } else {
+    body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
+      <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
+  }
+  renderInningBody(body, sheet);
+}
+// The rematch button: what it says and whether it can be tapped.
+function againState() {
+  const fee = S.kind === "career" ? venue().fee : 0, canAgain = career.coins >= fee || (S.kind === "career" && houseCovers(S.venue));
+  const O = S.online, R = O && O.rematch, who = esc(S.names[1]), bot = S.kind === "career" && !O;
+  const again = !canAgain ? "NOT ENOUGH COINS"
       : bot && S.botRematch === "asking" ? `WAITING FOR ${who}…`
       : bot && S.botRematch === "declined" ? `${who} declined · FIND A NEW MATCH`
       : bot ? `REMATCH · <i class="coin"></i> ${short(fee)}`
@@ -395,13 +406,21 @@ function renderInningSheet() {
       : R.me ? `WAITING FOR ${who}…`
       : R.them ? `${who} WANTS A THROWDOWN REMATCH! · <i class="coin"></i> ${short(fee)}`
       : `THROWDOWN REMATCH · <i class="coin"></i> ${short(fee)}`;
-    body = `${head}${scorecardHTML()}${rewards}
-      <button class="btn go ${O && O.gone ? "nope" : "green"}" id="againBtn" ${O || bot ? 'style="font-size:19px"' : ""} ${canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking" ? "" : "disabled"}>${again}</button>
-      <button class="btn" id="nextBtn">CLUBHOUSE</button>`;
-  } else {
-    body = `<div class="ribbon">INNING ${S.inning}</div>${scorecardHTML()}<div class="center" style="font-size:15px">${line}</div>
-      <button class="swipehint" id="nextBtn">Inning ${S.inning + 1} in <b id="innCount">${INNING_CARD_SECS}</b>… tap or swipe up <span>⇡</span></button>`;
-  }
+  return { again, O, off: !(canAgain && !(O && (O.gone || R.me)) && S.botRematch !== "asking") };
+}
+// Update just the rematch button (the card and its score bubble stay put).
+function refreshAgain() {
+  const b = $("againBtn"); if (!b || S.phase !== "over") return;
+  const { again, off, O } = againState(); b.innerHTML = again; b.disabled = off; b.classList.toggle("nope", !!(O && O.gone)); b.classList.toggle("green", !(O && O.gone));
+}
+// A big message across the screen (rematch answers and the like).
+function screenMsg(text) {
+  let el = $("screenMsg");
+  if (!el) { el = document.createElement("div"); el.id = "screenMsg"; document.body.appendChild(el); }
+  el.innerHTML = text; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+  clearTimeout(screenMsg.t); screenMsg.t = setTimeout(() => el.classList.remove("show"), 2600);
+}
+function renderInningBody(body, sheet) {
   $("inningBody").innerHTML = body;
   const wrap = $("inningBody").querySelector(".card-wrap");
   if (wrap) wrap.scrollTop = wrap.scrollHeight;
@@ -414,8 +433,8 @@ function renderInningSheet() {
     if (S.online && S.online.gone) return; // they've gone: no rematch
     if (S.online) { wantRematch(); return; }
     if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
-      S.botRematch = "asking"; renderInningSheet();
-      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; renderInningSheet(); } }, 2000 + Math.random() * 5000);
+      S.botRematch = "asking"; refreshAgain(); screenMsg(`Asking <b>${esc(S.names[1])}</b> for a rematch…`);
+      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b>: Not this time!`); sfx.thud(); } }, 2000 + Math.random() * 3000);
       return;
     }
     sheet.hidden = true; const k = S.kind, v = S.venue; openHub();
