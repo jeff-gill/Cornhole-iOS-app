@@ -201,7 +201,8 @@ function renderScore() {
   const ir = inningResult();
   for (const p of [0, 1]) {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
-    $("name" + p).textContent = S.names[p]; $("av" + p).innerHTML = S.kind === "career" ? avatarHTML(av, "sm") : "";
+    const nm = $("name" + p); if (nm.textContent !== S.names[p]) nm.textContent = S.names[p]; fitName(nm);
+    $("av" + p).innerHTML = S.kind === "career" ? avatarHTML(av, "sm") : "";
     $("pts" + p).textContent = S.scores[p];
     // career matches: each player's career stars, under their name (practice has none)
     const stars = S.kind === "career" ? (p === 0 ? career.stars : S.opponent ? S.opponent.stars || 0 : 0) : null;
@@ -537,6 +538,16 @@ function renderPracticeCard() {
   $("playBtn").onclick = () => { initAudio(); openPractice(); };
   renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
 }
+// A player's name in their tile: as big as the tile's name row allows (about a third of the tile's height, up to 26px),
+// shrinking only as much as a long name needs to fit the width; past 14px it's cut off with "…".
+function fitName(el) {
+  const card = el.closest(".card"); if (!card || !card.clientWidth) { requestAnimationFrame(() => fitName(el)); return; }
+  let size = Math.min(26, Math.max(14, Math.round(card.clientHeight * 0.3)));
+  el.style.fontSize = size + "px";
+  while (el.scrollWidth > el.clientWidth + 1 && size > 14) el.style.fontSize = (size -= 1) + "px";
+}
+const refitNames = () => { for (const p of [0, 1]) { const nm = $("name" + p); if (nm) fitName(nm); } };
+addEventListener("resize", refitNames); document.fonts?.ready.then(refitNames);
 function short(n) { return bigNum(n); } // 1.5K, 2.3M ... one decimal
 function renderHub() {
   $("coins").textContent = bigNum(career.coins);
