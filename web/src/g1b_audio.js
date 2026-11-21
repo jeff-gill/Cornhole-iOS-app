@@ -125,11 +125,15 @@ function startAmbience({ wind = 0, surf = false, crowd = false, night = false, f
     nodes.push(src, f, g);
     if (lfoRate) { const l = audio.createOscillator(), lg = audio.createGain(); l.frequency.value = lfoRate; lg.gain.value = lfoDepth; l.connect(lg).connect(g.gain); l.start(); nodes.push(l, lg); }
   };
-  if (wind > 0) layer("lowpass", 300 + wind * 40, 0.6, 0.05 + wind * 0.012, 0.13, 0.02 + wind * 0.006);
-  if (surf) layer("lowpass", 700, 0.5, 0.12, 0.11, 0.1);
-  if (crowd) { layer("bandpass", 900, 0.6, 0.07, 0.07, 0.025); layer("bandpass", 2200, 0.8, 0.025, 0.05, 0.01); }
+  // (The hissy wind and crowd layers sounded like waves and heavy rain, so they're gone until real recordings replace them.)
+  if (surf) layer("lowpass", 600, 0.5, 0.07, 0.11, 0.06);
   if (night) layer("highpass", 5200, 3, 0.012, 3.2, 0.01); // crickets-ish shimmer
   if (fire) { layer("lowpass", 240, 0.7, 0.05, 0.4, 0.02); layer("bandpass", 3200, 1.5, 0.018, 7.3, 0.016); } // crackling fire
   out.gain.setTargetAtTime(1, audio.currentTime, 0.8);
   amb = { gain: out, nodes };
 }
+
+// Start the sound on the very first touch anywhere (phones only allow audio after a tap), and right away if allowed.
+["pointerdown", "touchstart", "keydown"].forEach(ev => window.addEventListener(ev, function first() { initAudio(); ["pointerdown", "touchstart", "keydown"].forEach(e => window.removeEventListener(e, first, true)); }, true));
+try { initAudio(); } catch (e) { /* ignore */ }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && audio) audio.resume(); });
