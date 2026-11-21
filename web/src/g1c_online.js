@@ -126,7 +126,7 @@ function tryStartOnline() {
 }
 function opponentLeft() {
   if (search) { cancelSearch(true); return; }
-  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b> left: no rematch`); return; } // left instead of a rematch
+  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b> has declined the rematch`, 3000); return; } // left instead of a rematch
   if (!S.online || S.phase === "over" || S.phase === "hub") return;
   S.online.gone = true;
   S.winner = 0; S.phase = "over"; finishMatch();

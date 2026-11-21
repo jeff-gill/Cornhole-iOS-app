@@ -426,11 +426,11 @@ function refreshAgain() {
   const { again, off, no } = againState(); b.innerHTML = again; b.disabled = off; b.classList.toggle("nope", no); b.classList.toggle("green", !no);
 }
 // A big message across the screen (rematch answers and the like).
-function screenMsg(text) {
+function screenMsg(text, ms = 2600) {
   let el = $("screenMsg");
   if (!el) { el = document.createElement("div"); el.id = "screenMsg"; document.body.appendChild(el); }
   el.innerHTML = text; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
-  clearTimeout(screenMsg.t); screenMsg.t = setTimeout(() => el.classList.remove("show"), 2600);
+  clearTimeout(screenMsg.t); screenMsg.t = setTimeout(() => el.classList.remove("show"), ms);
 }
 function renderInningBody(body, sheet) {
   $("inningBody").innerHTML = body;
@@ -448,7 +448,7 @@ function renderInningBody(body, sheet) {
     if (S.online) { wantRematch(); return; }
     if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
       S.botRematch = "asking"; refreshAgain(); screenMsg(`Asking <b>${esc(S.names[1])}</b> for a rematch…`);
-      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b>: Not this time!`); sfx.thud(); } }, 2000 + Math.random() * 3000);
+      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b> has declined the rematch`, 3000); sfx.thud(); } }, 2000 + Math.random() * 3000);
       return;
     }
     sheet.hidden = true; const k = S.kind, v = S.venue; openHub();

@@ -2640,7 +2640,7 @@ function tryStartOnline() {
 }
 function opponentLeft() {
   if (search) { cancelSearch(true); return; }
-  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b> left: no rematch`); return; } // left instead of a rematch
+  if (S.online && S.phase === "over") { S.online.gone = true; S.online.noRematch = true; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b> has declined the rematch`, 3000); return; } // left instead of a rematch
   if (!S.online || S.phase === "over" || S.phase === "hub") return;
   S.online.gone = true;
   S.winner = 0; S.phase = "over"; finishMatch();
@@ -3287,7 +3287,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795275345`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795275800`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4801,7 +4801,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795275345`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795275800`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4812,7 +4812,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795275345`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795275800`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8397,11 +8397,11 @@ function refreshAgain() {
   const { again, off, no } = againState(); b.innerHTML = again; b.disabled = off; b.classList.toggle("nope", no); b.classList.toggle("green", !no);
 }
 // A big message across the screen (rematch answers and the like).
-function screenMsg(text) {
+function screenMsg(text, ms = 2600) {
   let el = $("screenMsg");
   if (!el) { el = document.createElement("div"); el.id = "screenMsg"; document.body.appendChild(el); }
   el.innerHTML = text; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
-  clearTimeout(screenMsg.t); screenMsg.t = setTimeout(() => el.classList.remove("show"), 2600);
+  clearTimeout(screenMsg.t); screenMsg.t = setTimeout(() => el.classList.remove("show"), ms);
 }
 function renderInningBody(body, sheet) {
   $("inningBody").innerHTML = body;
@@ -8419,7 +8419,7 @@ function renderInningBody(body, sheet) {
     if (S.online) { wantRematch(); return; }
     if (S.kind === "career" && !S.botRematch) { // a CPU opponent mulls it over, then says no
       S.botRematch = "asking"; refreshAgain(); screenMsg(`Asking <b>${esc(S.names[1])}</b> for a rematch…`);
-      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b>: Not this time!`); sfx.thud(); } }, 2000 + Math.random() * 3000);
+      setTimeout(() => { if (S.phase === "over" && S.botRematch === "asking") { S.botRematch = "declined"; refreshAgain(); screenMsg(`<b>${esc(S.names[1])}</b> has declined the rematch`, 3000); sfx.thud(); } }, 2000 + Math.random() * 3000);
       return;
     }
     sheet.hidden = true; const k = S.kind, v = S.venue; openHub();
