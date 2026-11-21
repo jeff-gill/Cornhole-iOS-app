@@ -707,7 +707,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .navbar small { font: 900 10px/1.05 Nunito, system-ui, sans-serif; letter-spacing: .02em; text-align: center; min-height: 2.1em; display: flex; align-items: center; }
 .navbar button.on { color: #fff; } .navbar button.on .nic { border-color: #fff; background: linear-gradient(#ffd84a, #f0a020); }
 .navbar .nbadge { position: absolute; top: 0; right: calc(50% - 26px); }
-.btn.small { font-size: 15px; padding: 10px 4px; }
+.btn.small { font-size: 15px; padding: 10px 4px; border-radius: 12px; }
 .progress { height: 10px; border-radius: 6px; background: rgba(0,0,0,.35); overflow: hidden; margin-top: 6px; }
 .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), #fff1a8); }
 /* Shop */
@@ -802,15 +802,12 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .storeitem .btn { font-size: 16px; padding: 10px 14px; min-width: 84px; }
 .swrow { display: flex; gap: 6px; margin-top: 4px; }
 .swrow canvas { width: 40px; height: 40px; border-radius: 10px; }
-.chiprow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-.chiprow button { border: 2px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); border-radius: 999px; padding: 4px 10px; font-weight: 900; font-size: 12px; }
-.chiprow button.on { background: var(--go); border-color: #fff; color: #12203a; }
 .storenote { font-size: 12px; color: var(--ink-dim); text-align: center; line-height: 1.4; }
 .shoptoast { position: sticky; bottom: 0; text-align: center; background: var(--gold); color: #3a2600; border-radius: 12px; padding: 8px; font-weight: 900; }
 .fxicon { width: 64px; height: 64px; border-radius: 12px; display: grid; place-items: center; font-size: 34px; background: radial-gradient(#2b4a80, #12203a); }
 .fxbtns { display: flex; flex-direction: column; gap: 6px; }
 .fxbtns .btn { min-width: 86px; }
-.btn.ghost { background: rgba(255,255,255,.1); box-shadow: none; font-size: 13px; padding: 6px 8px; }
+.btn.ghost { background: rgba(255,255,255,.1); box-shadow: none; font-size: 13px; padding: 10px 12px; border-radius: 12px; } /* buttons are rounded rectangles; ovals are for counters and tags */
 /* Pause toggles */
 .toggles { display: flex; flex-direction: column; gap: 8px; }
 .toggle { display: flex; justify-content: space-between; align-items: center; border: 3px solid rgba(255,255,255,.18); background: rgba(255,255,255,.07); border-radius: 16px; padding: 10px 14px;
@@ -3272,7 +3269,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795276278`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795276388`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4786,7 +4783,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795276278`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795276388`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4797,7 +4794,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795276278`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795276388`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
