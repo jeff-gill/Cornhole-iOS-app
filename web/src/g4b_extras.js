@@ -396,7 +396,7 @@ function beginnerHTML() {
 function renderSeasonBadge() {
   if (isBeginner()) { $("seasonBtn").innerHTML = `🌱 <b>Beginner</b> · ${beginnerHTML()}`; return; }
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
-  $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · <i class="coin" style="width:15px;height:15px;vertical-align:-2px"></i> ${short(s.points)} won · ${days} day${days > 1 ? "s" : ""} left`;
+  $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${days} day${days > 1 ? "s" : ""} left`;
 }
 let rankTab = "group";
 function openSeason(tab) {
