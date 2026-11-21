@@ -600,7 +600,7 @@ function renderHub() {
   $("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
-  const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
+  const nb = newCount(); $("gearBadge").hidden = !nb; $("gearBadge").textContent = nb; // items your cards just unlocked: they're in Bags & Boards
   play.disabled = !open || !afford;
   play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : !afford ? (dailyReady() ? "NOT ENOUGH COINS · OPEN 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
 }

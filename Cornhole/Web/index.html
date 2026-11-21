@@ -1031,7 +1031,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
         <ellipse cx="26" cy="21" rx="17" ry="6" fill="#d89412"/><rect x="9" y="13" width="34" height="8" fill="#e8a417" stroke="none"/><ellipse cx="26" cy="13" rx="17" ry="6" fill="url(#navCoinG)"/></g>
         <text x="26" y="17.5" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="11" font-weight="900" fill="#9a6400">$</text>
         <g transform="rotate(-18 47 41)"><circle cx="47" cy="41" r="13" fill="#e8392b" stroke="#fff" stroke-width="2.5" stroke-dasharray="3.2 2.2"/><circle cx="47" cy="41" r="8" fill="#c81f12"/><path d="M47 35.5 l1.6 3.4 3.7 .4 -2.8 2.5 .8 3.6 -3.3-1.9 -3.3 1.9 .8-3.6 -2.8-2.5 3.7-.4z" fill="#fff"/></g>
-      </svg></span><small>STORE</small><i class="nbadge" id="shopBadge" hidden></i></button>
+      </svg></span><small>STORE</small></button>
     </nav>
   </div>
 </div>
@@ -3378,7 +3378,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795303353`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795303415`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4892,7 +4892,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795303353`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795303415`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4903,7 +4903,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795303353`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795303415`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8782,7 +8782,7 @@ function renderHub() {
   $("playBtn").onclick = () => { initAudio(); playCourt(hubVenue); };
     const play = $("playBtn"), afford = career.coins >= v.fee || houseCovers(hubVenue);
   renderHubExtras(); rollSeason(); renderSeasonBadge(); renderDaily(); renderBBBtn();
-  const nb = newCount(); $("shopBadge").hidden = !nb; $("shopBadge").textContent = nb;
+  const nb = newCount(); $("gearBadge").hidden = !nb; $("gearBadge").textContent = nb; // items your cards just unlocked: they're in Bags & Boards
   play.disabled = !open || !afford;
   play.innerHTML = !open ? (v.soon ? "COMING SOON" : "LOCKED") : !afford ? (dailyReady() ? "NOT ENOUGH COINS · OPEN 🎁" : `NOT ENOUGH COINS · 🎁 IN ${timeText(giftNextIn())}`) : houseCovers(hubVenue) ? "PLAY · ON THE HOUSE" : `PLAY · <i class="coin"></i> ${short(v.fee)}`;
 }
