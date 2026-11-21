@@ -538,6 +538,8 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 .chrow .chclaim { flex: none; width: auto; padding: 8px 12px; }
 .chbonus { margin: 4px 0 10px; font-weight: 900; color: var(--gold); } .chbonus.done { color: var(--ink-dim); }
 #chBonus { margin-bottom: 10px; }
+.capnote { font-size: 14px; color: var(--ink-dim); margin: -4px 0 8px; }
+.innof { font-size: .45em; opacity: .7; margin-left: 1px; }
 /* the three clubhouse perks side by side, equal widths: icon on top, name, then status */
 .hubperks { display: grid !important; grid-template-columns: repeat(3, 1fr); align-items: stretch; }
 .hubperks .dailybtn { flex-direction: column; justify-content: flex-start; text-align: center; gap: 2px; padding: 8px 4px; width: auto; }
@@ -1050,7 +1052,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
       <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
-      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins (11 at Backyard BBQ, 2 more at each court after, up to 21), and you have to win by 2, so a close match can run past the target. Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
+      <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins (11 at Backyard BBQ, 2 more at each court after, up to 21), and you have to win by 2, so a close match can run past the target. A match lasts 8 innings at most: then the higher score wins; if the scores are tied, more cornholes in the match wins, then more bags on the board, and if that's tied too it's a draw (your buy-in comes back and no stars change). Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
       <p><b>Wind.</b> Wind bends the bag in flight. The green aiming guide already allows for it, so throw down the middle of the green.
       <p><b>Career.</b> Both players put in the buy-in and the <b>winner takes the pot</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
       <p><b>Opponents.</b> PLAY looks for a live player at your court. When no one is available, you'll play a computer opponent.</p>
@@ -1078,7 +1080,8 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
         <li>A bag that touches the ground, or hits the ground and bounces onto the board, scores nothing and is taken off.</li>
         <li>Points cancel out: only the difference between the two sides counts each inning. Equal scores are a wash.</li></ul></div>
       <div class="rulesec"><h3>🏆 Winning</h3><ul>
-        <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21. You have to win by 2, so a close match keeps going past the target.</li></ul></div>
+        <li>The first side to reach the target at the end of an inning wins: 11 points at Backyard BBQ, 2 more at each court after, up to 21. You have to win by 2, so a close match keeps going past the target.</li>
+        <li>8 innings at most. After the 8th, the higher score wins. Tied? More cornholes in the match wins, then more bags on the board. Still tied: a draw, your buy-in comes back and no stars change.</li></ul></div>
       <div class="rulesec"><h3>🚫 Fouls</h3><ul>
         <li>Stepping past the foul line, throwing from outside your box or throwing out of turn is a foul. A fouled bag scores nothing and is taken off the board.</li>
         <li>Taking too long to throw can also be called as a foul in leagues.</li></ul></div>
@@ -1988,6 +1991,7 @@ function tickBagPick(dt) {
 function closeBagPick() {
   if (S.phase !== "bagpick") return;
   $("bagPick").hidden = true; S.pickReady = false; beginTurn();
+  if (S.kind !== "bullseye" && S.inning <= 1 && typeof screenMsg === "function") screenMsg(`First to <b>${winScore()}</b> · win by 2<br><small>${MAX_INNINGS} innings max</small>`, 3000);
 }
 
 // ───────────────────────── Match flow
@@ -2067,7 +2071,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   S.boardMine = S.board === career.board;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
-  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
+  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.capEnd = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   { // this match's team colours (live matches: the shared seed picks the pair, the host takes the first colour)
     const r = online ? rng(online.seed + 17) : Math.random, pair = TEAM_PAIRS[Math.floor(r() * TEAM_PAIRS.length)], swap = online ? !online.host : r() < 0.5;
     S.teamC = swap ? [pair[1], pair[0]] : [pair[0], pair[1]];
@@ -2251,13 +2255,24 @@ function inningResult() {
   const winner = raw[0] === raw[1] ? null : (raw[0] > raw[1] ? 0 : 1);
   return { hole, on, raw, winner, awarded: Math.abs(raw[0] - raw[1]) };
 }
+// Matches end after MAX_INNINGS innings at most. Then: more points wins; tied on points, more cornholes over the
+// match; still tied, more bags on the board; still tied, it's a draw (buy-in back, no stars won or lost).
+const MAX_INNINGS = 8;
+function capWinner() {
+  const tot = k => [0, 1].map(p => S.history.reduce((t, h) => t + h[k][p], 0));
+  const hole = tot("hole"), on = tot("on");
+  S.capEnd = S.scores[0] !== S.scores[1] ? { by: "points" } : hole[0] !== hole[1] ? { by: "cornholes", a: hole } : on[0] !== on[1] ? { by: "bags on the board", a: on } : { by: "draw" };
+  return S.scores[0] !== S.scores[1] ? (S.scores[0] > S.scores[1] ? 0 : 1) : hole[0] !== hole[1] ? (hole[0] > hole[1] ? 0 : 1) : on[0] !== on[1] ? (on[0] > on[1] ? 0 : 1) : null;
+}
 function finishInning() {
   const r = inningResult(); S.lastInning = r;
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
   S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
   // reach the target and win by 2
-  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
+  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { S.winner = best; S.phase = "over"; finishMatch(); }
+  else if (S.history.length >= MAX_INNINGS) { S.winner = capWinner(); S.phase = "over"; finishMatch(); } // out of innings
+  else S.phase = "inning";
   ui();
   if (r.winner === null) showWash();
 }
@@ -2285,9 +2300,16 @@ function showWash() {
   }, 1700);
 }
 function finishMatch() {
+  const paid = career.activeMatch ? career.activeMatch.fee || 0 : 0;
   career.activeMatch = null; // it ended properly: nothing to refund
-  if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
+  if (S.winner !== null && (S.kind !== "career" || S.winner === 0)) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
+  if (S.winner === null) { // a draw (tied on points, cornholes and bags after the last inning): as if it never happened
+    career.coins += paid; save();
+    if (typeof chMatch === "function") chMatch(false, S.venue, S.history);
+    S.result = { won: false, draw: true, refund: paid, starDelta: 0, coins: 0, newly: [], can: null, coolerFull: false, holes: 0, season: 0 };
+    return;
+  }
   const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
   const coins = won ? pot(v) : 0;
   let can = null, coolerFull = false;
@@ -3299,7 +3321,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795277173`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795281198`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4813,7 +4835,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795277173`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795281198`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4824,7 +4846,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795277173`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795281198`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8272,7 +8294,7 @@ function renderScore() {
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
-  $("inningNum").textContent = S.inning;
+  $("inningNum").innerHTML = S.kind === "bullseye" ? S.inning : `${S.inning}<small class="innof">/${MAX_INNINGS}</small>`;
   $("toScore").textContent = Math.max(...S.scores) >= winScore() ? "win by 2" : "to " + winScore(); // (past the target but not 2 clear)
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
@@ -8441,16 +8463,19 @@ function renderInningSheet() {
   let body;
   if (S.phase === "over") {
     const res = S.result;
-    const head = S.online ? (res.won ? `<div class="big3" style="color:${COL.gold};font-size:30px">You won the Throwdown!</div>` : `<div class="big3" style="font-size:30px">You lost the Throwdown</div>`)
+    const capNote = S.capEnd ? `<div class="center capnote">${S.capEnd.by === "draw" ? `Tied after ${MAX_INNINGS} innings on points, cornholes and bags on the board.`
+        : S.capEnd.by === "points" ? `${MAX_INNINGS} innings played: most points wins.` : `Tied on points after ${MAX_INNINGS} innings: decided on ${S.capEnd.by} (${Math.max(...S.capEnd.a)}–${Math.min(...S.capEnd.a)}).`}</div>` : "";
+    const head0 = res && res.draw ? `<div class="big3">IT'S A DRAW</div>` : S.winner === null ? `<div class="big3">IT'S A DRAW</div>` : null;
+    const head = head0 ? head0 + capNote : (S.online ? (res.won ? `<div class="big3" style="color:${COL.gold};font-size:30px">You won the Throwdown!</div>` : `<div class="big3" style="font-size:30px">You lost the Throwdown</div>`)
       : S.kind === "career" ? (res.won ? `<div class="big3" style="color:${COL.gold}">YOU WIN!</div>` : `<div class="big3">YOU LOSE</div>`)
-      : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`;
+      : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`) + capNote;
     const pills = `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
         </div>`;
     const gotCan = res.can && !res.coolerFull;
     // a won can: its picture on the left, as tall as the two rows beside it (the rewards, then what you won)
-    const rewards = S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
+    const rewards = S.kind === "career" && res.draw ? `<div class="center big">${res.refund ? `Your <i class="coin"></i> ${short(res.refund)} buy-in is back. ` : ""}No stars won or lost.</div>` : S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
         <div class="rwtext">You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}</div></div></div>`
         : pills + (res.can ? `<div class="center big" style="color:${COL.gold}">Cooler and waiting line full, so no can this time</div>` : ""))
         + `${gotCan && res.holes ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}

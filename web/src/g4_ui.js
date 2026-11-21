@@ -212,7 +212,7 @@ function renderScore() {
     $("dots" + p).innerHTML = [0, 1, 2, 3].map(i => `<i class="${i < 4 - S.thrown[p] ? "on" : lost.includes(3 - i) ? "x" : ""}"></i>`).join("");
     $("card" + p).classList.toggle("active", S.player === p && !["inning", "over", "hub"].includes(S.phase));
   }
-  $("inningNum").textContent = S.inning;
+  $("inningNum").innerHTML = S.kind === "bullseye" ? S.inning : `${S.inning}<small class="innof">/${MAX_INNINGS}</small>`;
   $("toScore").textContent = Math.max(...S.scores) >= winScore() ? "win by 2" : "to " + winScore(); // (past the target but not 2 clear)
   const words = venue().name.split(" "); // "Pizza Patio" → PIZZA over a gold PATIO, like the title
   $("courtName").innerHTML = words.length > 1 ? `${esc(words[0])}<span>${esc(words.slice(1).join(" "))}</span>` : `<span>${esc(words[0])}</span>`;
@@ -381,16 +381,19 @@ function renderInningSheet() {
   let body;
   if (S.phase === "over") {
     const res = S.result;
-    const head = S.online ? (res.won ? `<div class="big3" style="color:${COL.gold};font-size:30px">You won the Throwdown!</div>` : `<div class="big3" style="font-size:30px">You lost the Throwdown</div>`)
+    const capNote = S.capEnd ? `<div class="center capnote">${S.capEnd.by === "draw" ? `Tied after ${MAX_INNINGS} innings on points, cornholes and bags on the board.`
+        : S.capEnd.by === "points" ? `${MAX_INNINGS} innings played: most points wins.` : `Tied on points after ${MAX_INNINGS} innings: decided on ${S.capEnd.by} (${Math.max(...S.capEnd.a)}–${Math.min(...S.capEnd.a)}).`}</div>` : "";
+    const head0 = res && res.draw ? `<div class="big3">IT'S A DRAW</div>` : S.winner === null ? `<div class="big3">IT'S A DRAW</div>` : null;
+    const head = head0 ? head0 + capNote : (S.online ? (res.won ? `<div class="big3" style="color:${COL.gold};font-size:30px">You won the Throwdown!</div>` : `<div class="big3" style="font-size:30px">You lost the Throwdown</div>`)
       : S.kind === "career" ? (res.won ? `<div class="big3" style="color:${COL.gold}">YOU WIN!</div>` : `<div class="big3">YOU LOSE</div>`)
-      : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`;
+      : `<div class="big3" style="color:${COL.gold}">${esc(S.names[S.winner])} WINS!</div>`) + capNote;
     const pills = `<div class="rewards">
         <div class="pill"><span class="ico" style="background:#2f86ff">⭐</span><b>${res.starDelta >= 0 ? "+" : ""}${res.starDelta}</b></div>
         <div class="pill"><i class="coin"></i><b>+${short(res.coins)}</b></div>
         </div>`;
     const gotCan = res.can && !res.coolerFull;
     // a won can: its picture on the left, as tall as the two rows beside it (the rewards, then what you won)
-    const rewards = S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
+    const rewards = S.kind === "career" && res.draw ? `<div class="center big">${res.refund ? `Your <i class="coin"></i> ${short(res.refund)} buy-in is back. ` : ""}No stars won or lost.</div>` : S.kind === "career" ? (gotCan ? `<div class="rewardrow"><div class="rwcan">${canPic(res.can)}</div><div class="rwright">${pills}
         <div class="rwtext">You won a ${esc(canById(res.can).name)} can!${coolerFull() ? " It's waiting for a free slot." : ""}</div></div></div>`
         : pills + (res.can ? `<div class="center big" style="color:${COL.gold}">Cooler and waiting line full, so no can this time</div>` : ""))
         + `${gotCan && res.holes ? `<div class="center muted">🎯 ${res.holes} cornhole${res.holes > 1 ? "s" : ""} boosted your can</div>` : ""}

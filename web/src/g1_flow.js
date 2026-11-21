@@ -428,6 +428,7 @@ function tickBagPick(dt) {
 function closeBagPick() {
   if (S.phase !== "bagpick") return;
   $("bagPick").hidden = true; S.pickReady = false; beginTurn();
+  if (S.kind !== "bullseye" && S.inning <= 1 && typeof screenMsg === "function") screenMsg(`First to <b>${winScore()}</b> · win by 2<br><small>${MAX_INNINGS} innings max</small>`, 3000);
 }
 
 // ───────────────────────── Match flow
@@ -507,7 +508,7 @@ function startMatch(kind, vi, online = null, pick = null) {
   S.boardMine = S.board === career.board;
   S.world = new World(); S.scores = [0, 0]; S.inning = 1; S.thrown = soloThrown(); S.lost = [[], []]; S.pauses = 0; S.awayDebt = 0; S.awayAt = null; S.leader = online ? online.lead : Math.random() < 0.5 ? 0 : 1;
   if (S.practice && S.practice.players === 1) S.leader = S.player = 0; // solo practice: you always throw S.player = S.leader;
-  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
+  S.saved = {}; S.lastInning = null; S.history = []; S.winner = null; S.capEnd = null; S.feedback = []; S.lastId = null; S.relT = 99; S.result = null; S.fourBagger = [false, false];
   { // this match's team colours (live matches: the shared seed picks the pair, the host takes the first colour)
     const r = online ? rng(online.seed + 17) : Math.random, pair = TEAM_PAIRS[Math.floor(r() * TEAM_PAIRS.length)], swap = online ? !online.host : r() < 0.5;
     S.teamC = swap ? [pair[1], pair[0]] : [pair[0], pair[1]];
@@ -691,13 +692,24 @@ function inningResult() {
   const winner = raw[0] === raw[1] ? null : (raw[0] > raw[1] ? 0 : 1);
   return { hole, on, raw, winner, awarded: Math.abs(raw[0] - raw[1]) };
 }
+// Matches end after MAX_INNINGS innings at most. Then: more points wins; tied on points, more cornholes over the
+// match; still tied, more bags on the board; still tied, it's a draw (buy-in back, no stars won or lost).
+const MAX_INNINGS = 8;
+function capWinner() {
+  const tot = k => [0, 1].map(p => S.history.reduce((t, h) => t + h[k][p], 0));
+  const hole = tot("hole"), on = tot("on");
+  S.capEnd = S.scores[0] !== S.scores[1] ? { by: "points" } : hole[0] !== hole[1] ? { by: "cornholes", a: hole } : on[0] !== on[1] ? { by: "bags on the board", a: on } : { by: "draw" };
+  return S.scores[0] !== S.scores[1] ? (S.scores[0] > S.scores[1] ? 0 : 1) : hole[0] !== hole[1] ? (hole[0] > hole[1] ? 0 : 1) : on[0] !== on[1] ? (on[0] > on[1] ? 0 : 1) : null;
+}
 function finishInning() {
   const r = inningResult(); S.lastInning = r;
   if (r.winner !== null) { S.scores[r.winner] += r.awarded; S.leader = r.winner; }
   S.history.push({ ...r, inning: S.inning, totals: [...S.scores] });
   const best = S.scores[0] >= S.scores[1] ? 0 : 1;
   // reach the target and win by 2
-  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { S.winner = best; S.phase = "over"; finishMatch(); } else S.phase = "inning";
+  if (S.scores[best] >= winScore() && S.scores[best] - S.scores[1 - best] >= 2) { S.winner = best; S.phase = "over"; finishMatch(); }
+  else if (S.history.length >= MAX_INNINGS) { S.winner = capWinner(); S.phase = "over"; finishMatch(); } // out of innings
+  else S.phase = "inning";
   ui();
   if (r.winner === null) showWash();
 }
@@ -725,9 +737,16 @@ function showWash() {
   }, 1700);
 }
 function finishMatch() {
+  const paid = career.activeMatch ? career.activeMatch.fee || 0 : 0;
   career.activeMatch = null; // it ended properly: nothing to refund
-  if (S.kind !== "career" || S.winner === 0) sfx.win(); else sfx.thud();
+  if (S.winner !== null && (S.kind !== "career" || S.winner === 0)) sfx.win(); else sfx.thud();
   if (S.kind !== "career") { S.result = null; return; }
+  if (S.winner === null) { // a draw (tied on points, cornholes and bags after the last inning): as if it never happened
+    career.coins += paid; save();
+    if (typeof chMatch === "function") chMatch(false, S.venue, S.history);
+    S.result = { won: false, draw: true, refund: paid, starDelta: 0, coins: 0, newly: [], can: null, coolerFull: false, holes: 0, season: 0 };
+    return;
+  }
   const v = venue(), won = S.winner === 0, before = courtStars(S.venue);
   const coins = won ? pot(v) : 0;
   let can = null, coolerFull = false;
