@@ -845,6 +845,12 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .oddsrow { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 2px 0; } .oddsrow i { font-style: normal; font-weight: 900; color: #fff; }
 .oddstable { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0 6px; } .oddstable th { color: var(--ink-dim); font-weight: 900; text-align: left; padding: 2px 3px; } .oddstable td { padding: 3px; border-top: 1px solid rgba(255,255,255,.1); }
 .settile { cursor: pointer; }
+.item-badge.burst { animation: badgeburst .5s ease-out forwards; }
+.item-badge.burst::before, .item-badge.burst::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: var(--gold);
+  box-shadow: 18px -14px 0 #fff, -20px -10px 0 var(--gold), 22px 10px 0 #ff4b3a, -16px 14px 0 #fff, 0 -22px 0 #ff4b3a, 0 20px 0 var(--gold); animation: badgebits .5s ease-out forwards; }
+.item-badge.burst::after { transform: rotate(45deg); }
+@keyframes badgeburst { 0% { transform: scale(1); opacity: 1; } 35% { transform: scale(1.45); opacity: 1; } 100% { transform: scale(.2); opacity: 0; } }
+@keyframes badgebits { 0% { opacity: 0; scale: .3; } 30% { opacity: 1; } 100% { opacity: 0; scale: 1.8; } }
 .gcid { color: var(--gold); font-weight: 900; user-select: all; -webkit-user-select: all; }
 .setworth { margin-top: 6px; font-weight: 900; color: var(--gold); } .setworth .coin { width: 16px; height: 16px; vertical-align: -3px; }
 .setlist { display: grid; gap: 10px; margin: 12px 0; text-align: left; }
@@ -3378,7 +3384,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795303465`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795303573`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4892,7 +4898,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795303465`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795303573`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4903,7 +4909,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795303465`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795303573`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -9013,13 +9019,14 @@ function renderShop() {
   }
   wireNewBadges();
 }
-// A NEW! item counts as seen once it's tapped: its badge goes, and the tab and Bags & Boards counts drop by one.
+// A NEW! item counts as seen once it's tapped: its badge bursts and goes, and the tab and Bags & Boards counts drop by one.
 function wireNewBadges() {
   for (const bd of document.querySelectorAll("#shopItems [data-new]")) {
     const row = bd.parentElement, key = bd.dataset.new;
     row.addEventListener("click", () => {
       if (!career.newCards || !career.newCards[key]) return;
-      delete career.newCards[key]; save(); bd.remove();
+      delete career.newCards[key]; save();
+      bd.classList.add("burst"); sfx.tick(); haptic("light"); setTimeout(() => bd.remove(), 520); // it bursts, then it's gone
       const TAB_CAT = { bags: "bag", boards: "board", throw: "trail", hole: "fx" };
       for (const b of document.querySelectorAll("#shop .tabs button")) { const n = TAB_CAT[b.dataset.tab] ? newCount(TAB_CAT[b.dataset.tab]) : 0; b.querySelector(".nbadge")?.remove(); if (n) b.insertAdjacentHTML("beforeend", `<i class="nbadge">${n}</i>`); }
       const nb = newCount(); $("gearBadge").hidden = !nb; $("gearBadge").textContent = nb;

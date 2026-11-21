@@ -831,13 +831,14 @@ function renderShop() {
   }
   wireNewBadges();
 }
-// A NEW! item counts as seen once it's tapped: its badge goes, and the tab and Bags & Boards counts drop by one.
+// A NEW! item counts as seen once it's tapped: its badge bursts and goes, and the tab and Bags & Boards counts drop by one.
 function wireNewBadges() {
   for (const bd of document.querySelectorAll("#shopItems [data-new]")) {
     const row = bd.parentElement, key = bd.dataset.new;
     row.addEventListener("click", () => {
       if (!career.newCards || !career.newCards[key]) return;
-      delete career.newCards[key]; save(); bd.remove();
+      delete career.newCards[key]; save();
+      bd.classList.add("burst"); sfx.tick(); haptic("light"); setTimeout(() => bd.remove(), 520); // it bursts, then it's gone
       const TAB_CAT = { bags: "bag", boards: "board", throw: "trail", hole: "fx" };
       for (const b of document.querySelectorAll("#shop .tabs button")) { const n = TAB_CAT[b.dataset.tab] ? newCount(TAB_CAT[b.dataset.tab]) : 0; b.querySelector(".nbadge")?.remove(); if (n) b.insertAdjacentHTML("beforeend", `<i class="nbadge">${n}</i>`); }
       const nb = newCount(); $("gearBadge").hidden = !nb; $("gearBadge").textContent = nb;
