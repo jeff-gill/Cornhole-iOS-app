@@ -198,7 +198,7 @@ function updateHUD() {
 // ───────────────────────── Panel and scoreboard
 const panel = $("panel");
 function renderScore() {
-  if (S.kind === "bullseye") { $("boardInfo").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = $("iobag" + p).hidden = true; return; } // no scoreboard: one throw
+  if (S.kind === "bullseye") { $("boardInfo").hidden = true; $("potBox").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = $("iobag" + p).hidden = true; return; } // no scoreboard: one throw
   const ir = inningResult();
   for (const p of [0, 1]) {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
@@ -500,7 +500,7 @@ let sceneVenue = hubVenue; // the court shown behind the clubhouse (the practice
 function openHub() {
   musicScene("hub");
   $("timeupMsg").hidden = true;
-  $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true;
+  $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true; $("potBox").hidden = true;
   showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
@@ -1068,3 +1068,24 @@ postNative("gamecenter", "signin"); // sign in to Game Center (iOS shows its own
 setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash").remove(), 600); }, Math.max(0, 2800 - performance.now()));
 
 requestAnimationFrame(frame);
+
+// The pot: once the opponent is set, both players' buy-ins fly into a cooler at the bottom of the screen (between the
+// score tables), the total counts up, and the lid snaps shut. It sits there for the rest of the match.
+function potIntro() {
+  const box = $("potBox"), v = venue(), amt = S.kind === "career" ? pot(v) : 0;
+  if (!amt) { box.hidden = true; return; }
+  box.hidden = false; box.classList.remove("shut"); $("potAmt").textContent = "0";
+  const mouth = box.querySelector(".potsvg").getBoundingClientRect(), tx = mouth.left + mouth.width / 2, ty = mouth.top + mouth.height * 0.35;
+  const N = 6; let landed = 0;
+  for (const p of [0, 1]) {
+    const src = $("card" + p).getBoundingClientRect();
+    for (let i = 0; i < N; i++) {
+      const c = document.createElement("i"); c.className = "coin flycoin";
+      const x0 = src.left + src.width / 2 + (Math.random() - 0.5) * 40, y0 = src.top + src.height * 0.6;
+      c.style.left = x0 + "px"; c.style.top = y0 + "px"; document.body.appendChild(c);
+      setTimeout(() => { c.style.transform = `translate(${tx - x0}px, ${ty - y0}px) scale(.7)`; c.style.opacity = "0"; }, 60 + i * 110 + p * 55);
+      setTimeout(() => { c.remove(); landed++; $("potAmt").textContent = short(Math.round(amt * landed / (2 * N))); if (landed % 3 === 0) sfx.tick(); }, 60 + i * 110 + p * 55 + 700);
+    }
+  }
+  setTimeout(() => { box.classList.add("shut"); $("potAmt").textContent = short(amt); sfx.thud(); haptic("thud"); }, 60 + N * 110 + 55 + 760);
+}

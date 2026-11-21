@@ -131,6 +131,16 @@ body.inhub .score, body.inhub #panel { display: none; }
 /* In / On for each player this inning, in the bottom corners of the court view */
 .iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
+#potBox { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 3; pointer-events: none; width: 92px; text-align: center; }
+body.nopanel #potBox { bottom: calc(8px + max(14px, env(safe-area-inset-bottom, 0px))); }
+.potsvg { width: 92px; height: auto; display: block; overflow: visible; filter: drop-shadow(0 3px 0 rgba(0,0,0,.3)); }
+.potlid { transform-origin: 112px 28px; transform: translate(-6px, -16px) rotate(18deg); transition: transform .35s cubic-bezier(.5,1.6,.6,1); }
+#potBox.shut .potlid { transform: none; }
+.potamt { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 3px; background: rgba(10,20,38,.82); border: 2px solid #fff; border-radius: 999px; padding: 1px 8px 1px 2px; }
+.potamt .coin { width: 18px; height: 18px; } .potamt .coin::after { font-size: 11px; }
+.potamt b { font-family: var(--font-display); font-weight: 400; font-size: 16px; color: #fff; font-variant-numeric: tabular-nums; }
+.coin.flycoin { position: fixed; z-index: 60; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none; transition: transform .7s cubic-bezier(.45,0,.4,1), opacity .2s .62s; }
+.coin.flycoin::after { font-size: 15px; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
 /* the bag each player is throwing, sitting on top of their table at the outside edge */
 .iobag { position: absolute; z-index: 3; pointer-events: none; display: flex; align-items: flex-end; gap: 5px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
@@ -900,7 +910,10 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
-    <div id="fbFloat" hidden></div><div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
+    <div id="fbFloat" hidden></div><div id="potBox" hidden><svg class="potsvg" viewBox="0 0 120 92" aria-hidden="true">
+      <g class="potlid"><rect x="6" y="14" width="108" height="16" rx="6" fill="#f4f6fa" stroke="#c9d0dc" stroke-width="2"/><rect x="44" y="6" width="32" height="10" rx="4" fill="none" stroke="#c9d0dc" stroke-width="4"/></g>
+      <rect x="10" y="30" width="100" height="56" rx="8" fill="#e8362c"/><rect x="10" y="30" width="100" height="10" fill="#c22a20"/><rect x="10" y="74" width="100" height="12" rx="6" fill="#b5241b"/>
+      <rect x="18" y="46" width="12" height="20" rx="4" fill="#fff" opacity=".35"/></svg><div class="potamt"><i class="coin"></i><b id="potAmt">0</b></div></div><div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>

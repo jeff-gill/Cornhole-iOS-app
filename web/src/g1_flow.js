@@ -428,7 +428,8 @@ function tickBagPick(dt) {
 function closeBagPick() {
   if (S.phase !== "bagpick") return;
   $("bagPick").hidden = true; S.pickReady = false; beginTurn();
-  if (S.kind !== "bullseye" && S.inning <= 1 && typeof screenMsg === "function") screenMsg(`First to <b>${winScore()}</b> · win by 2<br><small>${MAX_INNINGS} innings max</small>`, 3000);
+  if (S.kind !== "bullseye" && S.inning <= 1 && typeof potIntro === "function") potIntro();
+  if (S.kind !== "bullseye" && S.inning <= 1 && typeof screenMsg === "function") setTimeout(() => screenMsg(`First to <b>${winScore()}</b> · win by 2<br><small>${MAX_INNINGS} innings max</small>`, 3000), 1700);
 }
 
 // ───────────────────────── Match flow
