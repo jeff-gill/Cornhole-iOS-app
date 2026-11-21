@@ -175,7 +175,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 500, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
+const fresh = () => ({ graduated: false, coins: 500, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 // The time used for every timer and daily reward. In the iPhone app this is the app's own trusted clock (network
 // time, carried forward with the phone's uptime), so setting the phone's clock forward doesn't skip a wait.
@@ -186,6 +186,10 @@ const homeDate = () => { if (typeof career === "object" && career && career.tz =
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
 const haptic = kind => { if (career.haptics !== false) postNative("haptic", kind); };
+// Beginner: every new player starts here. Win BEGINNER_WINS matches, the last two in a row, to become a Rookie. Until
+// then Bags & Boards stays locked, every can you win is a Backyard Black, and there's no season ladder yet.
+const BEGINNER_WINS = 5;
+const isBeginner = () => career.graduated === false;
 let career = fresh();
 function careerFrom(raw) {
   const old = typeof raw === "string" ? JSON.parse(raw) : raw, c = { ...fresh(), ...old };
@@ -196,6 +200,7 @@ function careerFrom(raw) {
     c.venue = 0;
   }
   c.courtStars = { ...c.courtStars };
+  if (old.graduated === undefined) c.graduated = (old.wins || 0) >= 5; // saves from before the Beginner stage
   return c;
 }
 try {
@@ -695,7 +700,7 @@ function finishMatch() {
   let can = null, coolerFull = false;
   const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
   if (won) {
-    refundLife(); can = rollCan(null, holes);
+    refundLife(); can = isBeginner() ? "black" : rollCan(null, holes); // (Beginners only win the lowest can)
     if (!giveCan(can, S.venue)) { if (winQueueFull()) coolerFull = true; else (career.canBacklog ||= []).push({ id: can, court: S.venue, won: true }); }
   }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
@@ -710,7 +715,8 @@ function finishMatch() {
   if (!won && clockNow() - (career.roughAt || 0) >= 7 * 86400000 && (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 8)) career.roughOffer = S.venue;
   const newly = updateUnlocks();
   save();
-  addSeasonPoints(won ? starsForWin(S.venue) : 1);
+  if (isBeginner() && won && career.wins >= BEGINNER_WINS && career.winStreak >= 2) { career.graduated = true; career.justGraduated = true; save(); }
+  if (!isBeginner()) addSeasonPoints(won ? starsForWin(S.venue) : 1);
   S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? starsForWin(S.venue) : 1 };
   postScores();
 }

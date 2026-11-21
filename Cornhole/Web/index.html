@@ -676,6 +676,7 @@ s.was { opacity: .6; font-size: .8em; }
 .gbar i { position: absolute; left: 0; right: 0; border-radius: 4px; background: #fff; box-shadow: 0 0 6px rgba(255,255,255,.6); }
 .lbbtn { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; font-size: 18px; padding: 14px 16px; }
 .lbbtn span { font-size: 28px; }
+#navbar button.locked .nic { filter: grayscale(.7) brightness(.8); }
 .waitopp { text-align: center; margin: 4px 0 8px; padding: 8px; border-radius: 12px; background: rgba(255,201,58,.18); border: 2px solid var(--gold); color: var(--gold); font-family: var(--font-display); font-size: 20px; animation: canbob 1.4s ease-in-out infinite; }
 /* Pages: in the clubhouse they fill the space between the top bar and the bottom bar, which stay put */
 body.inhub .overlay.page { top: var(--topbar-h, 110px); bottom: var(--navbar-h, 96px); z-index: 25; background: linear-gradient(var(--deck-2), var(--deck)); padding: 8px 10px !important; align-items: stretch; border-top: 3px solid #fff; border-bottom: 3px solid #fff; }
@@ -1706,7 +1707,7 @@ const FEEL = { sticky: { label: "Sticky", slide: 0.86 }, neutral: { label: "Neut
 
 // ───────────────────────── Saved career (this device only)
 const SAVE_KEY = "backyard-cornhole.career.v1";
-const fresh = () => ({ coins: 500, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
+const fresh = () => ({ graduated: false, coins: 500, stars: 0, courtStars: {}, unlocked: ["backyard"], bags: ["starter"], bag: "starter", boards: ["classic"], board: "classic", venue: 0, wins: 0, losses: 0, tutorialDone: false, lastDaily: "", purchases: [], trails: ["none"], trail: "none", effects: ["confetti"], effect: "confetti", caps: 0, cans: [], cards: {}, lives: 5, livesAt: 0, alerts: false, avatar: "a0" });
 // Inside the iPhone app, the native side injects the saved career and stores updates; in a browser, localStorage does.
 // The time used for every timer and daily reward. In the iPhone app this is the app's own trusted clock (network
 // time, carried forward with the phone's uptime), so setting the phone's clock forward doesn't skip a wait.
@@ -1717,6 +1718,10 @@ const homeDate = () => { if (typeof career === "object" && career && career.tz =
 const nativeBridge = (() => { try { return window.webkit && window.webkit.messageHandlers; } catch (e) { return null; } })();
 function postNative(name, body) { try { if (nativeBridge && nativeBridge[name]) nativeBridge[name].postMessage(body); } catch (e) { /* not in the app */ } }
 const haptic = kind => { if (career.haptics !== false) postNative("haptic", kind); };
+// Beginner: every new player starts here. Win BEGINNER_WINS matches, the last two in a row, to become a Rookie. Until
+// then Bags & Boards stays locked, every can you win is a Backyard Black, and there's no season ladder yet.
+const BEGINNER_WINS = 5;
+const isBeginner = () => career.graduated === false;
 let career = fresh();
 function careerFrom(raw) {
   const old = typeof raw === "string" ? JSON.parse(raw) : raw, c = { ...fresh(), ...old };
@@ -1727,6 +1732,7 @@ function careerFrom(raw) {
     c.venue = 0;
   }
   c.courtStars = { ...c.courtStars };
+  if (old.graduated === undefined) c.graduated = (old.wins || 0) >= 5; // saves from before the Beginner stage
   return c;
 }
 try {
@@ -2226,7 +2232,7 @@ function finishMatch() {
   let can = null, coolerFull = false;
   const holes = S.history.reduce((t, h) => t + h.hole[0], 0); // your cornholes this match improve the can
   if (won) {
-    refundLife(); can = rollCan(null, holes);
+    refundLife(); can = isBeginner() ? "black" : rollCan(null, holes); // (Beginners only win the lowest can)
     if (!giveCan(can, S.venue)) { if (winQueueFull()) coolerFull = true; else (career.canBacklog ||= []).push({ id: can, court: S.venue, won: true }); }
   }
   addCourtStars(S.venue, won ? starsForWin(S.venue) : -starsForLoss(S.venue));
@@ -2241,7 +2247,8 @@ function finishMatch() {
   if (!won && clockNow() - (career.roughAt || 0) >= 7 * 86400000 && (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 8)) career.roughOffer = S.venue;
   const newly = updateUnlocks();
   save();
-  addSeasonPoints(won ? starsForWin(S.venue) : 1);
+  if (isBeginner() && won && career.wins >= BEGINNER_WINS && career.winStreak >= 2) { career.graduated = true; career.justGraduated = true; save(); }
+  if (!isBeginner()) addSeasonPoints(won ? starsForWin(S.venue) : 1);
   S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? starsForWin(S.venue) : 1 };
   postScores();
 }
@@ -3183,7 +3190,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795227146`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795228423`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4697,7 +4704,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795227146`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795228423`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4708,7 +4715,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795227146`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795228423`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6961,7 +6968,12 @@ const LEGAL_URL = "https://jeff-gill.github.io/Cornhole-iOS-app/";
 function openLink(url) { if (nativeBridge && nativeBridge.open) postNative("open", url); else window.open(url, "_blank", "noopener"); }
 
 // ── Season badge and ladder
+function beginnerHTML() {
+  const w = career.wins || 0;
+  return w < BEGINNER_WINS ? `${w} of ${BEGINNER_WINS} wins to Rookie` : `Win 2 in a row for Rookie`;
+}
 function renderSeasonBadge() {
+  if (isBeginner()) { $("seasonBtn").innerHTML = `🌱 <b>Beginner</b> · ${beginnerHTML()}`; return; }
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
 }
@@ -6985,7 +6997,8 @@ function openSeason(tab) {
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
   const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
-  const body = rankTab === "group" ? head + group
+  const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and join the season ladder.</div>`;
+  const body = isBeginner() && rankTab !== "gc" ? learner : rankTab === "group" ? head + group
     : rankTab === "ladder" ? `${head}<div class="muted infotext">Win: the court's win stars in points. Loss: 1 point for playing. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
     : `<div class="muted">The worldwide Game Center leaderboards.</div>
       <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
@@ -8361,7 +8374,8 @@ function openHub() {
   if (hubVenue >= 0 && !venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
-  if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
+  if (career.justGraduated) { career.justGraduated = false; save(); setTimeout(() => { sfx.win(); haptic("success"); showInfo(`<div class="lifebig">🎓</div><h2>You're a Rookie!</h2><div class="muted">Bags &amp; Boards is unlocked, your cans can be better than Backyard Black now, and you've joined this month's season ladder. Nice throwing!</div>`); }, 700); }
+  else if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
   else if (S.kind === "career") setTimeout(offerWelcome, 900);
 
 }
@@ -8462,11 +8476,13 @@ for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
   if (n === "rank") { openSeason(); return; }
   if (n === "home") showHubPage("home");
   else if (n === "store") { shopMode("store"); shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); }
+  else if (n === "gear" && isBeginner()) showInfo(`<div class="lifebig">🔒</div><h2>Bags &amp; Boards</h2><div class="muted">Unlocks when you reach <b>Rookie</b>: win ${BEGINNER_WINS} matches, the last two in a row.<br><br>${beginnerHTML()}.</div>`);
   else if (n === "gear") { shopMode("gear"); shopTab = "bags"; openShopNews(); $("shop").classList.add("noback"); }
   else if (n === "settings") { openAvatars("settings"); $("avatarSheet").classList.add("noback"); }
 };
 // which bottom-bar button is lit: the page that's open, else Home
 function syncNavbar() {
+  const gear = document.querySelector('#navbar [data-nav="gear"]'); if (gear && gear.classList.contains("locked") !== isBeginner()) gear.classList.toggle("locked", isBeginner());
   const on = !$("rankSheet").hidden ? "rank" : !$("shop").hidden ? ($("shop").classList.contains("mode-store") ? "store" : "gear") : !$("avatarSheet").hidden && $("avatarSheet").classList.contains("noback") ? "settings" : "home";
   for (const b of document.querySelectorAll("#navbar button")) { const lit = b.dataset.nav === on; if (b.classList.contains("on") !== lit) b.classList.toggle("on", lit); }
   const top = $("hub").querySelector(".hubtop"), nav = $("navbar");

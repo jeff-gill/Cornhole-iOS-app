@@ -473,7 +473,8 @@ function openHub() {
   if (hubVenue >= 0 && !venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
-  if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
+  if (career.justGraduated) { career.justGraduated = false; save(); setTimeout(() => { sfx.win(); haptic("success"); showInfo(`<div class="lifebig">🎓</div><h2>You're a Rookie!</h2><div class="muted">Bags &amp; Boards is unlocked, your cans can be better than Backyard Black now, and you've joined this month's season ladder. Nice throwing!</div>`); }, 700); }
+  else if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
   else if (S.kind === "career") setTimeout(offerWelcome, 900);
 
 }
@@ -574,11 +575,13 @@ for (const b of document.querySelectorAll("#navbar button")) b.onclick = () => {
   if (n === "rank") { openSeason(); return; }
   if (n === "home") showHubPage("home");
   else if (n === "store") { shopMode("store"); shopMsg = ""; shopTab = "store"; renderShop(); $("shop").hidden = false; $("shop").classList.add("noback"); }
+  else if (n === "gear" && isBeginner()) showInfo(`<div class="lifebig">🔒</div><h2>Bags &amp; Boards</h2><div class="muted">Unlocks when you reach <b>Rookie</b>: win ${BEGINNER_WINS} matches, the last two in a row.<br><br>${beginnerHTML()}.</div>`);
   else if (n === "gear") { shopMode("gear"); shopTab = "bags"; openShopNews(); $("shop").classList.add("noback"); }
   else if (n === "settings") { openAvatars("settings"); $("avatarSheet").classList.add("noback"); }
 };
 // which bottom-bar button is lit: the page that's open, else Home
 function syncNavbar() {
+  const gear = document.querySelector('#navbar [data-nav="gear"]'); if (gear && gear.classList.contains("locked") !== isBeginner()) gear.classList.toggle("locked", isBeginner());
   const on = !$("rankSheet").hidden ? "rank" : !$("shop").hidden ? ($("shop").classList.contains("mode-store") ? "store" : "gear") : !$("avatarSheet").hidden && $("avatarSheet").classList.contains("noback") ? "settings" : "home";
   for (const b of document.querySelectorAll("#navbar button")) { const lit = b.dataset.nav === on; if (b.classList.contains("on") !== lit) b.classList.toggle("on", lit); }
   const top = $("hub").querySelector(".hubtop"), nav = $("navbar");

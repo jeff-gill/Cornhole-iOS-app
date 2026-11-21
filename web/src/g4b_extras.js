@@ -389,7 +389,12 @@ const LEGAL_URL = "https://jeff-gill.github.io/Cornhole-iOS-app/";
 function openLink(url) { if (nativeBridge && nativeBridge.open) postNative("open", url); else window.open(url, "_blank", "noopener"); }
 
 // ── Season badge and ladder
+function beginnerHTML() {
+  const w = career.wins || 0;
+  return w < BEGINNER_WINS ? `${w} of ${BEGINNER_WINS} wins to Rookie` : `Win 2 in a row for Rookie`;
+}
 function renderSeasonBadge() {
+  if (isBeginner()) { $("seasonBtn").innerHTML = `🌱 <b>Beginner</b> · ${beginnerHTML()}`; return; }
   const s = seasonState(), days = Math.max(1, Math.ceil((seasonEnds() - clockNow()) / 86400000));
   $("seasonBtn").innerHTML = `${TITLE_ICONS[s.title]} <b>${TITLES[s.title]}</b> · ${s.points} pts · ${days} day${days > 1 ? "s" : ""} left`;
 }
@@ -413,7 +418,8 @@ function openSeason(tab) {
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
   const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
-  const body = rankTab === "group" ? head + group
+  const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and join the season ladder.</div>`;
+  const body = isBeginner() && rankTab !== "gc" ? learner : rankTab === "group" ? head + group
     : rankTab === "ladder" ? `${head}<div class="muted infotext">Win: the court's win stars in points. Loss: 1 point for playing. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up and the more players move down. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
     : `<div class="muted">The worldwide Game Center leaderboards.</div>
       <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
