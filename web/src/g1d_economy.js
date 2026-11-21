@@ -22,7 +22,7 @@ const CANS = [
 ];
 // How long a can takes to open once you start it (several can unlock at once). The better the can, the longer the wait.
 const OPEN_MIN = { white: 15, black: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
-const openMs = id => OPEN_MIN[id] * 60000;
+const openMs = id => (id === "white" && isBeginner() ? 1 : OPEN_MIN[id]) * 60000; // (Beginners: a Picnic White opens in 1 minute)
 const durText = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Math.round(m / 60)}h` : `${m}m`; };
 const timeText = ms => { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}`; };
 // A can's state: "ready" to open, "ticking" while it opens, or "idle" (waiting for you to start it).
