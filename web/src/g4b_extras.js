@@ -486,7 +486,7 @@ function wheelSlices() {
 // a bag or board card from the wheel, mostly the cheaper ones
 function wheelCard() { // which card (paid when the Daily Drop can opens)
   const key = Math.random() < 0.5 ? "bag" : "board", cat = CARD_CATS.find(c => c.key === key); // (pick once, then look it up)
-  const items = cardReach(cardItems(cat)), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
+  const items = cardItems(cat), w = items.map((_, i) => Math.exp(-5 * i / Math.max(1, items.length - 1)));
   let y = Math.random() * w.reduce((t, v) => t + v, 0), it = items[0];
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) { it = items[i]; break; } }
   return { cat: cat.key, id: it.id };

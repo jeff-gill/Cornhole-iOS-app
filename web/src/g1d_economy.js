@@ -94,18 +94,11 @@ const cardKey = (cat, it) => `${cat.key}:${it.id}`;
 const catByKey = k => CARD_CATS.find(c => c.key === k);
 // A duplicate card (the item is already yours) pays a little: 0.1% of the item's price.
 const dupCoins = it => Math.max(1, Math.round(it.price * 0.001));
-// Cards only come for the part of each list that matches how far you've got: the cheapest 30% at the first court,
-// growing with every court you open, the whole list from the last one. So nobody on an early court collects toward
-// the best items. (Items stay in their list order, cheapest first, so this also keeps the costliest out of reach.)
-function cardReach(items) {
-  const k = Math.min(1, 0.3 + 0.7 * topCourt() / (VENUES.length - 1));
-  return items.slice(0, Math.max(1, Math.ceil(items.length * k)));
-}
 // Pick an item for a card stack: cheap items are common; a can's bias decides how often rare ones show up.
 function pickCardItem(bias) {
   let x = Math.random() * CARD_CATS.reduce((t, c) => t + c.weight, 0), cat = CARD_CATS[0];
   for (const c of CARD_CATS) { x -= c.weight; if (x <= 0) { cat = c; break; } }
-  const items = cardReach(cardItems(cat)), w = items.map((_, i) => Math.exp(-bias * i / Math.max(1, items.length - 1)));
+  const items = cardItems(cat), w = items.map((_, i) => Math.exp(-bias * i / Math.max(1, items.length - 1)));
   let y = Math.random() * w.reduce((t, v) => t + v, 0);
   for (let i = 0; i < items.length; i++) { y -= w[i]; if (y <= 0) return { cat, it: items[i] }; }
   return { cat, it: items[0] };

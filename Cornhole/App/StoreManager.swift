@@ -21,7 +21,6 @@ final class StoreManager {
         "com.jeffgill.cornhole.caps.450",
         "com.jeffgill.cornhole.caps.1000",
         "com.jeffgill.cornhole.caps.2200",
-        "com.jeffgill.cornhole.lives5",
         "com.jeffgill.cornhole.can.gold",
         "com.jeffgill.cornhole.can.platinum",
         "com.jeffgill.cornhole.wheel.1",
