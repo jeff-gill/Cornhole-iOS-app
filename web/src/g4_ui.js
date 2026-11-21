@@ -253,6 +253,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
+  document.body.classList.toggle("nopanel", ["flight", "inning", "over"].includes(S.phase) && S.kind !== "bullseye");
   panel.classList.toggle("slim", ["throw", "cpu", "remote", "aiming", "flight", "inning", "over"].includes(S.phase)); // (every match panel sized to what it shows) // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
@@ -305,7 +306,6 @@ function ui() {
   const fbf = $("fbFloat"), showFb = false; // (no release readout: the PERFECT / SWISH / CORNHOLE banners say enough)
   fbf.hidden = !showFb;
   if (showFb) fbf.innerHTML = `<b style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "#fff"}">${S.perfect ? "PERFECT!" : S.overdrive ? "OVERDRIVE!" : "Release"}</b>${S.feedback.filter(f => f.title !== "Overdrive").map(f => `<span>${f.title} <i class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</i></span>`).join("")}`;
-  document.body.classList.toggle("nopanel", ["flight", "inning", "over"].includes(S.phase) && S.kind !== "bullseye");
   updateHUD(); renderClock();
   renderInningSheet(); bbRenderLegend();
 }

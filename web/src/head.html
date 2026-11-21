@@ -668,6 +668,10 @@ s.was { opacity: .6; font-size: .8em; }
 #inningBody { position: relative; }
 .backbtn.overback { position: absolute; left: 10px; top: 10px; transform: none; z-index: 3; }
 body.nopanel #panel { display: none; }
+/* with no panel the court reaches the screen's rounded bottom corners: keep the score tables clear of them */
+body.nopanel .iobox { bottom: calc(10px + max(14px, env(safe-area-inset-bottom, 0px))); }
+body.nopanel .iobox.p0, body.nopanel .iobag.p0 { left: max(18px, env(safe-area-inset-left, 0px)); }
+body.nopanel .iobox.p1, body.nopanel .iobag.p1 { right: max(18px, env(safe-area-inset-right, 0px)); }
 #fbFloat { position: absolute; top: 132px; left: 50%; transform: translateX(-50%); z-index: 4; pointer-events: none; display: flex; gap: 10px; align-items: center; padding: 6px 14px; border-radius: 999px; background: rgba(10,20,38,.8); border: 2px solid rgba(255,255,255,.6); font: 900 13px/1.2 Nunito, system-ui, sans-serif; white-space: nowrap; }
 #fbFloat b { font-family: var(--font-display); font-weight: 400; font-size: 17px; }
 #fbFloat i { font-style: normal; color: var(--gold); } #fbFloat i.perfect { color: #3ee07a; }

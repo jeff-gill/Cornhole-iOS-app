@@ -676,6 +676,10 @@ s.was { opacity: .6; font-size: .8em; }
 #inningBody { position: relative; }
 .backbtn.overback { position: absolute; left: 10px; top: 10px; transform: none; z-index: 3; }
 body.nopanel #panel { display: none; }
+/* with no panel the court reaches the screen's rounded bottom corners: keep the score tables clear of them */
+body.nopanel .iobox { bottom: calc(10px + max(14px, env(safe-area-inset-bottom, 0px))); }
+body.nopanel .iobox.p0, body.nopanel .iobag.p0 { left: max(18px, env(safe-area-inset-left, 0px)); }
+body.nopanel .iobox.p1, body.nopanel .iobag.p1 { right: max(18px, env(safe-area-inset-right, 0px)); }
 #fbFloat { position: absolute; top: 132px; left: 50%; transform: translateX(-50%); z-index: 4; pointer-events: none; display: flex; gap: 10px; align-items: center; padding: 6px 14px; border-radius: 999px; background: rgba(10,20,38,.8); border: 2px solid rgba(255,255,255,.6); font: 900 13px/1.2 Nunito, system-ui, sans-serif; white-space: nowrap; }
 #fbFloat b { font-family: var(--font-display); font-weight: 400; font-size: 17px; }
 #fbFloat i { font-style: normal; color: var(--gold); } #fbFloat i.perfect { color: #3ee07a; }
@@ -3213,7 +3217,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795230639`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795230701`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4727,7 +4731,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795230639`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795230701`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4738,7 +4742,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795230639`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795230701`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8185,6 +8189,7 @@ const chip = (label, value, cls = "") => `<div class="chip ${cls}"><small>${labe
 const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ? "Your" : esc(throwerName(p)) + "'s";
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
+  document.body.classList.toggle("nopanel", ["flight", "inning", "over"].includes(S.phase) && S.kind !== "bullseye");
   panel.classList.toggle("slim", ["throw", "cpu", "remote", "aiming", "flight", "inning", "over"].includes(S.phase)); // (every match panel sized to what it shows) // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
@@ -8237,7 +8242,6 @@ function ui() {
   const fbf = $("fbFloat"), showFb = false; // (no release readout: the PERFECT / SWISH / CORNHOLE banners say enough)
   fbf.hidden = !showFb;
   if (showFb) fbf.innerHTML = `<b style="color:${S.perfect ? COL.gold : S.overdrive ? "#ff6a5a" : "#fff"}">${S.perfect ? "PERFECT!" : S.overdrive ? "OVERDRIVE!" : "Release"}</b>${S.feedback.filter(f => f.title !== "Overdrive").map(f => `<span>${f.title} <i class="${f.text === "Perfect" ? "perfect" : ""}">${f.text}</i></span>`).join("")}`;
-  document.body.classList.toggle("nopanel", ["flight", "inning", "over"].includes(S.phase) && S.kind !== "bullseye");
   updateHUD(); renderClock();
   renderInningSheet(); bbRenderLegend();
 }
