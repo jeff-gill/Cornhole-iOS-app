@@ -370,16 +370,17 @@ window.__seasonEntries = msg => {
 function settleSeason(rank, size, realRank = rank) {
   const s = seasonState(), p = s.pending; if (!p) return;
   if (!rank && BOT_FILL[p.title]) { const G = groupFor([["me", p.points, "You", 1]], "me", p.id, p.title); rank = G.rank; size = G.size; realRank = G.realRank; }
-  let move = 0;
+  let move = 0, fewGames = false;
   if (!p.played) move = p.title >= INACTIVE_FROM ? -1 : 0;                      // only the top three titles punish sitting out
   else if (rank && size) {
     if (realRank <= promoteCount(p.title, size) && p.played >= MIN_MATCHES_TO_PROMOTE) move = 1; // (computer players never take a promotion place)
+    else if (realRank <= promoteCount(p.title, size) && p.title < TITLES.length - 1) fewGames = true;
     else if (rank > size - demoteCount(p.title, size)) move = -1;
   } else move = p.points >= offlinePromoteAt(p.title) && p.played >= MIN_MATCHES_TO_PROMOTE ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
   const title = clamp(p.title + move, 0, TITLES.length - 1);
   const reward = p.played && rank && size ? seasonRewardCan(p.title, rank, size) : null;
   if (reward) stashCan({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // waits if the cooler is full
-  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, joined: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
+  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, joined: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward, fewGames } });
   save();
   if (typeof joinSeason === "function") joinSeason(); // straight into a group at your new title
   if (typeof showSeasonResult === "function") showSeasonResult();

@@ -3097,16 +3097,17 @@ window.__seasonEntries = msg => {
 function settleSeason(rank, size, realRank = rank) {
   const s = seasonState(), p = s.pending; if (!p) return;
   if (!rank && BOT_FILL[p.title]) { const G = groupFor([["me", p.points, "You", 1]], "me", p.id, p.title); rank = G.rank; size = G.size; realRank = G.realRank; }
-  let move = 0;
+  let move = 0, fewGames = false;
   if (!p.played) move = p.title >= INACTIVE_FROM ? -1 : 0;                      // only the top three titles punish sitting out
   else if (rank && size) {
     if (realRank <= promoteCount(p.title, size) && p.played >= MIN_MATCHES_TO_PROMOTE) move = 1; // (computer players never take a promotion place)
+    else if (realRank <= promoteCount(p.title, size) && p.title < TITLES.length - 1) fewGames = true;
     else if (rank > size - demoteCount(p.title, size)) move = -1;
   } else move = p.points >= offlinePromoteAt(p.title) && p.played >= MIN_MATCHES_TO_PROMOTE ? 1 : p.points < offlineDemoteBelow(p.title) ? -1 : 0;
   const title = clamp(p.title + move, 0, TITLES.length - 1);
   const reward = p.played && rank && size ? seasonRewardCan(p.title, rank, size) : null;
   if (reward) stashCan({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // waits if the cooler is full
-  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, joined: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
+  Object.assign(s, { id: seasonId(), title, points: 0, played: 0, joined: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward, fewGames } });
   save();
   if (typeof joinSeason === "function") joinSeason(); // straight into a group at your new title
   if (typeof showSeasonResult === "function") showSeasonResult();
@@ -3278,7 +3279,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795235880`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795245120`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4792,7 +4793,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795235880`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795245120`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4803,7 +4804,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795235880`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795245120`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -7119,7 +7120,7 @@ function showSeasonResult() {
   const up = L.to > L.from, down = L.to < L.from;
   showInfo(`<div class="lifebig">${TITLE_ICONS[L.to]}</div><h2>${up ? "Promoted!" : down ? "Moved down" : "Season over"}</h2>
     <div class="big">${up ? `You're now a ${TITLES[L.to]}` : down ? `You're back to ${TITLES[L.to]}` : `You stay a ${TITLES[L.to]}`}</div>
-    <div class="muted">Last season you won ${short(L.points)} coins${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}. A new season has started.</div>
+    <div class="muted">Last season you won ${short(L.points)} coins${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}.${L.fewGames ? ` That was good enough to move up, but you need to play at least ${MIN_MATCHES_TO_PROMOTE} matches in a season to be promoted.` : ""} A new season has started.</div>
     ${L.reward ? `<div class="big" style="color:${COL.gold}">🥫 Season prize: ${canById(L.reward).name} can (in your cooler)</div>` : ""}`);
   if (up) { sfx.win(); haptic("success"); }
 }

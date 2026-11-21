@@ -452,7 +452,7 @@ function showSeasonResult() {
   const up = L.to > L.from, down = L.to < L.from;
   showInfo(`<div class="lifebig">${TITLE_ICONS[L.to]}</div><h2>${up ? "Promoted!" : down ? "Moved down" : "Season over"}</h2>
     <div class="big">${up ? `You're now a ${TITLES[L.to]}` : down ? `You're back to ${TITLES[L.to]}` : `You stay a ${TITLES[L.to]}`}</div>
-    <div class="muted">Last season you won ${short(L.points)} coins${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}. A new season has started.</div>
+    <div class="muted">Last season you won ${short(L.points)} coins${L.rank ? ` and finished #${L.rank} of ${L.size} in your group` : ""}.${L.fewGames ? ` That was good enough to move up, but you need to play at least ${MIN_MATCHES_TO_PROMOTE} matches in a season to be promoted.` : ""} A new season has started.</div>
     ${L.reward ? `<div class="big" style="color:${COL.gold}">🥫 Season prize: ${canById(L.reward).name} can (in your cooler)</div>` : ""}`);
   if (up) { sfx.win(); haptic("success"); }
 }
