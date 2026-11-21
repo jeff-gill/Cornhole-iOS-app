@@ -217,7 +217,7 @@ body.inhub .score, body.inhub #panel { display: none; }
 #washFx i { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,.85); background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(180,230,255,.25) 40%, rgba(120,200,255,.1) 70%);
   animation: bubble 2.4s ease-out forwards; opacity: 0; }
 @keyframes washin { from { transform: scale(.3) rotate(-6deg); opacity: 0; } }
-@keyframes washout { to { transform: scale(.85); opacity: 0; } }
+@keyframes washout { to { transform: scale(.6); opacity: 0; } }
 @keyframes bubble { 0% { opacity: 0; transform: translate(0, 20px) scale(.4); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), -150px) scale(1); } }
 .searchsheet { display: grid; gap: 12px; justify-items: center; padding: 26px 20px; }
 .oppspin { width: 100%; justify-self: stretch; height: 76px; box-sizing: border-box; overflow: hidden; border-radius: 18px; border: 4px solid #fff; background: linear-gradient(#12203a, #1b2f52); box-shadow: 0 6px 0 rgba(0,0,0,.35), inset 0 10px 14px rgba(0,0,0,.4), inset 0 -10px 14px rgba(0,0,0,.4); }
@@ -771,7 +771,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .hero .vs.right { right: -14px; left: auto; bottom: -12px; animation: dropR .55s .35s cubic-bezier(.55,0,.9,.6) backwards, thudsq .3s .9s ease-out; }
 .hero .vs.wash { left: 50%; bottom: 2px; width: auto; height: 42px; padding: 0 20px; border-radius: 12px; transform: translateX(-50%); font-size: 20px; color: #fff;
   background: linear-gradient(#4fc3f7, #1e7fd0); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); opacity: 0; transition: opacity .15s; }
-.hero .vs.wash.shown { opacity: 1; } /* appears as the big WASH card shrinks down onto it */
+.hero .vs.wash.shown { opacity: 1; transition: opacity .4s; } /* appears as the big WASH card shrinks down onto it */
 @keyframes dropL { from { transform: translate(40px, -220px) rotate(-200deg) scale(.7); opacity: 0; } 20% { opacity: 1; } to { transform: none; } }
 @keyframes dropR { from { transform: translate(-40px, -220px) rotate(200deg) scale(.7); opacity: 0; } 20% { opacity: 1; } to { transform: none; } }
 @keyframes thudsq { 0% { transform: scale(1.25, .7); } 45% { transform: scale(.9, 1.12); } 100% { transform: none; } }
@@ -2215,17 +2215,14 @@ function showWash() {
   card.classList.remove("shrink"); card.style.transform = ""; card.style.opacity = "";
   fx.hidden = false; card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
   sfx.whoosh(); haptic("light");
-  // after a moment it shrinks down onto the small WASH pill between the two tiles on the inning card
+  // after a moment it shrinks away where it is while the small WASH badge on the inning card fades in (one smooth step,
+  // no flying across the screen)
   clearTimeout(showWash.t); clearTimeout(showWash.t2);
   showWash.t = setTimeout(() => {
     const pill = document.querySelector("#inningSheet:not([hidden]) .hero .vs.wash");
-    card.classList.add("shrink");
-    if (pill) {
-      const a = card.getBoundingClientRect(), b = pill.getBoundingClientRect();
-      const k = b.height / a.height;
-      card.style.transform = `translate(${b.left + b.width / 2 - (a.left + a.width / 2)}px, ${b.top + b.height / 2 - (a.top + a.height / 2)}px) scale(${k})`;
-    } else card.style.opacity = "0";
-    showWash.t2 = setTimeout(() => { fx.hidden = true; if (pill) pill.classList.add("shown"); }, 520);
+    card.style.animation = "washout .4s ease-in forwards";
+    if (pill) pill.classList.add("shown");
+    showWash.t2 = setTimeout(() => { fx.hidden = true; card.style.animation = ""; }, 420);
   }, 1700);
 }
 function finishMatch() {
@@ -2295,6 +2292,8 @@ function cpuTurn() {
   S.cpuPlan = cpuPlan(S.player, S.world.bags, S.opponent && S.opponent.style);
   const sk = S.opponent ? S.opponent.skill : 0.25;
   S.cpuErr = { dir: gauss(sk), pow: gauss(sk) }; // decided now, so its power ring and arrow (shown as it winds up) end on them
+  // no computer 4-baggers at the Backyard or against a Beginner: with 3 already in, it rushes the last one
+  if ((S.venue === 0 || isBeginner()) && S.world.bags.filter(b => b.owner === S.player && b.state === "inHole").length >= 3) S.cpuErr.dir = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.4);
   S.end = { ...S.cpuPlan.end };
   S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0;
   refreshPlan();
@@ -3214,7 +3213,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795230184`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795230344`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4728,7 +4727,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795230184`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795230344`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4739,7 +4738,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795230184`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795230344`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);

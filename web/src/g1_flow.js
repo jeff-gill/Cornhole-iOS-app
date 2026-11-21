@@ -678,17 +678,14 @@ function showWash() {
   card.classList.remove("shrink"); card.style.transform = ""; card.style.opacity = "";
   fx.hidden = false; card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
   sfx.whoosh(); haptic("light");
-  // after a moment it shrinks down onto the small WASH pill between the two tiles on the inning card
+  // after a moment it shrinks away where it is while the small WASH badge on the inning card fades in (one smooth step,
+  // no flying across the screen)
   clearTimeout(showWash.t); clearTimeout(showWash.t2);
   showWash.t = setTimeout(() => {
     const pill = document.querySelector("#inningSheet:not([hidden]) .hero .vs.wash");
-    card.classList.add("shrink");
-    if (pill) {
-      const a = card.getBoundingClientRect(), b = pill.getBoundingClientRect();
-      const k = b.height / a.height;
-      card.style.transform = `translate(${b.left + b.width / 2 - (a.left + a.width / 2)}px, ${b.top + b.height / 2 - (a.top + a.height / 2)}px) scale(${k})`;
-    } else card.style.opacity = "0";
-    showWash.t2 = setTimeout(() => { fx.hidden = true; if (pill) pill.classList.add("shown"); }, 520);
+    card.style.animation = "washout .4s ease-in forwards";
+    if (pill) pill.classList.add("shown");
+    showWash.t2 = setTimeout(() => { fx.hidden = true; card.style.animation = ""; }, 420);
   }, 1700);
 }
 function finishMatch() {
@@ -758,6 +755,8 @@ function cpuTurn() {
   S.cpuPlan = cpuPlan(S.player, S.world.bags, S.opponent && S.opponent.style);
   const sk = S.opponent ? S.opponent.skill : 0.25;
   S.cpuErr = { dir: gauss(sk), pow: gauss(sk) }; // decided now, so its power ring and arrow (shown as it winds up) end on them
+  // no computer 4-baggers at the Backyard or against a Beginner: with 3 already in, it rushes the last one
+  if ((S.venue === 0 || isBeginner()) && S.world.bags.filter(b => b.owner === S.player && b.state === "inHole").length >= 3) S.cpuErr.dir = (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.4);
   S.end = { ...S.cpuPlan.end };
   S.landD = dist(S.cpuPlan.landing, S.cpuPlan.end); S.landPhi = 0;
   refreshPlan();
