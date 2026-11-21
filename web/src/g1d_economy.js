@@ -285,9 +285,18 @@ function seasonState() {
   career.season ||= { id: seasonId(), title: 0, points: 0, played: 0, last: null };
   return career.season;
 }
+const secondsIntoSeason = () => Math.max(1, Math.floor((clockNow() - Date.UTC(new Date(clockNow()).getUTCFullYear(), new Date(clockNow()).getUTCMonth(), 1)) / 1000));
+// Every player at a title is in a group: you join this month's league as soon as you open the game (or become a
+// Rookie), with 0 coins until you win, by posting your score (0 is fine) with your join time to Game Center.
+function joinSeason() {
+  if (isBeginner()) return;
+  const s = seasonState(); rollSeason();
+  if (!s.joined) { s.joined = secondsIntoSeason(); save(); }
+  postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined }));
+}
 function addSeasonPoints(n) {
   const s = seasonState(); rollSeason();
-  if (!s.joined) s.joined = Math.max(1, Math.floor((clockNow() - Date.UTC(new Date(clockNow()).getUTCFullYear(), new Date(clockNow()).getUTCMonth(), 1)) / 1000)); // seconds into the season
+  if (!s.joined) s.joined = secondsIntoSeason();
   s.points += n; s.played++; save();
   postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined }));
 }
@@ -369,5 +378,6 @@ function settleSeason(rank, size, realRank = rank) {
   if (reward) stashCan({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // waits if the cooler is full
   Object.assign(s, { id: seasonId(), title, points: 0, played: 0, joined: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
   save();
+  if (typeof joinSeason === "function") joinSeason(); // straight into a group at your new title
   if (typeof showSeasonResult === "function") showSeasonResult();
 }

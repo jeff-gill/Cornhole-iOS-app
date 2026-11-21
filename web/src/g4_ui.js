@@ -548,7 +548,7 @@ window.__gcPlayer = p => {
   gcSignedIn = p ? String(p.name || "Signed in") : "";
   if (!$("avatarSheet").hidden && ptab === "settings") renderProfile();
   if (p && p.name && !career.handleSet) { career.handle = String(p.name).slice(0, 24); save(); }
-  if (p) postScores();
+  if (p) { postScores(); joinSeason(); }
 };
 window.__gcPhoto = url => {
   if (typeof url !== "string" || !url.startsWith("data:image/png;base64,")) return;

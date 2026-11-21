@@ -2247,7 +2247,7 @@ function finishMatch() {
   if (!won && clockNow() - (career.roughAt || 0) >= 7 * 86400000 && (career.roughLosses >= 10 || career.recent.length >= 10 && career.recent.filter(x => !x).length >= 8)) career.roughOffer = S.venue;
   const newly = updateUnlocks();
   save();
-  if (isBeginner() && won && career.wins >= BEGINNER_WINS && career.winStreak >= 2) { career.graduated = true; career.justGraduated = true; save(); }
+  if (isBeginner() && won && career.wins >= BEGINNER_WINS && career.winStreak >= 2) { career.graduated = true; career.justGraduated = true; save(); joinSeason(); }
   if (!isBeginner()) addSeasonPoints(won ? coins : 0); // the season score: coins won from matches this month
   S.result = { won, starDelta: courtStars(S.venue) - before, coins, newly: newly.map(x => x.name), can, coolerFull, holes, lifeLost: !won, season: won ? coins : 0 };
   postScores();
@@ -2945,9 +2945,18 @@ function seasonState() {
   career.season ||= { id: seasonId(), title: 0, points: 0, played: 0, last: null };
   return career.season;
 }
+const secondsIntoSeason = () => Math.max(1, Math.floor((clockNow() - Date.UTC(new Date(clockNow()).getUTCFullYear(), new Date(clockNow()).getUTCMonth(), 1)) / 1000));
+// Every player at a title is in a group: you join this month's league as soon as you open the game (or become a
+// Rookie), with 0 coins until you win, by posting your score (0 is fine) with your join time to Game Center.
+function joinSeason() {
+  if (isBeginner()) return;
+  const s = seasonState(); rollSeason();
+  if (!s.joined) { s.joined = secondsIntoSeason(); save(); }
+  postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined }));
+}
 function addSeasonPoints(n) {
   const s = seasonState(); rollSeason();
-  if (!s.joined) s.joined = Math.max(1, Math.floor((clockNow() - Date.UTC(new Date(clockNow()).getUTCFullYear(), new Date(clockNow()).getUTCMonth(), 1)) / 1000)); // seconds into the season
+  if (!s.joined) s.joined = secondsIntoSeason();
   s.points += n; s.played++; save();
   postNative("season", JSON.stringify({ op: "submit", title: s.title, points: s.points, joined: s.joined }));
 }
@@ -3029,6 +3038,7 @@ function settleSeason(rank, size, realRank = rank) {
   if (reward) stashCan({ id: reward, court: VENUES.reduce((m, v, i) => (venueUnlocked(i) ? i : m), 0) }); // waits if the cooler is full
   Object.assign(s, { id: seasonId(), title, points: 0, played: 0, joined: 0, pending: null, last: { id: p.id, from: p.title, to: title, points: p.points, rank, size, reward } });
   save();
+  if (typeof joinSeason === "function") joinSeason(); // straight into a group at your new title
   if (typeof showSeasonResult === "function") showSeasonResult();
 }
 
@@ -3198,7 +3208,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795229139`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795229194`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4712,7 +4722,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795229139`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795229194`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4723,7 +4733,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795229139`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795229194`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8459,7 +8469,7 @@ window.__gcPlayer = p => {
   gcSignedIn = p ? String(p.name || "Signed in") : "";
   if (!$("avatarSheet").hidden && ptab === "settings") renderProfile();
   if (p && p.name && !career.handleSet) { career.handle = String(p.name).slice(0, 24); save(); }
-  if (p) postScores();
+  if (p) { postScores(); joinSeason(); }
 };
 window.__gcPhoto = url => {
   if (typeof url !== "string" || !url.startsWith("data:image/png;base64,")) return;
