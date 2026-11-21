@@ -491,6 +491,7 @@ function dismissScorecard(dx, dy) {
 let hubVenue = venueUnlocked(career.venue || 0) ? (career.venue || 0) : 0; // the court you played last
 let sceneVenue = hubVenue; // the court shown behind the clubhouse (the practice card keeps it)
 function openHub() {
+  musicScene("hub");
   $("timeupMsg").hidden = true;
   $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true;
   showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue

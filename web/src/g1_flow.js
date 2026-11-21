@@ -436,6 +436,7 @@ function throwerName(p) {
 }
 function startMatch(kind, vi, online = null, pick = null) {
   bbExit(); // (back to the regular court if Bullseye Bags was last)
+  musicScene(null);
   const v = VENUES[vi];
   S.online = null;
   if (kind === "career") S.practice = null;

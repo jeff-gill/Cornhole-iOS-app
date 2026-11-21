@@ -16,6 +16,7 @@ function setVolume(kind, v) {
 function initAudio() {
   try {
     if (!audio) {
+      try { if (navigator.audioSession) navigator.audioSession.type = "ambient"; } catch (e) { /* ignore */ } // muted by the silent switch (or Silent Mode on the Action button), mixes with the player's own music
       audio = new (window.AudioContext || window.webkitAudioContext)();
       master = audio.createGain(); master.gain.value = sfxOn ? 0.9 * sfxVol : 0; master.connect(audio.destination);
       musicBus = audio.createGain(); musicBus.gain.value = musicOn ? 0.55 * musicVol : 0; musicBus.connect(audio.destination);
@@ -37,43 +38,41 @@ function setMusic(on) {
   musicBus.gain.setTargetAtTime(on ? 0.55 * musicVol : 0, audio.currentTime, 0.1);
   if (on) startMusic(); else setTimeout(() => { if (!musicOn) stopMusic(); }, 400);
 }
-// ── Music: a light, sunny backyard loop (C, G, Am, F) scheduled a little ahead of time.
-let musicTimer = null, musicStep = 0, musicNext = 0;
-const BPM = 100, EIGHTH = 60 / BPM / 2;
-const PROG = [[60, 64, 67], [55, 59, 62], [57, 60, 64], [53, 57, 60]];
-const hz = n => 440 * Math.pow(2, (n - 69) / 12);
-function mnote(freq, dur, type, vol, t, attack = 0.01) {
-  const o = audio.createOscillator(), g = audio.createGain();
-  o.type = type; o.frequency.setValueAtTime(freq, t);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(musicBus); o.start(t); o.stop(t + dur + 0.05);
-}
-function mhat(t, vol) {
-  const src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
-  src.buffer = noise(); f.type = "highpass"; f.frequency.value = 7000;
-  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-  src.connect(f).connect(g).connect(musicBus); src.start(t, Math.random()); src.stop(t + 0.07);
-}
-const MELODY = [0, null, 2, 1, null, 2, 0, null]; // chord-tone pattern for the plucky lead
-function musicStepAt(i, t) {
-  const bar = Math.floor(i / 8) % 4, beat = i % 8, ch = PROG[bar];
-  if (beat === 0) ch.forEach(n => mnote(hz(n), EIGHTH * 7.6, "triangle", 0.035, t, 0.08));          // soft pad
-  if (beat % 2 === 0) mnote(hz(ch[0] - 12 + (beat === 4 ? 7 : 0)), EIGHTH * 1.7, "sine", 0.16, t);  // bouncy bass
-  const m = MELODY[beat];
-  if (m !== null && Math.floor(i / 32) % 2 === 1) mnote(hz(ch[m] + 12), EIGHTH * 0.9, "square", 0.018, t); // lead on alternate passes
-  mhat(t, beat % 2 ? 0.025 : 0.012);
-  if (beat === 4) { const s2 = audio.createBufferSource(), f2 = audio.createBiquadFilter(), g2 = audio.createGain(); // clap
-    s2.buffer = noise(); f2.type = "bandpass"; f2.frequency.value = 1600; g2.gain.setValueAtTime(0.06, t); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
-    s2.connect(f2).connect(g2).connect(musicBus); s2.start(t, Math.random()); s2.stop(t + 0.15); }
+// ── Music: real recorded tracks (web/assets/music, from Pixabay), looped. The menus play the clubhouse song; it fades
+// out when a match starts and back in on the clubhouse.
+const MUSIC_FILES = { hub: "assets/music/hub-country.mp3" };
+const MUSIC_LEVEL = 0.75;
+let musicWant = "hub", musicPlaying = null;
+const musicBufs = {}, musicLoading = {};
+function loadMusic(k) {
+  if (!audio || musicBufs[k] || musicLoading[k] || !MUSIC_FILES[k]) return;
+  musicLoading[k] = true;
+  fetch(MUSIC_FILES[k]).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+    .then(b => new Promise((res, rej) => audio.decodeAudioData(b, res, rej)))
+    .then(buf => { musicBufs[k] = buf; if (musicWant === k) startMusic(); })
+    .catch(() => { musicLoading[k] = false; });
 }
 function startMusic() {
-  if (!audio || musicTimer) return;
-  musicNext = audio.currentTime + 0.12;
-  musicTimer = setInterval(() => {
-    while (musicNext < audio.currentTime + 0.3) { musicStepAt(musicStep, musicNext); musicNext += EIGHTH; musicStep = (musicStep + 1) % 64; }
-  }, 60);
+  if (!audio || !musicOn || musicPlaying || !musicWant) return;
+  const buf = musicBufs[musicWant];
+  if (!buf) { loadMusic(musicWant); return; }
+  const src = audio.createBufferSource(), g = audio.createGain(), t = audio.currentTime;
+  src.buffer = buf; src.loop = true;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(MUSIC_LEVEL, t + 1.2);
+  src.connect(g).connect(musicBus); src.start();
+  musicPlaying = { src, g };
 }
-function stopMusic() { clearInterval(musicTimer); musicTimer = null; }
+function stopMusic(fade = 0.4) {
+  if (!musicPlaying) return;
+  const { src, g } = musicPlaying, t = audio.currentTime; musicPlaying = null;
+  try { g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(Math.max(0.0001, g.gain.value), t); g.gain.exponentialRampToValueAtTime(0.0001, t + fade); src.stop(t + fade + 0.05); } catch (e) { /* ignore */ }
+}
+// Which song should be playing now: "hub" in the menus, null (fade out) once a match starts.
+function musicScene(k) {
+  if (musicWant === k) return;
+  musicWant = k; stopMusic(k ? 0.5 : 2.5);
+  if (k) startMusic();
+}
 function noise() {
   if (!noiseBuf) {
     const n = audio.sampleRate * 2; noiseBuf = audio.createBuffer(1, n, audio.sampleRate);

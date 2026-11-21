@@ -155,7 +155,7 @@ function bbStart(mode, preview = false) {
   if (bbCleared(mode) || (!preview && !bbCanPlay())) return;
   const day = bbToday(), M = day.modes[mode], sc = day.scene, L = BB_BOARD.L;
   if (!preview && !bbUseThrow()) return;
-  initAudio();
+  initAudio(); musicScene(preview ? "hub" : null);
   $("bbSheet").hidden = true; $("hub").hidden = true; document.body.classList.remove("inhub", "looking");
   BB.active = { mode, day, M, done: false, preview };
   setCourt({ FY: M.dist, BY: M.dist + L, HW: BB_BOARD.W / 2, FH: BB_BOARD.FH, BH: BB_BOARD.BH, HR: BB_BOARD.HR, hole: { x: 0, y: M.dist + BB_BOARD.HOLE_Y }, rel: { h: 3, y: 0.5, x: 1.8 } }); // a standard court: level ground, regulation distance
@@ -203,7 +203,7 @@ function bbEndIntro() {
 function bbPreviewPlay() {
   const A = BB.active; if (!A || !A.preview) return;
   if (!bbUseThrow()) { bbPreviewBack(); return; }
-  A.preview = false; bbShowRingLabels(true); S.phase = "bbintro"; bbEndIntro(); // already seen the prizes: straight to aiming
+  A.preview = false; musicScene(null); bbShowRingLabels(true); S.phase = "bbintro"; bbEndIntro(); // already seen the prizes: straight to aiming
 }
 function bbPreviewBack() { openHub(); renderBBSheet(); }
 function bbPreviewPanel() {
