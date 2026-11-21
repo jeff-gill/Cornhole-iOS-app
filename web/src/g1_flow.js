@@ -201,6 +201,28 @@ function careerFrom(raw) {
   }
   c.courtStars = { ...c.courtStars };
   if (old.graduated === undefined) c.graduated = (old.wins || 0) >= 5; // saves from before the Beginner stage
+  return tidyCareer(c);
+}
+// A save from an old version (or a damaged one) can't break the game: every field is put back to the right type, counts
+// are whole numbers from 0 up, and gear you're using has to be gear you own.
+function tidyCareer(c) {
+  const base = fresh(), num = v => { v = Math.floor(+v); return Number.isFinite(v) ? clamp(v, 0, 1e15) : 0; }; // (some are times, in ms)
+  const strs = a => Array.isArray(a) ? a.filter(x => typeof x === "string") : [];
+  for (const [k, d] of Object.entries(base)) {
+    if (typeof d === "number") c[k] = num(c[k]);
+    else if (typeof d === "boolean") c[k] = !!c[k];
+    else if (typeof d === "string") c[k] = typeof c[k] === "string" ? c[k] : d;
+    else if (Array.isArray(d) && k !== "cans") c[k] = strs(c[k]).length ? strs(c[k]) : d.slice();
+    else if (d && typeof d === "object") c[k] = c[k] && typeof c[k] === "object" && !Array.isArray(c[k]) ? { ...c[k] } : {};
+  }
+  c.cans = (Array.isArray(c.cans) ? c.cans : []).filter(x => x && typeof x === "object" && typeof x.id === "string").slice(0, 4);
+  if (c.canBacklog !== undefined) c.canBacklog = (Array.isArray(c.canBacklog) ? c.canBacklog : []).filter(x => x && typeof x === "object" && typeof x.id === "string");
+  for (const k in c.courtStars) { if (!VENUES.some(v => v.id === k)) delete c.courtStars[k]; else c.courtStars[k] = num(c.courtStars[k]); }
+  c.unlocked = c.unlocked.filter(id => VENUES.some(v => v.id === id)); if (!c.unlocked.includes("backyard")) c.unlocked.unshift("backyard");
+  c.venue = c.venue < VENUES.length ? c.venue : 0;
+  const own = (list, all, key, dflt) => { c[list] = c[list].filter(id => all.some(x => x.id === id)); if (!c[list].includes(dflt)) c[list].unshift(dflt); if (!c[list].includes(c[key])) c[key] = dflt; };
+  own("bags", BAGS, "bag", "starter"); own("boards", BOARDS, "board", "classic"); own("trails", TRAILS, "trail", "none");
+  c.coins = Math.min(c.coins, 999999999); c.caps = Math.min(c.caps, 999999999);
   return c;
 }
 try {
