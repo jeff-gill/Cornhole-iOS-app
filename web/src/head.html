@@ -131,14 +131,30 @@ body.inhub .score, body.inhub #panel { display: none; }
 /* In / On for each player this inning, in the bottom corners of the court view */
 .iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
-#potBox { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 3; pointer-events: none; width: 92px; text-align: center; }
-body.nopanel #potBox { bottom: calc(8px + max(14px, env(safe-area-inset-bottom, 0px))); }
-.potsvg { width: 92px; height: auto; display: block; overflow: visible; filter: drop-shadow(0 3px 0 rgba(0,0,0,.3)); }
-.potlid { transform-origin: 112px 28px; transform: translate(-6px, -16px) rotate(18deg); transition: transform .35s cubic-bezier(.5,1.6,.6,1); }
-#potBox.shut .potlid { transform: none; }
-.potamt { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 3px; background: rgba(10,20,38,.82); border: 2px solid #fff; border-radius: 999px; padding: 1px 8px 1px 2px; }
-.potamt .coin { width: 18px; height: 18px; } .potamt .coin::after { font-size: 11px; }
-.potamt b { font-family: var(--font-display); font-weight: 400; font-size: 16px; color: #fff; font-variant-numeric: tabular-nums; }
+/* the pot: both buy-ins fly out of the player tiles into this bubble while you pick your bag */
+#potBubble { position: fixed; left: 50%; top: 200px; transform: translateX(-50%); z-index: 25; display: flex; align-items: center; gap: 6px; padding: 4px 14px 4px 10px; border-radius: 999px; background: linear-gradient(#2b4a80, #12203a); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); pointer-events: none; }
+#potBubble span { font: 900 12px/1 Nunito, system-ui, sans-serif; letter-spacing: .08em; color: var(--ink-dim); }
+#potBubble .coin { width: 26px; height: 26px; } #potBubble .coin::after { font-size: 15px; }
+#potBubble b { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: #fff; font-variant-numeric: tabular-nums; min-width: 1.6em; }
+#potBubble.pop { animation: potpop .35s cubic-bezier(.3,1.6,.5,1); }
+@keyframes potpop { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.18); } 100% { transform: translateX(-50%) scale(1); } }
+/* the board check sits below the player tiles and the pot, so both stay in view: a tighter layout */
+#bagPick { align-items: flex-start; padding-top: var(--bptop, 240px); background: rgba(6,12,24,.3); }
+#bagPick > .sheet { padding: 12px 14px 14px; max-height: calc(100dvh - var(--bptop, 240px) - max(12px, env(safe-area-inset-bottom, 0px))); overflow-y: auto; }
+#bagPick h2 { font-size: 22px; margin: 0 0 6px; }
+#bagPick .bpboard { padding: 6px 8px; gap: 10px; } #bagPick .bpboard img { width: 30px; height: 60px; }
+#bagPick .bpboard b { font-size: 17px; } #bagPick .bpboard small { margin-bottom: 0; } #bagPick .bpboard div { font-size: 13px; }
+#bagPick .bpsuggest { font-size: 13px; padding: 6px 8px; margin-top: 8px; }
+#bagPick .label { margin: 8px 0 2px; }
+#bagPick .bplist { gap: 8px; max-height: none; overflow: visible; }
+#bagPick .bpbag { padding: 10px 6px 8px; gap: 2px; font-size: 14px; border-radius: 14px; }
+#bagPick .bpbag canvas { width: 46px; height: 46px; }
+#bagPick .bpbag small { font-size: 12px; }
+#bagPick .bpstats { grid-template-columns: auto repeat(5, 8px); gap: 3px 2px; margin-top: 2px; }
+#bagPick .bpstats em { font-size: 11px; padding-right: 4px; } #bagPick .bpstats i { width: 8px; height: 8px; border-radius: 2px; }
+#bagPick .bpres { font-size: 12px; } #bagPick .bpfit { font-size: 12px; margin: 6px 0; }
+#bagPick .btn { padding-top: 10px; padding-bottom: 10px; }
+#searchCancel { width: 100%; padding: 12px 16px; font-size: 22px; line-height: 1; color: #fff; background: linear-gradient(#ff7a6a, #e8362c 55%, #b5241b); border: 3px solid #fff; border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.3); text-shadow: 0 2px 0 rgba(0,0,0,.25); }
 .coin.flycoin { position: fixed; z-index: 60; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none; transition: transform .7s cubic-bezier(.45,0,.4,1), opacity .2s .62s; }
 .coin.flycoin::after { font-size: 15px; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
@@ -178,14 +194,6 @@ body.nopanel #potBox { bottom: calc(8px + max(14px, env(safe-area-inset-bottom, 
 .bpsuggest { background: rgba(62,224,122,.14); border: 2px solid #2fbf71; border-radius: 12px; padding: 8px 10px; font-size: 14px; font-weight: 900; } .bpsuggest b { color: #3ee07a; }
 .bplist { padding-top: 8px; }
 /* the two suggested bags, side by side across the sheet */
-#bagPick .bplist { gap: 12px; max-height: none; overflow: visible; }
-#bagPick .bpbag { padding: 14px 8px 12px; gap: 4px; font-size: 16px; border-radius: 18px; }
-#bagPick .bpbag canvas { width: 72px; height: 72px; }
-#bagPick .bpbag small { font-size: 13px; }
-#bagPick .bpstats { grid-template-columns: auto repeat(5, 11px); gap: 5px 3px; margin-top: 4px; }
-#bagPick .bpstats em { font-size: 12px; padding-right: 6px; }
-#bagPick .bpstats i { width: 11px; height: 11px; border-radius: 3px; }
-#bagPick .bpres { font-size: 14px; }
 #bagPick .bpbest { font-size: 12px; top: -10px; }
 .bpfit { min-height: 18px; font-weight: 900; font-size: 13px; }
 .bptimer { height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; } .bptimer i { display: block; height: 100%; background: var(--gold); transition: width .2s linear; }
@@ -910,10 +918,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
-    <div id="fbFloat" hidden></div><div id="potBox" hidden><svg class="potsvg" viewBox="0 0 120 92" aria-hidden="true">
-      <g class="potlid"><rect x="6" y="14" width="108" height="16" rx="6" fill="#f4f6fa" stroke="#c9d0dc" stroke-width="2"/><rect x="44" y="6" width="32" height="10" rx="4" fill="none" stroke="#c9d0dc" stroke-width="4"/></g>
-      <rect x="10" y="30" width="100" height="56" rx="8" fill="#e8362c"/><rect x="10" y="30" width="100" height="10" fill="#c22a20"/><rect x="10" y="74" width="100" height="12" rx="6" fill="#b5241b"/>
-      <rect x="18" y="46" width="12" height="20" rx="4" fill="#fff" opacity=".35"/></svg><div class="potamt"><i class="coin"></i><b id="potAmt">0</b></div></div><div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
+    <div id="fbFloat" hidden></div><div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
@@ -1097,6 +1102,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
   </div>
 </div>
 
+<div id="potBubble" hidden><span>POT</span><i class="coin"></i><b id="potAmt">0</b></div>
 <div class="overlay" id="bagPick" hidden><div class="sheet" id="bagPickBody"></div></div>
 <div class="overlay" id="inningSheet" hidden>
   <div class="sheet" id="inningBody"></div>

@@ -393,6 +393,7 @@ function rankBagsFor(board) {
 const bestBagFor = board => rankBagsFor(board)[0];
 function openBagPick() {
   S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
+  if (typeof potIntro === "function") potIntro();
   const best = bestBagFor(boardById(S.board)); S.bestBag = best.id; // picked for you; tap another to change it
   if (best.id !== (S.gear[0].baseId || S.gear[0].id)) { S.gear[0] = best; career.bag = best.id; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: best.id }); }
   renderBagPick(); $("bagPick").hidden = false;
@@ -428,8 +429,8 @@ function tickBagPick(dt) {
 function closeBagPick() {
   if (S.phase !== "bagpick") return;
   $("bagPick").hidden = true; S.pickReady = false; beginTurn();
-  if (S.kind !== "bullseye" && S.inning <= 1 && typeof potIntro === "function") potIntro();
-  if (S.kind !== "bullseye" && S.inning <= 1 && typeof screenMsg === "function") setTimeout(() => screenMsg(`First to <b>${winScore()}</b> · win by 2<br><small>${MAX_INNINGS} innings max</small>`, 3000), 1700);
+  $("potBubble").hidden = true;
+  if (S.kind !== "bullseye" && S.inning <= 1 && typeof screenMsg === "function") setTimeout(() => screenMsg(`First to <b>${winScore()}</b> · win by 2<br><small>${MAX_INNINGS} innings max</small>`, 3000), 300);
 }
 
 // ───────────────────────── Match flow

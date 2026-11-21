@@ -198,7 +198,7 @@ function updateHUD() {
 // ───────────────────────── Panel and scoreboard
 const panel = $("panel");
 function renderScore() {
-  if (S.kind === "bullseye") { $("boardInfo").hidden = true; $("potBox").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = $("iobag" + p).hidden = true; return; } // no scoreboard: one throw
+  if (S.kind === "bullseye") { $("boardInfo").hidden = true; $("potBubble").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = $("iobag" + p).hidden = true; return; } // no scoreboard: one throw
   const ir = inningResult();
   for (const p of [0, 1]) {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
@@ -500,7 +500,7 @@ let sceneVenue = hubVenue; // the court shown behind the clubhouse (the practice
 function openHub() {
   musicScene("hub");
   $("timeupMsg").hidden = true;
-  $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true; $("potBox").hidden = true;
+  $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true; $("potBubble").hidden = true;
   showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
@@ -1069,23 +1069,25 @@ setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash"
 
 requestAnimationFrame(frame);
 
-// The pot: once the opponent is set, both players' buy-ins fly into a cooler at the bottom of the screen (between the
-// score tables), the total counts up, and the lid snaps shut. It sits there for the rest of the match.
+// The pot: while you pick your bag, each player's buy-in flies out of their tile into the POT bubble under the tiles
+// (the total counts up, then the bubble pops).
 function potIntro() {
-  const box = $("potBox"), v = venue(), amt = S.kind === "career" ? pot(v) : 0;
-  if (!amt) { box.hidden = true; return; }
-  box.hidden = false; box.classList.remove("shut"); $("potAmt").textContent = "0";
-  const mouth = box.querySelector(".potsvg").getBoundingClientRect(), tx = mouth.left + mouth.width / 2, ty = mouth.top + mouth.height * 0.35;
-  const N = 6; let landed = 0;
+  const bub = $("potBubble"), amt = S.kind === "career" ? pot(venue()) : 0;
+  if (!amt) { bub.hidden = true; return; }
+  const tiles = $("card0").getBoundingClientRect();
+  bub.style.top = (tiles.bottom + 10) + "px"; $("bagPick").style.setProperty("--bptop", (tiles.bottom + 64) + "px");
+  bub.hidden = false; $("potAmt").textContent = "0";
+  const end = bub.getBoundingClientRect(), tx = end.left + end.width / 2, ty = end.top + end.height / 2, N = 6; let landed = 0;
   for (const p of [0, 1]) {
     const src = $("card" + p).getBoundingClientRect();
     for (let i = 0; i < N; i++) {
       const c = document.createElement("i"); c.className = "coin flycoin";
-      const x0 = src.left + src.width / 2 + (Math.random() - 0.5) * 40, y0 = src.top + src.height * 0.6;
+      const x0 = src.left + src.width / 2 + (Math.random() - 0.5) * 50, y0 = src.top + src.height * 0.55;
       c.style.left = x0 + "px"; c.style.top = y0 + "px"; document.body.appendChild(c);
-      setTimeout(() => { c.style.transform = `translate(${tx - x0}px, ${ty - y0}px) scale(.7)`; c.style.opacity = "0"; }, 60 + i * 110 + p * 55);
-      setTimeout(() => { c.remove(); landed++; $("potAmt").textContent = short(Math.round(amt * landed / (2 * N))); if (landed % 3 === 0) sfx.tick(); }, 60 + i * 110 + p * 55 + 700);
+      const at = 250 + i * 110 + p * 55;
+      setTimeout(() => { c.style.transform = `translate(${tx - x0}px, ${ty - y0}px) scale(.8)`; c.style.opacity = "0"; }, at);
+      setTimeout(() => { c.remove(); landed++; $("potAmt").textContent = short(Math.round(amt * landed / (2 * N))); if (landed % 3 === 0) sfx.tick(); }, at + 700);
     }
   }
-  setTimeout(() => { box.classList.add("shut"); $("potAmt").textContent = short(amt); sfx.thud(); haptic("thud"); }, 60 + N * 110 + 55 + 760);
+  setTimeout(() => { $("potAmt").textContent = short(amt); bub.classList.remove("pop"); void bub.offsetWidth; bub.classList.add("pop"); sfx.thud(); haptic("light"); }, 250 + N * 110 + 55 + 760);
 }

@@ -143,14 +143,30 @@ body.inhub .score, body.inhub #panel { display: none; }
 /* In / On for each player this inning, in the bottom corners of the court view */
 .iobox { position: absolute; bottom: 10px; z-index: 3; pointer-events: none; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,.55);
   background: rgba(10,20,38,.78); box-shadow: 0 3px 0 rgba(0,0,0,.3); font-size: 12px; font-weight: 900; }
-#potBox { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); z-index: 3; pointer-events: none; width: 92px; text-align: center; }
-body.nopanel #potBox { bottom: calc(8px + max(14px, env(safe-area-inset-bottom, 0px))); }
-.potsvg { width: 92px; height: auto; display: block; overflow: visible; filter: drop-shadow(0 3px 0 rgba(0,0,0,.3)); }
-.potlid { transform-origin: 112px 28px; transform: translate(-6px, -16px) rotate(18deg); transition: transform .35s cubic-bezier(.5,1.6,.6,1); }
-#potBox.shut .potlid { transform: none; }
-.potamt { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 3px; background: rgba(10,20,38,.82); border: 2px solid #fff; border-radius: 999px; padding: 1px 8px 1px 2px; }
-.potamt .coin { width: 18px; height: 18px; } .potamt .coin::after { font-size: 11px; }
-.potamt b { font-family: var(--font-display); font-weight: 400; font-size: 16px; color: #fff; font-variant-numeric: tabular-nums; }
+/* the pot: both buy-ins fly out of the player tiles into this bubble while you pick your bag */
+#potBubble { position: fixed; left: 50%; top: 200px; transform: translateX(-50%); z-index: 25; display: flex; align-items: center; gap: 6px; padding: 4px 14px 4px 10px; border-radius: 999px; background: linear-gradient(#2b4a80, #12203a); border: 3px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); pointer-events: none; }
+#potBubble span { font: 900 12px/1 Nunito, system-ui, sans-serif; letter-spacing: .08em; color: var(--ink-dim); }
+#potBubble .coin { width: 26px; height: 26px; } #potBubble .coin::after { font-size: 15px; }
+#potBubble b { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: #fff; font-variant-numeric: tabular-nums; min-width: 1.6em; }
+#potBubble.pop { animation: potpop .35s cubic-bezier(.3,1.6,.5,1); }
+@keyframes potpop { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.18); } 100% { transform: translateX(-50%) scale(1); } }
+/* the board check sits below the player tiles and the pot, so both stay in view: a tighter layout */
+#bagPick { align-items: flex-start; padding-top: var(--bptop, 240px); background: rgba(6,12,24,.3); }
+#bagPick > .sheet { padding: 12px 14px 14px; max-height: calc(100dvh - var(--bptop, 240px) - max(12px, env(safe-area-inset-bottom, 0px))); overflow-y: auto; }
+#bagPick h2 { font-size: 22px; margin: 0 0 6px; }
+#bagPick .bpboard { padding: 6px 8px; gap: 10px; } #bagPick .bpboard img { width: 30px; height: 60px; }
+#bagPick .bpboard b { font-size: 17px; } #bagPick .bpboard small { margin-bottom: 0; } #bagPick .bpboard div { font-size: 13px; }
+#bagPick .bpsuggest { font-size: 13px; padding: 6px 8px; margin-top: 8px; }
+#bagPick .label { margin: 8px 0 2px; }
+#bagPick .bplist { gap: 8px; max-height: none; overflow: visible; }
+#bagPick .bpbag { padding: 10px 6px 8px; gap: 2px; font-size: 14px; border-radius: 14px; }
+#bagPick .bpbag canvas { width: 46px; height: 46px; }
+#bagPick .bpbag small { font-size: 12px; }
+#bagPick .bpstats { grid-template-columns: auto repeat(5, 8px); gap: 3px 2px; margin-top: 2px; }
+#bagPick .bpstats em { font-size: 11px; padding-right: 4px; } #bagPick .bpstats i { width: 8px; height: 8px; border-radius: 2px; }
+#bagPick .bpres { font-size: 12px; } #bagPick .bpfit { font-size: 12px; margin: 6px 0; }
+#bagPick .btn { padding-top: 10px; padding-bottom: 10px; }
+#searchCancel { width: 100%; padding: 12px 16px; font-size: 22px; line-height: 1; color: #fff; background: linear-gradient(#ff7a6a, #e8362c 55%, #b5241b); border: 3px solid #fff; border-radius: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.3); text-shadow: 0 2px 0 rgba(0,0,0,.25); }
 .coin.flycoin { position: fixed; z-index: 60; width: 26px; height: 26px; margin: -13px 0 0 -13px; pointer-events: none; transition: transform .7s cubic-bezier(.45,0,.4,1), opacity .2s .62s; }
 .coin.flycoin::after { font-size: 15px; }
 .iobox.p0 { left: max(10px, env(safe-area-inset-left, 0px)); } .iobox.p1 { right: max(10px, env(safe-area-inset-right, 0px)); }
@@ -190,14 +206,6 @@ body.nopanel #potBox { bottom: calc(8px + max(14px, env(safe-area-inset-bottom, 
 .bpsuggest { background: rgba(62,224,122,.14); border: 2px solid #2fbf71; border-radius: 12px; padding: 8px 10px; font-size: 14px; font-weight: 900; } .bpsuggest b { color: #3ee07a; }
 .bplist { padding-top: 8px; }
 /* the two suggested bags, side by side across the sheet */
-#bagPick .bplist { gap: 12px; max-height: none; overflow: visible; }
-#bagPick .bpbag { padding: 14px 8px 12px; gap: 4px; font-size: 16px; border-radius: 18px; }
-#bagPick .bpbag canvas { width: 72px; height: 72px; }
-#bagPick .bpbag small { font-size: 13px; }
-#bagPick .bpstats { grid-template-columns: auto repeat(5, 11px); gap: 5px 3px; margin-top: 4px; }
-#bagPick .bpstats em { font-size: 12px; padding-right: 6px; }
-#bagPick .bpstats i { width: 11px; height: 11px; border-radius: 3px; }
-#bagPick .bpres { font-size: 14px; }
 #bagPick .bpbest { font-size: 12px; top: -10px; }
 .bpfit { min-height: 18px; font-weight: 900; font-size: 13px; }
 .bptimer { height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; } .bptimer i { display: block; height: 100%; background: var(--gold); transition: width .2s linear; }
@@ -922,10 +930,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <canvas id="gl"></canvas>
     <div id="banner"></div>
     <div id="hint" hidden></div>
-    <div id="fbFloat" hidden></div><div id="potBox" hidden><svg class="potsvg" viewBox="0 0 120 92" aria-hidden="true">
-      <g class="potlid"><rect x="6" y="14" width="108" height="16" rx="6" fill="#f4f6fa" stroke="#c9d0dc" stroke-width="2"/><rect x="44" y="6" width="32" height="10" rx="4" fill="none" stroke="#c9d0dc" stroke-width="4"/></g>
-      <rect x="10" y="30" width="100" height="56" rx="8" fill="#e8362c"/><rect x="10" y="30" width="100" height="10" fill="#c22a20"/><rect x="10" y="74" width="100" height="12" rx="6" fill="#b5241b"/>
-      <rect x="18" y="46" width="12" height="20" rx="4" fill="#fff" opacity=".35"/></svg><div class="potamt"><i class="coin"></i><b id="potAmt">0</b></div></div><div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
+    <div id="fbFloat" hidden></div><div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
     <div id="coach" hidden></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
@@ -1109,6 +1114,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
   </div>
 </div>
 
+<div id="potBubble" hidden><span>POT</span><i class="coin"></i><b id="potAmt">0</b></div>
 <div class="overlay" id="bagPick" hidden><div class="sheet" id="bagPickBody"></div></div>
 <div class="overlay" id="inningSheet" hidden>
   <div class="sheet" id="inningBody"></div>
@@ -1973,6 +1979,7 @@ function rankBagsFor(board) {
 const bestBagFor = board => rankBagsFor(board)[0];
 function openBagPick() {
   S.phase = "bagpick"; S.pickT = BAG_PICK_SECS; ui();
+  if (typeof potIntro === "function") potIntro();
   const best = bestBagFor(boardById(S.board)); S.bestBag = best.id; // picked for you; tap another to change it
   if (best.id !== (S.gear[0].baseId || S.gear[0].id)) { S.gear[0] = best; career.bag = best.id; save(); setTeamColors(); renderScore(); if (S.online) netSend({ t: "bag", bag: best.id }); }
   renderBagPick(); $("bagPick").hidden = false;
@@ -2008,8 +2015,8 @@ function tickBagPick(dt) {
 function closeBagPick() {
   if (S.phase !== "bagpick") return;
   $("bagPick").hidden = true; S.pickReady = false; beginTurn();
-  if (S.kind !== "bullseye" && S.inning <= 1 && typeof potIntro === "function") potIntro();
-  if (S.kind !== "bullseye" && S.inning <= 1 && typeof screenMsg === "function") setTimeout(() => screenMsg(`First to <b>${winScore()}</b> · win by 2<br><small>${MAX_INNINGS} innings max</small>`, 3000), 1700);
+  $("potBubble").hidden = true;
+  if (S.kind !== "bullseye" && S.inning <= 1 && typeof screenMsg === "function") setTimeout(() => screenMsg(`First to <b>${winScore()}</b> · win by 2<br><small>${MAX_INNINGS} innings max</small>`, 3000), 300);
 }
 
 // ───────────────────────── Match flow
@@ -3339,7 +3346,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795281456`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795294321`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4853,7 +4860,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795281456`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795294321`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4864,7 +4871,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795281456`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795294321`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -8298,7 +8305,7 @@ function updateHUD() {
 // ───────────────────────── Panel and scoreboard
 const panel = $("panel");
 function renderScore() {
-  if (S.kind === "bullseye") { $("boardInfo").hidden = true; $("potBox").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = $("iobag" + p).hidden = true; return; } // no scoreboard: one throw
+  if (S.kind === "bullseye") { $("boardInfo").hidden = true; $("potBubble").hidden = true; for (const p of [0, 1]) $("io" + p).hidden = $("iobag" + p).hidden = true; return; } // no scoreboard: one throw
   const ir = inningResult();
   for (const p of [0, 1]) {
     const av = p === 0 ? career.avatar : S.opponent ? S.opponent.avatar : "a3";
@@ -8600,7 +8607,7 @@ let sceneVenue = hubVenue; // the court shown behind the clubhouse (the practice
 function openHub() {
   musicScene("hub");
   $("timeupMsg").hidden = true;
-  $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true; $("potBox").hidden = true;
+  $("io0").hidden = $("io1").hidden = $("iobag0").hidden = $("iobag1").hidden = true; $("boardInfo").hidden = true; $("potBubble").hidden = true;
   showTeamCoolers(["#e8392b", "#2f86ff"]); // the clubhouse view: red and blue
   if (career.activeMatch && S.kind === "career" && S.phase !== "hub" && !glitching) { glitchOut(); return; } // left a match some way we didn't plan for
   leaveOnline(); S.online = null;
@@ -9169,25 +9176,27 @@ setTimeout(() => { $("splash").classList.add("out"); setTimeout(() => $("splash"
 
 requestAnimationFrame(frame);
 
-// The pot: once the opponent is set, both players' buy-ins fly into a cooler at the bottom of the screen (between the
-// score tables), the total counts up, and the lid snaps shut. It sits there for the rest of the match.
+// The pot: while you pick your bag, each player's buy-in flies out of their tile into the POT bubble under the tiles
+// (the total counts up, then the bubble pops).
 function potIntro() {
-  const box = $("potBox"), v = venue(), amt = S.kind === "career" ? pot(v) : 0;
-  if (!amt) { box.hidden = true; return; }
-  box.hidden = false; box.classList.remove("shut"); $("potAmt").textContent = "0";
-  const mouth = box.querySelector(".potsvg").getBoundingClientRect(), tx = mouth.left + mouth.width / 2, ty = mouth.top + mouth.height * 0.35;
-  const N = 6; let landed = 0;
+  const bub = $("potBubble"), amt = S.kind === "career" ? pot(venue()) : 0;
+  if (!amt) { bub.hidden = true; return; }
+  const tiles = $("card0").getBoundingClientRect();
+  bub.style.top = (tiles.bottom + 10) + "px"; $("bagPick").style.setProperty("--bptop", (tiles.bottom + 64) + "px");
+  bub.hidden = false; $("potAmt").textContent = "0";
+  const end = bub.getBoundingClientRect(), tx = end.left + end.width / 2, ty = end.top + end.height / 2, N = 6; let landed = 0;
   for (const p of [0, 1]) {
     const src = $("card" + p).getBoundingClientRect();
     for (let i = 0; i < N; i++) {
       const c = document.createElement("i"); c.className = "coin flycoin";
-      const x0 = src.left + src.width / 2 + (Math.random() - 0.5) * 40, y0 = src.top + src.height * 0.6;
+      const x0 = src.left + src.width / 2 + (Math.random() - 0.5) * 50, y0 = src.top + src.height * 0.55;
       c.style.left = x0 + "px"; c.style.top = y0 + "px"; document.body.appendChild(c);
-      setTimeout(() => { c.style.transform = `translate(${tx - x0}px, ${ty - y0}px) scale(.7)`; c.style.opacity = "0"; }, 60 + i * 110 + p * 55);
-      setTimeout(() => { c.remove(); landed++; $("potAmt").textContent = short(Math.round(amt * landed / (2 * N))); if (landed % 3 === 0) sfx.tick(); }, 60 + i * 110 + p * 55 + 700);
+      const at = 250 + i * 110 + p * 55;
+      setTimeout(() => { c.style.transform = `translate(${tx - x0}px, ${ty - y0}px) scale(.8)`; c.style.opacity = "0"; }, at);
+      setTimeout(() => { c.remove(); landed++; $("potAmt").textContent = short(Math.round(amt * landed / (2 * N))); if (landed % 3 === 0) sfx.tick(); }, at + 700);
     }
   }
-  setTimeout(() => { box.classList.add("shut"); $("potAmt").textContent = short(amt); sfx.thud(); haptic("thud"); }, 60 + N * 110 + 55 + 760);
+  setTimeout(() => { $("potAmt").textContent = short(amt); bub.classList.remove("pop"); void bub.offsetWidth; bub.classList.add("pop"); sfx.thud(); haptic("light"); }, 250 + N * 110 + 55 + 760);
 }
 </script>
 
