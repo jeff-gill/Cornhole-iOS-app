@@ -567,12 +567,13 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 .capnote { font-size: 14px; color: var(--ink-dim); margin: -4px 0 8px; }
 .innof { font-size: .45em; opacity: .7; margin-left: 1px; }
 /* the three clubhouse perks side by side, equal widths: icon on top, name, then status */
-.hubperks { display: grid !important; grid-template-columns: repeat(3, 1fr); align-items: stretch; }
+.hubperks { display: grid !important; grid-template-columns: repeat(3, 1fr); align-items: stretch; gap: 12px !important; padding: 0 !important; }
+.hubperks .dailybtn { height: 100%; min-height: 96px; margin: 0 !important; box-sizing: border-box; }
 .hubperks .dailybtn { flex-direction: column; justify-content: flex-start; text-align: center; gap: 2px; padding: 8px 4px; width: auto; }
 .hubperks .dailybtn > span:last-child { display: block; }
 .hubperks .dailybtn b { font-size: 14px; line-height: 1.05; }
 .hubperks .dailybtn small { display: block; margin-top: 3px; line-height: 1.15; }
-.hubperks .chbtn { filter: none; }
+.hubperks .chbtn:not(.ready) { filter: none; }
 .hubperks { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 0 4px; }
 .hubperks .dailybtn { margin: 0; }
 .bbbtn { margin-left: auto !important; }
@@ -3373,7 +3374,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795303121`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795303353`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4887,7 +4888,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795303121`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795303353`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4898,7 +4899,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795303121`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795303353`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -7448,7 +7449,7 @@ const chReady = () => { const C = challenges(); return C.list.filter(c => c.got 
 function renderChallengesBtn() {
   const b = $("chBtn"); if (!b) return;
   const C = challenges(), done = C.list.filter(c => c.got >= c.need).length, ready = chReady();
-  b.classList.toggle("ready", ready > 0);
+  b.classList.toggle("ready", !(C.list.every(c => c.claimed) && C.bonus)); // bounces until today's are all done and claimed
   $("chSub").textContent = ready ? "Reward ready!" : done === C.list.length ? "All done today!" : `${done} of ${C.list.length} done`;
 }
 function openChallenges() {

@@ -721,7 +721,7 @@ const chReady = () => { const C = challenges(); return C.list.filter(c => c.got 
 function renderChallengesBtn() {
   const b = $("chBtn"); if (!b) return;
   const C = challenges(), done = C.list.filter(c => c.got >= c.need).length, ready = chReady();
-  b.classList.toggle("ready", ready > 0);
+  b.classList.toggle("ready", !(C.list.every(c => c.claimed) && C.bonus)); // bounces until today's are all done and claimed
   $("chSub").textContent = ready ? "Reward ready!" : done === C.list.length ? "All done today!" : `${done} of ${C.list.length} done`;
 }
 function openChallenges() {

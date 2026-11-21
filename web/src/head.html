@@ -559,12 +559,13 @@ body.bbmode .score::after { content: "🎯 BULLSEYE BAGS"; position: absolute; l
 .capnote { font-size: 14px; color: var(--ink-dim); margin: -4px 0 8px; }
 .innof { font-size: .45em; opacity: .7; margin-left: 1px; }
 /* the three clubhouse perks side by side, equal widths: icon on top, name, then status */
-.hubperks { display: grid !important; grid-template-columns: repeat(3, 1fr); align-items: stretch; }
+.hubperks { display: grid !important; grid-template-columns: repeat(3, 1fr); align-items: stretch; gap: 12px !important; padding: 0 !important; }
+.hubperks .dailybtn { height: 100%; min-height: 96px; margin: 0 !important; box-sizing: border-box; }
 .hubperks .dailybtn { flex-direction: column; justify-content: flex-start; text-align: center; gap: 2px; padding: 8px 4px; width: auto; }
 .hubperks .dailybtn > span:last-child { display: block; }
 .hubperks .dailybtn b { font-size: 14px; line-height: 1.05; }
 .hubperks .dailybtn small { display: block; margin-top: 3px; line-height: 1.15; }
-.hubperks .chbtn { filter: none; }
+.hubperks .chbtn:not(.ready) { filter: none; }
 .hubperks { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 0 4px; }
 .hubperks .dailybtn { margin: 0; }
 .bbbtn { margin-left: auto !important; }
