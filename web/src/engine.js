@@ -144,7 +144,8 @@ class World {
       }
       b.state = "sliding"; b.vx = lv.x; b.vy = lv.y;
       b.curve = (b.t.spin || 0) * SPIN_CURVE * sm; b.spin *= 0.6;
-      this.events.push({ type: "land", bag: b }); this.bounds(b);
+      const flat = Math.hypot(c.v.x, c.v.y), down = Math.abs(c.v.z || 0);
+      this.events.push({ type: "land", bag: b, steep: Math.atan2(down, flat) * 180 / Math.PI, down }); this.bounds(b);
     }
   }
   // A bag dropping through the hole brushes any bag hanging over its edge: that one slides a little the way the

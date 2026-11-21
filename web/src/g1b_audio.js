@@ -21,7 +21,7 @@ function initAudio() {
       master = audio.createGain(); master.gain.value = sfxOn ? 0.9 * sfxVol : 0; master.connect(audio.destination);
       musicBus = audio.createGain(); musicBus.gain.value = musicOn ? 0.55 * musicVol : 0; musicBus.connect(audio.destination);
     }
-    audio.resume();
+    audio.resume(); loadSfx();
     if (wantAmb && !amb) startAmbience(wantAmb);
     if (musicOn) startMusic();
   } catch (e) { audio = null; }
@@ -98,7 +98,29 @@ function tone(freq, dur, type = "sine", vol = 0.25, when = 0, slideTo = 0) {
   g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + 0.02);
 }
+// Recorded effects (web/assets/sfx, from Pixabay). Each falls back to its made-up sound until it has loaded.
+const SFX_FILES = { thudHard: "assets/sfx/thud-hard.mp3" };
+const sfxBufs = {}, sfxLoading = {};
+function loadSfx() {
+  if (!audio) return;
+  for (const k in SFX_FILES) {
+    if (sfxBufs[k] || sfxLoading[k]) continue;
+    sfxLoading[k] = true;
+    fetch(SFX_FILES[k]).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(b => new Promise((res, rej) => audio.decodeAudioData(b, res, rej)))
+      .then(buf => { sfxBufs[k] = buf; }).catch(() => { sfxLoading[k] = false; });
+  }
+}
+function playSample(k, vol = 1, rate = 1) {
+  if (!audio || !sfxBufs[k]) return false;
+  const src = audio.createBufferSource(), g = audio.createGain();
+  src.buffer = sfxBufs[k]; src.playbackRate.value = rate; g.gain.value = vol;
+  src.connect(g).connect(master); src.start();
+  return true;
+}
 const sfx = {
+  // a lob that comes down steep hits the wood hard: the recorded thud, louder the faster it drops
+  hardThud: (down = 20) => { if (!playSample("thudHard", clamp(0.55 + down / 60, 0.55, 1), 0.94 + Math.random() * 0.12)) sfx.thud(); },
   tick: () => tone(1250, 0.035, "square", 0.04),
   whoosh: () => burst({ dur: 0.38, freq: 900, q: 0.7, vol: 0.22, type: "bandpass", attack: 0.12, sweep: 2.4 }),
   thud: () => { burst({ dur: 0.16, freq: 520, vol: 0.9, sweep: 0.4 }); tone(95, 0.14, "sine", 0.55, 0, 50); },   // canvas bag on plywood

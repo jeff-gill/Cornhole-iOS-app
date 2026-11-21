@@ -1226,7 +1226,8 @@ class World {
       }
       b.state = "sliding"; b.vx = lv.x; b.vy = lv.y;
       b.curve = (b.t.spin || 0) * SPIN_CURVE * sm; b.spin *= 0.6;
-      this.events.push({ type: "land", bag: b }); this.bounds(b);
+      const flat = Math.hypot(c.v.x, c.v.y), down = Math.abs(c.v.z || 0);
+      this.events.push({ type: "land", bag: b, steep: Math.atan2(down, flat) * 180 / Math.PI, down }); this.bounds(b);
     }
   }
   // A bag dropping through the hole brushes any bag hanging over its edge: that one slides a little the way the
@@ -2289,7 +2290,7 @@ function handleEvents(evts) {
       if (n < 4) showBanner(name, p);
       sfx.hole(); haptic(n >= 3 ? "big" : "success"); celebrate(p); holeStreak(p, n);
     }
-    else if (e.type === "land") { sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
+    else if (e.type === "land") { if (e.steep >= 48) sfx.hardThud(e.down); else sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
     else if (e.type === "hit") { sfx.thud(); haptic("light"); }
     else if (e.type === "ground") { sfx.grass(); dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
     else if (e.type === "off") showBanner(e.bag.id === S.lastId ? "Slid off" : "Knocked off!", e.bag.owner);
@@ -2337,7 +2338,7 @@ function initAudio() {
       master = audio.createGain(); master.gain.value = sfxOn ? 0.9 * sfxVol : 0; master.connect(audio.destination);
       musicBus = audio.createGain(); musicBus.gain.value = musicOn ? 0.55 * musicVol : 0; musicBus.connect(audio.destination);
     }
-    audio.resume();
+    audio.resume(); loadSfx();
     if (wantAmb && !amb) startAmbience(wantAmb);
     if (musicOn) startMusic();
   } catch (e) { audio = null; }
@@ -2414,7 +2415,29 @@ function tone(freq, dur, type = "sine", vol = 0.25, when = 0, slideTo = 0) {
   g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
   o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + 0.02);
 }
+// Recorded effects (web/assets/sfx, from Pixabay). Each falls back to its made-up sound until it has loaded.
+const SFX_FILES = { thudHard: "assets/sfx/thud-hard.mp3" };
+const sfxBufs = {}, sfxLoading = {};
+function loadSfx() {
+  if (!audio) return;
+  for (const k in SFX_FILES) {
+    if (sfxBufs[k] || sfxLoading[k]) continue;
+    sfxLoading[k] = true;
+    fetch(SFX_FILES[k]).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(b => new Promise((res, rej) => audio.decodeAudioData(b, res, rej)))
+      .then(buf => { sfxBufs[k] = buf; }).catch(() => { sfxLoading[k] = false; });
+  }
+}
+function playSample(k, vol = 1, rate = 1) {
+  if (!audio || !sfxBufs[k]) return false;
+  const src = audio.createBufferSource(), g = audio.createGain();
+  src.buffer = sfxBufs[k]; src.playbackRate.value = rate; g.gain.value = vol;
+  src.connect(g).connect(master); src.start();
+  return true;
+}
 const sfx = {
+  // a lob that comes down steep hits the wood hard: the recorded thud, louder the faster it drops
+  hardThud: (down = 20) => { if (!playSample("thudHard", clamp(0.55 + down / 60, 0.55, 1), 0.94 + Math.random() * 0.12)) sfx.thud(); },
   tick: () => tone(1250, 0.035, "square", 0.04),
   whoosh: () => burst({ dur: 0.38, freq: 900, q: 0.7, vol: 0.22, type: "bandpass", attack: 0.12, sweep: 2.4 }),
   thud: () => { burst({ dur: 0.16, freq: 520, vol: 0.9, sweep: 0.4 }); tone(95, 0.14, "sine", 0.55, 0, 50); },   // canvas bag on plywood
@@ -3227,7 +3250,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795233269`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795233520`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4741,7 +4764,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795233269`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795233520`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4752,7 +4775,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795233269`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795233520`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);

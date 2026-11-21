@@ -747,7 +747,7 @@ function handleEvents(evts) {
       if (n < 4) showBanner(name, p);
       sfx.hole(); haptic(n >= 3 ? "big" : "success"); celebrate(p); holeStreak(p, n);
     }
-    else if (e.type === "land") { sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
+    else if (e.type === "land") { if (e.steep >= 48) sfx.hardThud(e.down); else sfx.thud(); haptic("thud"); dust(e.bag, groundDust()); squash(e.bag.id); }
     else if (e.type === "hit") { sfx.thud(); haptic("light"); }
     else if (e.type === "ground") { sfx.grass(); dust(e.bag, groundDust()); if (e.bag.id === S.lastId) showBanner("Off the board", e.bag.owner); }
     else if (e.type === "off") showBanner(e.bag.id === S.lastId ? "Slid off" : "Knocked off!", e.bag.owner);
