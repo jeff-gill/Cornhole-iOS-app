@@ -3186,7 +3186,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795228589`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795228652`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4700,7 +4700,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795228589`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795228652`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4711,7 +4711,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795228589`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795228652`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6704,7 +6704,7 @@ function rulesHTML() {
   ])}
   ${sec("🏆", "Seasons", [
     "Each season is a calendar month. Every title is a league split into groups of up to 100.",
-    "The top of your group moves up and the bottom moves down (the lines on the ladder show where).",
+    "The top of your group moves up and the bottom moves down (the lines in your group show where).",
     `You need at least ${MIN_MATCHES_TO_PROMOTE} matches in a season to be promoted.`,
   ])}
   </div>`;
@@ -6993,12 +6993,12 @@ function openSeason(tab) {
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
   const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
-  const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and join the season ladder.</div>`;
+  const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and start climbing the season titles.</div>`;
   const body = isBeginner() && rankTab !== "gc" ? learner : rankTab === "group" ? head + group
     : rankTab === "ladder" ? `${head}<div class="muted infotext">Win: the court's win stars in points. Loss: 1 point for playing. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
     : `<div class="muted">The worldwide Game Center leaderboards.</div>
       <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
-  $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "LADDER"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
+  $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "TITLES"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
   for (const b of $("rankBody").querySelectorAll("[data-rt]")) b.onclick = () => openSeason(b.dataset.rt);
   for (const b of $("rankBody").querySelectorAll("[data-lb]")) b.onclick = () => openRankings();
   closePages(); $("rankSheet").hidden = false; $("rankSheet").classList.add("noback");
@@ -8370,7 +8370,7 @@ function openHub() {
   if (hubVenue >= 0 && !venueUnlocked(hubVenue)) hubVenue = 0;
   renderHub(); $("hub").hidden = false; document.body.classList.add("inhub"); ui();
   hubWake();
-  if (career.justGraduated) { career.justGraduated = false; save(); setTimeout(() => { sfx.win(); haptic("success"); showInfo(`<div class="lifebig">🎓</div><h2>You're a Rookie!</h2><div class="muted">Bags &amp; Boards is unlocked, your cans can be better than Backyard Black now, and you've joined this month's season ladder. Nice throwing!</div>`); }, 700); }
+  if (career.justGraduated) { career.justGraduated = false; save(); setTimeout(() => { sfx.win(); haptic("success"); showInfo(`<div class="lifebig">🎓</div><h2>You're a Rookie!</h2><div class="muted">Bags &amp; Boards is unlocked, your cans can be better than Backyard Black now, and you're on this month's season titles. Nice throwing!</div>`); }, 700); }
   else if (career.roughOffer != null && S.kind === "career") setTimeout(offerStarTrade, 900);
   else if (S.kind === "career") setTimeout(offerWelcome, 900);
 

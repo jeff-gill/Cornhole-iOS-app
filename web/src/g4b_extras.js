@@ -129,7 +129,7 @@ function rulesHTML() {
   ])}
   ${sec("🏆", "Seasons", [
     "Each season is a calendar month. Every title is a league split into groups of up to 100.",
-    "The top of your group moves up and the bottom moves down (the lines on the ladder show where).",
+    "The top of your group moves up and the bottom moves down (the lines in your group show where).",
     `You need at least ${MIN_MATCHES_TO_PROMOTE} matches in a season to be promoted.`,
   ])}
   </div>`;
@@ -418,12 +418,12 @@ function openSeason(tab) {
       <div class="muted">${up ? `Top ${up} move up` : "The top title"}${down ? ` · bottom ${down} move down` : ""}. ${where}</div>`;
   }
   const head = `<div class="big">${TITLE_ICONS[s.title]} ${TITLES[s.title]} · ${s.points} points</div><div class="muted">${days} day${days > 1 ? "s" : ""} left this season.</div>`;
-  const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and join the season ladder.</div>`;
+  const learner = `<div class="lifebig">🌱</div><h2>You're a Beginner</h2><div class="muted center">${beginnerHTML()}. Win ${BEGINNER_WINS} matches, the last two in a row, to become a <b>Rookie</b> and start climbing the season titles.</div>`;
   const body = isBeginner() && rankTab !== "gc" ? learner : rankTab === "group" ? head + group
     : rankTab === "ladder" ? `${head}<div class="muted infotext">Win: the court's win stars in points. Loss: 1 point for playing. Each season is a calendar month, and every title is a league split into groups of up to 100. The higher the title, the harder it is to move up. As many players drop into each title as move up out of it, so groups stay full. Play at least ${MIN_MATCHES_TO_PROMOTE} matches to be promoted. The top 20 in each group win a can (Platinum for 1st, Gold for 2nd, Silver for 3rd, Backyard Black for the rest, one better for every title above Rookie), and each title adds 5% more cards to every can you open.</div><div class="ladder">${rows}</div>`
     : `<div class="muted">The worldwide Game Center leaderboards.</div>
       <button class="btn lbbtn" data-lb="stars"><span>⭐</span>Most stars</button><button class="btn lbbtn" data-lb="wins"><span>🏆</span>Most wins</button><button class="btn lbbtn" data-lb="fourBaggers"><span>🎯</span>Most 4-baggers</button>`;
-  $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "LADDER"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
+  $("rankBody").innerHTML = `<div class="tabs">${[["group", "MY GROUP"], ["ladder", "TITLES"], ["gc", "GAME CENTER"]].map(([k, l]) => `<button data-rt="${k}" class="${rankTab === k ? "on" : ""}">${l}</button>`).join("")}</div>${body}`;
   for (const b of $("rankBody").querySelectorAll("[data-rt]")) b.onclick = () => openSeason(b.dataset.rt);
   for (const b of $("rankBody").querySelectorAll("[data-lb]")) b.onclick = () => openRankings();
   closePages(); $("rankSheet").hidden = false; $("rankSheet").classList.add("noback");
