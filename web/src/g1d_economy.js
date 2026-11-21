@@ -20,7 +20,7 @@ const CANS = [
   // Express: rare, middling contents, but it opens right away.
   { id: "express", name: "Express Pop", color: "#ff2e88", rim: "#ffd0e8", odds: 3, pulls: 3, coins: [0.12, 0.3], cards: [6, 12], bias: 3.6, life: 0.03, express: true },
 ];
-// How long a can takes to open once you start it (one at a time). The better the can, the longer the wait.
+// How long a can takes to open once you start it (several can unlock at once). The better the can, the longer the wait.
 const OPEN_MIN = { black: 15, white: 60, bronze: 120, silver: 180, gold: 300, purple: 480, platinum: 720, diamond: 1440, express: 0 };
 const openMs = id => OPEN_MIN[id] * 60000;
 const durText = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Math.round(m / 60)}h` : `${m}m`; };
@@ -43,7 +43,7 @@ function skipCan(i) {
 const anyTicking = () => career.cans.some(c => canState(c) === "ticking");
 function startCan(i) {
   const slot = career.cans[i];
-  if (!slot || anyTicking() || canState(slot) !== "idle") return false;
+  if (!slot || canState(slot) !== "idle") return false; // (any number can unlock at the same time)
   slot.start = clockNow(); save();
   if (career.alerts) postNative("notify", JSON.stringify({ op: "schedule", id: "can.ready", at: slot.start + openMs(slot.id), title: `Your ${canById(slot.id).name} is ready! 🥫`, body: "Crack it open and see what's inside." }));
   return true;

@@ -55,7 +55,7 @@ function canTapped(i) {
   const nowBtn = `<button class="btn ${afford ? "blue" : ""}" id="openNow">${afford ? "OPEN NOW" : "NEED"} · <i class="bcap"></i> ${cost}</button>`;
   if (st === "ticking") { showInfo(`<div class="lifebig">🥫</div><h2>${k.name}</h2><div class="big">Opens in ${timeText(canLeft(c))}</div>${nowBtn}<div class="muted">You have <i class="bcap"></i> ${career.caps}. Win matches while you wait.</div>`); }
   else {
-    const busy = anyTicking();
+    const busy = false; // (cans unlock side by side, so another one opening never blocks this)
     showInfo(`<div class="lifebig">🔒</div><h2>${k.name}</h2><div class="muted">${k.pulls} prizes inside. It's locked: unlocking it takes ${durText(openMs(c.id))}${busy ? ", and another can is unlocking right now. One at a time." : "."}</div>
       ${busy ? "" : `<button class="btn green" id="startCan">🔓 UNLOCK · ${durText(openMs(c.id))}</button>`}${nowBtn}<div class="muted">You have <i class="bcap"></i> ${career.caps}.</div>`);
     if (!busy) $("startCan").onclick = () => { startCan(i); $("livesSheet").hidden = true; renderHubExtras(); sfx.tick(); };
@@ -170,7 +170,7 @@ function offerStarTrade() {
 }
 function showInfo(html) { $("livesBody").innerHTML = html + `<button class="btn" id="infoClose">DONE</button>`; $("infoClose").onclick = () => { $("livesSheet").hidden = true; }; $("livesSheet").hidden = false; }
 function cansInfoHTML() {
-  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Open one at a time: the better the can, the longer it takes, and Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
+  return `<h2>🥫 Cans</h2><div class="muted">Win a match to get a can, and there's a free one every day. Your cooler holds ${COOLER_SIZE}. Unlock as many as you like at once: the better the can, the longer it takes, and Express cans open right away. Sink more cornholes in a match for a better shot at a rare can.</div>
     <div class="cangrid">${CANS.map(c => `<div>${canPic(c.id)}<span>${c.name}</span></div>`).join("")}</div>`;
 }
 
@@ -584,7 +584,7 @@ const TOUR = [
   ["#seasonBtn", "Your rank", "Your title and the coins you've won this month. Tap it to see your group and the promotion line."],
   ["#dailyBtn", "Daily Drop", "A free prize every 4 hours (up to 2 wait): coins, caps, cards, sometimes a can."],
   ["#bbBtn", "Bullseye Bags", "One free throw a day at a giant bullseye. The closer to the hole, the better the prize."],
-  ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most, and open one at a time. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
+  ["#cooler", "Prize Cooler", "Cans you win go here, 4 at most. Tap one to unlock it, and several can unlock at once. Here are two to try: the first is <b>ready</b>, so tap it to open. The second is opening, and we've given you <b>bottle caps</b> to open it right now."],
   ["#throwBagsBtn", "Throw bags", "Pick a court and find an opponent. Practice, free, is the first card."],
   ["#navbar", "Menu", "Settings (with How to Play), your bags and boards, home, the rankings and the Store are always down here."],
 ];
