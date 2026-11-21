@@ -251,7 +251,8 @@ body.inhub .score, body.inhub #panel { display: none; }
 .btn.nope, .btn.nope:disabled { background: linear-gradient(#7a8194, #565d6e); box-shadow: 0 5px 0 #2c313d, inset 0 2px 0 rgba(255,255,255,.18); color: #d6dbe6; opacity: .8; pointer-events: none; text-shadow: none; font-size: 16px !important; white-space: normal; line-height: 1.15; }
 .btn.green { background: linear-gradient(#7af0a3, var(--go) 50%, var(--go-dark)); box-shadow: 0 5px 0 #075c2b, inset 0 2px 0 rgba(255,255,255,.35); }
 .pullpad { display: flex; align-items: center; gap: 14px; }
-#panel.slim { min-height: 0 !important; padding-top: 8px; padding-bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) - 14px)); } /* (text may sit partly in the home-bar space; nothing tappable does) */
+#panel.slim { min-height: 0 !important; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+#panel.slim.lowpad { padding-bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) - 14px)); } /* no buttons: text may sit partly in the home-bar space */
 #panel.slim .pullpad .bag { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; }
 #panel.slim .pullpad .big { font-size: 18px; }
 .pullpad .bag { width: 64px; height: 64px; flex: none; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 5px 0 rgba(0,0,0,.35); display: grid; place-items: center; font-family: var(--font-display); font-size: 26px; }

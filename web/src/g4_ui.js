@@ -255,7 +255,8 @@ const whoName = p => (S.kind === "career" || S.kind === "bullseye") && p === 0 ?
 function ui() {
   document.body.classList.toggle("bbmode", S.kind === "bullseye" && S.phase !== "hub");
   document.body.classList.toggle("nopanel", ["flight", "inning", "over"].includes(S.phase) && S.kind !== "bullseye");
-  panel.classList.toggle("slim", ["throw", "cpu", "remote", "aiming", "flight", "inning", "over"].includes(S.phase)); // (every match panel sized to what it shows) // throwing (yours or theirs): a slim panel, the court gets the screen
+  panel.classList.toggle("slim", ["throw", "cpu", "remote", "aiming", "flight", "inning", "over"].includes(S.phase)); // (every match panel sized to what it shows)
+  panel.classList.toggle("lowpad", S.phase === "cpu" || S.phase === "remote"); // (only panels with no buttons tuck into the home-bar space) // throwing (yours or theirs): a slim panel, the court gets the screen
   renderScore();
   const hint = $("hint");
   const learning = !career.tutorialDone; // the on-court hints only while learning; after that the ⓘ button has them
