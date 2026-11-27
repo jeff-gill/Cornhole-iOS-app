@@ -254,6 +254,7 @@ function renderProfile() {
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
       <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
+      <div class="studioline">__GAME_NAME__ · by __GAME_STUDIO__</div>
       <button class="linkbtn" id="setReset" style="display:block;margin:14px auto 0;font-size:13px;color:#ff8a7a">Start over (erase my progress)</button>
       ${window.__debugBuild || !nativeBridge ? `<button class="btn ghost" id="setTestWins" style="margin-top:10px">🧪 Test: +5 wins</button><button class="btn ghost" id="setTestNew" style="margin-top:8px">🧪 Test: unlock 3 new items</button>` : ""}`;
     if ($("setTestNew")) $("setTestNew").onclick = () => { // (Xcode builds and the browser preview only: try out the NEW! badges)

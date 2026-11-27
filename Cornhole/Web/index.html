@@ -846,6 +846,8 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
 .oddsrow { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 2px 0; } .oddsrow i { font-style: normal; font-weight: 900; color: #fff; }
 .oddstable { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0 6px; } .oddstable th { color: var(--ink-dim); font-weight: 900; text-align: left; padding: 2px 3px; } .oddstable td { padding: 3px; border-top: 1px solid rgba(255,255,255,.1); }
 .settile { cursor: pointer; }
+.splashstudio { margin-top: 10px; font: 900 13px/1.2 Nunito, system-ui, sans-serif; letter-spacing: .06em; color: rgba(255,255,255,.75); }
+.studioline { margin-top: 10px; text-align: center; font-size: 12px; color: var(--ink-dim); font-weight: 800; }
 .item-badge.burst { animation: badgeburst .5s ease-out forwards; }
 .item-badge.burst::before, .item-badge.burst::after { content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: var(--gold);
   box-shadow: 18px -14px 0 #fff, -20px -10px 0 var(--gold), 22px 10px 0 #ff4b3a, -16px 14px 0 #fff, 0 -22px 0 #ff4b3a, 0 20px 0 var(--gold); animation: badgebits .5s ease-out forwards; }
@@ -988,6 +990,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
   <div class="splashboard"><i class="hole"></i><i class="sbag b1"></i><i class="sbag b2"></i></div>
   <div class="splashbar"><i></i></div>
   <div class="splashtag">The ultimate cornhole throwdown.</div>
+  <div class="splashstudio">A Gillerilla Games production</div>
 </div>
 <div class="overlay page-home" id="hub">
   <div class="hubhead">
@@ -3385,7 +3388,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795305882`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795822046`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4899,7 +4902,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795305882`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795822046`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4910,7 +4913,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795305882`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795822046`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6993,6 +6996,7 @@ function renderProfile() {
       <button class="btn ghost" id="setHelp" style="width:100%;margin-top:12px;font-size:17px;padding:12px">❓ How to Play &amp; Rules</button>
       <button class="btn ghost" id="setTour" style="width:100%;margin-top:8px;font-size:17px;padding:12px">🧭 Clubhouse tour</button>
       <div class="row" style="justify-content:center;gap:4px 18px;flex-wrap:wrap;margin-top:12px;font-size:14px"><button class="linkbtn" id="setPrivacy">Privacy Policy</button><button class="linkbtn" id="setTerms">Terms of Service</button></div>
+      <div class="studioline">Cornhole Throwdown · by Gillerilla Games</div>
       <button class="linkbtn" id="setReset" style="display:block;margin:14px auto 0;font-size:13px;color:#ff8a7a">Start over (erase my progress)</button>
       ${window.__debugBuild || !nativeBridge ? `<button class="btn ghost" id="setTestWins" style="margin-top:10px">🧪 Test: +5 wins</button><button class="btn ghost" id="setTestNew" style="margin-top:8px">🧪 Test: unlock 3 new items</button>` : ""}`;
     if ($("setTestNew")) $("setTestNew").onclick = () => { // (Xcode builds and the browser preview only: try out the NEW! badges)
