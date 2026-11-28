@@ -54,7 +54,8 @@ const skyMesh = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.
     float hash(vec3 p){ return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }
     void main(){
       float h = vDir.y;
-      vec3 col = mix(horizon, mid, smoothstep(-0.02, 0.22, h));
+      vec3 hz = night < 0.5 ? mix(horizon, mid, 0.8) : horizon; // by day the haze at the horizon stays blue (it's most of the sky the cameras see)
+      vec3 col = mix(hz, mid, smoothstep(-0.02, 0.16, h));
       col = mix(col, top, smoothstep(0.22, 0.85, h));
       if (night < 0.5) col = pow(col, vec3(2.2)); // the colours above are picked by eye (screen colours): turn them into light values, or the tone mapping washes the day sky out to grey
       float s = max(dot(normalize(vDir), sunDir), 0.0);
@@ -2058,7 +2059,8 @@ function buildVenue(id) {
   glowOn = VENUE_LOOK[id].night >= 0.5 && id !== "rooftop"; // (the floodlit rooftop is bright enough to haze over too)
   const g = new THREE.Group(), L = VENUE_LOOK[id];
   skyU.top.value.set(...L.top); skyU.mid.value.set(...L.mid); skyU.horizon.value.set(...L.horizon); skyU.sunGlow.value = L.sunGlow; skyU.night.value = L.night;
-  scene.fog.color.setHex(L.fog[0]); scene.fog.near = L.fog[1]; scene.fog.far = L.fog[2];
+  scene.fog.color.setHex(L.fog[0]); scene.fog.near = 3000; scene.fog.far = 4000; // no haze on any court: the fog sits past the far edge of the view (Bullseye's foggy, rainy and snowy weather still brings it in)
+  if (L.night < 0.5) { const m = (k) => L.horizon[k] * 0.2 + L.mid[k] * 0.8; scene.fog.color.setRGB(m(0), m(1), m(2), THREE.SRGBColorSpace); } // by day the distance fades into the same blue as the sky behind it
   hemi.color.setHex(L.hemi[0]); hemi.groundColor.setHex(L.hemi[1]); hemi.intensity = L.hemi[2];
   sun.color.setHex(L.sun[0]); sun.intensity = L.sun[1]; sun.position.set(...L.sun[2]);
   skyU.sunDir.value.copy(sun.position).sub(sun.target.position).normalize();
@@ -2147,9 +2149,8 @@ function buildVenue(id) {
     gulls(g, 6, 10, -60, 7);
     loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
       if (!sky || venueId !== "beach") return;
-      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
+      scene.environment = sky.env; // the photo only lights the scene: the game's own blue sky stays behind (the photo's horizon reads grey on a phone)
       hemi.intensity = 0.9; renderer.toneMappingExposure = 1.05;
-      scene.fog.color.setHex(0xd6e6f2); scene.fog.near = 350; scene.fog.far = 1900;
     });
   } else if (id === "brewery") {
     // Lunchtime on the brick patio behind Nonna's Pizza: the wood fire glowing through the window, café tables under
@@ -2202,9 +2203,8 @@ function buildVenue(id) {
     stringLights(g, poles, [[[-24, -50], [24, -26]], [[24, -50], [-24, -26]], [[-24, -26], [24, -2]], [[24, -26], [-24, -2]], [[-24, -2], [24, 22]], [[24, -2], [-24, 22]], [[-24, -50], [24, -50]], [[-24, 22], [24, 22]]], 13, 2, 0.06);
     loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
       if (!sky || venueId !== "brewery") return;
-      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
+      scene.environment = sky.env; // the photo only lights the scene: the game's own blue sky stays behind (the photo's horizon reads grey on a phone)
       hemi.intensity = 0.85; renderer.toneMappingExposure = 1.05;
-      scene.fog.color.setHex(0xd2e2f0); scene.fog.near = 200; scene.fog.far = 700;
     });
   } else if (id === "lodge") {
     // The top of the ski slope outside Summit Lodge: a deck beside the lane, skiers heading down the slope to the
@@ -2293,9 +2293,8 @@ function buildVenue(id) {
     for (const [x, z, f, sd] of [[-13, -8, 1.3, 961], [-14, -22, 1.6, 962], [-12, 4, 1.0, 963], [14, -2, -1.4, 964]]) person(cg, x, z, f, sd, "stand");
     loadSky("kloofendal_48d_partly_cloudy_puresky_2k.hdr").then(sky => {
       if (!sky || venueId !== "bonfire") return;
-      scene.environment = sky.env; scene.background = sky.bg; skyMesh.visible = false;
+      scene.environment = sky.env; // the photo only lights the scene: the game's own blue sky stays behind (the photo's horizon reads grey on a phone)
       hemi.intensity = 0.85; renderer.toneMappingExposure = 1.08;
-      scene.fog.color.setHex(0xd8e6f0); scene.fog.near = 250; scene.fog.far = 800;
     });
   } else if (id === "island") {
     // Throwing from one little island to the next, a big island's beach across the water, smaller islands all round,
@@ -2328,7 +2327,6 @@ function buildVenue(id) {
       if (!sky || venueId !== "island") return;
       scene.environment = sky.env; // the photo sky only for reflections: the game's own deep-blue sky stays behind
       hemi.intensity = 0.9; renderer.toneMappingExposure = 1.05;
-      scene.fog.color.setHex(0xd6e6f2); scene.fog.near = 300; scene.fog.far = 1300;
     });
   } else if (id === "rooftop") {
     // A floodlit court on a city roof at night: four light towers keep the court bright, a lounge bar and sofas along

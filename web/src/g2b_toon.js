@@ -61,7 +61,7 @@ function setToon(id) {
   sun.intensity *= 0.55; hemi.intensity *= 0.85;
   if (id === "backyard") { // a brighter cartoon sky (other courts keep their own: sunset, snow, night...)
     skyU.top.value.set(0.12, 0.42, 0.95); skyU.mid.value.set(0.42, 0.72, 1.0); skyU.horizon.value.set(0.82, 0.93, 1.0); skyU.sunGlow.value = 0.6;
-    scene.fog.color.setHex(0xcfe6ff); scene.fog.near = 420; scene.fog.far = 1500;
+    scene.fog.color.setHex(0xcfe6ff);
   }
   if (VENUE_LOOK[id].night < 0.5) { st.clouds = toonClouds(); scene.add(st.clouds); } // puffy clouds by day
 }
