@@ -289,6 +289,15 @@ body.inhub .score, body.inhub #panel { display: none; }
 .btn.nope, .btn.nope:disabled { background: linear-gradient(#7a8194, #565d6e); box-shadow: 0 5px 0 #2c313d, inset 0 2px 0 rgba(255,255,255,.18); color: #d6dbe6; opacity: .8; pointer-events: none; text-shadow: none; font-size: 16px !important; white-space: normal; line-height: 1.15; }
 .btn.green { background: linear-gradient(#7af0a3, var(--go) 50%, var(--go-dark)); box-shadow: 0 5px 0 #075c2b, inset 0 2px 0 rgba(255,255,255,.35); }
 .pullpad { display: flex; align-items: center; gap: 14px; }
+.pullpad .bag { animation: pulldown 1.3s ease-in-out infinite; }
+@keyframes pulldown { 0%, 100% { transform: translateY(-4px); } 50% { transform: translateY(5px); } }
+#swipeHint { position: absolute; left: 50%; top: 30%; width: 90px; height: 150px; margin-left: -45px; pointer-events: none; z-index: 4; }
+#swipeHint .trail { position: absolute; left: 50%; top: 0; width: 10px; margin-left: -5px; height: 120px; border-radius: 6px;
+  background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.75)); transform-origin: top; animation: swipetrail 1.6s ease-in-out infinite; }
+#swipeHint .finger { position: absolute; left: 50%; top: 0; margin-left: -22px; font-size: 44px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.5)); animation: swipefinger 1.6s ease-in-out infinite; }
+#swipeHint .lbl { position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); white-space: nowrap; font-family: var(--font-display); font-size: 18px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.7); }
+@keyframes swipefinger { 0% { transform: translateY(-10px); opacity: 0; } 15% { opacity: 1; } 70% { transform: translateY(100px); opacity: 1; } 100% { transform: translateY(100px); opacity: 0; } }
+@keyframes swipetrail { 0% { transform: scaleY(0); opacity: 0; } 15% { opacity: 1; } 70% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
 #panel.slim { min-height: 0 !important; padding-top: 8px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
 #panel.slim.lowpad { padding-bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) - 14px)); } /* no buttons: text may sit partly in the home-bar space */
 #panel.slim .pullpad .bag { width: 44px; height: 44px; border-radius: 12px; font-size: 20px; }
@@ -972,6 +981,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <div id="hint" hidden></div>
     <div id="fbFloat" hidden></div><div class="iobox p0" id="io0" hidden></div><div class="iobox p1" id="io1" hidden></div><div class="iobag p0" id="iobag0" hidden></div><div class="iobag p1" id="iobag1" hidden></div>
     <div id="coach" hidden></div>
+    <div id="swipeHint" hidden><div class="trail"></div><div class="finger">👆</div><div class="lbl">Pull down</div></div>
     <div id="wind" hidden><div class="dial"><svg width="26" height="26" viewBox="-13 -13 26 26"><g id="windArrow"><path d="M0,-10 L6,2 L1.8,0.5 L1.8,10 L-1.8,10 L-1.8,0.5 L-6,2 Z" fill="#fff"/></g></svg></div><div><small>WIND</small><b id="windMph">0 mph</b></div></div>
     <div id="opp" hidden></div>
     <div id="boardInfo" hidden></div>
@@ -1114,7 +1124,7 @@ body.inhub #shop .row .pill { display: none; } /* (the top bar shows your coins 
     <h2>How to play</h2>
       <p><b>1. Pick the finish.</b> Tap the board where you want the bag to end up (green).</p>
       <p><b>2. Pick the landing.</b> Drag the yellow ring around the gold zone. Near the green spot it drops and sticks; farther back it comes in flat and slides. Off to the side adds <b>spin</b>.</p>
-      <p><b>3. Throw.</b> Tap THROW, then pull back anywhere. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
+      <p><b>3. Throw.</b> Tap THROW, then pull down anywhere on the screen. The bar fills with power and the arrow swings, faster the harder you pull. Let go with the bar in the gold band and the arrow pointing straight. Pull into <b>OVERDRIVE</b> and the throw goes wild.</p>
       <p><b>Scoring.</b> In the hole is 3, on the board is 1. Only the difference counts: throw 4 to their 1 and you score 3. First to the court's target wins (11 at Backyard BBQ, 2 more at each court after, up to 21), and you have to win by 2, so a close match can run past the target. A match lasts 8 innings at most: then the higher score wins; if the scores are tied, more cornholes in the match wins, then more bags on the board, and if that's tied too it's a draw (your entry fee comes back and no stars change). Whoever scores in an inning throws first in the next. After a wash, the same side leads again.</p>
       <p><b>Wind.</b> Wind bends the bag in flight. The green aiming guide already allows for it, so throw down the middle of the green.
       <p><b>Career.</b> Both players put in the entry fee and the <b>winner takes the prize</b>. A win earns stars at that court and a loss costs some (the court card shows how many). Fill a court's star track to open the next one.</p>
@@ -3279,6 +3289,7 @@ const skyMesh = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.
       float h = vDir.y;
       vec3 col = mix(horizon, mid, smoothstep(-0.02, 0.22, h));
       col = mix(col, top, smoothstep(0.22, 0.85, h));
+      if (night < 0.5) col = pow(col, vec3(2.2)); // the colours above are picked by eye (screen colours): turn them into light values, or the tone mapping washes the day sky out to grey
       float s = max(dot(normalize(vDir), sunDir), 0.0);
       col += sunGlow * (vec3(1.0, 0.75, 0.45) * pow(s, 8.0) * 0.35 + vec3(1.0, 0.95, 0.8) * pow(s, 300.0) * 1.5);
       if (night > 0.5) { vec3 q = floor(vDir * 260.0); float st = step(0.9975, hash(q)) * smoothstep(0.05, 0.4, h); col += vec3(st); }
@@ -3388,7 +3399,7 @@ function sizedTree(variant, feet) { // a Quaternius model wrapped in a group sca
 function loadBlender(name) {
   const sw = TREE_SWAP[name];
   if (sw) return sizedTree(sw[0][Math.floor(Math.random() * sw[0].length)], sw[1]);
-  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795825080`).then(g => {
+  if (!blenderCache.has(name)) blenderCache.set(name, gltfLoader.loadAsync(`${BLENDER}${name}.json?v=1795830163`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return g.scene;
   }).catch(() => null));
@@ -4902,7 +4913,7 @@ function partyLights(g, n, seed) { // coloured beams sweeping over the crowd
 // ───────────────────────── Stylized art test (Quaternius CC0 packs): nature models and animated people
 const NATURE = "assets/nature/", PEOPLE = "assets/people/", natureCache = new Map(), peopleCache = new Map();
 function loadNature(name) {
-  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795825080`).then(g => {
+  if (!natureCache.has(name)) natureCache.set(name, gltfLoader.loadAsync(`${NATURE}${name}.json?v=1795830163`).then(g => {
     g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material) o.material.side = THREE.DoubleSide; } });
     return g.scene;
   }).catch(() => null));
@@ -4913,7 +4924,7 @@ function plant(g, name, x, z, scale, rot) { // models are in metres; the court i
 }
 const PEOPLE_MODELS = ["male_casual", "male_longsleeve", "male_shirt", "female_casual", "female_tanktop", "female_alternative", "female_dress"];
 function loadPeople(name) {
-  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795825080`).then(gl => {
+  if (!peopleCache.has(name)) peopleCache.set(name, gltfLoader.loadAsync(`${PEOPLE}${name}.json?v=1795830163`).then(gl => {
     gl.scene.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(gl.scene); gl.tall = (bb.max.y - bb.min.y) || 1; gl.base = bb.min.y; return gl; // measured, so any export scale works
   }).catch(() => null));
   return peopleCache.get(name);
@@ -6461,8 +6472,8 @@ tipGlow.renderOrder = 9; aimSwing.add(tipGlow);
 const wedgeMat = new THREE.MeshBasicMaterial({ color: 0x3ee07a, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
 let wedge = null;
 // Power ring, read like a clock seen from behind the thrower: 12 o'clock is toward the board (where the arrow leaves the
-// ring), and it fills clockwise. White blends to bright green up to the sweet spot, which ends exactly at 6 o'clock between
-// two lines; past it the ring goes light yellow, orange, then red (overdrive) back at 12.
+// ring), and it fills clockwise. White up to the sweet spot (the prime zone, bright green between two lines), which is
+// centred on 6 o'clock; past it the ring goes yellow, orange, then red (overdrive) back at 12.
 const ringFlat = new THREE.Group(); ringFlat.rotation.x = -Math.PI / 2; aimBase.add(ringFlat);
 const ringMat = new THREE.ShaderMaterial({
   transparent: true, depthWrite: false,
@@ -6470,10 +6481,12 @@ const ringMat = new THREE.ShaderMaterial({
   vertexShader: "varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
   fragmentShader: `varying vec2 vP; uniform float uFill, uB0, uB1, uOD, uAlpha, uTime;
     vec3 ramp(float a){
-      vec3 white = vec3(1.0), green = vec3(0.55, 0.92, 0.55), bright = vec3(0.1, 1.0, 0.35);
-      vec3 lemon = vec3(1.0, 0.96, 0.55), orange = vec3(1.0, 0.58, 0.12), red = vec3(1.0, 0.13, 0.1);
-      if (a < 0.5) return a < 0.25 ? mix(white, green, a / 0.25) : mix(green, bright, (a - 0.25) / 0.25);
-      return a < 0.75 ? mix(lemon, orange, (a - 0.5) / 0.25) : mix(orange, red, (a - 0.75) / 0.25);
+      vec3 white = vec3(1.0), bright = vec3(0.1, 1.0, 0.35);
+      vec3 yellow = vec3(1.0, 0.92, 0.2), orange = vec3(1.0, 0.58, 0.12), red = vec3(1.0, 0.13, 0.1);
+      if (a < uB0) return white;
+      if (a <= uB1) return bright;
+      float k = (a - uB1) / max(1e-4, 1.0 - uB1);
+      return k < 0.5 ? mix(yellow, orange, k / 0.5) : mix(orange, red, (k - 0.5) / 0.5);
     }
     void main(){
       float r = length(vP);
@@ -6489,9 +6502,9 @@ const ringMat = new THREE.ShaderMaterial({
       float tick = 1.0 - smoothstep(px * 1.2, px * 2.6, abs(a - uFill));    // where the pull is right now
       col = mix(col, vec3(1.0), tick * step(0.001, uFill)); alpha = max(alpha, tick * step(0.001, uFill));
       float t = clamp((r - 1.08) / 0.34, 0.0, 1.0);
-      col = mix(col, vec3(1.0), 0.32 * smoothstep(0.55, 0.95, t) * (lit ? 1.0 : 0.4));  // glossy outer half, like the cards
+      col = mix(col, vec3(1.0), 0.15 * smoothstep(0.55, 0.95, t) * (lit ? 1.0 : 0.4));  // glossy outer half, like the cards
       col *= 0.88 + 0.12 * t;
-      gl_FragColor = vec4(col, alpha * uAlpha);
+      gl_FragColor = vec4(pow(col, vec3(2.2)), alpha * uAlpha);   // screen colours -> light values, or the tone mapping fades them
       if ((r > 1.0 && r < 1.08) || (r > 1.42 && r < 1.5)) gl_FragColor = vec4(1.0, 1.0, 1.0, uAlpha);   // white rims
       if (r <= 1.0 || r >= 1.5) gl_FragColor = vec4(0.04, 0.08, 0.15, 0.6 * uAlpha);              // dark edge
     }`,
@@ -6501,20 +6514,21 @@ const ringMesh = new THREE.Mesh(new THREE.RingGeometry(0.93, 1.57, 128, 2), ring
 ringMesh.renderOrder = 7; ringFlat.add(ringMesh);
 const ringShadow = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.6, 96, 1), shadowMat);
 ringShadow.position.set(0.18, -0.12, -0.005); ringShadow.renderOrder = 6; ringFlat.add(ringShadow);
-// Fill -> fraction of the circle. The sweet spot (target ± band) ends exactly at 6 o'clock (0.5).
+// Fill -> fraction of the circle. The sweet spot (target ± band) is centred exactly on 6 o'clock (0.5), the same size
+// on the ring as it always was (band / (target + band) of the circle); white before it, yellow to red after.
 function ringFrac(f, band) {
-  const top = POWER_TARGET + band;
-  return f <= top ? 0.5 * f / top : 0.5 + 0.5 * (f - top) / (FILL_MAX - top);
+  const w = 0.5 * band / (POWER_TARGET + band), lo = POWER_TARGET - band, hi = POWER_TARGET + band;
+  if (f <= lo) return (0.5 - w) * f / lo;
+  if (f <= hi) return 0.5 - w + 2 * w * (f - lo) / (hi - lo);
+  return 0.5 + w + (0.5 - w) * (f - hi) / (FILL_MAX - hi);
 }
-// Same colour ramp as the ring, for the arrow.
-const RAMP = [[0, "#ffffff"], [0.25, "#8ceb8c"], [0.5, "#1aff59"], [0.5001, "#fff58c"], [0.75, "#ff941f"], [1, "#ff211a"]];
+// Same colours as the ring, for the arrow: white, green in the prime zone (b0 to b1), then yellow, orange, red.
 const tmpC1 = new THREE.Color(), tmpC2 = new THREE.Color();
-function rampColor(a, out) {
-  for (let k = 1; k < RAMP.length; k++) if (a <= RAMP[k][0]) {
-    const [a0, c0] = RAMP[k - 1], [a1, c1] = RAMP[k];
-    return out.copy(tmpC1.set(c0)).lerp(tmpC2.set(c1), (a - a0) / Math.max(1e-6, a1 - a0));
-  }
-  return out.set(RAMP[RAMP.length - 1][1]);
+function rampColor(a, out, b0, b1) {
+  if (a < b0) return out.set("#ffffff");
+  if (a <= b1) return out.set("#1aff59");
+  const k = (a - b1) / Math.max(1e-4, 1 - b1);
+  return k < 0.5 ? out.copy(tmpC1.set("#ffeb33")).lerp(tmpC2.set("#ff941f"), k / 0.5) : out.copy(tmpC1.set("#ff941f")).lerp(tmpC2.set("#ff211a"), (k - 0.5) / 0.5);
 }
 let aimFireT = 0, aimWedgeZone = -1;
 const wedgeTilt = new THREE.Group(); aimBase.add(wedgeTilt);
@@ -6546,7 +6560,7 @@ function updateAimRig(dt) {
   // Arrow: longer with more pull, swinging with the aim needle.
   arrowMat.uniforms.uTime.value = S.time;
   const frac = ringFrac(Math.min(fill, FILL_MAX), band);
-  rampColor(frac, arrowMat.uniforms.uA.value);
+  rampColor(frac, arrowMat.uniforms.uA.value, ringFrac(POWER_TARGET - band, band), ringFrac(POWER_TARGET + band, band));
   tipGlow.material.color.copy(arrowMat.uniforms.uA.value);
   let len = 2 + Math.min(fill, FILL_MAX) * 9, alpha = p.active || !throwing ? 1 : 0.7;
   if (!throwing) { // launch: the arrow shoots out and fades
@@ -6570,7 +6584,7 @@ function updateAimRig(dt) {
   // Power ring.
   const u = ringMat.uniforms;
   u.uFill.value = fill > 0.005 ? frac : 0;
-  u.uB0.value = ringFrac(POWER_TARGET - band, band); u.uB1.value = 0.5;
+  u.uB0.value = ringFrac(POWER_TARGET - band, band); u.uB1.value = ringFrac(POWER_TARGET + band, band);
   u.uOD.value = ringFrac(1, band);
   u.uAlpha.value = alpha; u.uTime.value = S.time;
 }
@@ -8297,7 +8311,7 @@ function updateCamera(dt) {
     // A slow orbit outside the court looking in: both boards stay in view while the scenery turns behind them. The
     // camera stays low enough to see the surroundings, pulls back and widens over the sides (a phone is narrow and the
     // court is 31 ft long), and aims so the court rides above the clubhouse card.
-    hubYaw += dt * 0.12;
+    hubYaw += dt * 0.15;
     const a = hubYaw, side = Math.sin(a) ** 2, cz = -FY / 2 - 1;
     let d = narrow ? 38 + 16 * side : camera.aspect > 1.1 ? 42 + 8 * side : 30 + 6 * side; // (a wide iPad window: further back, so the near board clears the cards)
     const wall = VENUE_LOOK[venueId]?.wall; // stay inside the stands
@@ -8319,7 +8333,7 @@ function updateCamera(dt) {
     // on the line from the thrower's aim circle to the target: the circle sits dead centre, and the view angles in from
     // their side of the board
     const tgt = S.landing || HOLE, az0 = S.ideal ? S.ideal.az : Math.atan2(tgt.x - rel.x, tgt.y - rel.y), ax = rel.x + Math.sin(az0) * 0.6, ay = rel.y + Math.cos(az0) * 0.6, ux0 = tgt.x - ax, uy0 = tgt.y - ay, ul = Math.hypot(ux0, uy0) || 1, ux = ux0 / ul, uy = uy0 / ul;
-    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 11.5, 0, -(ay + uy * 11.5)); // (circle just clear of the score tables)
+    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 4, 0, -(ay + uy * 4)); // (looking a little lower, so the circle sits well clear of the score tables)
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
@@ -8488,7 +8502,7 @@ function ui() {
   } else if (S.phase === "throw") {
     // while throwing, just one slim row: the court gets the screen
     panel.innerHTML = `<div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
-      <div class="big">Pull back and let go</div><span class="spacer"></span><button class="btn small" id="backBtn">↩ AIM</button></div>`;
+      <div class="big">Pull down for power, let go to throw</div><span class="spacer"></span><button class="btn small" id="backBtn">↩ AIM</button></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
   } else if (S.phase === "bbintro") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
@@ -8527,6 +8541,7 @@ function renderCoach() {
   el.hidden = !text;
   renderInOn();
   el.classList.toggle("top", S.phase === "throw"); // keep the arrow clear while pulling
+  $("swipeHint").hidden = !(S.phase === "throw" && !S.pull.active && !isCPU(S.player)); // a finger showing the pull-down, until they start pulling
   if (text && el.innerHTML !== text) el.innerHTML = text;
   if (text) $("hint").hidden = true;
 }

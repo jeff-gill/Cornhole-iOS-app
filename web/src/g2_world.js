@@ -56,6 +56,7 @@ const skyMesh = new THREE.Mesh(new THREE.SphereGeometry(600, 32, 16), new THREE.
       float h = vDir.y;
       vec3 col = mix(horizon, mid, smoothstep(-0.02, 0.22, h));
       col = mix(col, top, smoothstep(0.22, 0.85, h));
+      if (night < 0.5) col = pow(col, vec3(2.2)); // the colours above are picked by eye (screen colours): turn them into light values, or the tone mapping washes the day sky out to grey
       float s = max(dot(normalize(vDir), sunDir), 0.0);
       col += sunGlow * (vec3(1.0, 0.75, 0.45) * pow(s, 8.0) * 0.35 + vec3(1.0, 0.95, 0.8) * pow(s, 300.0) * 1.5);
       if (night > 0.5) { vec3 q = floor(vDir * 260.0); float st = step(0.9975, hash(q)) * smoothstep(0.05, 0.4, h); col += vec3(st); }

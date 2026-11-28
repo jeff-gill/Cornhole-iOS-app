@@ -98,7 +98,7 @@ function updateCamera(dt) {
     // A slow orbit outside the court looking in: both boards stay in view while the scenery turns behind them. The
     // camera stays low enough to see the surroundings, pulls back and widens over the sides (a phone is narrow and the
     // court is 31 ft long), and aims so the court rides above the clubhouse card.
-    hubYaw += dt * 0.12;
+    hubYaw += dt * 0.15;
     const a = hubYaw, side = Math.sin(a) ** 2, cz = -FY / 2 - 1;
     let d = narrow ? 38 + 16 * side : camera.aspect > 1.1 ? 42 + 8 * side : 30 + 6 * side; // (a wide iPad window: further back, so the near board clears the cards)
     const wall = VENUE_LOOK[venueId]?.wall; // stay inside the stands
@@ -120,7 +120,7 @@ function updateCamera(dt) {
     // on the line from the thrower's aim circle to the target: the circle sits dead centre, and the view angles in from
     // their side of the board
     const tgt = S.landing || HOLE, az0 = S.ideal ? S.ideal.az : Math.atan2(tgt.x - rel.x, tgt.y - rel.y), ax = rel.x + Math.sin(az0) * 0.6, ay = rel.y + Math.cos(az0) * 0.6, ux0 = tgt.x - ax, uy0 = tgt.y - ay, ul = Math.hypot(ux0, uy0) || 1, ux = ux0 / ul, uy = uy0 / ul;
-    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 11.5, 0, -(ay + uy * 11.5)); // (circle just clear of the score tables)
+    tPos.set(ax - ux * 10, 6.6, -(ay - uy * 10)); tLook.set(ax + ux * 4, 0, -(ay + uy * 4)); // (looking a little lower, so the circle sits well clear of the score tables)
     fov = narrow ? 46 : 40;
   } else if (mode === "follow") {
     const b = S.world.bags.find(x => x.id === S.lastId);
@@ -289,7 +289,7 @@ function ui() {
   } else if (S.phase === "throw") {
     // while throwing, just one slim row: the court gets the screen
     panel.innerHTML = `<div class="pullpad"><div class="bag" style="background:linear-gradient(${COL.pl[S.player]}, ${COL.p[S.player]})">↓</div>
-      <div class="big">Pull back and let go</div><span class="spacer"></span><button class="btn small" id="backBtn">↩ AIM</button></div>`;
+      <div class="big">Pull down for power, let go to throw</div><span class="spacer"></span><button class="btn small" id="backBtn">↩ AIM</button></div>`;
     $("backBtn").onclick = () => { S.phase = "aiming"; ui(); };
   } else if (S.phase === "bbintro") {
     panel.innerHTML = `<div class="center" style="margin:auto"><div class="big">Here's what each ring is worth</div><div class="muted">Win a ring and it's gone for the rest of the day. The hole is the top prize.</div></div>
@@ -328,6 +328,7 @@ function renderCoach() {
   el.hidden = !text;
   renderInOn();
   el.classList.toggle("top", S.phase === "throw"); // keep the arrow clear while pulling
+  $("swipeHint").hidden = !(S.phase === "throw" && !S.pull.active && !isCPU(S.player)); // a finger showing the pull-down, until they start pulling
   if (text && el.innerHTML !== text) el.innerHTML = text;
   if (text) $("hint").hidden = true;
 }

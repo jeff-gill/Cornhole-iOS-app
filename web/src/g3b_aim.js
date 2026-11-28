@@ -68,8 +68,8 @@ tipGlow.renderOrder = 9; aimSwing.add(tipGlow);
 const wedgeMat = new THREE.MeshBasicMaterial({ color: 0x3ee07a, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
 let wedge = null;
 // Power ring, read like a clock seen from behind the thrower: 12 o'clock is toward the board (where the arrow leaves the
-// ring), and it fills clockwise. White blends to bright green up to the sweet spot, which ends exactly at 6 o'clock between
-// two lines; past it the ring goes light yellow, orange, then red (overdrive) back at 12.
+// ring), and it fills clockwise. White up to the sweet spot (the prime zone, bright green between two lines), which is
+// centred on 6 o'clock; past it the ring goes yellow, orange, then red (overdrive) back at 12.
 const ringFlat = new THREE.Group(); ringFlat.rotation.x = -Math.PI / 2; aimBase.add(ringFlat);
 const ringMat = new THREE.ShaderMaterial({
   transparent: true, depthWrite: false,
@@ -77,10 +77,12 @@ const ringMat = new THREE.ShaderMaterial({
   vertexShader: "varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
   fragmentShader: `varying vec2 vP; uniform float uFill, uB0, uB1, uOD, uAlpha, uTime;
     vec3 ramp(float a){
-      vec3 white = vec3(1.0), green = vec3(0.55, 0.92, 0.55), bright = vec3(0.1, 1.0, 0.35);
-      vec3 lemon = vec3(1.0, 0.96, 0.55), orange = vec3(1.0, 0.58, 0.12), red = vec3(1.0, 0.13, 0.1);
-      if (a < 0.5) return a < 0.25 ? mix(white, green, a / 0.25) : mix(green, bright, (a - 0.25) / 0.25);
-      return a < 0.75 ? mix(lemon, orange, (a - 0.5) / 0.25) : mix(orange, red, (a - 0.75) / 0.25);
+      vec3 white = vec3(1.0), bright = vec3(0.1, 1.0, 0.35);
+      vec3 yellow = vec3(1.0, 0.92, 0.2), orange = vec3(1.0, 0.58, 0.12), red = vec3(1.0, 0.13, 0.1);
+      if (a < uB0) return white;
+      if (a <= uB1) return bright;
+      float k = (a - uB1) / max(1e-4, 1.0 - uB1);
+      return k < 0.5 ? mix(yellow, orange, k / 0.5) : mix(orange, red, (k - 0.5) / 0.5);
     }
     void main(){
       float r = length(vP);
@@ -96,9 +98,9 @@ const ringMat = new THREE.ShaderMaterial({
       float tick = 1.0 - smoothstep(px * 1.2, px * 2.6, abs(a - uFill));    // where the pull is right now
       col = mix(col, vec3(1.0), tick * step(0.001, uFill)); alpha = max(alpha, tick * step(0.001, uFill));
       float t = clamp((r - 1.08) / 0.34, 0.0, 1.0);
-      col = mix(col, vec3(1.0), 0.32 * smoothstep(0.55, 0.95, t) * (lit ? 1.0 : 0.4));  // glossy outer half, like the cards
+      col = mix(col, vec3(1.0), 0.15 * smoothstep(0.55, 0.95, t) * (lit ? 1.0 : 0.4));  // glossy outer half, like the cards
       col *= 0.88 + 0.12 * t;
-      gl_FragColor = vec4(col, alpha * uAlpha);
+      gl_FragColor = vec4(pow(col, vec3(2.2)), alpha * uAlpha);   // screen colours -> light values, or the tone mapping fades them
       if ((r > 1.0 && r < 1.08) || (r > 1.42 && r < 1.5)) gl_FragColor = vec4(1.0, 1.0, 1.0, uAlpha);   // white rims
       if (r <= 1.0 || r >= 1.5) gl_FragColor = vec4(0.04, 0.08, 0.15, 0.6 * uAlpha);              // dark edge
     }`,
@@ -108,20 +110,21 @@ const ringMesh = new THREE.Mesh(new THREE.RingGeometry(0.93, 1.57, 128, 2), ring
 ringMesh.renderOrder = 7; ringFlat.add(ringMesh);
 const ringShadow = new THREE.Mesh(new THREE.RingGeometry(0.95, 1.6, 96, 1), shadowMat);
 ringShadow.position.set(0.18, -0.12, -0.005); ringShadow.renderOrder = 6; ringFlat.add(ringShadow);
-// Fill -> fraction of the circle. The sweet spot (target ± band) ends exactly at 6 o'clock (0.5).
+// Fill -> fraction of the circle. The sweet spot (target ± band) is centred exactly on 6 o'clock (0.5), the same size
+// on the ring as it always was (band / (target + band) of the circle); white before it, yellow to red after.
 function ringFrac(f, band) {
-  const top = POWER_TARGET + band;
-  return f <= top ? 0.5 * f / top : 0.5 + 0.5 * (f - top) / (FILL_MAX - top);
+  const w = 0.5 * band / (POWER_TARGET + band), lo = POWER_TARGET - band, hi = POWER_TARGET + band;
+  if (f <= lo) return (0.5 - w) * f / lo;
+  if (f <= hi) return 0.5 - w + 2 * w * (f - lo) / (hi - lo);
+  return 0.5 + w + (0.5 - w) * (f - hi) / (FILL_MAX - hi);
 }
-// Same colour ramp as the ring, for the arrow.
-const RAMP = [[0, "#ffffff"], [0.25, "#8ceb8c"], [0.5, "#1aff59"], [0.5001, "#fff58c"], [0.75, "#ff941f"], [1, "#ff211a"]];
+// Same colours as the ring, for the arrow: white, green in the prime zone (b0 to b1), then yellow, orange, red.
 const tmpC1 = new THREE.Color(), tmpC2 = new THREE.Color();
-function rampColor(a, out) {
-  for (let k = 1; k < RAMP.length; k++) if (a <= RAMP[k][0]) {
-    const [a0, c0] = RAMP[k - 1], [a1, c1] = RAMP[k];
-    return out.copy(tmpC1.set(c0)).lerp(tmpC2.set(c1), (a - a0) / Math.max(1e-6, a1 - a0));
-  }
-  return out.set(RAMP[RAMP.length - 1][1]);
+function rampColor(a, out, b0, b1) {
+  if (a < b0) return out.set("#ffffff");
+  if (a <= b1) return out.set("#1aff59");
+  const k = (a - b1) / Math.max(1e-4, 1 - b1);
+  return k < 0.5 ? out.copy(tmpC1.set("#ffeb33")).lerp(tmpC2.set("#ff941f"), k / 0.5) : out.copy(tmpC1.set("#ff941f")).lerp(tmpC2.set("#ff211a"), (k - 0.5) / 0.5);
 }
 let aimFireT = 0, aimWedgeZone = -1;
 const wedgeTilt = new THREE.Group(); aimBase.add(wedgeTilt);
@@ -153,7 +156,7 @@ function updateAimRig(dt) {
   // Arrow: longer with more pull, swinging with the aim needle.
   arrowMat.uniforms.uTime.value = S.time;
   const frac = ringFrac(Math.min(fill, FILL_MAX), band);
-  rampColor(frac, arrowMat.uniforms.uA.value);
+  rampColor(frac, arrowMat.uniforms.uA.value, ringFrac(POWER_TARGET - band, band), ringFrac(POWER_TARGET + band, band));
   tipGlow.material.color.copy(arrowMat.uniforms.uA.value);
   let len = 2 + Math.min(fill, FILL_MAX) * 9, alpha = p.active || !throwing ? 1 : 0.7;
   if (!throwing) { // launch: the arrow shoots out and fades
@@ -177,7 +180,7 @@ function updateAimRig(dt) {
   // Power ring.
   const u = ringMat.uniforms;
   u.uFill.value = fill > 0.005 ? frac : 0;
-  u.uB0.value = ringFrac(POWER_TARGET - band, band); u.uB1.value = 0.5;
+  u.uB0.value = ringFrac(POWER_TARGET - band, band); u.uB1.value = ringFrac(POWER_TARGET + band, band);
   u.uOD.value = ringFrac(1, band);
   u.uAlpha.value = alpha; u.uTime.value = S.time;
 }
