@@ -88,11 +88,11 @@ In Xcode, open the Cornhole target, then Signing & Capabilities, and add:
 In App Store Connect:
 
 - Under Features > Game Center, create three leaderboards (classic, high score, best score kept):
-  - `com.jeffgill.cornhole.stars`
-  - `com.jeffgill.cornhole.wins`
-  - `com.jeffgill.cornhole.fourbaggers`
+  - `com.lawnchairgames.cornhole.stars`
+  - `com.lawnchairgames.cornhole.wins`
+  - `com.lawnchairgames.cornhole.fourbaggers`
 - Create the in-app purchases listed in `Cornhole/App/StoreManager.swift`.
-- Create nine **recurring** leaderboards for the season leagues, `com.jeffgill.cornhole.season.t0` (Rookie) through `com.jeffgill.cornhole.season.t8` (Hall of Famer). Set each to restart monthly on the 1st (UTC), and keep the best score.
+- Create nine **recurring** leaderboards for the season leagues, `com.lawnchairgames.cornhole.season.t0` (Rookie) through `com.lawnchairgames.cornhole.season.t8` (Hall of Famer). Set each to restart monthly on the 1st (UTC), and keep the best score.
 
 ## Economy
 
@@ -131,12 +131,12 @@ hole. Only a bag resting on the board counts. Finish in a ring to win it, and it
 | On the board, no ring | nothing | nothing |
 | Off the board | nothing | nothing |
 
-Extra Daily Drops are consumable in-app purchases too: `com.jeffgill.cornhole.wheel.1`, `.wheel.3` and `.wheel.5`.
+Extra Daily Drops are consumable in-app purchases too: `com.lawnchairgames.cornhole.wheel.1`, `.wheel.3` and `.wheel.5`.
 
 Each throw has a 30-second clock. Every Sunday is Hole-in-One Sunday: sinking the hole also wins the exclusive Hole-in-One
 bag (never sold; a bonus Golden Pop can once you have it).
 
-Extra throws are consumable in-app purchases: `com.jeffgill.cornhole.bullseye.1`, `.bullseye.3` and `.bullseye.5`.
+Extra throws are consumable in-app purchases: `com.lawnchairgames.cornhole.bullseye.1`, `.bullseye.3` and `.bullseye.5`.
 
 **Cans.** Chance per win and contents. Coins are counted in buy-ins of the court where the can was won.
 

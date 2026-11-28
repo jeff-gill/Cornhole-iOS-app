@@ -11,9 +11,9 @@ import WebKit
 /// Leaderboard IDs must match the ones created in App Store Connect (Features > Game Center).
 final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegate {
     static let leaderboards = [
-        "stars": "com.jeffgill.cornhole.stars",            // total career stars
-        "wins": "com.jeffgill.cornhole.wins",              // career wins
-        "fourBaggers": "com.jeffgill.cornhole.fourbaggers", // 4-baggers thrown
+        "stars": "com.lawnchairgames.cornhole.stars",            // total career stars
+        "wins": "com.lawnchairgames.cornhole.wins",              // career wins
+        "fourBaggers": "com.lawnchairgames.cornhole.fourbaggers", // 4-baggers thrown
     ]
 
     weak var webView: WKWebView?
@@ -109,7 +109,7 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
 
     // MARK: Seasons
 
-    /// Season leagues: one recurring (monthly) leaderboard per title, e.g. com.jeffgill.cornhole.season.t0 for Rookie.
+    /// Season leagues: one recurring (monthly) leaderboard per title, e.g. com.lawnchairgames.cornhole.season.t0 for Rookie.
     /// {"op":"submit","title":2,"points":57} posts this month's points.
     /// {"op":"result","title":2} / {"op":"standings","title":2} load every score in last month's / this month's league
     /// and hand them to the game (window.__seasonEntries), which splits the league into groups of 100 or fewer the
@@ -119,7 +119,7 @@ final class GameCenter: NSObject, GKGameCenterControllerDelegate, GKMatchDelegat
               let msg = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let op = msg["op"] as? String,
               let title = (msg["title"] as? NSNumber)?.intValue, (0...20).contains(title) else { return }
-        let id = "com.jeffgill.cornhole.season.t\(title)"
+        let id = "com.lawnchairgames.cornhole.season.t\(title)"
         guard GKLocalPlayer.local.isAuthenticated else { if op != "submit" { sendEntries(op, [], me: "") }; return }
         if op == "submit", let points = (msg["points"] as? NSNumber)?.intValue {
             // context: when you joined this season (seconds in), so every phone fills groups in the same join order

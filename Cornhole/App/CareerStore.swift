@@ -121,7 +121,7 @@ enum CareerStore {
         let a: [UInt8] = [0x5c, 0x91, 0x3e, 0xd7, 0x22, 0xa8, 0x6f, 0x14, 0xc3, 0x7b, 0xe0, 0x49, 0x85, 0x1d, 0xb6, 0x2a]
         let b: [UInt8] = [0x0f, 0xd4, 0x67, 0x9a, 0x31, 0xec, 0x58, 0x83, 0x2e, 0xf1, 0x46, 0xbd, 0x70, 0x0b, 0x99, 0xc5]
         var material = Data(zip(a, b).map { ($0 ^ $1) &+ 0x3d })
-        material.append(Data((Bundle.main.bundleIdentifier ?? "com.jeffgill.cornhole").utf8))
+        material.append(Data((Bundle.main.bundleIdentifier ?? "com.lawnchairgames.cornhole").utf8))
         material.append(contentsOf: b.reversed())
         return SymmetricKey(data: SHA256.hash(data: material))
     }()

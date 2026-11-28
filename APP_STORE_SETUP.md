@@ -27,7 +27,7 @@ In-app purchases won't work, **even for testing**, until this is done.
 | Platform | iOS |
 | Name | Cornhole Throwdown |
 | Primary language | English (U.S.) |
-| Bundle ID | `com.jeffgill.cornhole` (if it isn't in the list, first register it at developer.apple.com → Certificates, IDs & Profiles → Identifiers → ＋ → App IDs, ticking **Game Center**, **In-App Purchase** and **iCloud**) |
+| Bundle ID | `com.lawnchairgames.cornhole` (if it isn't in the list, first register it at developer.apple.com → Certificates, IDs & Profiles → Identifiers → ＋ → App IDs, ticking **Game Center**, **In-App Purchase** and **iCloud**) |
 | SKU | `cornhole-throwdown` (anything; only you see it) |
 | User access | Full access |
 
@@ -44,23 +44,23 @@ Turn Game Center **on**, then add these leaderboards with these **exact IDs**.
 
 | Reference name | Leaderboard ID |
 |---|---|
-| Total Stars | `com.jeffgill.cornhole.stars` |
-| Wins | `com.jeffgill.cornhole.wins` |
-| 4-Baggers | `com.jeffgill.cornhole.fourbaggers` |
+| Total Stars | `com.lawnchairgames.cornhole.stars` |
+| Wins | `com.lawnchairgames.cornhole.wins` |
+| 4-Baggers | `com.lawnchairgames.cornhole.fourbaggers` |
 
 **Season leaderboards**: **recurring** leaderboards, one per title. Each resets on the **1st of every month**, runs **1 month**, "High score wins", integer:
 
 | Title | Leaderboard ID |
 |---|---|
-| Rookie | `com.jeffgill.cornhole.season.t0` |
-| Weekend Warrior | `com.jeffgill.cornhole.season.t1` |
-| Backyard Hero | `com.jeffgill.cornhole.season.t2` |
-| Local Legend | `com.jeffgill.cornhole.season.t3` |
-| Semi-Pro | `com.jeffgill.cornhole.season.t4` |
-| Pro | `com.jeffgill.cornhole.season.t5` |
-| All-Star | `com.jeffgill.cornhole.season.t6` |
-| Champion | `com.jeffgill.cornhole.season.t7` |
-| Hall of Famer | `com.jeffgill.cornhole.season.t8` |
+| Rookie | `com.lawnchairgames.cornhole.season.t0` |
+| Weekend Warrior | `com.lawnchairgames.cornhole.season.t1` |
+| Backyard Hero | `com.lawnchairgames.cornhole.season.t2` |
+| Local Legend | `com.lawnchairgames.cornhole.season.t3` |
+| Semi-Pro | `com.lawnchairgames.cornhole.season.t4` |
+| Pro | `com.lawnchairgames.cornhole.season.t5` |
+| All-Star | `com.lawnchairgames.cornhole.season.t6` |
+| Champion | `com.lawnchairgames.cornhole.season.t7` |
+| Hall of Famer | `com.lawnchairgames.cornhole.season.t8` |
 
 
 ## 5. In-app purchases (the app → Monetization → In-App Purchases → ＋)
@@ -70,31 +70,31 @@ and a review screenshot (a screenshot of the Store page is fine; the same one wo
 
 | Product ID | Type | Price | Display name |
 |---|---|---|---|
-| `com.jeffgill.cornhole.coins.small` | Consumable | $0.99 | Handful of Coins |
-| `com.jeffgill.cornhole.coins.pile` | Consumable | $2.99 | Pile of Coins |
-| `com.jeffgill.cornhole.coins.medium` | Consumable | $4.99 | Bag of Coins |
-| `com.jeffgill.cornhole.coins.large` | Consumable | $9.99 | Cooler of Coins |
-| `com.jeffgill.cornhole.coins.huge` | Consumable | $19.99 | Truckload of Coins |
-| `com.jeffgill.cornhole.coins.vault` | Consumable | $49.99 | Vault of Coins |
-| `com.jeffgill.cornhole.caps.80` | Consumable | $0.99 | Handful of Caps |
-| `com.jeffgill.cornhole.caps.450` | Consumable | $4.99 | Bucket of Caps |
-| `com.jeffgill.cornhole.caps.1000` | Consumable | $9.99 | Crate of Caps |
-| `com.jeffgill.cornhole.can.bronze` | Consumable | $0.99 | Bronze Fizz Can |
-| `com.jeffgill.cornhole.can.silver` | Consumable | $2.99 | Silver Splash Can |
-| `com.jeffgill.cornhole.can.gold` | Consumable | $4.99 | Golden Pop Can |
-| `com.jeffgill.cornhole.can.purple` | Consumable | $6.99 | Royal Purple Can |
-| `com.jeffgill.cornhole.can.platinum` | Consumable | $8.99 | Platinum Sparkle Can |
-| `com.jeffgill.cornhole.can.diamond` | Consumable | $10.99 | Diamond Dazzle Can |
-| `com.jeffgill.cornhole.wheel.1` | Consumable | $0.99 | 1 Daily Drop |
-| `com.jeffgill.cornhole.wheel.3` | Consumable | $1.99 | 3 Daily Drops |
-| `com.jeffgill.cornhole.wheel.5` | Consumable | $2.99 | 5 Daily Drops |
-| `com.jeffgill.cornhole.bullseye.1` | Consumable | $0.99 | 1 Bullseye Throw |
-| `com.jeffgill.cornhole.bullseye.3` | Consumable | $1.99 | 3 Bullseye Throws |
-| `com.jeffgill.cornhole.bullseye.5` | Consumable | $2.99 | 5 Bullseye Throws |
-| `com.jeffgill.cornhole.starterpack` | Non-Consumable | $2.99 | Welcome Pack |
-| `com.jeffgill.cornhole.set.galaxy` | Non-Consumable | $4.99 | Galaxy Set |
-| `com.jeffgill.cornhole.set.inferno` | Non-Consumable | $3.99 | Inferno Set |
-| `com.jeffgill.cornhole.trails` | Non-Consumable | $2.99 | Trail Pack |
+| `com.lawnchairgames.cornhole.coins.small` | Consumable | $0.99 | Handful of Coins |
+| `com.lawnchairgames.cornhole.coins.pile` | Consumable | $2.99 | Pile of Coins |
+| `com.lawnchairgames.cornhole.coins.medium` | Consumable | $4.99 | Bag of Coins |
+| `com.lawnchairgames.cornhole.coins.large` | Consumable | $9.99 | Cooler of Coins |
+| `com.lawnchairgames.cornhole.coins.huge` | Consumable | $19.99 | Truckload of Coins |
+| `com.lawnchairgames.cornhole.coins.vault` | Consumable | $49.99 | Vault of Coins |
+| `com.lawnchairgames.cornhole.caps.80` | Consumable | $0.99 | Handful of Caps |
+| `com.lawnchairgames.cornhole.caps.450` | Consumable | $4.99 | Bucket of Caps |
+| `com.lawnchairgames.cornhole.caps.1000` | Consumable | $9.99 | Crate of Caps |
+| `com.lawnchairgames.cornhole.can.bronze` | Consumable | $0.99 | Bronze Fizz Can |
+| `com.lawnchairgames.cornhole.can.silver` | Consumable | $2.99 | Silver Splash Can |
+| `com.lawnchairgames.cornhole.can.gold` | Consumable | $4.99 | Golden Pop Can |
+| `com.lawnchairgames.cornhole.can.purple` | Consumable | $6.99 | Royal Purple Can |
+| `com.lawnchairgames.cornhole.can.platinum` | Consumable | $8.99 | Platinum Sparkle Can |
+| `com.lawnchairgames.cornhole.can.diamond` | Consumable | $10.99 | Diamond Dazzle Can |
+| `com.lawnchairgames.cornhole.wheel.1` | Consumable | $0.99 | 1 Daily Drop |
+| `com.lawnchairgames.cornhole.wheel.3` | Consumable | $1.99 | 3 Daily Drops |
+| `com.lawnchairgames.cornhole.wheel.5` | Consumable | $2.99 | 5 Daily Drops |
+| `com.lawnchairgames.cornhole.bullseye.1` | Consumable | $0.99 | 1 Bullseye Throw |
+| `com.lawnchairgames.cornhole.bullseye.3` | Consumable | $1.99 | 3 Bullseye Throws |
+| `com.lawnchairgames.cornhole.bullseye.5` | Consumable | $2.99 | 5 Bullseye Throws |
+| `com.lawnchairgames.cornhole.starterpack` | Non-Consumable | $2.99 | Welcome Pack |
+| `com.lawnchairgames.cornhole.set.galaxy` | Non-Consumable | $4.99 | Galaxy Set |
+| `com.lawnchairgames.cornhole.set.inferno` | Non-Consumable | $3.99 | Inferno Set |
+| `com.lawnchairgames.cornhole.trails` | Non-Consumable | $2.99 | Trail Pack |
 
 Notes:
 - **Non-Consumable** = bought once, kept forever, comes back with "Restore purchases".

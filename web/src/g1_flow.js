@@ -76,7 +76,7 @@ const BAGS = [
 ];
 // Premium items come only from the Store (real money). Exclusive looks; stats are good but never better than the
 // best coin bag, so nobody can buy wins.
-const PID = s => "com.jeffgill.cornhole." + s;
+const PID = s => "com.lawnchairgames.cornhole." + s;
 BAGS.push(
   { id: "firecracker", name: "Firecracker", premium: PID("starterpack"), acc: 3, ctrl: 3, spin: 3, feel: "fast", c: "#e8392b", pattern: "flame" },
   { id: "galaxy", name: "Galaxy", premium: PID("set.galaxy"), acc: 4, ctrl: 4, spin: 4, feel: "neutral", c: "#5b3bd6", pattern: "galaxy" },
