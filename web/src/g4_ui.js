@@ -98,7 +98,7 @@ function updateCamera(dt) {
     // A slow orbit outside the court looking in: both boards stay in view while the scenery turns behind them. The
     // camera stays low enough to see the surroundings, pulls back and widens over the sides (a phone is narrow and the
     // court is 31 ft long), and aims so the court rides above the clubhouse card.
-    hubYaw += dt * 0.15;
+    hubYaw += dt * 0.165;
     const a = hubYaw, side = Math.sin(a) ** 2, cz = -FY / 2 - 1;
     let d = narrow ? 38 + 16 * side : camera.aspect > 1.1 ? 42 + 8 * side : 30 + 6 * side; // (a wide iPad window: further back, so the near board clears the cards)
     const wall = VENUE_LOOK[venueId]?.wall; // stay inside the stands
